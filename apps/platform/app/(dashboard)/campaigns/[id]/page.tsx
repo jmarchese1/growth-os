@@ -404,8 +404,8 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                       )}
                       {msg?.sentAt && (
                         <EmailPreviewModal
-                          subject={null}
-                          bodyHtml={null}
+                          subject={msg.subject}
+                          bodyHtml={msg.body}
                           label="Email"
                         />
                       )}
