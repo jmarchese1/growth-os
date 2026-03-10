@@ -391,6 +391,11 @@ export default async function ProspectDetailPage({ params }: {
                 {/* Message header */}
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest bg-white/5 px-1.5 py-0.5 rounded">
+                        {msg.stepNumber === 1 ? 'Cold Email' : msg.stepNumber ? `Follow-up ${msg.stepNumber - 1}` : 'Email'}
+                      </span>
+                    </div>
                     {msg.subject && (
                       <p className="text-sm font-medium text-white">{msg.subject}</p>
                     )}
