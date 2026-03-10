@@ -471,4 +471,87 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     });
     return reply.send(messages);
   });
+
+  // ─── Enrich NEW prospects with Hunter.io ──────────────────────────────────
+  // Targets prospects with status=NEW (no email found) that have a website.
+  // Calls Hunter domain search, saves email + contact info, queues outreach.
+  app.post('/campaigns/:id/enrich-hunter', async (request, reply) => {
+    const { id } = request.params as { id: string };
+
+    if (!env.HUNTER_API_KEY) {
+      return reply.code(400).send({ error: 'HUNTER_API_KEY not configured — add it to .env.local' });
+    }
+
+    try {
+      const campaign = await db.outboundCampaign.findUnique({ where: { id } });
+      if (!campaign) throw new NotFoundError('Campaign', id);
+
+      // Find prospects with no email that have a website to search against
+      const prospects = await db.prospectBusiness.findMany({
+        where: {
+          campaignId: id,
+          status: 'NEW',
+          website: { not: null },
+          email: null,
+        },
+      });
+
+      if (prospects.length === 0) {
+        return reply.send({ enriched: 0, message: 'No NEW prospects without emails found' });
+      }
+
+      const steps = (campaign.sequenceSteps as Array<{ stepNumber: number; delayHours: number }> | null) ?? [];
+      const baseDelayMs = 5 * 60 * 1000;
+      let enriched = 0;
+
+      for (const prospect of prospects) {
+        const domain = extractHunterDomain(prospect.website!);
+        if (!domain) continue;
+
+        const result = await findEmailViaHunter(domain, env.HUNTER_API_KEY!);
+        if (!result) continue;
+
+        await db.prospectBusiness.update({
+          where: { id: prospect.id },
+          data: {
+            email: result.email,
+            emailSource: 'hunter',
+            contactFirstName: result.firstName,
+            contactLastName: result.lastName,
+            contactTitle: result.position,
+            contactLinkedIn: result.linkedin,
+            emailVerificationScore: result.confidence,
+            status: 'ENRICHED',
+            nextFollowUpAt: new Date(Date.now() + baseDelayMs),
+          },
+        });
+
+        // Queue the full outreach sequence
+        await outreachSendQueue().add(
+          `outreach:${prospect.id}:step1`,
+          { prospectId: prospect.id, campaignId: id, channel: 'email', stepNumber: 1 },
+          { delay: baseDelayMs },
+        );
+        for (const step of steps) {
+          if (step.stepNumber <= 1) continue;
+          const delayMs = baseDelayMs + step.delayHours * 60 * 60 * 1000;
+          await outreachSendQueue().add(
+            `outreach:${prospect.id}:step${step.stepNumber}`,
+            { prospectId: prospect.id, campaignId: id, channel: 'email', stepNumber: step.stepNumber },
+            { delay: delayMs },
+          );
+        }
+
+        enriched++;
+        log.info({ prospectId: prospect.id, domain, email: result.email }, 'Hunter enriched prospect');
+      }
+
+      log.info({ campaignId: id, enriched, checked: prospects.length }, 'Hunter enrichment complete');
+      return reply.send({ enriched, checked: prospects.length });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      log.error({ err, campaignId: id }, 'Hunter enrichment failed');
+      return reply.code(500).send({ error: msg });
+    }
+  });
 }
