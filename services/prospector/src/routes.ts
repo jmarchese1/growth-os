@@ -462,6 +462,11 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
 
     log.info({ campaignId: id, queued }, 'Follow-up steps requeued');
     return reply.send({ queued, stepsPerProspect: followUpSteps.length });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    log.error({ err, campaignId: id }, 'Requeue follow-ups failed');
+    return reply.code(500).send({ error: msg });
+  }
   });
 
   // ─── Get outreach messages for a prospect ─────────────────────────────────
