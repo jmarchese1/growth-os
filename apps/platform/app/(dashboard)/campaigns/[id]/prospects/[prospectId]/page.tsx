@@ -19,6 +19,7 @@ interface OutreachMessage {
   subject: string | null;
   body: string;
   status: string;
+  stepNumber: number | null;
   sentAt: string | null;
   openedAt: string | null;
   repliedAt: string | null;
