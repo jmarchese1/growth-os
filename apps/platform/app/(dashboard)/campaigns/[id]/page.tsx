@@ -183,6 +183,11 @@ export default async function CampaignDetailPage({ params, searchParams }: {
         </div>
         {campaign && (
           <div className="flex items-center gap-2">
+            <EnrichHunterButton
+              campaignId={id}
+              prospectorUrl={PROSPECTOR_URL}
+              newCount={newCount}
+            />
             <ManageSequenceButton
               campaignId={id}
               currentSteps={campaign.sequenceSteps}
