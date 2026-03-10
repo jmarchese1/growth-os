@@ -36,20 +36,15 @@ export default function Home() {
       {/* gray-50 → white */}
       <SectionBleed from="#f9fafb" to="#ffffff" height={48} />
 
-      <ScrollReveal>
-        <AutomationExamples />
-      </ScrollReveal>
+      {/* Last 3 sections — no scroll-reveal animations */}
+      <AutomationExamples />
 
-      <ScrollReveal>
-        <ProposalCTA />
-      </ScrollReveal>
+      <CalendlySection />
 
-      {/* white → gray-50 for booking section */}
-      <SectionBleed from="#ffffff" to="#f9fafb" height={48} />
+      <ProposalCTA />
 
-      <ScrollReveal>
-        <CalendlySection />
-      </ScrollReveal>
+      {/* white → dark footer */}
+      <SectionBleed from="#ffffff" to="#1e1b4b" height={80} />
 
       <Footer />
     </main>
