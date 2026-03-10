@@ -75,12 +75,22 @@ function EditStepModal({
     setSaving(true);
     setError('');
     try {
+      // Fetch current campaign steps to merge (don't clobber other steps)
+      const campRes = await fetch(`${prospectorUrl}/campaigns`);
+      const camps = campRes.ok ? (await campRes.json()) as Array<{ id: string; sequenceSteps: Step[] | null }> : [];
+      const camp = camps.find((c) => c.id === campaignId);
+      const existingSteps: Step[] = camp?.sequenceSteps ?? [];
+
+      // Merge: replace just this step, keep others
+      const merged = existingSteps
+        .filter((s) => s.stepNumber !== step.stepNumber)
+        .concat([{ stepNumber: step.stepNumber, delayHours: step.delayHours, subject, bodyHtml }])
+        .sort((a, b) => a.stepNumber - b.stepNumber);
+
       const res = await fetch(`${prospectorUrl}/campaigns/${campaignId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sequenceSteps: [{ stepNumber: step.stepNumber, delayHours: step.delayHours, subject, bodyHtml }],
-        }),
+        body: JSON.stringify({ sequenceSteps: merged }),
       });
       if (!res.ok) {
         setError('Failed to save — try again');
