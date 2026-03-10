@@ -106,6 +106,7 @@ export const prospectorEnvSchema = baseEnvSchema.extend({
   GEOAPIFY_API_KEY: z.string().optional(),
   BRAVE_SEARCH_API_KEY: z.string().optional(),
   APOLLO_API_KEY: z.string().optional(), // Apollo.io — $49/mo Basic, 10k credits. Much better SMB/restaurant coverage than Hunter.
+  HUNTER_API_KEY: z.string().optional(), // Hunter.io — $49/mo Starter, 2k credits. Domain-based email finder, great for restaurant websites.
   ANTHROPIC_API_KEY: z.string().optional(), // Claude AI — enables per-prospect email personalization at send time.
   SENDGRID_API_KEY: z.string().optional(),
   SENDGRID_FROM_EMAIL: z.string().optional(),
