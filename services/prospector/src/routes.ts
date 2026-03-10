@@ -52,11 +52,11 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     if (!env.GEOAPIFY_API_KEY) return reply.send([]);
 
     const text = state ? `${q}, ${state}` : q;
+    // Autocomplete endpoint returns GeoJSON (no format=json support)
     const params = new URLSearchParams({
       text,
       type: 'city',
       filter: 'countrycode:us',
-      format: 'json',
       limit: '6',
       apiKey: env.GEOAPIFY_API_KEY,
     });
@@ -65,15 +65,20 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       const res = await fetch(`https://api.geoapify.com/v1/geocode/autocomplete?${params}`);
       if (!res.ok) return reply.send([]);
       const data = (await res.json()) as {
-        results?: Array<{ formatted?: string; city?: string; state?: string; state_code?: string; lon: number; lat: number }>;
+        features?: Array<{
+          properties: { city?: string; state?: string; state_code?: string };
+          geometry: { coordinates: [number, number] };
+        }>;
       };
-      const results = (data.results ?? []).map((r) => ({
-        label: [r.city, r.state_code ?? r.state].filter(Boolean).join(', '),
-        city: r.city ?? '',
-        state: r.state_code ?? r.state ?? '',
-        lon: r.lon,
-        lat: r.lat,
-      })).filter((r) => r.city);
+      const results = (data.features ?? [])
+        .map((f) => ({
+          label: [f.properties.city, f.properties.state_code ?? f.properties.state].filter(Boolean).join(', '),
+          city: f.properties.city ?? '',
+          state: f.properties.state_code ?? f.properties.state ?? '',
+          lon: f.geometry.coordinates[0],
+          lat: f.geometry.coordinates[1],
+        }))
+        .filter((r) => r.city);
       return reply.send(results);
     } catch {
       return reply.send([]);
