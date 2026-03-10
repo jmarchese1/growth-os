@@ -62,16 +62,16 @@ export default function SystemOverview() {
 
       {/* Header */}
       <div className="relative z-10 py-20 px-6 pb-10">
-        <div className="max-w-7xl mr-auto ml-0 lg:ml-8">
+        <div className="max-w-7xl mx-auto">
           <p className="text-xs font-semibold tracking-[0.2em] uppercase text-gray-400 mb-4">
             The System
           </p>
-          <h2 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight mb-4">
+          <h2 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight mb-4">
             One platform.
             <br />
             <span className="text-gray-400">Eight AI modules.</span>
           </h2>
-          <p className="text-2xl text-gray-500 max-w-2xl leading-relaxed">
+          <p className="text-xl text-gray-500 max-w-2xl leading-relaxed">
             We deploy a complete AI infrastructure stack — every module
             working together, all connected, live in days.
           </p>
@@ -80,11 +80,11 @@ export default function SystemOverview() {
 
       {/* Module list */}
       <div className="relative z-10 px-6 pb-20">
-        <div className="max-w-7xl mr-auto ml-0 lg:ml-8">
+        <div className="max-w-7xl mx-auto">
           {modules.map((mod, index) => (
             <div
               key={mod.number}
-              className="py-6 grid grid-cols-1 md:grid-cols-[90px_1fr_2fr] gap-4 items-start group -mx-6 px-6 cursor-default border-b border-indigo-100/60 last:border-0"
+              className="py-5 grid grid-cols-1 md:grid-cols-[80px_1fr_2fr] gap-4 items-start group -mx-6 px-6 cursor-default border-b border-indigo-100/60 last:border-0"
               style={{
                 transition: 'background 0.2s ease, box-shadow 0.2s ease',
                 background: index % 2 === 0
