@@ -227,23 +227,26 @@ export default async function CampaignDetailPage({ params, searchParams }: {
         {/* Scrollbar-on-top wrapper: rotateX flips the scrollbar to the top, inner div flips content back */}
         <div className="overflow-x-auto [transform:rotateX(180deg)]">
         <div className="[transform:rotateX(180deg)]">
-        <table className="text-sm" style={{ minWidth: '1480px', width: '100%' }}>
+        <table className="text-sm" style={{ minWidth: '1620px', width: '100%' }}>
           <thead>
             <tr className="bg-white/[0.07] border-b-2 border-slate-700/40">
               <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap sticky left-0 bg-[#17132b] z-10">Company</th>
               <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Phone</th>
               <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Email</th>
               <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">
-                First <span className="text-[9px] text-slate-600 font-normal">· Hunter.io</span>
+                First <span className="text-[9px] text-slate-600 font-normal">· Apollo</span>
               </th>
               <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">
-                Last <span className="text-[9px] text-slate-600 font-normal">· Hunter.io</span>
+                Last <span className="text-[9px] text-slate-600 font-normal">· Apollo</span>
               </th>
               <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Rating</th>
               <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Status</th>
               <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Sent</th>
               <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Opened</th>
               <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Reply</th>
+              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                Sequence <span className="text-[9px] text-slate-600 font-normal">· next follow-up</span>
+              </th>
               <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap sticky right-0 bg-[#17132b] z-10">Actions</th>
             </tr>
           </thead>
