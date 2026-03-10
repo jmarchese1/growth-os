@@ -238,6 +238,9 @@ importers:
       bullmq:
         specifier: ^5.27.0
         version: 5.70.4
+      ioredis:
+        specifier: ^5.4.0
+        version: 5.9.3
     devDependencies:
       '@types/node':
         specifier: ^22.0.0
