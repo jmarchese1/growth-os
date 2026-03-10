@@ -70,3 +70,4 @@ export async function buildApp() {
   log.info('API Gateway configured');
   return app;
 }
+
