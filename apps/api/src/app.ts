@@ -45,8 +45,9 @@ export async function buildApp() {
     }
 
     // Fastify validation errors
-    if (error.statusCode === 400) {
-      return reply.code(400).send({ success: false, error: error.message });
+    const fe = error as FastifyError;
+    if (fe.statusCode === 400) {
+      return reply.code(400).send({ success: false, error: fe.message });
     }
 
     log.error({ err: error }, 'Unhandled API error');
