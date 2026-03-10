@@ -69,7 +69,7 @@ export default function SystemOverview() {
           <h2 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight mb-4">
             One platform.
             <br />
-            <span className="text-gray-400">Eight AI modules.</span>
+            <span className="text-gradient">Eight AI modules.</span>
           </h2>
           <p className="text-xl text-gray-500 max-w-2xl leading-relaxed">
             We deploy a complete AI infrastructure stack — every module
