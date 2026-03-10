@@ -101,6 +101,7 @@ export async function sendColdEmail(
       subject,
       body: htmlWithPixel,
       status: 'SENT',
+      stepNumber: options?.stepNumber ?? 1,
       sentAt: new Date(),
       externalId: messageId,
       trackingPixelId,
