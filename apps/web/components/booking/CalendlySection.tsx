@@ -34,7 +34,7 @@ export default function CalendlySection() {
     process.env['NEXT_PUBLIC_CAL_LINK'] ?? 'jason-marchese-mkfkwl/30min';
 
   return (
-      <section id="book" className="relative bg-white overflow-hidden bg-grid pt-6 pb-10 px-6">
+      <section id="book" className="relative bg-white overflow-hidden bg-grid pt-2 pb-10 px-6">
         {/* Neural network — same as proposal section */}
         <ParticleCanvas />
         {/* Soft radial glow */}
