@@ -60,19 +60,20 @@ export default function ProposalCTA() {
     setForm((f) => ({ ...f, [field]: value }));
 
   return (
-    <section id="proposal" className="pt-12 pb-20 px-6 text-gray-900 relative overflow-hidden">
-      {/* Desk background photo — bright, airy */}
+    <section id="proposal" className="pt-12 pb-20 px-6 text-white relative overflow-hidden">
+      {/* Dark desk/tech background */}
       <Image
-        src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1600&q=85"
+        src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=1600&q=85"
         alt=""
         fill
         className="object-cover object-center"
         priority
       />
-      {/* Light semi-transparent overlay */}
-      <div className="absolute inset-0 bg-white/82" />
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-gray-950/88" />
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute bottom-0 left-1/4 w-96 h-96 rounded-full bg-indigo-100 opacity-40 blur-3xl" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-indigo-900 opacity-20 blur-3xl" />
+        <div className="absolute bottom-0 left-1/4 w-96 h-96 rounded-full bg-violet-900 opacity-15 blur-3xl" />
       </div>
       <div className="max-w-2xl mx-auto relative z-10">
         <p className="text-xs font-semibold tracking-[0.2em] uppercase text-embedo-accent mb-4">
@@ -80,12 +81,12 @@ export default function ProposalCTA() {
         </p>
         <h2 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight mb-4">
           See exactly what{' '}
-          <span className="text-gradient">AI</span>
+          <span className="text-indigo-400">AI</span>
           <br />
           can do for your business.
         </h2>
-        <p className="text-gray-500 text-xl mb-10 leading-relaxed">
-          We generate a <span className="text-gray-900 font-semibold">custom proposal in seconds</span> — specific to your business, your industry, and
+        <p className="text-gray-400 text-xl mb-10 leading-relaxed">
+          We generate a <span className="text-white font-semibold">custom proposal in seconds</span> — specific to your business, your industry, and
           your goals.
         </p>
 
@@ -106,21 +107,21 @@ export default function ProposalCTA() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Business Name *</label>
+                <label className="block text-sm text-gray-600 mb-1">Business Name *</label>
                 <input
                   required
                   value={form.businessName}
                   onChange={(e) => update('businessName', e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-white/40"
+                  className="w-full bg-white/70 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-400 backdrop-blur-sm"
                   placeholder="The Golden Fork"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Industry</label>
+                <label className="block text-sm text-gray-600 mb-1">Industry</label>
                 <select
                   value={form.industry}
                   onChange={(e) => update('industry', e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/40"
+                  className="w-full bg-white/70 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-indigo-400 backdrop-blur-sm"
                 >
                   <option value="restaurant">Restaurant</option>
                   <option value="salon">Salon / Spa</option>
@@ -134,11 +135,11 @@ export default function ProposalCTA() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Business Size</label>
+                <label className="block text-sm text-gray-600 mb-1">Business Size</label>
                 <select
                   value={form.size}
                   onChange={(e) => update('size', e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/40"
+                  className="w-full bg-white/70 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-indigo-400 backdrop-blur-sm"
                 >
                   <option value="solo">Just me</option>
                   <option value="small">2–10 employees</option>
@@ -147,46 +148,46 @@ export default function ProposalCTA() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Location *</label>
+                <label className="block text-sm text-gray-600 mb-1">Location *</label>
                 <input
                   required
                   value={form.location}
                   onChange={(e) => update('location', e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-white/40"
+                  className="w-full bg-white/70 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-400 backdrop-blur-sm"
                   placeholder="Austin, TX"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Your biggest challenge (optional)</label>
+              <label className="block text-sm text-gray-600 mb-1">Your biggest challenge (optional)</label>
               <textarea
                 value={form.goals}
                 onChange={(e) => update('goals', e.target.value)}
                 rows={2}
-                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-white/40 resize-none"
+                className="w-full bg-white/70 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-400 backdrop-blur-sm resize-none"
                 placeholder="e.g. We miss too many calls. Our social media is inconsistent."
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Your Name</label>
+                <label className="block text-sm text-gray-600 mb-1">Your Name</label>
                 <input
                   value={form.contactName}
                   onChange={(e) => update('contactName', e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-white/40"
+                  className="w-full bg-white/70 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-400 backdrop-blur-sm"
                   placeholder="Jane Smith"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Email *</label>
+                <label className="block text-sm text-gray-600 mb-1">Email *</label>
                 <input
                   required
                   type="email"
                   value={form.contactEmail}
                   onChange={(e) => update('contactEmail', e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-white/40"
+                  className="w-full bg-white/70 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-400 backdrop-blur-sm"
                   placeholder="jane@restaurant.com"
                 />
               </div>
