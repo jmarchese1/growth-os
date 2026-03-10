@@ -45,7 +45,7 @@ export default function CalendlySection() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
 
             {/* Photo with orbital background */}
-            <div className="flex justify-center lg:justify-end">
+            <div className="flex justify-center lg:justify-start">
               <div
                 className="relative flex items-center justify-center"
                 style={{ width: ORBIT_CONTAINER, height: ORBIT_CONTAINER, maxWidth: '100%' }}
