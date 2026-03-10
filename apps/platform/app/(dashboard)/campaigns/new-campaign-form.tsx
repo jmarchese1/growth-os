@@ -122,6 +122,9 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
   }
 
   const inputCls = "w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 transition-colors";
+  // Selects need a solid background — semi-transparent bg breaks native option rendering (white-on-white)
+  const selectCls = "w-full px-3 py-2.5 bg-[#12101f] border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 transition-colors appearance-none";
+  const optionCls = "bg-[#12101f] text-white";
   const labelCls = "block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wide";
 
   if (!open) {
