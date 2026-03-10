@@ -134,7 +134,7 @@ export default function CalendlySection() {
 
                 {/* Photo — on top of orbital background */}
                 <div className="relative z-10">
-                  <div className="w-72 h-72 lg:w-[320px] lg:h-[320px] rounded-3xl overflow-hidden shadow-2xl shadow-violet-900/40"
+                  <div className="w-80 h-80 lg:w-[400px] lg:h-[400px] rounded-3xl overflow-hidden shadow-2xl shadow-violet-900/40"
                     style={{ border: '1.5px solid rgba(139,92,246,0.35)' }}
                   >
                     <Image
@@ -143,7 +143,7 @@ export default function CalendlySection() {
                       fill
                       className="object-cover"
                       style={{ objectPosition: '50% 8%' }}
-                      sizes="(max-width: 768px) 288px, 320px"
+                      sizes="(max-width: 768px) 320px, 400px"
                     />
                   </div>
                 </div>
