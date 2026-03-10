@@ -16,6 +16,8 @@ export interface CallCompletedPayload {
   intent: string;
   extractedData?: Record<string, unknown>;
   transcript?: string;
+  summary?: string;
+  sentiment?: string;
   duration: number;
 }
 
