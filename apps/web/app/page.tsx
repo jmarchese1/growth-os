@@ -4,7 +4,8 @@ import TickerStrip from '@/components/sections/TickerStrip';
 import ProblemSection from '@/components/sections/ProblemSection';
 import SystemOverview from '@/components/sections/SystemOverview';
 import FeaturesSection from '@/components/sections/FeaturesSection';
-import ClosingCTA from '@/components/sections/ClosingCTA';
+import ProposalCTA from '@/components/proposal/ProposalCTA';
+import CalendlySection from '@/components/booking/CalendlySection';
 import Footer from '@/components/shared/Footer';
 import ScrollReveal from '@/components/ui/ScrollReveal';
 import SectionBleed from '@/components/ui/SectionBleed';
@@ -34,7 +35,9 @@ export default function Home() {
       {/* gray-50 → white */}
       <SectionBleed from="#f9fafb" to="#ffffff" height={48} />
 
-      <ClosingCTA />
+      <CalendlySection />
+
+      <ProposalCTA />
 
       {/* white → dark footer */}
       <SectionBleed from="#ffffff" to="#1e1b4b" height={80} />
