@@ -114,10 +114,11 @@ export async function searchRestaurants(
   city: string,
   apiKey: string,
   maxResults = 200,
+  coords?: { lon: number; lat: number },
 ): Promise<PlaceResult[]> {
   log.info({ city, maxResults }, 'Starting Geoapify restaurant search');
 
-  const { lon, lat } = await geocodeCity(city, apiKey);
+  const { lon, lat } = coords ?? await geocodeCity(city, apiKey);
   log.info({ city, lon, lat }, 'City geocoded');
 
   const results: PlaceResult[] = [];
