@@ -144,12 +144,22 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
 
     log.info({ campaignId: id, city: campaign.targetCity }, 'Running campaign');
 
-    // Scrape in background — return immediately
+    // Geocode the city synchronously first so we can return a proper error if it fails
+    let coords: { lon: number; lat: number };
+    try {
+      coords = await geocodeCity(campaign.targetCity, env.GEOAPIFY_API_KEY!);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      log.warn({ campaignId: id, city: campaign.targetCity, err }, 'Geocode failed');
+      return reply.code(400).send({ error: msg });
+    }
+
+    // Scrape places in background — return 202 immediately
     setImmediate(async () => {
       try {
-        const allPlaces = await searchRestaurants(campaign.targetCity, env.GEOAPIFY_API_KEY!);
+        const allPlaces = await searchRestaurants(campaign.targetCity, env.GEOAPIFY_API_KEY!, 200, coords);
         const places = campaign.maxProspects != null ? allPlaces.slice(0, campaign.maxProspects) : allPlaces;
-        log.info({ campaignId: id, total: allPlaces.length, limited: places.length, maxProspects: campaign.maxProspects }, 'Places scraped, queuing prospects');
+        log.info({ campaignId: id, total: allPlaces.length, limited: places.length }, 'Places scraped, queuing prospects');
 
         for (const place of places) {
           const job: Record<string, unknown> = {
@@ -165,11 +175,11 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
           await prospectDiscoveredQueue().add(`place:${place.placeId}`, job as never);
         }
       } catch (err) {
-        log.error({ err, campaignId: id }, 'Campaign run failed');
+        log.error({ err, campaignId: id }, 'Campaign scrape failed');
       }
     });
 
-    return reply.code(202).send({ message: 'Campaign started', campaignId: id, city: campaign.targetCity });
+    return reply.code(202).send({ message: 'Campaign started', campaignId: id, city: campaign.targetCity, coords });
   });
 
   // ─── Campaign stats ───────────────────────────────────────────────────────
