@@ -61,7 +61,7 @@ const bullets = [
 
 export default function FeaturesSection() {
   return (
-    <section id="features" className="pt-8 pb-20 px-6 bg-gray-50">
+    <section id="features" className="pt-8 pb-10 px-6 bg-gray-50">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-stretch mb-16">
 
