@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
 const DEFAULT_SUBJECT = `quick question for {{businessName}}`;
@@ -37,6 +37,34 @@ const DEFAULT_BODY = `<div style="font-family: Arial, sans-serif; max-width: 540
   </p>
 </div>`;
 
+const US_STATES = [
+  { code: 'AL', name: 'Alabama' }, { code: 'AK', name: 'Alaska' }, { code: 'AZ', name: 'Arizona' },
+  { code: 'AR', name: 'Arkansas' }, { code: 'CA', name: 'California' }, { code: 'CO', name: 'Colorado' },
+  { code: 'CT', name: 'Connecticut' }, { code: 'DE', name: 'Delaware' }, { code: 'FL', name: 'Florida' },
+  { code: 'GA', name: 'Georgia' }, { code: 'HI', name: 'Hawaii' }, { code: 'ID', name: 'Idaho' },
+  { code: 'IL', name: 'Illinois' }, { code: 'IN', name: 'Indiana' }, { code: 'IA', name: 'Iowa' },
+  { code: 'KS', name: 'Kansas' }, { code: 'KY', name: 'Kentucky' }, { code: 'LA', name: 'Louisiana' },
+  { code: 'ME', name: 'Maine' }, { code: 'MD', name: 'Maryland' }, { code: 'MA', name: 'Massachusetts' },
+  { code: 'MI', name: 'Michigan' }, { code: 'MN', name: 'Minnesota' }, { code: 'MS', name: 'Mississippi' },
+  { code: 'MO', name: 'Missouri' }, { code: 'MT', name: 'Montana' }, { code: 'NE', name: 'Nebraska' },
+  { code: 'NV', name: 'Nevada' }, { code: 'NH', name: 'New Hampshire' }, { code: 'NJ', name: 'New Jersey' },
+  { code: 'NM', name: 'New Mexico' }, { code: 'NY', name: 'New York' }, { code: 'NC', name: 'North Carolina' },
+  { code: 'ND', name: 'North Dakota' }, { code: 'OH', name: 'Ohio' }, { code: 'OK', name: 'Oklahoma' },
+  { code: 'OR', name: 'Oregon' }, { code: 'PA', name: 'Pennsylvania' }, { code: 'RI', name: 'Rhode Island' },
+  { code: 'SC', name: 'South Carolina' }, { code: 'SD', name: 'South Dakota' }, { code: 'TN', name: 'Tennessee' },
+  { code: 'TX', name: 'Texas' }, { code: 'UT', name: 'Utah' }, { code: 'VT', name: 'Vermont' },
+  { code: 'VA', name: 'Virginia' }, { code: 'WA', name: 'Washington' }, { code: 'WV', name: 'West Virginia' },
+  { code: 'WI', name: 'Wisconsin' }, { code: 'WY', name: 'Wyoming' }, { code: 'DC', name: 'Washington DC' },
+];
+
+interface AutocompleteResult {
+  label: string;
+  city: string;
+  state: string;
+  lon: number;
+  lat: number;
+}
+
 export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -46,16 +74,24 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
   const [aiPreviewHtml, setAiPreviewHtml] = useState('');
   const [aiPreviewing, setAiPreviewing] = useState(false);
   const [aiPreviewOpen, setAiPreviewOpen] = useState(false);
+
+  // Location
+  const [selectedState, setSelectedState] = useState('');
+  const [cityInput, setCityInput] = useState('');
+  const [cityCoords, setCityCoords] = useState<{ lat: number; lon: number } | null>(null);
+  const [suggestions, setSuggestions] = useState<AutocompleteResult[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [fetchingCities, setFetchingCities] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [form, setForm] = useState({
     name: '',
-    targetCity: '',
     targetIndustry: 'RESTAURANT',
     maxProspects: '50',
     emailSubject: DEFAULT_SUBJECT,
     emailBodyHtml: DEFAULT_BODY,
   });
 
-  // Check if AI is available on mount
   useEffect(() => {
     fetch(`${prospectorUrl}/ai/status`)
       .then((r) => r.json())
@@ -63,13 +99,63 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
       .catch(() => setAiEnabled(false));
   }, [prospectorUrl]);
 
+  const fetchSuggestions = useCallback(async (q: string, state: string) => {
+    if (q.length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
+    setFetchingCities(true);
+    try {
+      const params = new URLSearchParams({ q });
+      if (state) params.set('state', state);
+      const res = await fetch(`${prospectorUrl}/geocode/autocomplete?${params}`);
+      if (res.ok) {
+        const data = (await res.json()) as AutocompleteResult[];
+        setSuggestions(data);
+        setShowSuggestions(data.length > 0);
+      }
+    } catch { /* silent */ } finally {
+      setFetchingCities(false);
+    }
+  }, [prospectorUrl]);
+
+  function onCityInputChange(value: string) {
+    setCityInput(value);
+    setCityCoords(null);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => fetchSuggestions(value, selectedState), 280);
+  }
+
+  function onStateChange(code: string) {
+    setSelectedState(code);
+    setCityCoords(null);
+    if (cityInput.length >= 2) {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => fetchSuggestions(cityInput, code), 280);
+    }
+  }
+
+  function selectSuggestion(s: AutocompleteResult) {
+    setCityInput(s.label);
+    setCityCoords({ lat: s.lat, lon: s.lon });
+    if (!selectedState && s.state) setSelectedState(s.state);
+    setSuggestions([]);
+    setShowSuggestions(false);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!cityCoords) {
+      setError('Please select a city from the dropdown to confirm the location.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
       const payload = {
         ...form,
+        targetCity: cityInput,
+        targetState: selectedState || undefined,
+        targetCountry: 'US',
+        targetLat: cityCoords.lat,
+        targetLon: cityCoords.lon,
         maxProspects: form.maxProspects === 'unlimited' ? null : parseInt(form.maxProspects),
       };
       const res = await fetch(`${prospectorUrl}/campaigns`, {
@@ -84,7 +170,10 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
       }
       router.refresh();
       setOpen(false);
-      setForm({ ...form, name: '', targetCity: '', maxProspects: '50' });
+      setForm({ ...form, name: '', maxProspects: '50' });
+      setCityInput('');
+      setSelectedState('');
+      setCityCoords(null);
     } catch {
       setError('Network error — is the prospector service running?');
     } finally {
@@ -102,7 +191,7 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: form.name || 'Acme Restaurant',
-          city: form.targetCity || 'New York',
+          city: cityInput || 'New York',
           website: 'acmerestaurant.com',
           googleRating: 4.3,
           googleReviewCount: 218,
@@ -122,7 +211,6 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
   }
 
   const inputCls = "w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 transition-colors";
-  // Selects need a solid background — semi-transparent bg breaks native option rendering (white-on-white)
   const selectCls = "w-full px-3 py-2.5 bg-[#12101f] border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 transition-colors appearance-none";
   const optionCls = "bg-[#12101f] text-white";
   const labelCls = "block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wide";
@@ -164,19 +252,6 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
             />
           </div>
           <div>
-            <label className={labelCls}>Target City</label>
-            <input
-              required
-              value={form.targetCity}
-              onChange={(e) => setForm({ ...form, targetCity: e.target.value })}
-              placeholder="New York, NY"
-              className={inputCls}
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
             <label className={labelCls}>Industry</label>
             <select
               value={form.targetIndustry}
@@ -191,24 +266,88 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
               <option value="OTHER" className={optionCls}>Other</option>
             </select>
           </div>
-          <div>
-            <label className={labelCls}>
-              Max Businesses to Contact
-              <span className="text-slate-600 normal-case font-normal tracking-normal ml-1">— per run</span>
-            </label>
-            <select
-              value={form.maxProspects}
-              onChange={(e) => setForm({ ...form, maxProspects: e.target.value })}
-              className={selectCls}
-            >
-              <option value="10" className={optionCls}>10 businesses</option>
-              <option value="25" className={optionCls}>25 businesses</option>
-              <option value="50" className={optionCls}>50 businesses</option>
-              <option value="100" className={optionCls}>100 businesses</option>
-              <option value="250" className={optionCls}>250 businesses</option>
-              <option value="unlimited" className={optionCls}>Unlimited</option>
-            </select>
+        </div>
+
+        {/* Location — US State + City autocomplete */}
+        <div>
+          <label className={labelCls}>
+            Target Location
+            <span className="text-slate-600 normal-case font-normal tracking-normal ml-1">— United States</span>
+          </label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <select
+                value={selectedState}
+                onChange={(e) => onStateChange(e.target.value)}
+                className={selectCls}
+              >
+                <option value="" className={optionCls}>All states</option>
+                {US_STATES.map((s) => (
+                  <option key={s.code} value={s.code} className={optionCls}>{s.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="md:col-span-2 relative">
+              <input
+                required
+                value={cityInput}
+                onChange={(e) => onCityInputChange(e.target.value)}
+                onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                placeholder={selectedState ? `City in ${selectedState}…` : 'Type a city name…'}
+                className={inputCls + (cityCoords ? ' !border-emerald-500/50 !ring-1 !ring-emerald-500/30' : '')}
+                autoComplete="off"
+              />
+              {cityCoords && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-400 text-xs font-medium">✓ confirmed</span>
+              )}
+              {fetchingCities && !cityCoords && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs animate-pulse">searching…</span>
+              )}
+
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-[#1a1730] border border-white/10 rounded-lg shadow-xl overflow-hidden">
+                  {suggestions.map((s, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onMouseDown={() => selectSuggestion(s)}
+                      className="w-full text-left px-3 py-2.5 text-sm text-slate-200 hover:bg-violet-600/20 hover:text-white transition-colors flex items-center gap-2.5"
+                    >
+                      <span className="text-[10px] font-semibold text-slate-500 bg-white/5 px-1.5 py-0.5 rounded flex-shrink-0">{s.state}</span>
+                      {s.city}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
+          {!cityCoords && cityInput.length > 1 && !fetchingCities && suggestions.length === 0 && (
+            <p className="text-[10px] text-amber-500/70 mt-1.5">No cities found — try a different spelling or select a state first.</p>
+          )}
+          {!cityCoords && cityInput.length > 1 && suggestions.length > 0 && (
+            <p className="text-[10px] text-slate-600 mt-1.5">Select a city from the list to confirm the location.</p>
+          )}
+        </div>
+
+        <div>
+          <label className={labelCls}>
+            Max Businesses to Contact
+            <span className="text-slate-600 normal-case font-normal tracking-normal ml-1">— per run</span>
+          </label>
+          <select
+            value={form.maxProspects}
+            onChange={(e) => setForm({ ...form, maxProspects: e.target.value })}
+            className={selectCls}
+          >
+            <option value="10" className={optionCls}>10 businesses</option>
+            <option value="25" className={optionCls}>25 businesses</option>
+            <option value="50" className={optionCls}>50 businesses</option>
+            <option value="100" className={optionCls}>100 businesses</option>
+            <option value="250" className={optionCls}>250 businesses</option>
+            <option value="unlimited" className={optionCls}>Unlimited</option>
+          </select>
         </div>
 
         <div>
@@ -284,7 +423,7 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
               <div>
                 <p className="text-sm font-semibold text-white">AI Email Preview</p>
-                <p className="text-[10px] text-slate-500 mt-0.5">Sample: &ldquo;{form.name || 'Acme Restaurant'}&rdquo; · {form.targetCity || 'New York'} · ★ 4.3</p>
+                <p className="text-[10px] text-slate-500 mt-0.5">Sample: &ldquo;{form.name || 'Acme Restaurant'}&rdquo; · {cityInput || 'New York'} · ★ 4.3</p>
               </div>
               <button onClick={() => setAiPreviewOpen(false)} className="text-slate-500 hover:text-white transition-colors text-lg">✕</button>
             </div>
