@@ -180,12 +180,20 @@ export default async function CampaignDetailPage({ params, searchParams }: {
           )}
         </div>
         {campaign && (
-          <EditEmailButton
-            campaignId={id}
-            currentSubject={campaign.emailSubject}
-            currentBodyHtml={campaign.emailBodyHtml}
-            prospectorUrl={PROSPECTOR_URL}
-          />
+          <div className="flex items-center gap-2">
+            <ManageSequenceButton
+              campaignId={id}
+              currentSteps={campaign.sequenceSteps}
+              prospectorUrl={PROSPECTOR_URL}
+              contactedCount={emailed}
+            />
+            <EditEmailButton
+              campaignId={id}
+              currentSubject={campaign.emailSubject}
+              currentBodyHtml={campaign.emailBodyHtml}
+              prospectorUrl={PROSPECTOR_URL}
+            />
+          </div>
         )}
       </div>
 
