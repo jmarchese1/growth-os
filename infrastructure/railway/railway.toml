@@ -1,0 +1,65 @@
+[build]
+builder = "DOCKERFILE"
+
+[[services]]
+name = "api-gateway"
+dockerfilePath = "apps/api/Dockerfile"
+startCommand = "node apps/api/dist/index.js"
+port = 3000
+healthcheckPath = "/health"
+
+[[services]]
+name = "crm-core"
+dockerfilePath = "services/crm-core/Dockerfile"
+startCommand = "node services/crm-core/dist/index.js"
+port = 3001
+healthcheckPath = "/health"
+
+[[services]]
+name = "voice-agent"
+dockerfilePath = "services/voice-agent/Dockerfile"
+startCommand = "node services/voice-agent/dist/index.js"
+port = 3002
+healthcheckPath = "/health"
+
+[[services]]
+name = "chatbot-agent"
+dockerfilePath = "services/chatbot-agent/Dockerfile"
+startCommand = "node services/chatbot-agent/dist/index.js"
+port = 3003
+healthcheckPath = "/health"
+
+[[services]]
+name = "lead-engine"
+dockerfilePath = "services/lead-engine/Dockerfile"
+startCommand = "node services/lead-engine/dist/index.js"
+port = 3004
+healthcheckPath = "/health"
+
+[[services]]
+name = "survey-engine"
+dockerfilePath = "services/survey-engine/Dockerfile"
+startCommand = "node services/survey-engine/dist/index.js"
+port = 3005
+healthcheckPath = "/health"
+
+[[services]]
+name = "social-media"
+dockerfilePath = "services/social-media/Dockerfile"
+startCommand = "node services/social-media/dist/index.js"
+port = 3006
+healthcheckPath = "/health"
+
+[[services]]
+name = "website-gen"
+dockerfilePath = "services/website-gen/Dockerfile"
+startCommand = "node services/website-gen/dist/index.js"
+port = 3007
+healthcheckPath = "/health"
+
+[[services]]
+name = "proposal-engine"
+dockerfilePath = "services/proposal-engine/Dockerfile"
+startCommand = "node services/proposal-engine/dist/index.js"
+port = 3008
+healthcheckPath = "/health"

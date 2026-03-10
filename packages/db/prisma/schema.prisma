@@ -1,0 +1,649 @@
+// Embedo — Master Prisma Schema
+// Multi-tenant: every table (except Business) carries a businessId foreign key
+// Data source: Supabase PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum BusinessType {
+  RESTAURANT
+  SALON
+  RETAIL
+  FITNESS
+  MEDICAL
+  OTHER
+}
+
+enum OnboardingStatus {
+  PENDING
+  PROVISIONING
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+}
+
+enum LeadSource {
+  VOICE
+  CHATBOT
+  SURVEY
+  SOCIAL
+  WEBSITE
+  MANUAL
+  CALENDLY
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CONVERTED
+  DEAD
+}
+
+enum ContactStatus {
+  LEAD
+  PROSPECT
+  CUSTOMER
+  CHURNED
+}
+
+enum CallDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum CallIntent {
+  RESERVATION
+  INQUIRY
+  COMPLAINT
+  GENERAL
+  UNKNOWN
+}
+
+enum ChatChannel {
+  WEB
+  INSTAGRAM
+  FACEBOOK
+  WHATSAPP
+}
+
+enum SocialPlatform {
+  INSTAGRAM
+  FACEBOOK
+  GOOGLE_MY_BUSINESS
+  TIKTOK
+}
+
+enum PostStatus {
+  DRAFT
+  SCHEDULED
+  POSTED
+  FAILED
+}
+
+enum ProposalStatus {
+  DRAFT
+  SENT
+  VIEWED
+  ACCEPTED
+  DECLINED
+}
+
+enum WebsiteStatus {
+  GENERATING
+  DRAFT
+  LIVE
+  ERROR
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum SequenceTrigger {
+  LEAD_CREATED
+  SURVEY_COMPLETE
+  APPOINTMENT_BOOKED
+  APPOINTMENT_REMINDER
+  CALL_COMPLETED
+  PROPOSAL_SENT
+  CUSTOM
+}
+
+enum ActivityType {
+  CALL
+  CHAT
+  EMAIL
+  SMS
+  APPOINTMENT
+  SURVEY_RESPONSE
+  NOTE
+  LEAD_CREATED
+  STATUS_CHANGE
+}
+
+// ─── Core: Multi-Tenancy Anchor ───────────────────────────────────────────────
+
+model Business {
+  id     String          @id @default(cuid())
+  name   String
+  slug   String          @unique
+  type   BusinessType    @default(RESTAURANT)
+  status OnboardingStatus @default(PENDING)
+
+  // Contact info
+  phone   String?
+  email   String?
+  website String?
+  address Json?   // { street, city, state, zip, country }
+  timezone String @default("America/New_York")
+
+  // Integration IDs (credentials stored encrypted in Supabase Vault)
+  elevenLabsAgentId String?
+  twilioPhoneNumber String?
+  twilioAccountSid  String?
+  calendlyUri       String?   // Calendly scheduling link
+  instagramPageId   String?
+  facebookPageId    String?
+
+  // Flexible per-business configuration
+  settings Json? // { hours, menu, chatbotPersona, socialPostingSchedule, etc. }
+
+  // Relations
+  contacts        Contact[]
+  leads           Lead[]
+  surveys         Survey[]
+  socialAccounts  SocialAccount[]
+  websites        GeneratedWebsite[]
+  proposals       Proposal[]
+  callLogs        VoiceCallLog[]
+  chatSessions    ChatSession[]
+  contentPosts    ContentPost[]
+  emailSequences  EmailSequence[]
+  smsSequences    SmsSequence[]
+  appointments    Appointment[]
+  onboardingLog   OnboardingLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([status])
+}
+
+// ─── CRM: Contacts & Leads ────────────────────────────────────────────────────
+
+model Contact {
+  id         String        @id @default(cuid())
+  businessId String
+  business   Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  firstName String?
+  lastName  String?
+  email     String?
+  phone     String?
+
+  source    LeadSource
+  status    ContactStatus @default(LEAD)
+  leadScore Int           @default(0)
+  tags      String[]
+
+  notes String?
+
+  // Relations
+  leads           Lead[]
+  activities      ContactActivity[]
+  surveyResponses SurveyResponse[]
+  appointments    Appointment[]
+  chatSessions    ChatSession[]
+  callLogs        VoiceCallLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([businessId, email])
+  @@unique([businessId, phone])
+  @@index([businessId])
+  @@index([status])
+  @@index([leadScore])
+}
+
+model Lead {
+  id         String     @id @default(cuid())
+  businessId String
+  business   Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  contactId  String?
+  contact    Contact?   @relation(fields: [contactId], references: [id])
+
+  source   LeadSource
+  sourceId String?    // ID from originating source (callSid, sessionId, etc.)
+  rawData  Json       // Raw captured data before normalization
+  status   LeadStatus @default(NEW)
+
+  assignedTo String? // Embedo staff user ID
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([status])
+  @@index([source])
+}
+
+model ContactActivity {
+  id         String       @id @default(cuid())
+  businessId String
+  contactId  String
+  contact    Contact      @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  type        ActivityType
+  title       String
+  description String?
+  metadata    Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([contactId])
+  @@index([businessId])
+  @@index([type])
+}
+
+// ─── Voice Agent ──────────────────────────────────────────────────────────────
+
+model VoiceCallLog {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  contactId  String?
+  contact    Contact? @relation(fields: [contactId], references: [id])
+
+  twilioCallSid   String        @unique
+  direction       CallDirection
+  duration        Int?          // seconds
+  transcript      String?
+  summary         String?
+  sentiment       String?
+  intent          CallIntent    @default(UNKNOWN)
+  recordingUrl    String?
+
+  leadCaptured    Boolean @default(false)
+  reservationMade Boolean @default(false)
+
+  // Extracted structured data from call
+  extractedData Json? // { name, phone, email, reservationDate, partySize, etc. }
+
+  createdAt DateTime @default(now())
+
+  @@index([businessId])
+  @@index([twilioCallSid])
+}
+
+// ─── Chatbot Agent ────────────────────────────────────────────────────────────
+
+model ChatSession {
+  id         String      @id @default(cuid())
+  businessId String
+  business   Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  contactId  String?
+  contact    Contact?    @relation(fields: [contactId], references: [id])
+
+  channel    ChatChannel
+  sessionKey String      @unique
+  messages   Json[]      // Array of { role, content, timestamp }
+
+  leadCaptured    Boolean @default(false)
+  appointmentMade Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([sessionKey])
+}
+
+// ─── Survey Engine ────────────────────────────────────────────────────────────
+
+model Survey {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  title       String
+  slug        String
+  description String?
+
+  // Question definitions array: [{ id, type, label, options, required }]
+  schema Json
+
+  active    Boolean @default(true)
+  responses SurveyResponse[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([businessId, slug])
+  @@index([businessId])
+}
+
+model SurveyResponse {
+  id         String   @id @default(cuid())
+  surveyId   String
+  survey     Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  contactId  String?
+  contact    Contact? @relation(fields: [contactId], references: [id])
+
+  answers     Json // { questionId: answer }
+  score       Int?  // computed satisfaction score if applicable
+  triggeredAt DateTime? // when automation was triggered
+
+  createdAt DateTime @default(now())
+
+  @@index([surveyId])
+  @@index([contactId])
+}
+
+// ─── Social Media ─────────────────────────────────────────────────────────────
+
+model SocialAccount {
+  id         String         @id @default(cuid())
+  businessId String
+  business   Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  platform    SocialPlatform
+  accountId   String         // platform's page/account ID
+  accountName String?
+
+  // Encrypted OAuth tokens stored here (in production use Supabase Vault)
+  accessToken  String?
+  refreshToken String?
+  tokenExpiry  DateTime?
+
+  active Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([businessId, platform])
+  @@index([businessId])
+}
+
+model ContentPost {
+  id         String         @id @default(cuid())
+  businessId String
+  business   Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  platform       SocialPlatform
+  caption        String
+  imageUrl       String?
+  hashtags       String[]
+  scheduledAt    DateTime?
+  postedAt       DateTime?
+  platformPostId String?
+  status         PostStatus @default(DRAFT)
+
+  // Engagement metrics (updated periodically)
+  likes    Int @default(0)
+  comments Int @default(0)
+  shares   Int @default(0)
+  reach    Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+// ─── Proposals ────────────────────────────────────────────────────────────────
+
+model Proposal {
+  id         String   @id @default(cuid())
+  businessId String?
+  business   Business? @relation(fields: [businessId], references: [id])
+  contactId  String?
+
+  // Intake form data submitted by prospect
+  intakeData Json // { businessName, industry, size, location, currentSystems, goals }
+
+  // AI-generated proposal content sections
+  content Json? // { executive_summary, problem_statement, solution, modules, pricing, timeline, next_steps }
+
+  pdfUrl     String?
+  shareToken String  @unique @default(cuid())
+  status     ProposalStatus @default(DRAFT)
+
+  viewedAt   DateTime?
+  acceptedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([shareToken])
+  @@index([status])
+}
+
+// ─── Website Generation ───────────────────────────────────────────────────────
+
+model GeneratedWebsite {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  template     String       // e.g. "restaurant-minimal", "restaurant-premium"
+  config       Json         // { colors, fonts, sections, content, chatbotEnabled }
+  deployUrl    String?
+  customDomain String?
+  status       WebsiteStatus @default(GENERATING)
+
+  // Vercel deployment info
+  vercelDeploymentId String?
+  vercelProjectId    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId])
+}
+
+// ─── Appointments ─────────────────────────────────────────────────────────────
+
+model Appointment {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  contactId  String
+  contact    Contact  @relation(fields: [contactId], references: [id])
+
+  calendlyEventId  String?  @unique
+  calendlyEventUri String?
+
+  title     String
+  startTime DateTime
+  endTime   DateTime
+  timezone  String?
+
+  status AppointmentStatus @default(SCHEDULED)
+  notes  String?
+
+  // Reminder tracking
+  reminder24hSent Boolean @default(false)
+  reminder1hSent  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([startTime])
+  @@index([status])
+}
+
+// ─── Automation Sequences ─────────────────────────────────────────────────────
+
+model EmailSequence {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  name    String
+  trigger SequenceTrigger
+
+  // Array of steps: [{ stepNumber, delayHours, subject, templateId, body }]
+  steps Json
+
+  active Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([trigger])
+}
+
+model SmsSequence {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  name    String
+  trigger SequenceTrigger
+
+  // Array of steps: [{ stepNumber, delayHours, message }]
+  steps Json
+
+  active Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([trigger])
+}
+
+// ─── Outbound Prospecting ─────────────────────────────────────────────────────
+
+enum ProspectStatus {
+  NEW
+  ENRICHED
+  CONTACTED
+  OPENED
+  REPLIED
+  MEETING_BOOKED
+  CONVERTED
+  UNSUBSCRIBED
+  BOUNCED
+  DEAD
+}
+
+enum OutreachChannel {
+  EMAIL
+  SMS
+}
+
+enum OutreachStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  OPENED
+  REPLIED
+  BOUNCED
+  FAILED
+}
+
+model OutboundCampaign {
+  id             String       @id @default(cuid())
+  name           String
+  targetCity     String
+  targetIndustry BusinessType @default(RESTAURANT)
+  emailSubject   String
+  emailBodyHtml  String
+  smsBody        String?
+  maxProspects   Int?         // null = no limit; caps outreach sends per run
+  active         Boolean      @default(true)
+  prospects      ProspectBusiness[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active])
+}
+
+model ProspectBusiness {
+  id         String           @id @default(cuid())
+  campaignId String
+  campaign   OutboundCampaign @relation(fields: [campaignId], references: [id])
+
+  name              String
+  address           Json?
+  phone             String?
+  website           String?
+  email             String?
+  emailSource       String?  // "geoapify" | "website_scrape" | "brave_search" | "hunter"
+  phoneSource       String?  // "geoapify" | "website_scrape"
+  googlePlaceId     String?  @unique
+  googleRating      Float?
+  googleReviewCount Int?
+  status            ProspectStatus @default(NEW)
+  convertedToBusinessId String?
+  messages          OutreachMessage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([campaignId])
+  @@index([status])
+  @@index([email])
+}
+
+model OutreachMessage {
+  id         String           @id @default(cuid())
+  prospectId String
+  prospect   ProspectBusiness @relation(fields: [prospectId], references: [id])
+
+  channel         OutreachChannel
+  subject         String?
+  body            String
+  status          OutreachStatus @default(QUEUED)
+  sentAt          DateTime?
+  openedAt        DateTime?
+  repliedAt       DateTime?
+  replyBody       String?
+  externalId      String?
+  trackingPixelId String?        @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([prospectId])
+  @@index([status])
+  @@index([trackingPixelId])
+}
+
+// ─── Onboarding Audit Log ─────────────────────────────────────────────────────
+
+model OnboardingLog {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  step    String  // e.g. "voice_agent_provisioned", "website_deployed"
+  status  String  // "success" | "error" | "pending"
+  message String?
+  data    Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([businessId])
+}

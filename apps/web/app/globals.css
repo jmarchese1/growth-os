@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white text-embedo-black;
+  }
+
+  ::selection {
+    @apply bg-black text-white;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-gradient {
+    background: linear-gradient(135deg, #6366F1 0%, #818CF8 50%, #A5B4FC 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  /* Subtle grid for light backgrounds */
+  .bg-grid {
+    background-image: linear-gradient(rgba(99,102,241,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(99,102,241,0.05) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+  /* More visible grid for dark backgrounds */
+  .bg-grid-dark {
+    background-image: linear-gradient(rgba(99,102,241,0.18) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(99,102,241,0.18) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+}
+
+/* Logo particle orbit */
+@keyframes logo-orbit {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Large logo slow rotation */
+@keyframes slow-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Glow pulse for logo display */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.15); }
+}
+
+/* Counter-rotation: keeps child content upright while parent orbits */
+@keyframes counter-orbit {
+  from { transform: rotate(360deg); }
+  to   { transform: rotate(0deg); }
+}
+
+/* Cube breathes while spinning */
+@keyframes cube-spin-breathe {
+  0%   { transform: rotate(0deg)   scale(1.00); }
+  25%  { transform: rotate(90deg)  scale(1.07); }
+  50%  { transform: rotate(180deg) scale(1.00); }
+  75%  { transform: rotate(270deg) scale(1.06); }
+  100% { transform: rotate(360deg) scale(1.00); }
+}

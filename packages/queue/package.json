@@ -1,0 +1,16 @@
+{
+  "name": "@embedo/queue",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "bullmq": "^5.27.0",
+    "ioredis": "^5.4.0",
+    "@embedo/utils": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0"
+  }
+}

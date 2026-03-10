@@ -1,0 +1,35 @@
+{
+  "name": "embedo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI automation infrastructure for small businesses",
+  "scripts": {
+    "dev": "turbo run dev --concurrency=20",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean",
+    "db:migrate": "turbo run db:migrate --filter=@embedo/db",
+    "db:generate": "turbo run db:generate --filter=@embedo/db",
+    "db:studio": "cd packages/db && npx prisma studio",
+    "db:seed": "cd packages/db && npx tsx prisma/seed.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "playwright": "^1.58.2",
+    "prettier": "^3.0.0",
+    "tsx": "^4.19.0",
+    "turbo": "^2.3.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.15.0"
+}
