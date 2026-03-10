@@ -32,7 +32,7 @@ export default function AutomationExamples() {
     <section className="bg-gray-950 text-white">
       {/* Header with dark grid */}
       <div className="bg-grid-dark pt-20 pb-10 px-6">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <p className="text-xs font-semibold tracking-[0.2em] uppercase text-indigo-400 mb-4">
             Automation in Action
           </p>
@@ -48,7 +48,7 @@ export default function AutomationExamples() {
 
       {/* Alternating rows */}
       <div className="px-6 pb-12">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           {automations.map((a, i) => (
             <div
               key={i}
