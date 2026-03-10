@@ -60,20 +60,13 @@ export default function ProposalCTA() {
     setForm((f) => ({ ...f, [field]: value }));
 
   return (
-    <section id="proposal" className="pt-12 pb-20 px-6 text-white relative overflow-hidden">
-      {/* Dark bokeh background — subtle, doesn't compete with text */}
-      <Image
-        src="https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=1600&q=60"
-        alt=""
-        fill
-        className="object-cover object-center scale-105"
-        priority
-      />
-      {/* Near-opaque overlay — image is barely a whisper of texture */}
-      <div className="absolute inset-0 bg-gray-950/97" />
+    <section id="proposal" className="pt-12 pb-20 px-6 text-white relative overflow-hidden bg-gray-950">
+      {/* Neural network background — same Embedo theme as hero, tuned for dark */}
+      <DarkParticleCanvas />
+      {/* Subtle depth glows */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-indigo-900 opacity-20 blur-3xl" />
-        <div className="absolute bottom-0 left-1/4 w-96 h-96 rounded-full bg-violet-900 opacity-15 blur-3xl" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-indigo-900 opacity-18 blur-3xl" />
+        <div className="absolute bottom-0 left-1/4 w-96 h-96 rounded-full bg-violet-950 opacity-20 blur-3xl" />
       </div>
       <div className="max-w-2xl mx-auto relative z-10">
         <p className="text-xs font-semibold tracking-[0.2em] uppercase text-embedo-accent mb-4">
