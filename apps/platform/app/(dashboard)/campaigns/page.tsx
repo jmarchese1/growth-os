@@ -107,7 +107,7 @@ export default async function CampaignsPage() {
                       >
                         View →
                       </Link>
-                      <RunCampaignButton campaignId={c.id} prospectorUrl={PROSPECTOR_URL} />
+                      <RunCampaignButton campaignId={c.id} prospectorUrl={PROSPECTOR_URL} initialTotal={c._count.prospects} />
                       <DeleteCampaignButton campaignId={c.id} campaignName={c.name} prospectorUrl={PROSPECTOR_URL} />
                     </div>
                   </td>
