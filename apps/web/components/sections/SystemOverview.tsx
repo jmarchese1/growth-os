@@ -61,7 +61,7 @@ export default function SystemOverview() {
       </div>
 
       {/* Header */}
-      <div className="relative z-10 pt-6 pb-6 px-6">
+      <div className="relative z-10 py-10 px-6 pb-8">
         <div className="max-w-7xl mx-auto">
           <p className="text-xs font-semibold tracking-[0.2em] uppercase text-gray-400 mb-4">
             The System
