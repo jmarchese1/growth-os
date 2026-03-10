@@ -438,20 +438,19 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     for (const prospect of prospects) {
       const baseSentAt = prospect.messages[0]?.sentAt ?? prospect.createdAt;
       const baseTime = new Date(baseSentAt).getTime();
+      const firstStep = followUpSteps[0];
 
       for (const step of followUpSteps) {
         const fireAt = baseTime + step.delayHours * 60 * 60 * 1000;
         const delay = Math.max(0, fireAt - Date.now());
-
         await outreachSendQueue().add(
-          `outreach:${prospect.id}:step${step.stepNumber}`,
+          `requeue:${prospect.id}:step${step.stepNumber}:${Date.now()}`,
           { prospectId: prospect.id, campaignId: id, channel: 'email', stepNumber: step.stepNumber },
-          { delay, jobId: `outreach:${prospect.id}:step${step.stepNumber}` },
+          { delay },
         );
       }
 
-      // Update nextFollowUpAt on the prospect
-      const firstStep = followUpSteps[0];
+      // Update nextFollowUpAt to when first follow-up step will fire
       const nextAt = new Date(baseTime + firstStep.delayHours * 60 * 60 * 1000);
       await db.prospectBusiness.update({
         where: { id: prospect.id },
