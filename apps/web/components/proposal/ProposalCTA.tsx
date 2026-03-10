@@ -279,7 +279,7 @@ export default function ProposalCTA() {
               href={proposalUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block px-8 py-4 bg-indigo-600 text-white text-base font-semibold rounded-full hover:bg-indigo-700 transition-all"
+              className="inline-block px-8 py-4 bg-black text-white text-base font-semibold rounded-full transition-all hover:bg-indigo-700 hover:scale-105 active:scale-95"
             >
               View Your Proposal →
             </a>
