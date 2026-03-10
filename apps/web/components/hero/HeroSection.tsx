@@ -15,24 +15,24 @@ export default function HeroSection() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-indigo-50 opacity-70 blur-3xl" />
       </div>
 
-      <div className="relative z-10 max-w-4xl mx-auto text-center">
+      <div className="relative z-10 max-w-6xl mx-auto text-center">
         {/* Pill badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-200 bg-indigo-50 mb-8">
-          <span className="w-1.5 h-1.5 rounded-full bg-embedo-accent animate-pulse" />
+        <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-indigo-200 bg-indigo-50 mb-10">
+          <span className="w-2 h-2 rounded-full bg-embedo-accent animate-pulse" />
           <span className="text-xs font-semibold tracking-[0.15em] uppercase text-embedo-accent">
             AI Infrastructure for Local Business
           </span>
         </div>
 
         {/* Headline */}
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.05] text-balance mb-6">
+        <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-[6.5rem] font-bold tracking-tight leading-[1.02] text-balance mb-8">
           Your business,
           <br />
           <span className="text-gradient">now runs on AI.</span>
         </h1>
 
         {/* Subheadline */}
-        <p className="text-lg md:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed mb-10 text-balance">
+        <p className="text-xl md:text-2xl text-gray-500 max-w-3xl mx-auto leading-relaxed mb-12 text-balance">
           Embedo deploys a complete AI automation layer into your restaurant or local business —
           voice agent, chatbot, leads, social media, surveys, and more.
           <span className="text-gray-800 font-medium"> Live in days.</span>
@@ -42,17 +42,17 @@ export default function HeroSection() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <a
             href="#proposal"
-            className="px-7 py-3 text-gray-900 text-sm font-semibold rounded-full transition-all hover:scale-105 active:scale-95"
+            className="px-9 py-4 text-gray-900 text-base font-semibold rounded-full transition-all hover:scale-105 active:scale-95"
             style={{
               background: 'linear-gradient(135deg, #4ade80, #22c55e)',
-              boxShadow: '0 0 24px rgba(74,222,128,0.50), 0 4px 16px rgba(34,197,94,0.30)',
+              boxShadow: '0 0 28px rgba(74,222,128,0.55), 0 4px 20px rgba(34,197,94,0.35)',
             }}
           >
             Generate Custom Proposal
           </a>
           <a
             href="#book"
-            className="px-7 py-3 bg-white text-black text-sm font-semibold rounded-full border border-gray-200 hover:border-gray-400 transition-all hover:scale-105 active:scale-95"
+            className="px-9 py-4 bg-white text-black text-base font-semibold rounded-full border border-gray-200 hover:border-gray-400 transition-all hover:scale-105 active:scale-95"
           >
             Schedule a Call →
           </a>
