@@ -113,6 +113,10 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       emailSubject: parsed.emailSubject,
       emailBodyHtml: parsed.emailBodyHtml,
     };
+    if (parsed.targetState !== undefined) createData['targetState'] = parsed.targetState;
+    if (parsed.targetCountry !== undefined) createData['targetCountry'] = parsed.targetCountry;
+    if (parsed.targetLat !== undefined) createData['targetLat'] = parsed.targetLat;
+    if (parsed.targetLon !== undefined) createData['targetLon'] = parsed.targetLon;
     if (parsed.smsBody !== undefined) createData['smsBody'] = parsed.smsBody;
     if (parsed.maxProspects != null) createData['maxProspects'] = parsed.maxProspects;
     if (parsed.sequenceSteps !== undefined) {
