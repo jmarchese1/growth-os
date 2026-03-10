@@ -403,6 +403,68 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     return reply.send(prospect);
   });
 
+  // ─── Retroactively queue follow-up steps for contacted prospects ──────────
+  app.post('/campaigns/:id/requeue-followups', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const campaign = await db.outboundCampaign.findUnique({ where: { id } });
+    if (!campaign) throw new NotFoundError('Campaign', id);
+
+    const steps = (campaign.sequenceSteps as Array<{ stepNumber: number; delayHours: number }> | null) ?? [];
+    const followUpSteps = steps.filter((s) => s.stepNumber > 1);
+
+    if (followUpSteps.length === 0) {
+      return reply.code(400).send({ error: 'No follow-up steps configured on this campaign. Add steps first, then apply.' });
+    }
+
+    // Prospects that got step 1 but have no follow-up scheduled
+    const prospects = await db.prospectBusiness.findMany({
+      where: {
+        campaignId: id,
+        status: { in: ['CONTACTED', 'OPENED'] },
+        nextFollowUpAt: null,
+        email: { not: null },
+      },
+      include: {
+        messages: {
+          where: { stepNumber: 1 },
+          take: 1,
+          orderBy: { createdAt: 'asc' },
+          select: { sentAt: true },
+        },
+      },
+    });
+
+    let queued = 0;
+    for (const prospect of prospects) {
+      const baseSentAt = prospect.messages[0]?.sentAt ?? prospect.createdAt;
+      const baseTime = new Date(baseSentAt).getTime();
+
+      for (const step of followUpSteps) {
+        const fireAt = baseTime + step.delayHours * 60 * 60 * 1000;
+        const delay = Math.max(0, fireAt - Date.now());
+
+        await outreachSendQueue().add(
+          `outreach:${prospect.id}:step${step.stepNumber}`,
+          { prospectId: prospect.id, campaignId: id, channel: 'email', stepNumber: step.stepNumber },
+          { delay, jobId: `outreach:${prospect.id}:step${step.stepNumber}` },
+        );
+      }
+
+      // Update nextFollowUpAt on the prospect
+      const firstStep = followUpSteps[0];
+      const nextAt = new Date(baseTime + firstStep.delayHours * 60 * 60 * 1000);
+      await db.prospectBusiness.update({
+        where: { id: prospect.id },
+        data: { nextFollowUpAt: nextAt > new Date() ? nextAt : null },
+      });
+
+      queued++;
+    }
+
+    log.info({ campaignId: id, queued }, 'Follow-up steps requeued');
+    return reply.send({ queued, stepsPerProspect: followUpSteps.length });
+  });
+
   // ─── Get outreach messages for a prospect ─────────────────────────────────
   app.get('/prospects/:id/messages', async (request, reply) => {
     const { id } = request.params as { id: string };
