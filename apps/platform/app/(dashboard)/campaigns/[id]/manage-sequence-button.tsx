@@ -36,8 +36,9 @@ export function ManageSequenceButton({ campaignId, currentSteps, prospectorUrl, 
   const [applyToExisting, setApplyToExisting] = useState(true);
 
   // Only follow-up steps (step 1 is the cold email, managed via Edit Email)
+  const existingFollowUps = (currentSteps ?? []).filter((s) => s.stepNumber > 1);
   const [steps, setSteps] = useState<Step[]>(
-    (currentSteps ?? []).filter((s) => s.stepNumber > 1)
+    existingFollowUps.length > 0 ? existingFollowUps : DEFAULT_STEPS
   );
 
   function addStep() {
