@@ -7,7 +7,16 @@ import { sendColdEmail } from '../outreach/email-sender.js';
 
 const log = createLogger('prospector:outreach-worker');
 
-const TERMINAL_STATUSES = new Set(['CONTACTED', 'OPENED', 'REPLIED', 'MEETING_BOOKED', 'CONVERTED', 'UNSUBSCRIBED', 'BOUNCED', 'DEAD']);
+// Statuses where ALL further outreach stops.
+// CONTACTED and OPENED are intentionally excluded — those prospects still receive follow-up steps.
+const STOP_OUTREACH_STATUSES = new Set([
+  'REPLIED',
+  'MEETING_BOOKED',
+  'CONVERTED',
+  'UNSUBSCRIBED',
+  'BOUNCED',
+  'DEAD',
+]);
 
 export function startOutreachWorker(): Worker {
   const worker = new Worker<OutreachSendPayload>(
@@ -25,15 +34,15 @@ export function startOutreachWorker(): Worker {
         return;
       }
 
-      // Prevent duplicate outreach
-      if (TERMINAL_STATUSES.has(prospect.status)) {
-        log.info({ prospectId, status: prospect.status }, 'Prospect already contacted — skipping');
+      if (STOP_OUTREACH_STATUSES.has(prospect.status)) {
+        log.info({ prospectId, status: prospect.status, stepNumber }, 'Outreach stopped — terminal status');
+        await db.prospectBusiness.update({ where: { id: prospectId }, data: { nextFollowUpAt: null } });
         return;
       }
 
       if (!prospect.email) {
-        log.info({ prospectId }, 'No email on prospect — skipping email outreach');
-        await db.prospectBusiness.update({ where: { id: prospectId }, data: { status: 'DEAD' } });
+        log.info({ prospectId }, 'No email on prospect — skipping');
+        await db.prospectBusiness.update({ where: { id: prospectId }, data: { status: 'DEAD', nextFollowUpAt: null } });
         return;
       }
 
@@ -44,7 +53,7 @@ export function startOutreachWorker(): Worker {
         const status = suppression.reason.includes('bounce') || suppression.reason.includes('invalid')
           ? 'BOUNCED'
           : 'UNSUBSCRIBED';
-        await db.prospectBusiness.update({ where: { id: prospectId }, data: { status } });
+        await db.prospectBusiness.update({ where: { id: prospectId }, data: { status, nextFollowUpAt: null } });
         log.info({ prospectId, status }, 'Suppressed email — skipping send');
         return;
       }
@@ -57,8 +66,9 @@ export function startOutreachWorker(): Worker {
       }> | null) ?? [];
 
       const step = stepNumber ? steps.find((s) => s.stepNumber === stepNumber) : null;
-      if (stepNumber && !step) {
-        log.info({ prospectId, stepNumber }, 'Sequence step not found â€” skipping');
+      // Only skip missing step if it's a follow-up (step > 1). Step 1 uses campaign defaults.
+      if (stepNumber && stepNumber > 1 && !step) {
+        log.info({ prospectId, stepNumber }, 'Sequence step not found — skipping');
         return;
       }
 
@@ -69,14 +79,29 @@ export function startOutreachWorker(): Worker {
           stepNumber,
           disableAi: stepNumber ? stepNumber > 1 : false,
         });
+
+        // After a successful send, update nextFollowUpAt to when the NEXT step will fire
+        const currentStep = stepNumber ?? 1;
+        const nextStep = steps.find((s) => s.stepNumber === currentStep + 1);
+        if (nextStep) {
+          const baseDelayMs = 5 * 60 * 1000;
+          const nextFireAt = new Date(
+            prospect.createdAt.getTime() + baseDelayMs + nextStep.delayHours * 60 * 60 * 1000,
+          );
+          await db.prospectBusiness.update({ where: { id: prospectId }, data: { nextFollowUpAt: nextFireAt } });
+          log.info({ prospectId, nextFireAt, nextStep: currentStep + 1 }, 'Next follow-up scheduled');
+        } else {
+          // Last step sent — no more follow-ups
+          await db.prospectBusiness.update({ where: { id: prospectId }, data: { nextFollowUpAt: null } });
+        }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         if (msg.toLowerCase().includes('suppressed')) {
           await db.prospectBusiness.update({
             where: { id: prospectId },
-            data: { status: 'UNSUBSCRIBED' },
+            data: { status: 'UNSUBSCRIBED', nextFollowUpAt: null },
           });
-          log.info({ prospectId }, 'Suppressed email â€” marking unsubscribed');
+          log.info({ prospectId }, 'Suppressed email — marking unsubscribed');
           return;
         }
         throw err;
