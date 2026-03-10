@@ -372,14 +372,40 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                     )}
                   </td>
 
+                  {/* Sequence — next follow-up countdown */}
+                  <td className="px-4 py-3 min-w-[140px]">
+                    {p.nextFollowUpAt ? (
+                      <FollowUpTimer
+                        scheduledAt={p.nextFollowUpAt}
+                        stepNumber={(msg?.stepNumber ?? 1) + 1}
+                      />
+                    ) : msg?.sentAt ? (
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[9px] font-semibold text-slate-600 uppercase tracking-wider">
+                          Step {msg.stepNumber ?? 1} sent
+                        </span>
+                        <span className="text-xs text-slate-600">Sequence done</span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-slate-700">—</span>
+                    )}
+                  </td>
+
                   {/* Actions — sticky right */}
-                  <td className="px-4 py-3 min-w-[160px] sticky right-0 bg-[#0c0a18] group-hover:bg-[#0e0c1e] z-10 transition-colors">
+                  <td className="px-4 py-3 min-w-[180px] sticky right-0 bg-[#0c0a18] group-hover:bg-[#0e0c1e] z-10 transition-colors">
                     <div className="flex items-center gap-2 flex-nowrap">
                       {p.email && (p.status === 'NEW' || p.status === 'ENRICHED') && (
                         <SendButton prospectId={p.id} prospectorUrl={PROSPECTOR_URL} />
                       )}
                       {p.status === 'REPLIED' && (
                         <ConvertButton prospectId={p.id} prospectorUrl={PROSPECTOR_URL} />
+                      )}
+                      {msg?.sentAt && (
+                        <EmailPreviewModal
+                          subject={null}
+                          bodyHtml={null}
+                          label="Email"
+                        />
                       )}
                       <Link
                         href={`/campaigns/${id}/prospects/${p.id}`}
