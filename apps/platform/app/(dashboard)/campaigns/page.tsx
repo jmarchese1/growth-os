@@ -9,6 +9,7 @@ interface CampaignStats {
   id: string;
   name: string;
   targetCity: string;
+  targetState: string | null;
   targetIndustry: string;
   active: boolean;
   createdAt: string;
