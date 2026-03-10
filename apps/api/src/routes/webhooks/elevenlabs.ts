@@ -76,7 +76,7 @@ export async function elevenLabsWebhookRoutes(app: FastifyInstance): Promise<voi
         callSid: data.conversation_id,
         intent: 'UNKNOWN',
         duration: data.call_duration_secs ?? 0,
-        transcript,
+        ...(transcript !== undefined && { transcript }),
         ...(data.analysis?.summary !== undefined && { summary: data.analysis.summary }),
         ...(data.analysis?.sentiment !== undefined && { sentiment: data.analysis.sentiment }),
         ...(data.metadata !== undefined && { extractedData: data.metadata }),
