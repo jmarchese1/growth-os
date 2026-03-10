@@ -325,7 +325,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     const prospect = await db.prospectBusiness.findUnique({
       where: { id },
       include: {
-        campaign: { select: { id: true, name: true, targetCity: true, targetIndustry: true } },
+        campaign: { select: { id: true, name: true, targetCity: true, targetIndustry: true, sequenceSteps: true } },
         messages: { orderBy: { createdAt: 'desc' } },
       },
     });
