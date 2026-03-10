@@ -17,34 +17,14 @@ interface Props {
   contactedCount: number; // prospects eligible for retroactive requeue
 }
 
-const DEFAULT_FOLLOWUP_BODY = `<div style="font-family: Arial, sans-serif; max-width: 540px; color: #1a1a1a; line-height: 1.65; font-size: 15px;">
-  <p>Hey {{businessName}},</p>
+const STEP2_BODY = `<div style="font-family: Arial, sans-serif; max-width: 540px; color: #1a1a1a; line-height: 1.65; font-size: 15px;"><p>Hey {{businessName}},</p><p>Wanted to follow up in case my last message got buried. A lot of restaurants in {{city}} are quietly using AI to handle the stuff that slips through the cracks — missed calls, slow follow-ups, re-engaging regulars who went quiet.</p><p>Takes about a week to set up and most places see the difference in the first few days. Happy to walk you through exactly what it'd look like for your spot.</p><p style="margin-top: 20px;"><a href="{{calLink}}" style="display: inline-block; background: #4f46e5; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600;">Book a 10-min call →</a></p><table style="margin-top: 28px; padding-top: 20px; border-collapse: collapse; width: 100%;" cellpadding="0" cellspacing="0"><tr><td style="padding-right: 12px; vertical-align: middle; width: 56px;"><img src="https://i.imgur.com/RDXkWkD.jpeg" alt="Jason" width="48" height="48" style="border-radius: 50%; display: block; object-fit: cover;" /></td><td style="vertical-align: middle;"><p style="margin: 0; font-size: 14px; font-weight: 700; color: #1a1a1a;">Jason</p><p style="margin: 2px 0 0; font-size: 13px; color: #666;">Data Scientist · <a href="https://embedo.io" style="color: #4f46e5; text-decoration: none;">embedo.io</a></p></td></tr></table><p style="margin-top: 32px; font-size: 11px; color: #bbb;"><a href="mailto:{{replyEmail}}?subject=Unsubscribe" style="color: #bbb;">Unsubscribe</a></p></div>`;
 
-  <p>
-    Just bumping this up in case it got buried. Totally get it if the timing's off —
-    but if you're losing even a couple of reservations a week to missed calls, it adds up fast.
-  </p>
+const STEP3_BODY = `<div style="font-family: Arial, sans-serif; max-width: 540px; color: #1a1a1a; line-height: 1.65; font-size: 15px;"><p>Hey {{businessName}},</p><p>This is my last note — I don't want to keep hitting your inbox if the timing isn't right.</p><p>If things change and you ever want to see what an AI layer could do for your restaurant, just reply to this and I'll pick it up from there. No pitch, just a conversation.</p><p>Either way, good luck with the season. Hope it's a busy one.</p><table style="margin-top: 28px; padding-top: 20px; border-collapse: collapse; width: 100%;" cellpadding="0" cellspacing="0"><tr><td style="padding-right: 12px; vertical-align: middle; width: 56px;"><img src="https://i.imgur.com/RDXkWkD.jpeg" alt="Jason" width="48" height="48" style="border-radius: 50%; display: block; object-fit: cover;" /></td><td style="vertical-align: middle;"><p style="margin: 0; font-size: 14px; font-weight: 700; color: #1a1a1a;">Jason</p><p style="margin: 2px 0 0; font-size: 13px; color: #666;">Data Scientist · <a href="https://embedo.io" style="color: #4f46e5; text-decoration: none;">embedo.io</a></p></td></tr></table><p style="margin-top: 32px; font-size: 11px; color: #bbb;"><a href="mailto:{{replyEmail}}?subject=Unsubscribe" style="color: #bbb;">Unsubscribe</a></p></div>`;
 
-  <p>Happy to do a quick 10-min call to show you what it looks like. No pressure.</p>
-
-  <p>— <a href="{{calLink}}" style="color: #4f46e5;">Book a time here</a> if easier.</p>
-
-  <table style="margin-top: 28px; padding-top: 20px; border-collapse: collapse; width: 100%;" cellpadding="0" cellspacing="0">
-    <tr>
-      <td style="padding-right: 12px; vertical-align: middle; width: 56px;">
-        <img src="https://i.imgur.com/RDXkWkD.jpeg" alt="Jason" width="48" height="48" style="border-radius: 50%; display: block; object-fit: cover;" />
-      </td>
-      <td style="vertical-align: middle;">
-        <p style="margin: 0; font-size: 14px; font-weight: 700; color: #1a1a1a;">Jason</p>
-        <p style="margin: 2px 0 0; font-size: 13px; color: #666;">Data Scientist · <a href="https://embedo.io" style="color: #4f46e5; text-decoration: none;">embedo.io</a></p>
-      </td>
-    </tr>
-  </table>
-
-  <p style="margin-top: 32px; font-size: 11px; color: #bbb;">
-    <a href="mailto:{{replyEmail}}?subject=Unsubscribe" style="color: #bbb;">Unsubscribe</a>
-  </p>
-</div>`;
+const DEFAULT_STEPS: Step[] = [
+  { stepNumber: 2, delayHours: 72, subject: 'Re: quick question for {{businessName}}', bodyHtml: STEP2_BODY },
+  { stepNumber: 3, delayHours: 192, subject: 'closing the loop — {{businessName}}', bodyHtml: STEP3_BODY },
+];
 
 export function ManageSequenceButton({ campaignId, currentSteps, prospectorUrl, contactedCount }: Props) {
   const router = useRouter();
