@@ -181,14 +181,14 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
             <select
               value={form.targetIndustry}
               onChange={(e) => setForm({ ...form, targetIndustry: e.target.value })}
-              className={inputCls + " appearance-none"}
+              className={selectCls}
             >
-              <option value="RESTAURANT">Restaurant</option>
-              <option value="SALON">Salon</option>
-              <option value="RETAIL">Retail</option>
-              <option value="FITNESS">Fitness</option>
-              <option value="MEDICAL">Medical</option>
-              <option value="OTHER">Other</option>
+              <option value="RESTAURANT" className={optionCls}>Restaurant</option>
+              <option value="SALON" className={optionCls}>Salon</option>
+              <option value="RETAIL" className={optionCls}>Retail</option>
+              <option value="FITNESS" className={optionCls}>Fitness</option>
+              <option value="MEDICAL" className={optionCls}>Medical</option>
+              <option value="OTHER" className={optionCls}>Other</option>
             </select>
           </div>
           <div>
