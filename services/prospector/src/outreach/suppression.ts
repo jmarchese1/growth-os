@@ -15,7 +15,7 @@ export async function upsertSuppression(params: {
   const normalized = email.toLowerCase();
   await db.outreachSuppression.upsert({
     where: { email: normalized },
-    update: { reason, source },
-    create: { email: normalized, reason, source },
+    update: { reason, source: source ?? null },
+    create: { email: normalized, reason, source: source ?? null },
   });
 }
