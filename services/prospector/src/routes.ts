@@ -25,6 +25,10 @@ const updateCampaignSchema = z.object({
 const createCampaignSchema = z.object({
   name: z.string().min(2),
   targetCity: z.string().min(2),
+  targetState: z.string().optional(),
+  targetCountry: z.string().optional(),
+  targetLat: z.number().optional(),
+  targetLon: z.number().optional(),
   targetIndustry: z.enum(['RESTAURANT', 'SALON', 'RETAIL', 'FITNESS', 'MEDICAL', 'OTHER']).default('RESTAURANT'),
   emailSubject: z.string().min(5),
   emailBodyHtml: z.string().min(20),
