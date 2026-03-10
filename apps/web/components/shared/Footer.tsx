@@ -22,7 +22,17 @@ export default function Footer() {
 
           {/* Brand */}
           <div className="lg:col-span-2">
-            <p className="text-2xl font-bold tracking-tight mb-3">Embedo</p>
+            <div className="flex items-center gap-3 mb-3">
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"
+                style={{ filter: 'drop-shadow(0 0 8px rgba(139,92,246,0.60))' }}
+              >
+                <polygon points="16,4 28,10 16,16 4,10" fill="#7C3AED" />
+                <polygon points="4,10 16,16 16,28 4,22" fill="#4C1D95" />
+                <polygon points="28,10 16,16 16,28 28,22" fill="#6D28D9" />
+                <polyline points="16,4 4,10 4,22 16,28 28,22 28,10 16,4" stroke="rgba(0,0,0,0.35)" strokeWidth="0.6" fill="none" />
+              </svg>
+              <p className="text-2xl font-bold tracking-tight">Embedo</p>
+            </div>
             <p className="text-indigo-300 text-sm leading-relaxed max-w-xs mb-6">
               AI infrastructure for local businesses. Voice, chat, leads, social, surveys,
               and more — deployed in days, not months.
