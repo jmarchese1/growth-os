@@ -74,9 +74,9 @@ export function startOutreachWorker(): Worker {
 
       try {
         await sendColdEmail(prospect, campaign, {
-          subjectOverride: step?.subject,
-          bodyHtmlOverride: step?.bodyHtml,
-          stepNumber,
+          ...(step?.subject !== undefined && { subjectOverride: step.subject }),
+          ...(step?.bodyHtml !== undefined && { bodyHtmlOverride: step.bodyHtml }),
+          ...(stepNumber !== undefined && { stepNumber }),
           disableAi: stepNumber ? stepNumber > 1 : false,
         });
 
