@@ -43,7 +43,7 @@ export default function ProblemSection() {
         </div>
 
         {/* Quote block */}
-        <div className="mt-6 p-10 bg-black text-white rounded-2xl relative overflow-hidden">
+        <div className="mt-14 p-10 bg-black text-white rounded-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-900 opacity-20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-violet-900 opacity-15 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
           <p className="text-xs font-semibold tracking-[0.2em] uppercase text-indigo-400 mb-4 relative z-10">Heard on a discovery call</p>
