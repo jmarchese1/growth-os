@@ -34,8 +34,8 @@ export default function Home() {
         <FeaturesSection />
       </ScrollReveal>
 
-      {/* gray-50 → dark */}
-      <SectionBleed from="#f9fafb" to="#030712" height={100} />
+      {/* subtle glow line: light → dark */}
+      <div className="h-px w-full bg-gradient-to-r from-transparent via-indigo-400/25 to-transparent" />
 
       <ScrollReveal>
         <AutomationExamples />
@@ -46,8 +46,8 @@ export default function Home() {
         <ProposalCTA />
       </ScrollReveal>
 
-      {/* dark → white about */}
-      <SectionBleed from="#030712" to="#ffffff" height={100} />
+      {/* subtle glow line: dark → light */}
+      <div className="h-px w-full bg-gradient-to-r from-transparent via-indigo-400/25 to-transparent" />
 
       <ScrollReveal>
         <CalendlySection />
