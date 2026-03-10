@@ -292,6 +292,79 @@ export default async function ProspectDetailPage({ params }: {
         </div>
       </div>
 
+      {/* Sequence Timeline */}
+      {(() => {
+        const steps = prospect.campaign.sequenceSteps ?? [];
+        const sentStepNumbers = new Set(prospect.messages.map((m) => m.stepNumber ?? 1));
+        const BASE_DELAY_MS = 5 * 60 * 1000;
+        const prospectCreatedAt = new Date(prospect.createdAt).getTime();
+
+        // Build a unified list: step 1 always exists
+        const allSteps = [
+          { stepNumber: 1, delayHours: 0, label: 'Cold Email' },
+          ...steps.filter((s) => s.stepNumber > 1).map((s) => ({
+            stepNumber: s.stepNumber,
+            delayHours: s.delayHours,
+            label: `Follow-up ${s.stepNumber - 1}`,
+          })),
+        ];
+
+        return (
+          <div className="bg-white/[0.03] backdrop-blur-sm rounded-2xl border border-white/[0.08] p-5 glow-card">
+            <h2 className="text-[9px] font-bold text-slate-600 uppercase tracking-[0.16em] mb-4">
+              Sequence
+              <span className="ml-2 normal-case font-normal text-xs tracking-normal text-slate-700">
+                {allSteps.length} step{allSteps.length !== 1 ? 's' : ''}
+              </span>
+            </h2>
+            <div className="flex items-start gap-0">
+              {allSteps.map((step, i) => {
+                const sent = sentStepNumbers.has(step.stepNumber);
+                const scheduledAt = new Date(prospectCreatedAt + BASE_DELAY_MS + step.delayHours * 3600000);
+                const isFuture = !sent && scheduledAt > new Date();
+                const isNext = !sent && prospect.nextFollowUpAt &&
+                  Math.abs(new Date(prospect.nextFollowUpAt).getTime() - scheduledAt.getTime()) < 60000;
+
+                return (
+                  <div key={step.stepNumber} className="flex-1 min-w-0">
+                    <div className="flex items-center">
+                      <div className={`w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold border ${
+                        sent
+                          ? 'bg-violet-600/30 border-violet-500/50 text-violet-300'
+                          : isNext
+                          ? 'bg-amber-500/20 border-amber-500/40 text-amber-400 animate-pulse'
+                          : 'bg-white/5 border-white/10 text-slate-600'
+                      }`}>
+                        {sent ? '✓' : step.stepNumber}
+                      </div>
+                      {i < allSteps.length - 1 && (
+                        <div className={`h-px flex-1 mx-1 ${sent ? 'bg-violet-500/30' : 'bg-white/5'}`} />
+                      )}
+                    </div>
+                    <div className="mt-2 pr-2">
+                      <p className={`text-[10px] font-semibold truncate ${sent ? 'text-violet-300' : isNext ? 'text-amber-400' : 'text-slate-600'}`}>
+                        {step.label}
+                      </p>
+                      {sent ? (
+                        <p className="text-[9px] text-slate-600 mt-0.5">Sent</p>
+                      ) : isNext && prospect.nextFollowUpAt ? (
+                        <FollowUpTimer scheduledAt={prospect.nextFollowUpAt} stepNumber={step.stepNumber} />
+                      ) : isFuture ? (
+                        <p className="text-[9px] text-slate-700 mt-0.5">
+                          {step.delayHours}h after start
+                        </p>
+                      ) : (
+                        <p className="text-[9px] text-slate-700 mt-0.5">Skipped</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Email History */}
       <div className="bg-white/[0.03] backdrop-blur-sm rounded-2xl border border-white/[0.08] glow-card">
         <div className="px-5 py-4 border-b border-white/[0.06]">
