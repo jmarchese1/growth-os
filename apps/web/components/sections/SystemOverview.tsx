@@ -107,13 +107,13 @@ export default function SystemOverview() {
                 el.style.boxShadow = '';
               }}
             >
-              <span className="text-base font-mono text-gray-300 pt-0.5 group-hover:text-indigo-400 transition-colors duration-200">
+              <span className="text-sm font-mono text-gray-300 pt-0.5 group-hover:text-indigo-400 transition-colors duration-200">
                 {mod.number}
               </span>
-              <h3 className="text-lg font-semibold text-gray-800 group-hover:text-indigo-700 transition-colors duration-200">
+              <h3 className="text-base font-semibold text-gray-800 group-hover:text-indigo-700 transition-colors duration-200">
                 {mod.name}
               </h3>
-              <p className="text-gray-500 leading-relaxed text-base group-hover:text-gray-600 transition-colors duration-200">
+              <p className="text-gray-500 leading-relaxed text-sm group-hover:text-gray-600 transition-colors duration-200">
                 {mod.description}
               </p>
             </div>
