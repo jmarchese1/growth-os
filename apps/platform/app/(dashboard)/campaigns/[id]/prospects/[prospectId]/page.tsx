@@ -88,10 +88,11 @@ const MSG_STATUS_COLORS: Record<string, string> = {
 };
 
 const SOURCE_LABELS: Record<string, { label: string; color: string }> = {
-  geoapify:      { label: 'Geoapify',    color: 'text-sky-500/50' },
-  website_scrape:{ label: 'Website',     color: 'text-emerald-500/50' },
-  brave_search:  { label: 'Brave',       color: 'text-orange-400/50' },
-  hunter:        { label: 'Hunter.io',   color: 'text-purple-400/50' },
+  geoapify:      { label: 'Geoapify',  color: 'text-sky-500/50' },
+  website_scrape:{ label: 'Website',   color: 'text-emerald-500/50' },
+  brave_search:  { label: 'Brave',     color: 'text-orange-400/50' },
+  apollo:        { label: 'Apollo.io', color: 'text-purple-400/60' },
+  hunter:        { label: 'Hunter.io', color: 'text-purple-400/50' }, // legacy
 };
 
 function SourceBadge({ source }: { source: string | null | undefined }) {
