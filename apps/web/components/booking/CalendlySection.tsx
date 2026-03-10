@@ -42,7 +42,7 @@ export default function CalendlySection() {
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 items-center">
 
             {/* Photo with orbital background */}
             <div className="flex justify-center lg:justify-start">
