@@ -7,7 +7,8 @@
   "dependencies": {
     "bullmq": "^5.27.0",
     "ioredis": "^5.4.0",
-    "@embedo/utils": "workspace:*"
+    "@embedo/utils": "workspace:*",
+    "@embedo/types": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.7.0",
