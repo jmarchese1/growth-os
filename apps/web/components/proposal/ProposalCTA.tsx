@@ -61,16 +61,16 @@ export default function ProposalCTA() {
 
   return (
     <section id="proposal" className="pt-12 pb-20 px-6 text-white relative overflow-hidden">
-      {/* Dark desk/tech background */}
+      {/* Dark bokeh background — subtle, doesn't compete with text */}
       <Image
-        src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=1600&q=85"
+        src="https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=1600&q=60"
         alt=""
         fill
-        className="object-cover object-center"
+        className="object-cover object-center scale-105"
         priority
       />
-      {/* Dark overlay */}
-      <div className="absolute inset-0 bg-gray-950/88" />
+      {/* Heavy dark overlay so photo is just a hint */}
+      <div className="absolute inset-0 bg-gray-950/93" />
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-indigo-900 opacity-20 blur-3xl" />
         <div className="absolute bottom-0 left-1/4 w-96 h-96 rounded-full bg-violet-900 opacity-15 blur-3xl" />
