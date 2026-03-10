@@ -117,6 +117,16 @@
 }
 
 /* Signal pulse ring expanding from orbit center */
+@keyframes proposal-float {
+  0%, 100% { transform: translateY(0px) rotate(-1deg); }
+  50%       { transform: translateY(-14px) rotate(1deg); }
+}
+
+@keyframes proposal-sparkle {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50%       { opacity: 1;   transform: scale(1.2); }
+}
+
 @keyframes signal-pulse {
   0%   { transform: scale(0.4); opacity: 0.55; }
   100% { transform: scale(3.2); opacity: 0; }
