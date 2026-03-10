@@ -253,7 +253,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
           <tbody className="divide-y divide-slate-800/60">
             {prospects.length === 0 && (
               <tr>
-                <td colSpan={11} className="px-4 py-16 text-center text-slate-600 text-sm">
+                <td colSpan={12} className="px-4 py-16 text-center text-slate-600 text-sm">
                   No prospects found{filterStatus ? ` with status "${filterStatus}"` : ''}.
                 </td>
               </tr>
