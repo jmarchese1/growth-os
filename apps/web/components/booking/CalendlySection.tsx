@@ -35,9 +35,13 @@ export default function CalendlySection() {
 
   return (
       <section id="book" className="relative bg-white overflow-hidden bg-grid py-20 px-6">
-        {/* Soft radial glow matching hero */}
+        {/* Neural network particle background */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-indigo-50 opacity-60 blur-3xl" />
+          <ParticleCanvas />
+        </div>
+        {/* Soft radial glow on top */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-indigo-50 opacity-40 blur-3xl" />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto">
