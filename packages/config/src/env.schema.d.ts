@@ -373,7 +373,7 @@ export declare const prospectorEnvSchema: z.ZodObject<{
     PORT: z.ZodDefault<z.ZodNumber>;
     GEOAPIFY_API_KEY: z.ZodOptional<z.ZodString>;
     BRAVE_SEARCH_API_KEY: z.ZodOptional<z.ZodString>;
-    HUNTER_API_KEY: z.ZodOptional<z.ZodString>;
+    APOLLO_API_KEY: z.ZodOptional<z.ZodString>;
     ANTHROPIC_API_KEY: z.ZodOptional<z.ZodString>;
     SENDGRID_API_KEY: z.ZodOptional<z.ZodString>;
     SENDGRID_FROM_EMAIL: z.ZodOptional<z.ZodString>;
@@ -401,7 +401,7 @@ export declare const prospectorEnvSchema: z.ZodObject<{
     OWNER_EMAIL?: string | undefined;
     GEOAPIFY_API_KEY?: string | undefined;
     BRAVE_SEARCH_API_KEY?: string | undefined;
-    HUNTER_API_KEY?: string | undefined;
+    APOLLO_API_KEY?: string | undefined;
     REPLY_TRACKING_EMAIL?: string | undefined;
     OWNER_PHONE?: string | undefined;
 }, {
@@ -420,7 +420,7 @@ export declare const prospectorEnvSchema: z.ZodObject<{
     OWNER_EMAIL?: string | undefined;
     GEOAPIFY_API_KEY?: string | undefined;
     BRAVE_SEARCH_API_KEY?: string | undefined;
-    HUNTER_API_KEY?: string | undefined;
+    APOLLO_API_KEY?: string | undefined;
     REPLY_TRACKING_EMAIL?: string | undefined;
     OWNER_PHONE?: string | undefined;
     API_BASE_URL?: string | undefined;

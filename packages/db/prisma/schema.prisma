@@ -606,6 +606,7 @@ model ProspectBusiness {
   googleReviewCount Int?
   status            ProspectStatus @default(NEW)
   convertedToBusinessId String?
+  nextFollowUpAt    DateTime?   // When the next automated follow-up is scheduled to fire
   messages          OutreachMessage[]
 
   createdAt DateTime @default(now())
@@ -614,6 +615,7 @@ model ProspectBusiness {
   @@index([campaignId])
   @@index([status])
   @@index([email])
+  @@index([nextFollowUpAt])
 }
 
 model OutreachMessage {
@@ -625,6 +627,7 @@ model OutreachMessage {
   subject         String?
   body            String
   status          OutreachStatus @default(QUEUED)
+  stepNumber      Int?            // Which step in the sequence (1 = cold email, 2+ = follow-ups)
   sentAt          DateTime?
   openedAt        DateTime?
   repliedAt       DateTime?
