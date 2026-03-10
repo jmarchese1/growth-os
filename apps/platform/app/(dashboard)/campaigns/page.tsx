@@ -82,7 +82,10 @@ export default async function CampaignsPage() {
                     </Link>
                     <p className="text-xs text-slate-500 mt-0.5">{c.targetIndustry}</p>
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-300">{c.targetCity}</td>
+                  <td className="px-6 py-4 text-sm text-slate-300">
+                    {c.targetCity}
+                    {c.targetState && <span className="text-slate-600 ml-1 text-xs">{c.targetState}</span>}
+                  </td>
                   <td className="px-6 py-4">
                     <span className="text-sm font-semibold text-white">{c._count.prospects}</span>
                     <span className="text-xs text-slate-500 ml-1">prospects</span>
