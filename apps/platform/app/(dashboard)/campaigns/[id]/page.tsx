@@ -12,6 +12,7 @@ type ProspectStatus = 'NEW' | 'ENRICHED' | 'CONTACTED' | 'OPENED' | 'REPLIED' | 
 
 interface Message {
   status: string;
+  stepNumber: number | null;
   sentAt: string | null;
   openedAt: string | null;
   repliedAt: string | null;
@@ -29,8 +30,10 @@ interface Prospect {
   googleReviewCount: number | null;
   contactFirstName: string | null;
   contactLastName: string | null;
+  emailSource: string | null;
   emailVerificationStatus: string | null;
   status: ProspectStatus;
+  nextFollowUpAt: string | null;
   createdAt: string;
   updatedAt: string;
   messages: Message[];
