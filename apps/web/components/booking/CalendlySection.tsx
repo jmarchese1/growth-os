@@ -181,58 +181,40 @@ export default function CalendlySection() {
                 <span className="text-embedo-accent font-medium">every step of the way</span> —
                 from strategy call to go-live, and beyond.
               </p>
+
+              {/* Booking CTA — inline with bio */}
+              <div className="mt-8">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-200 bg-indigo-50 mb-5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                  <span className="text-xs font-semibold tracking-[0.15em] uppercase text-indigo-600">
+                    Free Strategy Call
+                  </span>
+                </div>
+
+                <div>
+                  <CalModal calLink={calLink}>
+                    <span
+                      className="inline-flex items-center gap-3 px-8 py-4 text-gray-900 text-sm font-semibold rounded-full transition-all hover:scale-105 active:scale-95"
+                      style={{
+                        background: 'linear-gradient(135deg, #4ade80, #22c55e)',
+                        boxShadow: '0 0 24px rgba(74,222,128,0.50), 0 4px 16px rgba(34,197,94,0.30)',
+                      }}
+                    >
+                      Book a Free Call with Jason
+                      <span className="text-xl">→</span>
+                    </span>
+                  </CalModal>
+                </div>
+
+                <div className="mt-4 flex items-center gap-6 text-sm text-gray-400">
+                  <span>✓ 30 minutes</span>
+                  <span>✓ No obligation</span>
+                  <span>✓ Free</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
-
-      {/* ── Booking CTA — matches founder bg ────────── */}
-      <section id="book" className="relative py-20 px-6 bg-white bg-grid text-gray-900 overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-indigo-50 opacity-60 blur-3xl" />
-          <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-violet-50 opacity-40 blur-3xl" />
-        </div>
-
-        <div className="relative z-10 max-w-3xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-200 bg-indigo-50 mb-8">
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-            <span className="text-xs font-semibold tracking-[0.15em] uppercase text-indigo-600">
-              Free Strategy Call
-            </span>
-          </div>
-
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-6">
-            Book a call. Find out how AI
-            <br />
-            <span className="text-gradient">can evolve your business.</span>
-          </h2>
-
-          <p className="text-lg text-gray-500 max-w-xl mx-auto leading-relaxed mb-10">
-            In 30 minutes, we&apos;ll walk through exactly what&apos;s possible for your business —
-            which modules make the most impact, what it costs, and how fast we can go live.{' '}
-            <span className="text-gray-700 font-medium">No pressure, no obligation.</span>
-          </p>
-
-          <CalModal calLink={calLink}>
-            <span
-              className="inline-flex items-center gap-3 px-8 py-4 text-gray-900 text-sm font-semibold rounded-full transition-all hover:scale-105 active:scale-95"
-              style={{
-                background: 'linear-gradient(135deg, #4ade80, #22c55e)',
-                boxShadow: '0 0 24px rgba(74,222,128,0.50), 0 4px 16px rgba(34,197,94,0.30)',
-              }}
-            >
-              Book a Free Call with Jason
-              <span className="text-xl">→</span>
-            </span>
-          </CalModal>
-
-          <div className="mt-8 flex items-center justify-center gap-6 text-sm text-gray-400">
-            <span>✓ 30 minutes</span>
-            <span>✓ No obligation</span>
-            <span>✓ Free</span>
-          </div>
-        </div>
-      </section>
-    </>
   );
 }
