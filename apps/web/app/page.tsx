@@ -22,32 +22,30 @@ export default function Home() {
         <ProblemSection />
       </ScrollReveal>
 
-      {/* white → white grid: subtle bleed keeps sections from hard-cutting */}
       <ScrollReveal>
         <SystemOverview />
       </ScrollReveal>
 
       {/* white → gray-50 */}
-      <SectionBleed from="#ffffff" to="#f9fafb" height={60} />
+      <SectionBleed from="#ffffff" to="#f9fafb" height={48} />
 
       <ScrollReveal>
         <FeaturesSection />
       </ScrollReveal>
 
-      {/* subtle glow line: light → dark */}
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-indigo-400/25 to-transparent" />
+      {/* gray-50 → white */}
+      <SectionBleed from="#f9fafb" to="#ffffff" height={48} />
 
       <ScrollReveal>
         <AutomationExamples />
       </ScrollReveal>
 
-      {/* dark → dark proposal */}
       <ScrollReveal>
         <ProposalCTA />
       </ScrollReveal>
 
-      {/* subtle glow line: dark → light */}
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-indigo-400/25 to-transparent" />
+      {/* white → gray-50 for booking section */}
+      <SectionBleed from="#ffffff" to="#f9fafb" height={48} />
 
       <ScrollReveal>
         <CalendlySection />
