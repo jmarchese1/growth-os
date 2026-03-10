@@ -107,21 +107,21 @@ export default function ProposalCTA() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Business Name *</label>
+                <label className="block text-sm text-gray-400 mb-1">Business Name *</label>
                 <input
                   required
                   value={form.businessName}
                   onChange={(e) => update('businessName', e.target.value)}
-                  className="w-full bg-white/70 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-400 backdrop-blur-sm"
+                  className="w-full bg-white/8 border border-white/12 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 backdrop-blur-sm"
                   placeholder="The Golden Fork"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Industry</label>
+                <label className="block text-sm text-gray-400 mb-1">Industry</label>
                 <select
                   value={form.industry}
                   onChange={(e) => update('industry', e.target.value)}
-                  className="w-full bg-white/70 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-indigo-400 backdrop-blur-sm"
+                  className="w-full bg-gray-900 border border-white/12 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500"
                 >
                   <option value="restaurant">Restaurant</option>
                   <option value="salon">Salon / Spa</option>
