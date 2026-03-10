@@ -20,7 +20,7 @@ export default function ProblemSection() {
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-5">
               Most leads go cold
               <br />
-              <span className="text-gray-400">before you even know.</span>
+              <span className="text-gradient">before you even know.</span>
             </h2>
             <p className="text-gray-500 text-lg leading-relaxed">
               Every missed call, unanswered DM, and delayed follow-up is{' '}
