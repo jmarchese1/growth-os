@@ -115,15 +115,16 @@ export async function searchRestaurants(
   apiKey: string,
   maxResults = 200,
   coords?: { lon: number; lat: number },
+  startOffset = 0,
 ): Promise<PlaceResult[]> {
-  log.info({ city, maxResults }, 'Starting Geoapify restaurant search');
+  log.info({ city, maxResults, startOffset }, 'Starting Geoapify restaurant search');
 
   const { lon, lat } = coords ?? await geocodeCity(city, apiKey);
   log.info({ city, lon, lat }, 'City geocoded');
 
   const results: PlaceResult[] = [];
   const batchSize = 20; // Geoapify free tier recommended batch size
-  let offset = 0;
+  let offset = startOffset;
 
   while (results.length < maxResults) {
     const data = await fetchPlacesPage(lon, lat, offset, batchSize, apiKey);
