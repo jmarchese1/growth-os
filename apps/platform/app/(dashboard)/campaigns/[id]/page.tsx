@@ -296,23 +296,28 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                         <a href={`mailto:${p.email}`} className="font-mono text-xs text-slate-300 hover:text-violet-400 transition-colors truncate block">
                           {p.email}
                         </a>
-                        {p.emailVerificationStatus && (
-                          <span className="text-[9px] uppercase tracking-wider text-slate-600">
-                            {p.emailVerificationStatus}
-                          </span>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {p.emailSource === 'apollo' && (
+                            <span className="text-[9px] font-semibold uppercase tracking-wider text-purple-400/60">via Apollo</span>
+                          )}
+                          {p.emailVerificationStatus && (
+                            <span className="text-[9px] uppercase tracking-wider text-slate-600">
+                              {p.emailVerificationStatus}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     ) : (
                       <span className="text-xs text-slate-600 italic">not found</span>
                     )}
                   </td>
 
-                  {/* First Name — Hunter.io */}
+                  {/* First Name — Apollo */}
                   <td className="px-4 py-3 min-w-[100px]">
                     <span className="text-xs text-slate-300">{p.contactFirstName ?? '—'}</span>
                   </td>
 
-                  {/* Last Name — Hunter.io */}
+                  {/* Last Name — Apollo */}
                   <td className="px-4 py-3 min-w-[100px]">
                     <span className="text-xs text-slate-300">{p.contactLastName ?? '—'}</span>
                   </td>
