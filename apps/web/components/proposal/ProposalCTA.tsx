@@ -61,20 +61,23 @@ export default function ProposalCTA() {
   return (
     <section id="proposal" className="pt-12 pb-20 px-6 text-gray-900 relative overflow-hidden bg-white">
 
-      <div className="max-w-2xl mx-auto relative z-10">
-        <p className="text-xs font-semibold tracking-[0.2em] uppercase text-embedo-accent mb-4">
-          Custom Proposal
-        </p>
-        <h2 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight mb-4">
-          See exactly what{' '}
-          <span className="text-gradient">AI</span>
-          <br />
-          can do for your business.
-        </h2>
-        <p className="text-gray-500 text-xl mb-10 leading-relaxed">
-          We generate a <span className="text-gray-900 font-semibold">custom proposal in seconds</span> — specific to your business, your industry, and
-          your goals.
-        </p>
+      <div className="max-w-7xl mx-auto relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+
+          {/* Left: copy + form */}
+          <div>
+            <p className="text-xs font-semibold tracking-[0.2em] uppercase text-embedo-accent mb-4">
+              Custom Proposal
+            </p>
+            <h2 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight mb-4">
+              See exactly what{' '}
+              <span className="text-gradient">AI</span>
+              <br />
+              can do for your business.
+            </h2>
+            <p className="text-gray-500 text-xl mb-10 leading-relaxed">
+              We generate a <span className="text-gray-900 font-semibold">custom proposal in seconds</span> — specific to your business, your industry, and your goals.
+            </p>
 
         {step === 'idle' && (
           <button
