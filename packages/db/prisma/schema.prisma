@@ -571,6 +571,8 @@ model OutboundCampaign {
   emailBodyHtml  String
   smsBody        String?
   maxProspects   Int?         // null = no limit; caps outreach sends per run
+  // Optional multi-step outreach: [{ stepNumber, delayHours, subject, bodyHtml }]
+  sequenceSteps  Json?
   active         Boolean      @default(true)
   prospects      ProspectBusiness[]
 
@@ -592,6 +594,13 @@ model ProspectBusiness {
   email             String?
   emailSource       String?  // "geoapify" | "website_scrape" | "brave_search" | "hunter"
   phoneSource       String?  // "geoapify" | "website_scrape"
+  contactFirstName  String?
+  contactLastName   String?
+  contactTitle      String?
+  contactLinkedIn   String?
+  emailVerificationStatus String?
+  emailVerificationScore  Int?
+  emailVerifiedAt   DateTime?
   googlePlaceId     String?  @unique
   googleRating      Float?
   googleReviewCount Int?
@@ -620,6 +629,7 @@ model OutreachMessage {
   openedAt        DateTime?
   repliedAt       DateTime?
   replyBody       String?
+  replyCategory   String?
   externalId      String?
   trackingPixelId String?        @unique
 
@@ -629,6 +639,17 @@ model OutreachMessage {
   @@index([prospectId])
   @@index([status])
   @@index([trackingPixelId])
+}
+
+model OutreachSuppression {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  reason    String
+  source    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
 }
 
 // ─── Onboarding Audit Log ─────────────────────────────────────────────────────

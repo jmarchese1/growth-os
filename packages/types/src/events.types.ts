@@ -131,4 +131,5 @@ export interface OutreachSendPayload {
   prospectId: string;
   campaignId: string;
   channel: 'email' | 'sms';
+  stepNumber?: number;
 }

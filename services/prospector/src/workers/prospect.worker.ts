@@ -5,7 +5,8 @@ import { createLogger } from '@embedo/utils';
 import type { ProspectDiscoveredPayload } from '@embedo/types';
 import { extractEmailFromWebsite, extractPhoneFromWebsite } from '../scraper/website-email.js';
 import { findBusinessEmail } from '../scraper/brave-search.js';
-import { findEmailViaHunter, extractDomain } from '../scraper/hunter.js';
+import { findEmailViaHunter, extractDomain, verifyEmailViaHunter } from '../scraper/hunter.js';
+import { upsertSuppression } from '../outreach/suppression.js';
 import { env } from '../config.js';
 
 const log = createLogger('prospector:prospect-worker');
@@ -15,7 +16,15 @@ async function enrichEmail(
   city: string,
   geoapifyEmail: string | undefined,
   website: string | undefined,
-): Promise<{ email: string; source: string } | null> {
+): Promise<{
+  email: string;
+  source: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  position?: string | null;
+  linkedin?: string | null;
+  confidence?: number | null;
+} | null> {
   // 1. Email directly from Geoapify (OSM data)
   if (geoapifyEmail) return { email: geoapifyEmail, source: 'geoapify' };
 
@@ -36,7 +45,17 @@ async function enrichEmail(
     const domain = extractDomain(website);
     if (domain) {
       const result = await findEmailViaHunter(domain, env.HUNTER_API_KEY);
-      if (result) return { email: result.email, source: 'hunter' };
+      if (result) {
+        return {
+          email: result.email,
+          source: 'hunter',
+          firstName: result.firstName,
+          lastName: result.lastName,
+          position: result.position,
+          linkedin: result.linkedin,
+          confidence: result.confidence,
+        };
+      }
     }
   }
 
@@ -58,7 +77,14 @@ export function startProspectWorker(): Worker {
 
       const city = (address['city'] as string | undefined) ?? '';
       const emailResult = await enrichEmail(name, city, geoapifyEmail, website);
-      const status = emailResult ? 'ENRICHED' : 'NEW';
+      let verification: { result?: string; score?: number } | null = null;
+      if (emailResult?.email && env.HUNTER_API_KEY) {
+        verification = await verifyEmailViaHunter(emailResult.email, env.HUNTER_API_KEY);
+      }
+
+      const verificationStatus = verification?.result?.toLowerCase();
+      const isInvalid = verificationStatus === 'undeliverable' || verificationStatus === 'invalid' || verificationStatus === 'bad';
+      const status = isInvalid ? 'DEAD' : emailResult ? 'ENRICHED' : 'NEW';
 
       // If Places/Geoapify didn't return a phone, try scraping the website directly
       let resolvedPhone = phone ?? null;
@@ -81,6 +107,13 @@ export function startProspectWorker(): Worker {
           website: website ?? null,
           email: emailResult?.email ?? null,
           emailSource: emailResult?.source ?? null,
+          contactFirstName: emailResult?.firstName ?? null,
+          contactLastName: emailResult?.lastName ?? null,
+          contactTitle: emailResult?.position ?? null,
+          contactLinkedIn: emailResult?.linkedin ?? null,
+          emailVerificationStatus: verification?.result ?? null,
+          emailVerificationScore: verification?.score != null ? Math.round(verification.score) : null,
+          emailVerifiedAt: verification ? new Date() : null,
           googlePlaceId: placeId,
           googleRating: null,
           googleReviewCount: null,
@@ -91,12 +124,36 @@ export function startProspectWorker(): Worker {
       log.info({ prospectId: prospect.id, name, email: emailResult?.email, emailSource: emailResult?.source, status }, 'Prospect created');
 
       if (emailResult?.email) {
+        if (isInvalid) {
+          await upsertSuppression({ email: emailResult.email, reason: 'verification_invalid', source: 'hunter' });
+          log.info({ prospectId: prospect.id }, 'Invalid email â€” suppressed');
+          return;
+        }
+
+        const campaign = await db.outboundCampaign.findUnique({
+          where: { id: campaignId },
+          select: { sequenceSteps: true },
+        });
+        const steps = (campaign?.sequenceSteps as Array<{ stepNumber: number; delayHours: number }> | null) ?? [];
+
+        const baseDelayMs = 5 * 60 * 1000;
         await outreachSendQueue().add(
-          `outreach:${prospect.id}`,
-          { prospectId: prospect.id, campaignId, channel: 'email' },
-          { delay: 5 * 60 * 1000 },
+          `outreach:${prospect.id}:step1`,
+          { prospectId: prospect.id, campaignId, channel: 'email', stepNumber: 1 },
+          { delay: baseDelayMs },
         );
-        log.info({ prospectId: prospect.id }, 'Outreach queued');
+
+        for (const step of steps) {
+          if (step.stepNumber <= 1) continue;
+          const delayMs = baseDelayMs + step.delayHours * 60 * 60 * 1000;
+          await outreachSendQueue().add(
+            `outreach:${prospect.id}:step${step.stepNumber}`,
+            { prospectId: prospect.id, campaignId, channel: 'email', stepNumber: step.stepNumber },
+            { delay: delayMs },
+          );
+        }
+
+        log.info({ prospectId: prospect.id, steps: steps.length + 1 }, 'Outreach queued');
       }
     },
     {

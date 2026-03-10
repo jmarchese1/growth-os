@@ -10,6 +10,7 @@ import { elevenLabsWebhookRoutes } from './routes/webhooks/elevenlabs.js';
 import { twilioWebhookRoutes } from './routes/webhooks/twilio.js';
 import { calWebhookRoutes } from './routes/webhooks/cal.js';
 import { sendgridInboundRoutes } from './routes/webhooks/sendgrid-inbound.js';
+import { sendgridEventRoutes } from './routes/webhooks/sendgrid-events.js';
 import { trackRoutes } from './routes/track.js';
 
 const log = createLogger('api:gateway');
@@ -65,9 +66,9 @@ export async function buildApp() {
   await app.register(twilioWebhookRoutes);
   await app.register(calWebhookRoutes);
   await app.register(sendgridInboundRoutes);
+  await app.register(sendgridEventRoutes);
   await app.register(trackRoutes);
 
   log.info('API Gateway configured');
   return app;
 }
-

@@ -102,5 +102,6 @@ export interface OutreachSendPayload {
     prospectId: string;
     campaignId: string;
     channel: 'email' | 'sms';
+    stepNumber?: number;
 }
 //# sourceMappingURL=events.types.d.ts.map

@@ -14,6 +14,12 @@ const updateCampaignSchema = z.object({
   emailSubject: z.string().min(5).optional(),
   emailBodyHtml: z.string().min(20).optional(),
   smsBody: z.string().optional(),
+  sequenceSteps: z.array(z.object({
+    stepNumber: z.number().int().positive(),
+    delayHours: z.number().min(0),
+    subject: z.string().min(2).optional(),
+    bodyHtml: z.string().min(20).optional(),
+  })).optional(),
 });
 
 const createCampaignSchema = z.object({
@@ -24,6 +30,12 @@ const createCampaignSchema = z.object({
   emailBodyHtml: z.string().min(20),
   smsBody: z.string().optional(),
   maxProspects: z.number().int().positive().nullable().optional(),
+  sequenceSteps: z.array(z.object({
+    stepNumber: z.number().int().positive(),
+    delayHours: z.number().min(0),
+    subject: z.string().min(2).optional(),
+    bodyHtml: z.string().min(20).optional(),
+  })).optional(),
 });
 
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
@@ -64,6 +76,9 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     };
     if (parsed.smsBody !== undefined) createData['smsBody'] = parsed.smsBody;
     if (parsed.maxProspects != null) createData['maxProspects'] = parsed.maxProspects;
+    if (parsed.sequenceSteps !== undefined) {
+      createData['sequenceSteps'] = parsed.sequenceSteps.sort((a, b) => a.stepNumber - b.stepNumber);
+    }
     const campaign = await db.outboundCampaign.create({ data: createData as never });
     log.info({ campaignId: campaign.id, name: campaign.name }, 'Campaign created');
     return reply.code(201).send(campaign);
@@ -91,6 +106,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
         ...(parsed.emailSubject !== undefined && { emailSubject: parsed.emailSubject }),
         ...(parsed.emailBodyHtml !== undefined && { emailBodyHtml: parsed.emailBodyHtml }),
         ...(parsed.smsBody !== undefined && { smsBody: parsed.smsBody }),
+        ...(parsed.sequenceSteps !== undefined && { sequenceSteps: parsed.sequenceSteps.sort((a, b) => a.stepNumber - b.stepNumber) }),
       },
     });
     log.info({ campaignId: id }, 'Campaign email updated');
@@ -224,12 +240,48 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   // ─── Mark prospect converted ──────────────────────────────────────────────
   app.patch('/prospects/:id/convert', async (request, reply) => {
     const { id } = request.params as { id: string };
-    const prospect = await db.prospectBusiness.update({
+    const prospect = await db.prospectBusiness.findUnique({
       where: { id },
-      data: { status: 'CONVERTED' },
+      include: { campaign: true },
     });
-    log.info({ prospectId: id }, 'Prospect marked converted');
-    return reply.send(prospect);
+    if (!prospect) throw new NotFoundError('Prospect', id);
+
+    if (prospect.convertedToBusinessId) {
+      const existing = await db.business.findUnique({ where: { id: prospect.convertedToBusinessId } });
+      return reply.send({ prospect, business: existing });
+    }
+
+    const baseSlug = prospect.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+    let slug = baseSlug;
+    let suffix = 1;
+    while (await db.business.findUnique({ where: { slug } })) {
+      slug = `${baseSlug}-${suffix++}`;
+    }
+
+    const business = await db.business.create({
+      data: {
+        name: prospect.name,
+        slug,
+        type: prospect.campaign.targetIndustry,
+        status: 'PENDING',
+        phone: prospect.phone ?? undefined,
+        email: prospect.email ?? undefined,
+        website: prospect.website ?? undefined,
+        address: prospect.address ?? undefined,
+        timezone: 'America/New_York',
+      },
+    });
+
+    const updated = await db.prospectBusiness.update({
+      where: { id },
+      data: { status: 'CONVERTED', convertedToBusinessId: business.id },
+    });
+
+    log.info({ prospectId: id, businessId: business.id }, 'Prospect converted to business');
+    return reply.send({ prospect: updated, business });
   });
 
   // ─── Send email to prospect now (bypass queue delay) ──────────────────────
@@ -256,6 +308,9 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       return reply.code(200).send({ ok: true, messageId });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
+      if (msg.toLowerCase().includes('suppressed')) {
+        return reply.code(400).send({ error: 'Email is suppressed for this prospect' });
+      }
       // Extract SendGrid body if present
       const sgBody = (err as { response?: { body?: { errors?: { message: string }[] } } }).response?.body;
       const sgMsg = sgBody?.errors?.[0]?.message ?? msg;

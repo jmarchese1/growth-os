@@ -28,6 +28,14 @@ interface HunterDomainSearchResponse {
   errors?: Array<{ id: string; code: number; details: string }>;
 }
 
+interface HunterVerifyResponse {
+  data?: {
+    result?: string; // deliverable | undeliverable | risky | unknown (Hunter terminology)
+    score?: number;
+  };
+  errors?: Array<{ id: string; code: number; details: string }>;
+}
+
 /**
  * Look up the best contact email for a business domain using Hunter.io.
  * Returns null if no email found, API key missing, or request fails.
@@ -92,6 +100,39 @@ export function extractDomain(websiteUrl: string): string | null {
     const parsed = new URL(websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`);
     return parsed.hostname.replace(/^www\./, '');
   } catch {
+    return null;
+  }
+}
+
+export async function verifyEmailViaHunter(
+  email: string,
+  apiKey: string,
+): Promise<{ result?: string; score?: number } | null> {
+  const url = `https://api.hunter.io/v2/email-verifier?email=${encodeURIComponent(email)}&api_key=${apiKey}`;
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+
+    if (!res.ok) {
+      log.warn({ email, status: res.status }, 'Hunter.io email verification failed');
+      return null;
+    }
+
+    const json = (await res.json()) as HunterVerifyResponse;
+    if (json.errors?.length) {
+      log.warn({ email, errors: json.errors }, 'Hunter.io verification API error');
+      return null;
+    }
+
+    const result = json.data?.result;
+    const score = json.data?.score;
+    log.info({ email, result, score }, 'Hunter.io email verified');
+    return { result, score };
+  } catch {
+    log.warn({ email }, 'Hunter.io verification threw â€” skipping');
     return null;
   }
 }

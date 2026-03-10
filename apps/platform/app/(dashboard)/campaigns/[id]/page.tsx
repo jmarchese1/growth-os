@@ -25,6 +25,9 @@ interface Prospect {
   address: { formatted?: string; city?: string; state?: string } | null;
   googleRating: number | null;
   googleReviewCount: number | null;
+  contactFirstName: string | null;
+  contactLastName: string | null;
+  emailVerificationStatus: string | null;
   status: ProspectStatus;
   createdAt: string;
   updatedAt: string;
@@ -281,9 +284,16 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                   {/* Email */}
                   <td className="px-4 py-3 min-w-[190px]">
                     {p.email ? (
-                      <a href={`mailto:${p.email}`} className="font-mono text-xs text-slate-300 hover:text-violet-400 transition-colors truncate block">
-                        {p.email}
-                      </a>
+                      <div className="space-y-1">
+                        <a href={`mailto:${p.email}`} className="font-mono text-xs text-slate-300 hover:text-violet-400 transition-colors truncate block">
+                          {p.email}
+                        </a>
+                        {p.emailVerificationStatus && (
+                          <span className="text-[9px] uppercase tracking-wider text-slate-600">
+                            {p.emailVerificationStatus}
+                          </span>
+                        )}
+                      </div>
                     ) : (
                       <span className="text-xs text-slate-600 italic">not found</span>
                     )}
@@ -291,12 +301,12 @@ export default async function CampaignDetailPage({ params, searchParams }: {
 
                   {/* First Name — Hunter.io */}
                   <td className="px-4 py-3 min-w-[100px]">
-                    <span className="text-xs text-slate-600 italic">—</span>
+                    <span className="text-xs text-slate-300">{p.contactFirstName ?? '—'}</span>
                   </td>
 
                   {/* Last Name — Hunter.io */}
                   <td className="px-4 py-3 min-w-[100px]">
-                    <span className="text-xs text-slate-600 italic">—</span>
+                    <span className="text-xs text-slate-300">{p.contactLastName ?? '—'}</span>
                   </td>
 
                   {/* Google Rating */}

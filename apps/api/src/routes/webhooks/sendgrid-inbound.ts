@@ -20,6 +20,15 @@ function extractReplyText(text: string): string {
   return topLines.join('\n').trim();
 }
 
+function classifyReply(text: string): string {
+  const lower = text.toLowerCase();
+  if (/(unsubscribe|opt\s*out|remove me|do not contact|stop emailing|stop emails)/.test(lower)) return 'UNSUBSCRIBE';
+  if (/(out of office|auto-?reply|vacation|away from (the )?office)/.test(lower)) return 'OOO';
+  if (/(interested|let's|lets|call|meeting|schedule|demo|sounds good|yes)/.test(lower)) return 'POSITIVE';
+  if (/(not interested|no thanks|stop|do not|don't contact)/.test(lower)) return 'NEGATIVE';
+  return 'NEUTRAL';
+}
+
 export async function sendgridInboundRoutes(app: FastifyInstance): Promise<void> {
   // SendGrid Inbound Parse sends multipart/form-data
   app.post('/webhooks/sendgrid/inbound', async (request, reply) => {
@@ -56,6 +65,7 @@ export async function sendgridInboundRoutes(app: FastifyInstance): Promise<void>
 
     const latestMessage = prospect.messages[0];
     const replyText = extractReplyText(text);
+    const replyCategory = classifyReply(replyText);
 
     // Update outreach message
     if (latestMessage) {
@@ -65,6 +75,7 @@ export async function sendgridInboundRoutes(app: FastifyInstance): Promise<void>
           repliedAt: new Date(),
           replyBody: replyText.slice(0, 2000),
           status: 'REPLIED',
+          replyCategory,
         },
       });
     }
@@ -72,8 +83,16 @@ export async function sendgridInboundRoutes(app: FastifyInstance): Promise<void>
     // Update prospect status
     await db.prospectBusiness.update({
       where: { id: prospect.id },
-      data: { status: 'REPLIED' },
+      data: { status: replyCategory === 'UNSUBSCRIBE' ? 'UNSUBSCRIBED' : 'REPLIED' },
     });
+
+    if (replyCategory === 'UNSUBSCRIBE' && fromEmail) {
+      await db.outreachSuppression.upsert({
+        where: { email: fromEmail },
+        update: { reason: 'unsubscribe', source: 'sendgrid_inbound' },
+        create: { email: fromEmail, reason: 'unsubscribe', source: 'sendgrid_inbound' },
+      });
+    }
 
     log.info({ prospectId: prospect.id, fromEmail }, 'Reply recorded');
 

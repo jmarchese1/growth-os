@@ -7,13 +7,13 @@ import { sendColdEmail } from '../outreach/email-sender.js';
 
 const log = createLogger('prospector:outreach-worker');
 
-const TERMINAL_STATUSES = new Set(['CONTACTED', 'OPENED', 'REPLIED', 'MEETING_BOOKED', 'CONVERTED', 'UNSUBSCRIBED', 'DEAD']);
+const TERMINAL_STATUSES = new Set(['CONTACTED', 'OPENED', 'REPLIED', 'MEETING_BOOKED', 'CONVERTED', 'UNSUBSCRIBED', 'BOUNCED', 'DEAD']);
 
 export function startOutreachWorker(): Worker {
   const worker = new Worker<OutreachSendPayload>(
     QUEUE_NAMES.OUTREACH_SEND,
     async (job) => {
-      const { prospectId, campaignId } = job.data;
+      const { prospectId, campaignId, stepNumber } = job.data;
 
       const [prospect, campaign] = await Promise.all([
         db.prospectBusiness.findUnique({ where: { id: prospectId } }),
@@ -37,7 +37,50 @@ export function startOutreachWorker(): Worker {
         return;
       }
 
-      await sendColdEmail(prospect, campaign);
+      const suppression = await db.outreachSuppression.findUnique({
+        where: { email: prospect.email.toLowerCase() },
+      });
+      if (suppression) {
+        const status = suppression.reason.includes('bounce') || suppression.reason.includes('invalid')
+          ? 'BOUNCED'
+          : 'UNSUBSCRIBED';
+        await db.prospectBusiness.update({ where: { id: prospectId }, data: { status } });
+        log.info({ prospectId, status }, 'Suppressed email — skipping send');
+        return;
+      }
+
+      const steps = (campaign.sequenceSteps as Array<{
+        stepNumber: number;
+        delayHours: number;
+        subject?: string;
+        bodyHtml?: string;
+      }> | null) ?? [];
+
+      const step = stepNumber ? steps.find((s) => s.stepNumber === stepNumber) : null;
+      if (stepNumber && !step) {
+        log.info({ prospectId, stepNumber }, 'Sequence step not found â€” skipping');
+        return;
+      }
+
+      try {
+        await sendColdEmail(prospect, campaign, {
+          subjectOverride: step?.subject,
+          bodyHtmlOverride: step?.bodyHtml,
+          stepNumber,
+          disableAi: stepNumber ? stepNumber > 1 : false,
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.toLowerCase().includes('suppressed')) {
+          await db.prospectBusiness.update({
+            where: { id: prospectId },
+            data: { status: 'UNSUBSCRIBED' },
+          });
+          log.info({ prospectId }, 'Suppressed email â€” marking unsubscribed');
+          return;
+        }
+        throw err;
+      }
     },
     {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

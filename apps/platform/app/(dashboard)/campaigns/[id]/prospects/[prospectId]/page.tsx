@@ -31,10 +31,17 @@ interface ProspectDetail {
   name: string;
   email: string | null;
   emailSource: string | null;
+  emailVerificationStatus: string | null;
+  emailVerificationScore: number | null;
+  emailVerifiedAt: string | null;
   phone: string | null;
   phoneSource: string | null;
   website: string | null;
   address: { formatted?: string; city?: string; state?: string; street?: string; zip?: string } | null;
+  contactFirstName: string | null;
+  contactLastName: string | null;
+  contactTitle: string | null;
+  contactLinkedIn: string | null;
   status: ProspectStatus;
   googlePlaceId: string | null;
   googleRating: number | null;
@@ -159,6 +166,11 @@ export default async function ProspectDetailPage({ params }: {
                 <div className="mt-0.5">
                   <SourceBadge source={prospect.emailSource} />
                 </div>
+                {prospect.emailVerificationStatus && (
+                  <div className="mt-1 text-[10px] uppercase tracking-wider text-slate-600">
+                    {prospect.emailVerificationStatus}{prospect.emailVerificationScore != null ? ` · ${prospect.emailVerificationScore}` : ''}
+                  </div>
+                )}
               </dd>
             </div>
             <div>
@@ -178,19 +190,28 @@ export default async function ProspectDetailPage({ params }: {
             </div>
             <div>
               <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">First Name</dt>
-              <dd className="text-sm text-slate-700 italic">— <span className="text-[9px] text-slate-800">Hunter.io pending</span></dd>
+              <dd className="text-sm text-slate-300">{prospect.contactFirstName ?? '—'}</dd>
             </div>
             <div>
               <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Last Name</dt>
-              <dd className="text-sm text-slate-700 italic">— <span className="text-[9px] text-slate-800">Hunter.io pending</span></dd>
+              <dd className="text-sm text-slate-300">{prospect.contactLastName ?? '—'}</dd>
             </div>
             <div>
               <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Title</dt>
-              <dd className="text-sm text-slate-700 italic">— <span className="text-[9px] text-slate-800">Hunter.io pending</span></dd>
+              <dd className="text-sm text-slate-300">{prospect.contactTitle ?? '—'}</dd>
             </div>
             <div>
               <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">LinkedIn</dt>
-              <dd className="text-sm text-slate-700 italic">— <span className="text-[9px] text-slate-800">Hunter.io pending</span></dd>
+              <dd>
+                {prospect.contactLinkedIn ? (
+                  <a href={prospect.contactLinkedIn} target="_blank" rel="noopener noreferrer"
+                    className="text-sm text-violet-400 hover:text-violet-300 hover:underline transition-colors break-all">
+                    {prospect.contactLinkedIn}
+                  </a>
+                ) : (
+                  <span className="text-sm text-slate-300">—</span>
+                )}
+              </dd>
             </div>
           </dl>
         </div>

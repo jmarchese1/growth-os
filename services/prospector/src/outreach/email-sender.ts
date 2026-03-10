@@ -5,6 +5,7 @@ import { db } from '@embedo/db';
 import type { OutboundCampaign, ProspectBusiness } from '@embedo/db';
 import { renderEmailHtml } from './templates.js';
 import { generatePersonalizedEmail } from './ai-personalizer.js';
+import { isSuppressed } from './suppression.js';
 import { env } from '../config.js';
 
 const log = createLogger('prospector:email-sender');
@@ -12,9 +13,19 @@ const log = createLogger('prospector:email-sender');
 export async function sendColdEmail(
   prospect: ProspectBusiness,
   campaign: OutboundCampaign,
+  options?: {
+    subjectOverride?: string;
+    bodyHtmlOverride?: string;
+    stepNumber?: number;
+    disableAi?: boolean;
+  },
 ): Promise<string> {
   if (!prospect.email) throw new Error(`Prospect ${prospect.id} has no email`);
   if (!env.SENDGRID_API_KEY) throw new Error('SENDGRID_API_KEY not configured');
+
+  if (await isSuppressed(prospect.email)) {
+    throw new Error(`Email suppressed for ${prospect.email}`);
+  }
 
   sgMail.setApiKey(env.SENDGRID_API_KEY);
 
@@ -23,9 +34,12 @@ export async function sendColdEmail(
   const replyEmail = env.REPLY_TRACKING_EMAIL ?? env.SENDGRID_FROM_EMAIL ?? 'jason@embedo.co';
   const calLink = process.env['CAL_LINK'] ?? 'https://cal.com/jason-marchese-mkfkwl/30min';
 
+  const subjectTemplate = options?.subjectOverride ?? campaign.emailSubject;
+  const bodyTemplate = options?.bodyHtmlOverride ?? campaign.emailBodyHtml;
+
   // Use Claude to personalize per prospect if ANTHROPIC_API_KEY is configured
   let bodyHtml: string;
-  if (env.ANTHROPIC_API_KEY) {
+  if (env.ANTHROPIC_API_KEY && !options?.disableAi && !options?.bodyHtmlOverride) {
     const aiHtml = await generatePersonalizedEmail(
       {
         name: prospect.name,
@@ -39,12 +53,12 @@ export async function sendColdEmail(
       env.ANTHROPIC_API_KEY,
     );
     // Fall back to static template if AI fails
-    bodyHtml = aiHtml ?? renderEmailHtml(campaign.emailBodyHtml, { businessName: prospect.name, city, calLink, replyEmail });
+    bodyHtml = aiHtml ?? renderEmailHtml(bodyTemplate, { businessName: prospect.name, city, calLink, replyEmail });
   } else {
-    bodyHtml = renderEmailHtml(campaign.emailBodyHtml, { businessName: prospect.name, city, calLink, replyEmail });
+    bodyHtml = renderEmailHtml(bodyTemplate, { businessName: prospect.name, city, calLink, replyEmail });
   }
 
-  const subject = renderEmailHtml(campaign.emailSubject, {
+  const subject = renderEmailHtml(subjectTemplate, {
     businessName: prospect.name,
     city,
     calLink,
@@ -67,6 +81,12 @@ export async function sendColdEmail(
       replyTo: replyEmail,  // replies go to tracking address; from must be verified
       subject,
       html: htmlWithPixel,
+      customArgs: {
+        trackingPixelId,
+        prospectId: prospect.id,
+        campaignId: campaign.id,
+        stepNumber: options?.stepNumber ?? 1,
+      },
     });
     messageId = (response.headers as Record<string, string>)['x-message-id'] ?? trackingPixelId;
   } catch (err) {
