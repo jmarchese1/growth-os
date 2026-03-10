@@ -15,6 +15,10 @@ export async function twilioWebhookRoutes(app: FastifyInstance): Promise<void> {
 
     log.info({ from: body['From'], to: toNumber }, 'Inbound call received');
 
+    if (!toNumber) {
+      return reply.code(400).send({ error: 'Missing To number' });
+    }
+
     // Find business by Twilio phone number
     const business = await db.business.findFirst({
       where: { twilioPhoneNumber: toNumber },
