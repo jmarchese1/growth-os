@@ -10,7 +10,7 @@ export default function ProblemSection() {
 
   return (
     <section className="py-20 px-6 bg-white">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         {/* Top row: text + logo display */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-16">
           <div>

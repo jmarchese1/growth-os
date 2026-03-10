@@ -22,8 +22,8 @@ export default function ParticleCanvas() {
 
     let animId: number;
     const particles: Particle[] = [];
-    const COUNT = 58;
-    const CONNECT_DIST = 162;
+    const COUNT = 78;
+    const CONNECT_DIST = 190;
     const mouse = { x: -9999, y: -9999 };
 
     const resize = () => {
@@ -49,7 +49,7 @@ export default function ParticleCanvas() {
         vx: (Math.random() - 0.5) * 0.36,
         vy: (Math.random() - 0.5) * 0.36,
         radius: Math.random() * 1.9 + 0.9,
-        opacity: Math.random() * 0.50 + 0.22,
+        opacity: Math.random() * 0.72 + 0.38,
         teal: Math.random() < 0.28,
       });
     }
@@ -67,7 +67,7 @@ export default function ParticleCanvas() {
           const dy = a.y - b.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < CONNECT_DIST) {
-            const alpha = (1 - dist / CONNECT_DIST) * 0.12;
+            const alpha = (1 - dist / CONNECT_DIST) * 0.22;
             // Blend color: rose-rose = rose, indigo-indigo = indigo, mixed = soft violet
             const lineColor = (a.teal && b.teal)
               ? `rgba(244,114,182,${alpha})`
@@ -76,7 +76,7 @@ export default function ParticleCanvas() {
               : `rgba(168,100,220,${alpha})`;
             ctx.beginPath();
             ctx.strokeStyle = lineColor;
-            ctx.lineWidth = 0.9;
+            ctx.lineWidth = 1.2;
             ctx.moveTo(a.x, a.y);
             ctx.lineTo(b.x, b.y);
             ctx.stroke();
@@ -128,7 +128,7 @@ export default function ParticleCanvas() {
     <canvas
       ref={canvasRef}
       className="absolute inset-0 w-full h-full pointer-events-auto"
-      style={{ opacity: 0.68 }}
+      style={{ opacity: 0.95 }}
     />
   );
 }

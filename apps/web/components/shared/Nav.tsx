@@ -18,7 +18,7 @@ export default function Nav() {
         scrolled ? 'bg-white/90 backdrop-blur-md border-b border-gray-100' : 'bg-transparent'
       }`}
     >
-      <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div className="w-full px-8 lg:px-12 h-[72px] flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
           <EmbedoLogo size={28} />
           <span className="text-base font-bold tracking-tight">Embedo</span>

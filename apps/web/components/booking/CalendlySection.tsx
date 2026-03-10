@@ -41,7 +41,7 @@ export default function CalendlySection() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-indigo-50 opacity-60 blur-3xl" />
         </div>
 
-        <div className="relative z-10 max-w-6xl mx-auto">
+        <div className="relative z-10 max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
 
             {/* Photo with orbital background */}
