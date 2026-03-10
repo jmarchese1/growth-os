@@ -189,13 +189,6 @@ export default function CalendlySection() {
 
               {/* Booking CTA — inline with bio */}
               <div className="mt-8">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-200 bg-indigo-50 mb-5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                  <span className="text-xs font-semibold tracking-[0.15em] uppercase text-indigo-600">
-                    Free Strategy Call
-                  </span>
-                </div>
-
                 <div>
                   <CalModal calLink={calLink}>
                     <span
