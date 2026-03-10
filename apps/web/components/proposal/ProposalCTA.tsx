@@ -60,13 +60,7 @@ export default function ProposalCTA() {
     setForm((f) => ({ ...f, [field]: value }));
 
   return (
-    <section id="proposal" className="pt-12 pb-20 px-6 text-gray-900 relative overflow-hidden bg-white bg-grid">
-      {/* Neural network — same as hero */}
-      <ParticleCanvas />
-      {/* Soft radial glow */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-indigo-50 opacity-70 blur-3xl" />
-      </div>
+    <section id="proposal" className="pt-12 pb-20 px-6 text-gray-900 relative overflow-hidden bg-white">
 
       <div className="max-w-2xl mx-auto relative z-10">
         <p className="text-xs font-semibold tracking-[0.2em] uppercase text-embedo-accent mb-4">
