@@ -252,11 +252,7 @@ export default function ProposalCTA() {
 
             <button
               type="submit"
-              className="w-full px-8 py-4 text-gray-900 text-base font-semibold rounded-full transition-all hover:scale-105 active:scale-95"
-              style={{
-                background: 'linear-gradient(135deg, #4ade80, #22c55e)',
-                boxShadow: '0 0 24px rgba(74,222,128,0.50), 0 4px 16px rgba(34,197,94,0.30)',
-              }}
+              className="w-full px-8 py-4 bg-black text-white text-base font-semibold rounded-full transition-all hover:bg-indigo-700 hover:scale-105 active:scale-95"
             >
               Generate My Proposal →
             </button>
