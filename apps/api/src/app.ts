@@ -27,6 +27,10 @@ export async function buildApp() {
     contentSecurityPolicy: false, // disabled for API
   });
 
+  await app.register(multipart, {
+    attachFieldsToBody: 'keyValues',
+  });
+
   await app.register(rateLimit, {
     max: 200,
     timeWindow: '1 minute',
