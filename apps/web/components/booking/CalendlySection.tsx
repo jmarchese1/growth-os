@@ -188,18 +188,17 @@ export default function CalendlySection() {
         </div>
       </section>
 
-      {/* ── Booking CTA — dark indigo ──────────────────────── */}
-      <section id="book" className="relative py-20 px-6 bg-indigo-950 text-white overflow-hidden">
+      {/* ── Booking CTA — light ──────────────────────── */}
+      <section id="book" className="relative py-20 px-6 bg-gray-50 text-gray-900 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-indigo-800 opacity-30 blur-3xl" />
-          <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-violet-900 opacity-15 blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full bg-indigo-900 opacity-20 blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-indigo-100 opacity-60 blur-3xl" />
+          <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-violet-100 opacity-40 blur-3xl" />
         </div>
 
         <div className="relative z-10 max-w-3xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-700 bg-indigo-900/80 mb-8">
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-300 animate-pulse" />
-            <span className="text-xs font-semibold tracking-[0.15em] uppercase text-indigo-300">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-200 bg-indigo-50 mb-8">
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+            <span className="text-xs font-semibold tracking-[0.15em] uppercase text-indigo-600">
               Free Strategy Call
             </span>
           </div>
@@ -207,13 +206,13 @@ export default function CalendlySection() {
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-6">
             Book a call. Find out how AI
             <br />
-            <span className="text-indigo-300">can evolve your business.</span>
+            <span className="text-indigo-600">can evolve your business.</span>
           </h2>
 
-          <p className="text-lg text-indigo-200/70 max-w-xl mx-auto leading-relaxed mb-10">
+          <p className="text-lg text-gray-500 max-w-xl mx-auto leading-relaxed mb-10">
             In 30 minutes, we&apos;ll walk through exactly what&apos;s possible for your business —
             which modules make the most impact, what it costs, and how fast we can go live.{' '}
-            <span className="text-indigo-300">No pressure, no obligation.</span>
+            <span className="text-gray-700 font-medium">No pressure, no obligation.</span>
           </p>
 
           <CalModal calLink={calLink}>
@@ -229,7 +228,7 @@ export default function CalendlySection() {
             </span>
           </CalModal>
 
-          <div className="mt-8 flex items-center justify-center gap-6 text-sm text-indigo-400/70">
+          <div className="mt-8 flex items-center justify-center gap-6 text-sm text-gray-400">
             <span>✓ 30 minutes</span>
             <span>✓ No obligation</span>
             <span>✓ Free</span>
