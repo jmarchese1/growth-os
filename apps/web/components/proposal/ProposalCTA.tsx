@@ -135,11 +135,11 @@ export default function ProposalCTA() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Business Size</label>
+                <label className="block text-sm text-gray-400 mb-1">Business Size</label>
                 <select
                   value={form.size}
                   onChange={(e) => update('size', e.target.value)}
-                  className="w-full bg-white/70 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-indigo-400 backdrop-blur-sm"
+                  className="w-full bg-gray-900 border border-white/12 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500"
                 >
                   <option value="solo">Just me</option>
                   <option value="small">2–10 employees</option>
@@ -148,12 +148,12 @@ export default function ProposalCTA() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Location *</label>
+                <label className="block text-sm text-gray-400 mb-1">Location *</label>
                 <input
                   required
                   value={form.location}
                   onChange={(e) => update('location', e.target.value)}
-                  className="w-full bg-white/70 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-400 backdrop-blur-sm"
+                  className="w-full bg-white/8 border border-white/12 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 backdrop-blur-sm"
                   placeholder="Austin, TX"
                 />
               </div>
