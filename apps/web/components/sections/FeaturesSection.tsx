@@ -9,12 +9,12 @@ const features = [
   { icon: '🚀', title: 'Live in days, not months', description: 'From onboarding to fully deployed AI infrastructure in days. No dev team, no technical knowledge required.', accent: false },
 ];
 
-const ORBIT_R = 108;
-const NODE_D  = 60;
+const ORBIT_R = 162;
+const NODE_D  = 68;
 const DURATION = 24;
 const COUNT = 6;
-const INNER_R = 62;
-const OUTER_R = 152;
+const INNER_R = 93;
+const OUTER_R = 228;
 
 const TOOLS = [
   { name: 'Anthropic',  color: '#D97706', slug: 'anthropic'  },
