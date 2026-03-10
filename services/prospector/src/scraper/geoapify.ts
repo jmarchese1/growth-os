@@ -53,7 +53,7 @@ interface GeoapifyPlacesResponse {
   }>;
 }
 
-async function geocodeCity(city: string, apiKey: string): Promise<{ lon: number; lat: number }> {
+export async function geocodeCity(city: string, apiKey: string): Promise<{ lon: number; lat: number }> {
   // Attempt 1: strict 'city' type
   // Attempt 2: unrestricted — catches townships, CDPs, boroughs (e.g. "Edison, NJ", "Brooklyn, NY")
   const paramSets = [
