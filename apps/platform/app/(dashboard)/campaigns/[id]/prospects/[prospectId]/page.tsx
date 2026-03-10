@@ -428,9 +428,9 @@ export default async function ProspectDetailPage({ params }: {
                   )}
                 </div>
 
-                {/* Sent email body */}
+                {/* Sent email body — expanded by default */}
                 {msg.body && (
-                  <details className="group">
+                  <details className="group" open>
                     <summary className="text-[10px] font-semibold text-slate-600 uppercase tracking-wider cursor-pointer select-none hover:text-slate-400 transition-colors list-none flex items-center gap-1.5">
                       <svg className="w-3 h-3 transition-transform group-open:rotate-90 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
