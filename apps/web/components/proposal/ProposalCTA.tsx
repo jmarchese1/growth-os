@@ -59,7 +59,7 @@ export default function ProposalCTA() {
     setForm((f) => ({ ...f, [field]: value }));
 
   return (
-    <section id="proposal" className="pt-12 pb-20 px-6 text-gray-900 relative overflow-hidden bg-white">
+    <section id="proposal" className="pt-20 pb-20 px-6 text-gray-900 relative overflow-hidden bg-white">
 
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
