@@ -5,7 +5,7 @@ import { createLogger } from '@embedo/utils';
 import type { ProspectDiscoveredPayload } from '@embedo/types';
 import { extractEmailFromWebsite, extractPhoneFromWebsite } from '../scraper/website-email.js';
 import { findBusinessEmail } from '../scraper/brave-search.js';
-import { findEmailViaHunter, extractDomain, verifyEmailViaHunter } from '../scraper/hunter.js';
+import { findEmailViaApollo, extractDomain, verifyEmailViaApollo } from '../scraper/apollo.js';
 import { upsertSuppression } from '../outreach/suppression.js';
 import { env } from '../config.js';
 
@@ -40,15 +40,15 @@ async function enrichEmail(
     if (found) return { email: found, source: 'brave_search' };
   }
 
-  // 4. Hunter.io domain search — drop in HUNTER_API_KEY to enable
-  if (env.HUNTER_API_KEY && website) {
+  // 4. Apollo.io domain search — drop in APOLLO_API_KEY to enable
+  if (env.APOLLO_API_KEY && website) {
     const domain = extractDomain(website);
     if (domain) {
-      const result = await findEmailViaHunter(domain, env.HUNTER_API_KEY);
+      const result = await findEmailViaApollo(domain, env.APOLLO_API_KEY);
       if (result) {
         return {
           email: result.email,
-          source: 'hunter',
+          source: 'apollo',
           firstName: result.firstName,
           lastName: result.lastName,
           position: result.position,
@@ -77,16 +77,19 @@ export function startProspectWorker(): Worker {
 
       const city = (address['city'] as string | undefined) ?? '';
       const emailResult = await enrichEmail(name, city, geoapifyEmail, website);
+
+      // Verify the discovered email to avoid hard bounces
       let verification: { result?: string; score?: number } | null = null;
-      if (emailResult?.email && env.HUNTER_API_KEY) {
-        verification = await verifyEmailViaHunter(emailResult.email, env.HUNTER_API_KEY);
+      if (emailResult?.email && env.APOLLO_API_KEY) {
+        const apolloResult = await verifyEmailViaApollo(emailResult.email, env.APOLLO_API_KEY);
+        verification = { result: apolloResult };
       }
 
       const verificationStatus = verification?.result?.toLowerCase();
-      const isInvalid = verificationStatus === 'undeliverable' || verificationStatus === 'invalid' || verificationStatus === 'bad';
+      const isInvalid = verificationStatus === 'undeliverable';
       const status = isInvalid ? 'DEAD' : emailResult ? 'ENRICHED' : 'NEW';
 
-      // If Places/Geoapify didn't return a phone, try scraping the website directly
+      // If Geoapify did not return a phone, try scraping the website
       let resolvedPhone = phone ?? null;
       let phoneSource: string | null = phone ? 'geoapify' : null;
       if (!resolvedPhone && website) {
@@ -96,6 +99,8 @@ export function startProspectWorker(): Worker {
           log.debug({ name, phone: resolvedPhone }, 'Phone found via website scrape');
         }
       }
+
+      const baseDelayMs = 5 * 60 * 1000; // 5 minutes before first email
 
       const prospect = await db.prospectBusiness.create({
         data: {
@@ -118,15 +123,22 @@ export function startProspectWorker(): Worker {
           googleRating: null,
           googleReviewCount: null,
           status,
+          // Countdown to first email shown in campaign table
+          nextFollowUpAt: emailResult?.email && !isInvalid
+            ? new Date(Date.now() + baseDelayMs)
+            : null,
         },
       });
 
-      log.info({ prospectId: prospect.id, name, email: emailResult?.email, emailSource: emailResult?.source, status }, 'Prospect created');
+      log.info(
+        { prospectId: prospect.id, name, email: emailResult?.email, emailSource: emailResult?.source, status },
+        'Prospect created',
+      );
 
       if (emailResult?.email) {
         if (isInvalid) {
-          await upsertSuppression({ email: emailResult.email, reason: 'verification_invalid', source: 'hunter' });
-          log.info({ prospectId: prospect.id }, 'Invalid email â€” suppressed');
+          await upsertSuppression({ email: emailResult.email, reason: 'verification_invalid', source: 'apollo' });
+          log.info({ prospectId: prospect.id }, 'Invalid email — suppressed');
           return;
         }
 
@@ -136,13 +148,14 @@ export function startProspectWorker(): Worker {
         });
         const steps = (campaign?.sequenceSteps as Array<{ stepNumber: number; delayHours: number }> | null) ?? [];
 
-        const baseDelayMs = 5 * 60 * 1000;
+        // Queue step 1 (cold email)
         await outreachSendQueue().add(
           `outreach:${prospect.id}:step1`,
           { prospectId: prospect.id, campaignId, channel: 'email', stepNumber: 1 },
           { delay: baseDelayMs },
         );
 
+        // Queue follow-up steps with their configured delays
         for (const step of steps) {
           if (step.stepNumber <= 1) continue;
           const delayMs = baseDelayMs + step.delayHours * 60 * 60 * 1000;
@@ -153,7 +166,7 @@ export function startProspectWorker(): Worker {
           );
         }
 
-        log.info({ prospectId: prospect.id, steps: steps.length + 1 }, 'Outreach queued');
+        log.info({ prospectId: prospect.id, steps: steps.length + 1 }, 'Outreach sequence queued');
       }
     },
     {
