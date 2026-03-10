@@ -105,7 +105,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     };
     const replyEmail = env.REPLY_TRACKING_EMAIL ?? env.SENDGRID_FROM_EMAIL ?? 'jason@embedo.io';
     const html = await generatePersonalizedEmail(
-      { name: name ?? 'Acme Restaurant', city: city ?? 'New York', website: website ?? null, googleRating, googleReviewCount },
+      { name: name ?? 'Acme Restaurant', city: city ?? 'New York', website: website ?? null, googleRating: googleRating ?? null, googleReviewCount: googleReviewCount ?? null },
       replyEmail,
       env.ANTHROPIC_API_KEY,
     );
