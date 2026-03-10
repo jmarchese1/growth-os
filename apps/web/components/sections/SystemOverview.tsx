@@ -63,18 +63,105 @@ export default function SystemOverview() {
       {/* Header */}
       <div className="relative z-10 py-10 px-6 pb-8">
         <div className="max-w-7xl mx-auto">
-          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-gray-400 mb-4">
-            The System
-          </p>
-          <h2 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight mb-4">
-            One platform.
-            <br />
-            <span className="text-gradient">Eight AI modules.</span>
-          </h2>
-          <p className="text-xl text-gray-500 max-w-2xl leading-relaxed">
-            We deploy a complete AI infrastructure stack — every module
-            working together, all connected, live in days.
-          </p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            {/* Left: copy */}
+            <div>
+              <p className="text-xs font-semibold tracking-[0.2em] uppercase text-gray-400 mb-4">
+                The System
+              </p>
+              <h2 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight mb-4">
+                One platform.
+                <br />
+                <span className="text-gradient">Eight AI modules.</span>
+              </h2>
+              <p className="text-xl text-gray-500 max-w-2xl leading-relaxed">
+                We deploy a complete AI infrastructure stack — every module
+                working together, all connected, live in days.
+              </p>
+            </div>
+
+            {/* Right: floating AI brain illustration */}
+            <div className="hidden lg:flex items-center justify-center">
+              <div style={{ animation: 'proposal-float 5s ease-in-out infinite' }}>
+                <svg width="320" height="300" viewBox="0 0 320 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <radialGradient id="brain-glow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor="rgba(99,102,241,0.15)" />
+                      <stop offset="100%" stopColor="rgba(99,102,241,0)" />
+                    </radialGradient>
+                    <linearGradient id="node-grad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#6366f1" />
+                      <stop offset="100%" stopColor="#8b5cf6" />
+                    </linearGradient>
+                    <linearGradient id="node-grad2" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#8b5cf6" />
+                      <stop offset="100%" stopColor="#a78bfa" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Background glow */}
+                  <circle cx="160" cy="150" r="130" fill="url(#brain-glow)" />
+
+                  {/* Connection lines */}
+                  {[
+                    [160,150, 80,80],  [160,150, 240,80],  [160,150, 60,170],
+                    [160,150, 260,170],[160,150, 100,250],  [160,150, 220,250],
+                    [80,80,  60,170],  [240,80, 260,170],   [60,170, 100,250],
+                    [260,170,220,250], [80,80,  240,80],
+                  ].map(([x1,y1,x2,y2], i) => (
+                    <line key={i} x1={x1} y1={y1} x2={x2} y2={y2}
+                      stroke="rgba(99,102,241,0.18)" strokeWidth="1.2"
+                      strokeDasharray="4 6"
+                    />
+                  ))}
+
+                  {/* Outer nodes */}
+                  {[
+                    { cx: 80,  cy: 80,  r: 22, label: '🎙️', delay: '0s'   },
+                    { cx: 240, cy: 80,  r: 22, label: '💬', delay: '0.6s' },
+                    { cx: 60,  cy: 170, r: 20, label: '📈', delay: '1.2s' },
+                    { cx: 260, cy: 170, r: 20, label: '📱', delay: '1.8s' },
+                    { cx: 100, cy: 250, r: 18, label: '✉️', delay: '2.4s' },
+                    { cx: 220, cy: 250, r: 18, label: '📊', delay: '3.0s' },
+                  ].map((n, i) => (
+                    <g key={i} style={{ animation: `proposal-sparkle 3s ease-in-out infinite`, animationDelay: n.delay }}>
+                      <circle cx={n.cx} cy={n.cy} r={n.r + 6} fill="rgba(99,102,241,0.08)" />
+                      <circle cx={n.cx} cy={n.cy} r={n.r} fill="white"
+                        stroke="rgba(99,102,241,0.35)" strokeWidth="1.5"
+                        style={{ filter: 'drop-shadow(0 2px 8px rgba(99,102,241,0.20))' }}
+                      />
+                      <text x={n.cx} y={n.cy + 6} textAnchor="middle" fontSize={n.r * 0.85}>{n.label}</text>
+                    </g>
+                  ))}
+
+                  {/* Center hub */}
+                  <circle cx="160" cy="150" r="44" fill="rgba(99,102,241,0.08)" />
+                  <circle cx="160" cy="150" r="36" fill="url(#node-grad)"
+                    style={{ filter: 'drop-shadow(0 0 20px rgba(99,102,241,0.55))' }}
+                  />
+                  <circle cx="160" cy="150" r="28" fill="url(#node-grad2)" opacity="0.6" />
+                  {/* E letter in center */}
+                  <text x="160" y="157" textAnchor="middle" fontSize="22" fontWeight="700" fill="white" fontFamily="system-ui">E</text>
+
+                  {/* Orbiting dot */}
+                  <g style={{ animation: 'logo-orbit 4s linear infinite' }}
+                    transform="translate(160,150)">
+                    <circle cx="0" cy="-52" r="4" fill="rgba(167,139,250,0.9)"
+                      style={{ filter: 'drop-shadow(0 0 6px rgba(167,139,250,0.8))' }}
+                    />
+                  </g>
+
+                  {/* Sparkle dots */}
+                  <circle cx="155" cy="42" r="3" fill="#a78bfa" opacity="0.5"
+                    style={{ animation: 'proposal-sparkle 2.5s ease-in-out infinite' }} />
+                  <circle cx="285" cy="130" r="2.5" fill="#6366f1" opacity="0.4"
+                    style={{ animation: 'proposal-sparkle 3.2s ease-in-out infinite 1s' }} />
+                  <circle cx="38" cy="220" r="2" fill="#8b5cf6" opacity="0.45"
+                    style={{ animation: 'proposal-sparkle 2.8s ease-in-out infinite 0.5s' }} />
+                </svg>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
