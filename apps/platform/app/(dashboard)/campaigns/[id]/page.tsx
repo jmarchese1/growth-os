@@ -13,6 +13,8 @@ type ProspectStatus = 'NEW' | 'ENRICHED' | 'CONTACTED' | 'OPENED' | 'REPLIED' | 
 interface Message {
   status: string;
   stepNumber: number | null;
+  subject: string | null;
+  body: string;
   sentAt: string | null;
   openedAt: string | null;
   repliedAt: string | null;
