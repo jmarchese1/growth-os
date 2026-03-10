@@ -66,6 +66,15 @@
   to   { transform: rotate(0deg); }
 }
 
+/* Infinite horizontal ticker */
+@keyframes ticker {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-ticker {
+  animation: ticker 30s linear infinite;
+}
+
 /* Cube breathes while spinning */
 @keyframes cube-spin-breathe {
   0%   { transform: rotate(0deg)   scale(1.00); }
