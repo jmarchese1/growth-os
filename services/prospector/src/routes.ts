@@ -187,14 +187,20 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
 
     log.info({ campaignId: id, city: campaign.targetCity }, 'Running campaign');
 
-    // Geocode the city synchronously first so we can return a proper error if it fails
+    // Use stored coords if available (set at campaign creation via autocomplete).
+    // Fall back to geocoding only for campaigns created before this feature was added.
     let coords: { lon: number; lat: number };
-    try {
-      coords = await geocodeCity(campaign.targetCity, env.GEOAPIFY_API_KEY!);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      log.warn({ campaignId: id, city: campaign.targetCity, err }, 'Geocode failed');
-      return reply.code(400).send({ error: msg });
+    if (campaign.targetLat != null && campaign.targetLon != null) {
+      coords = { lon: campaign.targetLon, lat: campaign.targetLat };
+      log.info({ campaignId: id, coords }, 'Using stored campaign coords — skipping geocode');
+    } else {
+      try {
+        coords = await geocodeCity(campaign.targetCity, env.GEOAPIFY_API_KEY!);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        log.warn({ campaignId: id, city: campaign.targetCity, err }, 'Geocode failed');
+        return reply.code(400).send({ error: msg });
+      }
     }
 
     // Scrape places in background — return 202 immediately
