@@ -160,12 +160,12 @@ export default function ProposalCTA() {
             </div>
 
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Your biggest challenge (optional)</label>
+              <label className="block text-sm text-gray-400 mb-1">Your biggest challenge (optional)</label>
               <textarea
                 value={form.goals}
                 onChange={(e) => update('goals', e.target.value)}
                 rows={2}
-                className="w-full bg-white/70 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-400 backdrop-blur-sm resize-none"
+                className="w-full bg-white/8 border border-white/12 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 backdrop-blur-sm resize-none"
                 placeholder="e.g. We miss too many calls. Our social media is inconsistent."
               />
             </div>
