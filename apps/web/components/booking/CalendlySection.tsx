@@ -206,7 +206,7 @@ export default function CalendlySection() {
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-6">
             Book a call. Find out how AI
             <br />
-            <span className="text-indigo-600">can evolve your business.</span>
+            <span className="text-gradient">can evolve your business.</span>
           </h2>
 
           <p className="text-lg text-gray-500 max-w-xl mx-auto leading-relaxed mb-10">
