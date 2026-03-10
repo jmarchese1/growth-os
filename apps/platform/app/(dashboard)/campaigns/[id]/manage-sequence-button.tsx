@@ -44,11 +44,13 @@ export function ManageSequenceButton({ campaignId, currentSteps, prospectorUrl, 
   function addStep() {
     const nextNum = steps.length > 0 ? Math.max(...steps.map((s) => s.stepNumber)) + 1 : 2;
     const prevDelay = steps.length > 0 ? steps[steps.length - 1].delayHours : 0;
+    const defaultBody = nextNum === 3 ? STEP3_BODY : STEP2_BODY;
+    const defaultSubject = nextNum === 3 ? 'closing the loop — {{businessName}}' : 'Re: quick question for {{businessName}}';
     setSteps([...steps, {
       stepNumber: nextNum,
-      delayHours: prevDelay + 72, // default: 3 days after previous
-      subject: `Re: quick question for {{businessName}}`,
-      bodyHtml: DEFAULT_FOLLOWUP_BODY,
+      delayHours: prevDelay + 72,
+      subject: defaultSubject,
+      bodyHtml: defaultBody,
     }]);
   }
 
