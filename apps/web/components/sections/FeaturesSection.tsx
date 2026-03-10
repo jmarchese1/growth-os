@@ -90,8 +90,8 @@ export default function FeaturesSection() {
           </div>
 
           {/* Right: Powered-by orbital — enhanced with inner ring + signal pulses */}
-          <div className="bg-gray-950 rounded-2xl p-5 shadow-lg flex flex-col">
-            <p className="text-xs font-semibold tracking-[0.15em] uppercase text-gray-500 mb-2">
+          <div className="flex flex-col items-center justify-center" style={{ animation: 'proposal-float 5s ease-in-out infinite' }}>
+            <p className="text-xs font-semibold tracking-[0.15em] uppercase text-gray-400 mb-2">
               Powered by best-in-class AI
             </p>
 
