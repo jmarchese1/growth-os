@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import ParticleCanvas from '@/components/ui/ParticleCanvas';
 
 interface IntakeForm {
   businessName: string;
