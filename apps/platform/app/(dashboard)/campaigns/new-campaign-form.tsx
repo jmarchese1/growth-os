@@ -199,14 +199,14 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
             <select
               value={form.maxProspects}
               onChange={(e) => setForm({ ...form, maxProspects: e.target.value })}
-              className={inputCls + " appearance-none"}
+              className={selectCls}
             >
-              <option value="10">10 businesses</option>
-              <option value="25">25 businesses</option>
-              <option value="50">50 businesses</option>
-              <option value="100">100 businesses</option>
-              <option value="250">250 businesses</option>
-              <option value="unlimited">Unlimited</option>
+              <option value="10" className={optionCls}>10 businesses</option>
+              <option value="25" className={optionCls}>25 businesses</option>
+              <option value="50" className={optionCls}>50 businesses</option>
+              <option value="100" className={optionCls}>100 businesses</option>
+              <option value="250" className={optionCls}>250 businesses</option>
+              <option value="unlimited" className={optionCls}>Unlimited</option>
             </select>
           </div>
         </div>
