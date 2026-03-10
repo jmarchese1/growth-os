@@ -127,10 +127,10 @@ export async function verifyEmailViaHunter(
       return null;
     }
 
-    const result = json.data?.result;
-    const score = json.data?.score;
+    const result = json.data?.result ?? undefined;
+    const score = json.data?.score ?? undefined;
     log.info({ email, result, score }, 'Hunter.io email verified');
-    return { result, score };
+    return { ...(result !== undefined && { result }), ...(score !== undefined && { score }) };
   } catch {
     log.warn({ email }, 'Hunter.io verification threw â€” skipping');
     return null;
