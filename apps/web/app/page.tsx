@@ -1,7 +1,7 @@
 import Nav from '@/components/shared/Nav';
 import HeroSection from '@/components/hero/HeroSection';
+import TickerStrip from '@/components/sections/TickerStrip';
 import ProblemSection from '@/components/sections/ProblemSection';
-import PhotoSection from '@/components/sections/PhotoSection';
 import SystemOverview from '@/components/sections/SystemOverview';
 import FeaturesSection from '@/components/sections/FeaturesSection';
 import AutomationExamples from '@/components/sections/AutomationExamples';
@@ -14,8 +14,8 @@ export default function Home() {
     <main className="min-h-screen bg-white">
       <Nav />
       <HeroSection />
+      <TickerStrip />
       <ProblemSection />
-      <PhotoSection />
       <SystemOverview />
       <FeaturesSection />
       <AutomationExamples />
