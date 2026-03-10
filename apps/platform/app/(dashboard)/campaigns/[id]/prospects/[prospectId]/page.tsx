@@ -47,9 +47,16 @@ interface ProspectDetail {
   googlePlaceId: string | null;
   googleRating: number | null;
   googleReviewCount: number | null;
+  nextFollowUpAt: string | null;
   createdAt: string;
   updatedAt: string;
-  campaign: { id: string; name: string; targetCity: string; targetIndustry: string };
+  campaign: {
+    id: string;
+    name: string;
+    targetCity: string;
+    targetIndustry: string;
+    sequenceSteps: Array<{ stepNumber: number; delayHours: number; subject?: string }> | null;
+  };
   messages: OutreachMessage[];
 }
 
