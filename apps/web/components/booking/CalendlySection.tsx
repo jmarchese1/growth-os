@@ -1,6 +1,7 @@
 'use client';
 import Image from 'next/image';
 import CalModal from './CalendlyModal';
+import ParticleCanvas from '@/components/ui/ParticleCanvas';
 
 const badges = [
   { label: 'Senior Data Scientist' },
