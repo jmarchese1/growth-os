@@ -232,6 +232,9 @@ importers:
 
   packages/queue:
     dependencies:
+      '@embedo/types':
+        specifier: workspace:*
+        version: link:../types
       '@embedo/utils':
         specifier: workspace:*
         version: link:../utils
