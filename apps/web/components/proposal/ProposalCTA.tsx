@@ -69,8 +69,8 @@ export default function ProposalCTA() {
         className="object-cover object-center scale-105"
         priority
       />
-      {/* Heavy dark overlay so photo is just a hint */}
-      <div className="absolute inset-0 bg-gray-950/93" />
+      {/* Near-opaque overlay — image is barely a whisper of texture */}
+      <div className="absolute inset-0 bg-gray-950/97" />
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-indigo-900 opacity-20 blur-3xl" />
         <div className="absolute bottom-0 left-1/4 w-96 h-96 rounded-full bg-violet-900 opacity-15 blur-3xl" />
