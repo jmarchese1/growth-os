@@ -340,7 +340,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
         phone: prospect.phone ?? null,
         email: prospect.email ?? null,
         website: prospect.website ?? null,
-        address: prospect.address ?? null,
+        ...(prospect.address != null && { address: prospect.address }),
         timezone: 'America/New_York',
       },
     });
