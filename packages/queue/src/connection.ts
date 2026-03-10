@@ -1,4 +1,4 @@
-import IORedis from 'ioredis';
+import { Redis as IORedis } from 'ioredis';
 import { createLogger } from '@embedo/utils';
 
 const log = createLogger('queue:connection');
