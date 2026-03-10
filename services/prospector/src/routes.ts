@@ -218,11 +218,13 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     // Scrape places in background — return 202 immediately
     setImmediate(async () => {
       try {
-        const allPlaces = await searchRestaurants(campaign.targetCity, env.GEOAPIFY_API_KEY!, 200, coords);
-        const places = campaign.maxProspects != null ? allPlaces.slice(0, campaign.maxProspects) : allPlaces;
-        log.info({ campaignId: id, total: allPlaces.length, limited: places.length }, 'Places scraped, queuing prospects');
+        // Start from after already-scraped prospects so each run returns fresh results
+        const existingCount = await db.prospectBusiness.count({ where: { campaignId: id } });
+        const fetchLimit = campaign.maxProspects ?? 200;
+        const allPlaces = await searchRestaurants(campaign.targetCity, env.GEOAPIFY_API_KEY!, fetchLimit, coords, existingCount);
+        log.info({ campaignId: id, total: allPlaces.length, startOffset: existingCount }, 'Places scraped, queuing prospects');
 
-        for (const place of places) {
+        for (const place of allPlaces) {
           const job: Record<string, unknown> = {
             campaignId: id,
             placeId: place.placeId,
