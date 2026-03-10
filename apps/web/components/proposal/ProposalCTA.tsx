@@ -1,6 +1,6 @@
 'use client';
-import Image from 'next/image';
 import { useState } from 'react';
+import DarkParticleCanvas from '@/components/ui/DarkParticleCanvas';
 
 interface IntakeForm {
   businessName: string;
