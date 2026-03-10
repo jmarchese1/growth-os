@@ -56,7 +56,7 @@ interface ProspectDetail {
     name: string;
     targetCity: string;
     targetIndustry: string;
-    sequenceSteps: Array<{ stepNumber: number; delayHours: number; subject?: string }> | null;
+    sequenceSteps: Array<{ stepNumber: number; delayHours: number; subject?: string; bodyHtml?: string }> | null;
   };
   messages: OutreachMessage[];
 }
