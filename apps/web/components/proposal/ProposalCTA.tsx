@@ -60,32 +60,32 @@ export default function ProposalCTA() {
     setForm((f) => ({ ...f, [field]: value }));
 
   return (
-    <section id="proposal" className="pt-12 pb-20 px-6 text-white relative overflow-hidden">
-      {/* Desk background photo */}
+    <section id="proposal" className="pt-12 pb-20 px-6 text-gray-900 relative overflow-hidden">
+      {/* Desk background photo — bright, airy */}
       <Image
-        src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=1600&q=80"
+        src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1600&q=85"
         alt=""
         fill
         className="object-cover object-center"
         priority
       />
-      {/* Dark overlay keeping content readable */}
-      <div className="absolute inset-0 bg-gray-950/90" />
+      {/* Light semi-transparent overlay */}
+      <div className="absolute inset-0 bg-white/82" />
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute bottom-0 left-1/4 w-96 h-96 rounded-full bg-indigo-900 opacity-20 blur-3xl" />
+        <div className="absolute bottom-0 left-1/4 w-96 h-96 rounded-full bg-indigo-100 opacity-40 blur-3xl" />
       </div>
       <div className="max-w-2xl mx-auto relative z-10">
-        <p className="text-xs font-semibold tracking-[0.2em] uppercase text-indigo-400 mb-4">
+        <p className="text-xs font-semibold tracking-[0.2em] uppercase text-embedo-accent mb-4">
           Custom Proposal
         </p>
         <h2 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight mb-4">
           See exactly what{' '}
-          <span className="text-indigo-400">AI</span>
+          <span className="text-gradient">AI</span>
           <br />
           can do for your business.
         </h2>
-        <p className="text-gray-400 text-xl mb-10 leading-relaxed">
-          We generate a <span className="text-white font-semibold">custom proposal in seconds</span> — specific to your business, your industry, and
+        <p className="text-gray-500 text-xl mb-10 leading-relaxed">
+          We generate a <span className="text-gray-900 font-semibold">custom proposal in seconds</span> — specific to your business, your industry, and
           your goals.
         </p>
 
