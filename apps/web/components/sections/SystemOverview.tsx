@@ -80,7 +80,7 @@ export default function SystemOverview() {
 
       {/* Module list */}
       <div className="relative z-10 px-6 pb-20">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           {modules.map((mod, index) => (
             <div
               key={mod.number}
