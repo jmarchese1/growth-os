@@ -1,0 +1,4 @@
+export { db } from './client.js';
+export { Prisma, PrismaClient } from '@prisma/client';
+export type { Business, Contact, Lead, VoiceCallLog, ChatSession, Survey, SurveyResponse, ContentPost, SocialAccount, Proposal, GeneratedWebsite, Appointment, EmailSequence, SmsSequence, ContactActivity, OnboardingLog, OutboundCampaign, ProspectBusiness, OutreachMessage, BusinessType, OnboardingStatus, LeadSource, LeadStatus, ContactStatus, CallDirection, CallIntent, ChatChannel, SocialPlatform, PostStatus, ProposalStatus, WebsiteStatus, AppointmentStatus, SequenceTrigger, ActivityType, ProspectStatus, OutreachChannel, OutreachStatus, } from '@prisma/client';
+//# sourceMappingURL=index.d.ts.map

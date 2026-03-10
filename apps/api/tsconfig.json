@@ -2,15 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "dist",
-    "baseUrl": "../..",
-    "paths": {
-      "@embedo/types": ["packages/types/src/index.ts"],
-      "@embedo/utils": ["packages/utils/src/index.ts"],
-      "@embedo/queue": ["packages/queue/src/index.ts"],
-      "@embedo/db": ["packages/db/src/index.ts"],
-      "@embedo/config": ["packages/config/src/index.ts"]
-    }
+    "outDir": "dist"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]

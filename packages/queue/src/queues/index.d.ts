@@ -1,0 +1,37 @@
+import { Queue } from 'bullmq';
+import type { SmsJobPayload, EmailJobPayload, LeadCreatedPayload, CallCompletedPayload, SurveyResponsePayload, SurveyDeliveryPayload, AppointmentBookedPayload, BusinessOnboardedPayload, PostSocialJobPayload, AutoDmJobPayload, ProposalViewedPayload, GenerateWebsiteJobPayload, SequenceStepJobPayload, ProspectDiscoveredPayload, OutreachSendPayload } from '@embedo/types';
+export declare const QUEUE_NAMES: {
+    readonly SMS: "embedo-sms";
+    readonly EMAIL: "embedo-email";
+    readonly LEAD_CREATED: "embedo-lead.created";
+    readonly CALL_COMPLETED: "embedo-call.completed";
+    readonly SURVEY_RESPONSE: "embedo-survey.response";
+    readonly SURVEY_DELIVERY: "embedo-survey.delivery";
+    readonly APPOINTMENT_BOOKED: "embedo-appointment.booked";
+    readonly BUSINESS_ONBOARDED: "embedo-business.onboarded";
+    readonly SOCIAL_POST: "embedo-social.post";
+    readonly AUTO_DM: "embedo-social.autodm";
+    readonly PROPOSAL_VIEWED: "embedo-proposal.viewed";
+    readonly WEBSITE_GENERATE: "embedo-website.generate";
+    readonly SEQUENCE_STEP: "embedo-sequence.step";
+    readonly PROSPECT_DISCOVERED: "embedo-prospect.discovered";
+    readonly OUTREACH_SEND: "embedo-outreach.send";
+};
+export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
+export declare const smsQueue: () => Queue<SmsJobPayload, any, string, SmsJobPayload, any, string>;
+export declare const emailQueue: () => Queue<EmailJobPayload, any, string, EmailJobPayload, any, string>;
+export declare const leadCreatedQueue: () => Queue<LeadCreatedPayload, any, string, LeadCreatedPayload, any, string>;
+export declare const callCompletedQueue: () => Queue<CallCompletedPayload, any, string, CallCompletedPayload, any, string>;
+export declare const surveyResponseQueue: () => Queue<SurveyResponsePayload, any, string, SurveyResponsePayload, any, string>;
+export declare const surveyDeliveryQueue: () => Queue<SurveyDeliveryPayload, any, string, SurveyDeliveryPayload, any, string>;
+export declare const appointmentBookedQueue: () => Queue<AppointmentBookedPayload, any, string, AppointmentBookedPayload, any, string>;
+export declare const businessOnboardedQueue: () => Queue<BusinessOnboardedPayload, any, string, BusinessOnboardedPayload, any, string>;
+export declare const socialPostQueue: () => Queue<PostSocialJobPayload, any, string, PostSocialJobPayload, any, string>;
+export declare const autoDmQueue: () => Queue<AutoDmJobPayload, any, string, AutoDmJobPayload, any, string>;
+export declare const proposalViewedQueue: () => Queue<ProposalViewedPayload, any, string, ProposalViewedPayload, any, string>;
+export declare const websiteGenerateQueue: () => Queue<GenerateWebsiteJobPayload, any, string, GenerateWebsiteJobPayload, any, string>;
+export declare const sequenceStepQueue: () => Queue<SequenceStepJobPayload, any, string, SequenceStepJobPayload, any, string>;
+export declare const prospectDiscoveredQueue: () => Queue<ProspectDiscoveredPayload, any, string, ProspectDiscoveredPayload, any, string>;
+export declare const outreachSendQueue: () => Queue<OutreachSendPayload, any, string, OutreachSendPayload, any, string>;
+export declare function closeAllQueues(): Promise<void>;
+//# sourceMappingURL=index.d.ts.map
