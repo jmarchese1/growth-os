@@ -6,6 +6,7 @@ import { prospectDiscoveredQueue, outreachSendQueue } from '@embedo/queue';
 import { searchRestaurants, geocodeCity } from './scraper/geoapify.js';
 import { sendColdEmail } from './outreach/email-sender.js';
 import { generatePersonalizedEmail } from './outreach/ai-personalizer.js';
+import { findEmailViaHunter, extractDomain as extractHunterDomain } from './scraper/hunter.js';
 import { env } from './config.js';
 
 const log = createLogger('prospector:routes');
