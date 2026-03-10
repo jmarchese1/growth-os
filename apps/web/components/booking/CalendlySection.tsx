@@ -11,23 +11,23 @@ const badges = [
 
 // Orbital rings behind the photo — same pattern as LogoDisplay
 const RINGS = [
-  { size: 324, r: 160, dash: '8 16',  dot: 3.0, dotColor: 'rgba(99,102,241,0.95)',  speed: '14s', cw: true  },
-  { size: 390, r: 193, dash: '5 22',  dot: 2.5, dotColor: 'rgba(139,92,246,0.70)',  speed: '21s', cw: false },
-  { size: 452, r: 224, dash: '3 30',  dot: 2.0, dotColor: 'rgba(167,139,250,0.45)', speed: '30s', cw: true  },
+  { size: 460, r: 228, dash: '8 16',  dot: 3.0, dotColor: 'rgba(99,102,241,0.95)',  speed: '14s', cw: true  },
+  { size: 540, r: 268, dash: '5 22',  dot: 2.5, dotColor: 'rgba(139,92,246,0.70)',  speed: '21s', cw: false },
+  { size: 620, r: 308, dash: '3 30',  dot: 2.0, dotColor: 'rgba(167,139,250,0.45)', speed: '30s', cw: true  },
 ];
 
 // Orbiting particles around the photo
 const PARTICLES = [
-  { duration: '4.5s', delay: '0s',    radius: 152, sz: 2.8, a: 0.80, rgb: '167,139,250' },
-  { duration: '3.8s', delay: '-1.5s', radius: 168, sz: 2.2, a: 0.62, rgb: '139,92,246'  },
-  { duration: '5.2s', delay: '-2.8s', radius: 145, sz: 3.0, a: 0.70, rgb: '99,102,241'  },
-  { duration: '4.0s', delay: '-0.7s', radius: 178, sz: 1.8, a: 0.50, rgb: '196,181,253' },
-  { duration: '6.0s', delay: '-3.5s', radius: 196, sz: 1.6, a: 0.40, rgb: '139,92,246'  },
-  { duration: '5.5s', delay: '-1.2s', radius: 212, sz: 1.4, a: 0.35, rgb: '167,139,250' },
+  { duration: '4.5s', delay: '0s',    radius: 220, sz: 2.8, a: 0.80, rgb: '167,139,250' },
+  { duration: '3.8s', delay: '-1.5s', radius: 242, sz: 2.2, a: 0.62, rgb: '139,92,246'  },
+  { duration: '5.2s', delay: '-2.8s', radius: 208, sz: 3.0, a: 0.70, rgb: '99,102,241'  },
+  { duration: '4.0s', delay: '-0.7s', radius: 258, sz: 1.8, a: 0.50, rgb: '196,181,253' },
+  { duration: '6.0s', delay: '-3.5s', radius: 278, sz: 1.6, a: 0.40, rgb: '139,92,246'  },
+  { duration: '5.5s', delay: '-1.2s', radius: 295, sz: 1.4, a: 0.35, rgb: '167,139,250' },
 ];
 
 // Outer container must clear the largest ring + its dot + padding
-const ORBIT_CONTAINER = 452 + 16; // largest ring size + breathing room
+const ORBIT_CONTAINER = 620 + 20; // largest ring size + breathing room
 
 export default function CalendlySection() {
   const calLink =
