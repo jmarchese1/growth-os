@@ -5,13 +5,13 @@ import { env } from '../config.js';
 
 const log = createLogger('api:auth');
 
-const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+const supabase = createClient(env.SUPABASE_URL ?? '', env.SUPABASE_SERVICE_ROLE_KEY ?? '');
 
 /**
  * Verify Supabase JWT from Authorization header.
  * Attaches `request.user` on success.
  */
-export async function requireAuth(request: FastifyRequest, reply: FastifyReply): Promise<void> {
+export async function requireAuth(request: FastifyRequest, _reply: FastifyReply): Promise<void> {
   const token = request.headers.authorization?.replace('Bearer ', '');
 
   if (!token) {
