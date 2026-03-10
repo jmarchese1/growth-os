@@ -83,15 +83,15 @@ function NavItem({
         collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5'
       } ${
         isActive
-          ? 'text-indigo-700 bg-indigo-50 border border-indigo-100 shadow-sm'
-          : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50 border border-transparent'
+          ? 'text-white bg-violet-600/20 border border-violet-500/30 shadow-[0_0_16px_rgba(124,58,237,0.18),inset_0_0_16px_rgba(124,58,237,0.04)]'
+          : 'text-slate-400 hover:text-white hover:bg-white/[0.04] border border-transparent'
       }`}
     >
-      <span className={`flex-shrink-0 ${isActive ? 'text-indigo-600' : 'text-gray-400'}`}>{icon}</span>
+      <span className={`flex-shrink-0 ${isActive ? 'text-violet-400' : 'text-slate-500'}`}>{icon}</span>
       {!collapsed && (
         <>
           {label}
-          {isActive && <span className="ml-auto w-1 h-4 rounded-full bg-indigo-400" />}
+          {isActive && <span className="ml-auto w-1 h-4 rounded-full bg-violet-400/60" />}
         </>
       )}
     </Link>
@@ -113,19 +113,20 @@ function Sidebar({
 
   return (
     <aside
-      className="flex-shrink-0 border-r border-gray-100 bg-white flex flex-col h-screen sticky top-0 relative overflow-hidden select-none"
-      style={{ width }}
+      className="flex-shrink-0 border-r border-white/[0.06] flex flex-col h-screen sticky top-0 relative overflow-hidden select-none"
+      style={{ width, background: 'linear-gradient(180deg, #0f0c1f 0%, #0d0b1a 100%)' }}
     >
-      {/* Subtle indigo orb top-left */}
-      <div className="absolute -top-16 -left-16 w-40 h-40 rounded-full bg-indigo-100/60 blur-3xl pointer-events-none" />
+      {/* Ambient glow */}
+      <div className="absolute -top-16 -left-16 w-48 h-48 rounded-full bg-violet-600/10 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-violet-950/20 to-transparent pointer-events-none" />
 
       {/* Logo */}
-      <div className={`relative border-b border-gray-100 flex items-center ${collapsed ? 'justify-center py-5 px-2' : 'px-5 py-5 gap-3'}`}>
+      <div className={`relative border-b border-white/[0.06] flex items-center ${collapsed ? 'justify-center py-5 px-2' : 'px-5 py-5 gap-3'}`}>
         <EmbedoLogo size={collapsed ? 28 : 36} />
         {!collapsed && (
           <div>
-            <p className="text-sm font-bold text-gray-900 leading-none tracking-tight">Embedo</p>
-            <p className="text-[10px] text-indigo-500 mt-0.5 leading-none font-medium uppercase tracking-widest">Growth OS</p>
+            <p className="text-sm font-bold text-white leading-none tracking-tight">Embedo</p>
+            <p className="text-[10px] text-violet-400/60 mt-0.5 leading-none font-medium uppercase tracking-widest">Growth OS</p>
           </div>
         )}
       </div>
@@ -135,7 +136,7 @@ function Sidebar({
         {NAV.map((group) => (
           <div key={group.section}>
             {!collapsed && (
-              <p className="px-3 mb-2 text-[9px] font-bold text-gray-300 uppercase tracking-[0.18em]">
+              <p className="px-3 mb-2 text-[9px] font-bold text-slate-700 uppercase tracking-[0.18em]">
                 {group.section}
               </p>
             )}
@@ -152,16 +153,17 @@ function Sidebar({
       </nav>
 
       {/* Footer */}
-      <div className={`relative border-t border-gray-100 flex items-center ${collapsed ? 'justify-center py-4 px-2' : 'px-4 py-4 gap-2.5'}`}>
+      <div className={`relative border-t border-white/[0.06] flex items-center ${collapsed ? 'justify-center py-4 px-2' : 'px-4 py-4 gap-2.5'}`}>
         <div className="relative w-7 h-7 flex-shrink-0">
-          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white text-xs font-bold">
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold">
             J
           </div>
+          <div className="absolute inset-0 rounded-full bg-violet-500/30 blur-sm" />
         </div>
         {!collapsed && (
           <div>
-            <p className="text-xs font-semibold text-gray-700 leading-none">Jason Marchese</p>
-            <p className="text-[10px] text-gray-400 mt-0.5 leading-none">Owner</p>
+            <p className="text-xs font-semibold text-slate-300 leading-none">Jason Marchese</p>
+            <p className="text-[10px] text-slate-600 mt-0.5 leading-none">Owner</p>
           </div>
         )}
       </div>
@@ -169,7 +171,7 @@ function Sidebar({
       {/* Collapse/expand toggle button */}
       <button
         onClick={onToggle}
-        className="absolute bottom-16 -right-3 w-6 h-6 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-indigo-600 hover:border-indigo-200 transition-colors z-50 shadow-sm"
+        className="absolute bottom-16 -right-3 w-6 h-6 rounded-full bg-[#1a1730] border border-white/10 flex items-center justify-center text-slate-500 hover:text-violet-400 hover:border-violet-500/40 transition-colors z-50 shadow-md"
         title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       >
         <svg viewBox="0 0 20 20" fill="currentColor" className={`w-3 h-3 transition-transform ${collapsed ? 'rotate-0' : 'rotate-180'}`}>
@@ -179,7 +181,7 @@ function Sidebar({
 
       {/* Drag handle */}
       <div
-        className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-indigo-100 active:bg-indigo-200 transition-colors z-40"
+        className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-violet-500/25 active:bg-violet-500/40 transition-colors z-40"
         onMouseDown={onDragStart}
       />
     </aside>
@@ -232,11 +234,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
-      {/* Subtle ambient orbs on the main canvas */}
+    <div className="min-h-screen flex bg-[#0c0a18]">
+      {/* Global ambient background orbs */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-32 right-1/4 w-[500px] h-[500px] rounded-full bg-indigo-100/40 blur-[120px] animate-float-orb" />
-        <div className="absolute bottom-0 right-0 w-[350px] h-[350px] rounded-full bg-indigo-50/60 blur-[100px] animate-float-orb-b" />
+        <div className="absolute -top-32 left-1/4 w-[560px] h-[560px] rounded-full bg-violet-700/8 blur-[110px] animate-float-orb" />
+        <div className="absolute top-2/3 -right-20 w-[420px] h-[420px] rounded-full bg-indigo-600/6 blur-[100px] animate-float-orb-b" />
+        <div className="absolute bottom-0 left-10 w-[300px] h-[300px] rounded-full bg-violet-900/8 blur-[80px] animate-shimmer" />
       </div>
 
       <Sidebar
