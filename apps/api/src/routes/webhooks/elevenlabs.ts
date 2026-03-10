@@ -77,9 +77,9 @@ export async function elevenLabsWebhookRoutes(app: FastifyInstance): Promise<voi
         intent: 'UNKNOWN',
         duration: data.call_duration_secs ?? 0,
         transcript,
-        summary: data.analysis?.summary,
-        sentiment: data.analysis?.sentiment,
-        extractedData: data.metadata,
+        ...(data.analysis?.summary !== undefined && { summary: data.analysis.summary }),
+        ...(data.analysis?.sentiment !== undefined && { sentiment: data.analysis.sentiment }),
+        ...(data.metadata !== undefined && { extractedData: data.metadata }),
       });
 
       // Also emit lead.created with whatever data is in metadata
