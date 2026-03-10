@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { SendButton } from '../../send-button';
 import { ConvertButton } from '../../convert-button';
-import { FollowUpTimer } from '../../follow-up-timer';
+import { SequenceSection } from './sequence-section';
 
 const PROSPECTOR_URL = process.env.PROSPECTOR_URL ?? 'http://localhost:3009';
 
