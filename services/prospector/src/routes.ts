@@ -45,6 +45,41 @@ const createCampaignSchema = z.object({
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.get('/health', async () => ({ ok: true, service: 'prospector' }));
 
+  // ─── Geocode autocomplete (proxied to keep API key server-side) ───────────
+  app.get('/geocode/autocomplete', async (request, reply) => {
+    const { q, state } = request.query as { q?: string; state?: string };
+    if (!q || q.length < 2) return reply.send([]);
+    if (!env.GEOAPIFY_API_KEY) return reply.send([]);
+
+    const text = state ? `${q}, ${state}` : q;
+    const params = new URLSearchParams({
+      text,
+      type: 'city',
+      filter: 'countrycode:us',
+      format: 'json',
+      limit: '6',
+      apiKey: env.GEOAPIFY_API_KEY,
+    });
+
+    try {
+      const res = await fetch(`https://api.geoapify.com/v1/geocode/autocomplete?${params}`);
+      if (!res.ok) return reply.send([]);
+      const data = (await res.json()) as {
+        results?: Array<{ formatted?: string; city?: string; state?: string; state_code?: string; lon: number; lat: number }>;
+      };
+      const results = (data.results ?? []).map((r) => ({
+        label: [r.city, r.state_code ?? r.state].filter(Boolean).join(', '),
+        city: r.city ?? '',
+        state: r.state_code ?? r.state ?? '',
+        lon: r.lon,
+        lat: r.lat,
+      })).filter((r) => r.city);
+      return reply.send(results);
+    } catch {
+      return reply.send([]);
+    }
+  });
+
   // ─── AI status ────────────────────────────────────────────────────────────
   app.get('/ai/status', async () => ({ aiEnabled: !!env.ANTHROPIC_API_KEY }));
 
