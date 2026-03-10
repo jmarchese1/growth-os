@@ -148,7 +148,7 @@ export default function FeaturesSection() {
                     key={i}
                     className="absolute rounded-full"
                     style={{
-                      width: 8, height: 8,
+                      width: '8px', height: '8px',
                       left: d.left, top: d.top,
                       background: 'rgba(139,92,246,0.95)',
                       boxShadow: '0 0 8px 3px rgba(139,92,246,0.65)',
