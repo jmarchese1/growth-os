@@ -29,7 +29,7 @@ export class ValidationError extends EmbedoError {
   constructor(message: string, fields?: Record<string, string[]>) {
     super(message, 400, 'VALIDATION_ERROR');
     this.name = 'ValidationError';
-    this.fields = fields;
+    if (fields !== undefined) this.fields = fields;
   }
 }
 
