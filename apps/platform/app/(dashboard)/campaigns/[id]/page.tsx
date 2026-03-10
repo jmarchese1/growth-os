@@ -4,6 +4,7 @@ import { SendButton } from './send-button';
 import { ConvertButton } from './convert-button';
 import { EditEmailButton } from './edit-email-button';
 import { ManageSequenceButton } from './manage-sequence-button';
+import { EnrichHunterButton } from './enrich-hunter-button';
 import { FollowUpTimer } from './follow-up-timer';
 import { EmailPreviewModal } from './email-preview-modal';
 
