@@ -49,6 +49,13 @@ interface Stats {
   replies: number;
 }
 
+interface SequenceStep {
+  stepNumber: number;
+  delayHours: number;
+  subject?: string;
+  bodyHtml?: string;
+}
+
 interface Campaign {
   id: string;
   name: string;
@@ -56,6 +63,7 @@ interface Campaign {
   targetIndustry: string;
   emailSubject: string;
   emailBodyHtml: string;
+  sequenceSteps: SequenceStep[] | null;
   active: boolean;
   createdAt: string;
 }
