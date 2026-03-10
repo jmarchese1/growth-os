@@ -54,15 +54,25 @@ interface GeoapifyPlacesResponse {
 }
 
 async function geocodeCity(city: string, apiKey: string): Promise<{ lon: number; lat: number }> {
-  const params = new URLSearchParams({ text: city, type: 'city', format: 'json', apiKey });
-  const res = await fetch(`${GEOCODE_BASE}/search?${params}`);
-  if (!res.ok) throw new ExternalApiError('Geoapify', `Geocode HTTP ${res.status}`);
+  // Attempt 1: strict 'city' type
+  // Attempt 2: unrestricted — catches townships, CDPs, boroughs (e.g. "Edison, NJ", "Brooklyn, NY")
+  const paramSets = [
+    new URLSearchParams({ text: city, type: 'city', format: 'json', apiKey }),
+    new URLSearchParams({ text: city, format: 'json', limit: '1', apiKey }),
+  ];
 
-  const data = (await res.json()) as GeoapifyGeoResponse;
-  const first = data.results[0];
-  if (!first) throw new ExternalApiError('Geoapify', `City not found: ${city}`);
+  for (const params of paramSets) {
+    const res = await fetch(`${GEOCODE_BASE}/search?${params}`);
+    if (!res.ok) throw new ExternalApiError('Geoapify', `Geocode HTTP ${res.status}`);
+    const data = (await res.json()) as GeoapifyGeoResponse;
+    const first = data.results[0];
+    if (first) {
+      log.debug({ city, lon: first.lon, lat: first.lat }, 'City geocoded');
+      return { lon: first.lon, lat: first.lat };
+    }
+  }
 
-  return { lon: first.lon, lat: first.lat };
+  throw new ExternalApiError('Geoapify', `Location not found: "${city}". Try a larger nearby city or add the state (e.g. "Edison, NJ").`);
 }
 
 async function fetchPlacesPage(
