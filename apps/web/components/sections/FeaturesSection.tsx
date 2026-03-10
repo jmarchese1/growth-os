@@ -71,7 +71,7 @@ export default function FeaturesSection() {
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight leading-[1.1] mb-6">
               Your competitors<br />
               hire staff.<br />
-              <span className="text-gray-400">You deploy AI.</span>
+              <span className="text-gradient">You deploy AI.</span>
             </h2>
 
             <div className="space-y-5">
