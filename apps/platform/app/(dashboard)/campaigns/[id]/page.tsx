@@ -119,6 +119,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
   const { items: prospects, total } = (await prospectsRes.json()) as { items: Prospect[]; total: number };
 
   const s = stats.byStatus;
+  const newCount = s['NEW'] ?? 0;
   const hasEmail = (s['ENRICHED'] ?? 0) + (s['CONTACTED'] ?? 0) + (s['OPENED'] ?? 0) + (s['REPLIED'] ?? 0) + (s['CONVERTED'] ?? 0);
   const emailed  = (s['CONTACTED'] ?? 0) + (s['OPENED'] ?? 0) + (s['REPLIED'] ?? 0) + (s['CONVERTED'] ?? 0);
   const opened   = (s['OPENED'] ?? 0) + (s['REPLIED'] ?? 0) + (s['CONVERTED'] ?? 0);
