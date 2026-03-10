@@ -90,7 +90,7 @@ export default function FeaturesSection() {
           </div>
 
           {/* Right: Powered-by orbital — enhanced with inner ring + signal pulses */}
-          <div className="flex flex-col items-center justify-center" style={{ animation: 'proposal-float 5s ease-in-out infinite' }}>
+          <div className="flex flex-col items-center justify-center" style={{ animation: 'proposal-float 5s ease-in-out infinite', marginLeft: '-40px' }}>
 
             <div
               className="relative flex-1 flex items-center justify-center overflow-visible"
