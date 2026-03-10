@@ -98,7 +98,7 @@ exports.prospectorEnvSchema = exports.baseEnvSchema.extend({
     PORT: zod_1.z.coerce.number().default(3009),
     GEOAPIFY_API_KEY: zod_1.z.string().optional(),
     BRAVE_SEARCH_API_KEY: zod_1.z.string().optional(),
-    HUNTER_API_KEY: zod_1.z.string().optional(), // Hunter.io — $49/mo Starter, 2k credits. Drop in key to enable email enrichment.
+    APOLLO_API_KEY: zod_1.z.string().optional(), // Apollo.io — $49/mo Basic, 10k credits. Much better SMB/restaurant coverage than Hunter.
     ANTHROPIC_API_KEY: zod_1.z.string().optional(), // Claude AI — enables per-prospect email personalization at send time.
     SENDGRID_API_KEY: zod_1.z.string().optional(),
     SENDGRID_FROM_EMAIL: zod_1.z.string().optional(),
