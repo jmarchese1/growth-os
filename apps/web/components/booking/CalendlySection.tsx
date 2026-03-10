@@ -33,9 +33,7 @@ export default function CalendlySection() {
     process.env['NEXT_PUBLIC_CAL_LINK'] ?? 'jason-marchese-mkfkwl/30min';
 
   return (
-    <>
-      {/* ── Founder intro — light with grid (like hero) ────── */}
-      <section className="relative bg-white overflow-hidden bg-grid py-20 px-6">
+      <section id="book" className="relative bg-white overflow-hidden bg-grid py-20 px-6">
         {/* Soft radial glow matching hero */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-indigo-50 opacity-60 blur-3xl" />
