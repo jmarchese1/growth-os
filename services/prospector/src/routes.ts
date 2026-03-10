@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { createLogger, validate, NotFoundError } from '@embedo/utils';
 import { db } from '@embedo/db';
-import { prospectDiscoveredQueue } from '@embedo/queue';
+import { prospectDiscoveredQueue, outreachSendQueue } from '@embedo/queue';
 import { searchRestaurants, geocodeCity } from './scraper/geoapify.js';
 import { sendColdEmail } from './outreach/email-sender.js';
 import { generatePersonalizedEmail } from './outreach/ai-personalizer.js';
