@@ -446,7 +446,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
           );
         }
 
-        const nextAt = new Date(baseTime + firstStep.delayHours * 60 * 60 * 1000);
+        const nextAt = new Date(baseTime + firstStep!.delayHours * 60 * 60 * 1000);
         await db.prospectBusiness.update({
           where: { id: prospect.id },
           data: { nextFollowUpAt: nextAt > new Date() ? nextAt : null },
