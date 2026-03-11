@@ -15,6 +15,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/services/crm-core/node_modules ./services/crm-core/node_modules
 COPY --from=builder /app/services/crm-core/dist ./services/crm-core/dist
 COPY --from=builder /app/services/crm-core/package.json ./services/crm-core/
 
