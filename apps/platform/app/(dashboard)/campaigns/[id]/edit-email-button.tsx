@@ -230,7 +230,8 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
