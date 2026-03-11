@@ -300,7 +300,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
           messages: {
             orderBy: { createdAt: 'desc' },
             take: 1,
-            select: { status: true, stepNumber: true, subject: true, body: true, sentAt: true, openedAt: true, repliedAt: true, replyBody: true },
+            select: { status: true, stepNumber: true, subject: true, body: true, sentAt: true, openedAt: true, repliedAt: true, replyBody: true, replyCategory: true },
           },
         },
       }),
