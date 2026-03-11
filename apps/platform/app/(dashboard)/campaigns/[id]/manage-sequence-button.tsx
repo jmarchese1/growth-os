@@ -108,8 +108,8 @@ export function ManageSequenceButton({ campaignId, currentSteps, prospectorUrl, 
         </span>
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      {mounted && open && createPortal(
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
           <div className="relative bg-[#0f1117] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl">
 
