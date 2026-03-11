@@ -262,3 +262,38 @@ Campaigns                Leads                    Businesses
 - Never call real external APIs in tests — mock with `vi.mock()` or MSW
 - Use test DB (separate `DATABASE_URL` in CI) with Prisma seed data
 - Run: `pnpm test`
+
+---
+
+## Next Steps — Product Roadmap
+
+### Immediate (Infrastructure & Wiring)
+- [ ] **Cal.com webhook setup**: Configure `BOOKING_CREATED` webhook pointing to `https://embedoapi-production.up.railway.app/webhooks/cal` in Cal.com dashboard
+- [ ] **SendGrid Inbound Parse setup**: Configure inbound parse domain to forward replies to `https://embedoapi-production.up.railway.app/webhooks/sendgrid/inbound`
+- [ ] **SendGrid Event Webhook setup**: Point open/click/bounce events to `https://embedoapi-production.up.railway.app/webhooks/sendgrid/events`
+- [ ] **Deploy CRM Core to Railway**: Currently only API gateway and Prospector are deployed. CRM Core needs its own Railway service for business onboarding to work in production.
+- [ ] **Set `EMBEDO_BUSINESS_ID` env var on Railway**: Required for Cal.com webhook to associate appointments with the correct business
+- [ ] **Run Prisma migration**: `OUTBOUND` was added to `LeadSource` enum but migration hasn't been applied yet (`pnpm db:migrate`)
+- [ ] **Apollo.io API key**: Set `APOLLO_API_KEY` in production env to enable prospect email enrichment
+
+### Short-term (Platform Features)
+- [ ] **Business detail page** (`/businesses/[id]`): View/edit an onboarded business, see their active products, contacts, appointments
+- [ ] **Lead detail page** (`/leads/[id]`): View lead info, reply history, convert-to-business action
+- [ ] **Proposal builder in platform**: Generate and send proposals from the Leads pipeline
+- [ ] **Reply-to-prospect from dashboard**: Compose and send follow-up emails directly from the Leads page
+- [ ] **Campaign analytics dashboard**: Open rates, reply rates, conversion funnel per campaign
+- [ ] **Automated follow-up sequence builder UI**: Visual editor for multi-step email sequences
+
+### Medium-term (Product Delivery Layer)
+- [ ] **Voice Agent deployment**: ElevenLabs agent provisioning per onboarded business (Twilio number + IVR)
+- [ ] **Chatbot widget deployment**: Claude-powered chat widget auto-deployed to client websites
+- [ ] **Website generator**: Apple-style restaurant website generation + Vercel auto-deploy
+- [ ] **Social media automation**: Content generation, scheduling, comment monitoring for client businesses
+- [ ] **Survey engine**: Post-call/post-visit surveys with automated follow-up
+
+### Long-term (Scale & Expand)
+- [ ] **Multi-vertical expansion**: Extend beyond restaurants to other local business types (salons, gyms, clinics)
+- [ ] **Client-facing dashboard**: Let onboarded businesses log in and see their own analytics, leads, appointments
+- [ ] **White-label option**: Allow agencies to resell Embedo under their own brand
+- [ ] **Stripe billing integration**: Automated invoicing and subscription management for onboarded businesses
+- [ ] **AI proposal follow-up**: Auto-detect proposal views and trigger personalized follow-up sequences
