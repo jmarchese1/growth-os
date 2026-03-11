@@ -126,7 +126,7 @@ export async function logContactActivity(params: {
     data: {
       ...rest,
       ...(description != null ? { description } : {}),
-      ...(metadata != null ? { metadata: metadata as Record<string, unknown> & { toJSON(): unknown } } : {}),
+      ...(metadata != null ? { metadata: metadata as Prisma.InputJsonValue } : {}),
     },
   });
 }
