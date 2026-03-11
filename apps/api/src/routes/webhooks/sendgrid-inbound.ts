@@ -95,7 +95,34 @@ export async function sendgridInboundRoutes(app: FastifyInstance): Promise<void>
       });
     }
 
-    log.info({ prospectId: prospect.id, fromEmail }, 'Reply recorded');
+    log.info({ prospectId: prospect.id, fromEmail, replyCategory }, 'Reply recorded');
+
+    // Auto-create Lead when a prospect replies (non-unsubscribe, non-OOO)
+    if (replyCategory !== 'UNSUBSCRIBE' && replyCategory !== 'OOO') {
+      try {
+        await leadCreatedQueue().add(
+          `prospect-reply:${prospect.id}`,
+          {
+            businessId: prospect.id, // prospect ID as reference — no business yet
+            source: 'OUTBOUND',
+            sourceId: prospect.id,
+            rawData: {
+              prospectId: prospect.id,
+              name: prospect.name,
+              email: fromEmail,
+              phone: prospect.phone,
+              website: prospect.website,
+              replyCategory,
+              replyText: replyText.slice(0, 500),
+              campaignId: prospect.campaignId,
+            },
+          },
+        );
+        log.info({ prospectId: prospect.id }, 'Lead created event queued from prospect reply');
+      } catch (err) {
+        log.error({ err, prospectId: prospect.id }, 'Failed to queue lead.created — non-fatal');
+      }
+    }
 
     const preview = replyText.slice(0, 160);
 
