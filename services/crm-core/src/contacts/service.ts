@@ -121,7 +121,14 @@ export async function logContactActivity(params: {
   description?: string;
   metadata?: Record<string, unknown>;
 }): Promise<void> {
-  await db.contactActivity.create({ data: params });
+  const { description, metadata, ...rest } = params;
+  await db.contactActivity.create({
+    data: {
+      ...rest,
+      ...(description != null ? { description } : {}),
+      ...(metadata != null ? { metadata: metadata as Record<string, unknown> & { toJSON(): unknown } } : {}),
+    },
+  });
 }
 
 export async function getContactTimeline(contactId: string) {
