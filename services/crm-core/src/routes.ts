@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { validate } from '@embedo/utils';
+import type { OnboardingRequest } from '@embedo/types';
 import { onboardBusiness } from './onboarding.js';
 import {
   getBusinessById,
