@@ -28,7 +28,10 @@ const TOOLS = [
 // 3 inner accent dots at 0°, 120°, 240°
 const INNER_DOTS = [0, 120, 240].map((deg) => {
   const rad = (deg * Math.PI) / 180;
-  return { left: INNER_R + INNER_R * Math.cos(rad) - 4, top: INNER_R + INNER_R * Math.sin(rad) - 4 };
+  return {
+    left: Math.round((INNER_R + INNER_R * Math.cos(rad) - 4) * 100) / 100,
+    top:  Math.round((INNER_R + INNER_R * Math.sin(rad) - 4) * 100) / 100,
+  };
 });
 
 const NODES = TOOLS.map((t, i) => {
