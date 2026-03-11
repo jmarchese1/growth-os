@@ -32,10 +32,10 @@ export async function createOrUpdateContact(params: {
     const updated = await db.contact.update({
       where: { id: existing.id },
       data: {
-        firstName: firstName ?? existing.firstName ?? undefined,
-        lastName: lastName ?? existing.lastName ?? undefined,
-        email: email ?? existing.email ?? undefined,
-        phone: phone ?? existing.phone ?? undefined,
+        ...(firstName != null ? { firstName } : {}),
+        ...(lastName != null ? { lastName } : {}),
+        ...(email != null ? { email } : {}),
+        ...(phone != null ? { phone } : {}),
         tags: [...new Set([...existing.tags, ...tags])],
         updatedAt: new Date(),
       },
@@ -46,10 +46,10 @@ export async function createOrUpdateContact(params: {
   const contact = await db.contact.create({
     data: {
       businessId,
-      email,
-      phone,
-      firstName,
-      lastName,
+      ...(email != null ? { email } : {}),
+      ...(phone != null ? { phone } : {}),
+      ...(firstName != null ? { firstName } : {}),
+      ...(lastName != null ? { lastName } : {}),
       source,
       tags,
       status: 'LEAD',
