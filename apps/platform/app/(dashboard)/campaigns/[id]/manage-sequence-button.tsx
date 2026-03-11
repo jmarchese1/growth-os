@@ -221,7 +221,8 @@ export function ManageSequenceButton({ campaignId, currentSteps, prospectorUrl, 
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
