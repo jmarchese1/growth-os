@@ -78,7 +78,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       businessId: id,
       page: parseInt(query['page'] ?? '1'),
       pageSize: parseInt(query['pageSize'] ?? '20'),
-      search: query['search'],
+      ...(query['search'] != null ? { search: query['search'] } : {}),
     });
   });
 
