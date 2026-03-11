@@ -161,7 +161,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
         ...(parsed.emailSubject !== undefined && { emailSubject: parsed.emailSubject }),
         ...(parsed.emailBodyHtml !== undefined && { emailBodyHtml: parsed.emailBodyHtml }),
         ...(parsed.smsBody !== undefined && { smsBody: parsed.smsBody }),
-        ...(parsed.sequenceSteps !== undefined && { sequenceSteps: parsed.sequenceSteps.sort((a, b) => a.stepNumber - b.stepNumber) }),
+        ...(parsed.sequenceSteps !== undefined && { sequenceSteps: parsed.sequenceSteps.sort((a: { stepNumber: number }, b: { stepNumber: number }) => a.stepNumber - b.stepNumber) }),
       },
     });
     log.info({ campaignId: id }, 'Campaign email updated');
