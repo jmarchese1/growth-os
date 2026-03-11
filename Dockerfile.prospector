@@ -12,10 +12,11 @@ RUN pnpm --filter @embedo/prospector... build
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/pnpm-workspace.yaml /app/pnpm-lock.yaml /app/package.json /app/turbo.json ./
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/services/prospector/dist ./services/prospector/dist
 COPY --from=builder /app/services/prospector/package.json ./services/prospector/
+RUN pnpm install --no-frozen-lockfile --prod
 
 EXPOSE 3009
 CMD ["node", "services/prospector/dist/index.js"]
