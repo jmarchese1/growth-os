@@ -3,19 +3,27 @@ import { useEffect, useRef, useState } from 'react';
 
 export default function CursorSpotlight() {
   const ref = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState({ x: -999, y: -999 });
-  const [visible, setVisible] = useState(false);
+  const [pos, setPos] = useState({ x: -1, y: -1 }); // -1 signals "use section center"
+  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
     const section = ref.current?.closest('section');
     if (!section) return;
 
+    // Set initial position to center of section
+    const rect = section.getBoundingClientRect();
+    setPos({ x: rect.width / 2, y: rect.height / 2 });
+
     const onMove = (e: MouseEvent) => {
-      const rect = section.getBoundingClientRect();
-      setPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+      const r = section.getBoundingClientRect();
+      setPos({ x: e.clientX - r.left, y: e.clientY - r.top });
       setVisible(true);
     };
-    const onLeave = () => setVisible(false);
+    const onLeave = () => {
+      // Return to center instead of hiding
+      const r = section.getBoundingClientRect();
+      setPos({ x: r.width / 2, y: r.height / 2 });
+    };
 
     section.addEventListener('mousemove', onMove);
     section.addEventListener('mouseleave', onLeave);
