@@ -105,6 +105,51 @@ export async function calWebhookRoutes(app: FastifyInstance): Promise<void> {
       calendlyEventId: payload.uid,
     });
 
+    // ─── Bridge: Check if this attendee is an existing prospect ────────────
+    // If they came from an outbound campaign, update their status to MEETING_BOOKED.
+    // If they're a fresh inbound booking (landing page), create a lead.
+    const attendeeEmail = attendee.email?.toLowerCase();
+    let isOutboundProspect = false;
+
+    if (attendeeEmail) {
+      const prospect = await db.prospectBusiness.findFirst({
+        where: { email: attendeeEmail },
+        orderBy: { updatedAt: 'desc' },
+      });
+
+      if (prospect) {
+        // Outbound prospect booked a meeting — advance their pipeline status
+        await db.prospectBusiness.update({
+          where: { id: prospect.id },
+          data: { status: 'MEETING_BOOKED', nextFollowUpAt: null },
+        });
+        isOutboundProspect = true;
+        log.info({ prospectId: prospect.id, email: attendeeEmail }, 'Prospect status updated to MEETING_BOOKED');
+      } else {
+        // No prospect match — this is an inbound lead from the landing page / direct booking
+        try {
+          await leadCreatedQueue().add(`cal-booking:${payload.uid}`, {
+            businessId,
+            source: 'CALENDLY',
+            sourceId: payload.uid,
+            rawData: {
+              name: attendee.name,
+              email: attendeeEmail,
+              phone: attendee.phoneNumber ?? null,
+              title: payload.title,
+              startTime: payload.startTime,
+              appointmentId: appointment.id,
+              contactId: contact.id,
+              channel: 'cal.com',
+            },
+          });
+          log.info({ email: attendeeEmail }, 'Inbound lead created from Cal.com booking');
+        } catch (err) {
+          log.error({ err }, 'Failed to queue lead.created from Cal.com — non-fatal');
+        }
+      }
+    }
+
     // SMS alert to Jason
     const ownerPhone = process.env['OWNER_PHONE'];
     const twilioSid = process.env['TWILIO_ACCOUNT_SID'];
