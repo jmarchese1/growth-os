@@ -217,15 +217,42 @@ pnpm dev
 
 ---
 
+## Sales Funnel (Three-Stage Pipeline)
+
+The platform dashboard sidebar reflects the sales funnel:
+
+```
+OUTBOUND (cold)          PIPELINE (warm)          MAIN (customers)
+─────────────────        ─────────────────        ─────────────────
+Campaigns                Leads                    Businesses
+  └─ Prospects             └─ Proposals             └─ Contacts
+       │                        │                        │
+       ├─ Reply ──────────► Lead created           Signed customer
+       ├─ Meeting booked ─► Lead created           (product delivery)
+       └─ Converted ──────────────────────────────► Business onboarded
+```
+
+- **Outbound**: Cold outreach campaigns via prospector. Prospects discovered, enriched, emailed.
+- **Pipeline**: When prospects reply or book a Cal.com meeting, they become leads. Proposals sent here.
+- **Main**: Converted leads become onboarded businesses receiving Embedo products.
+
+### Prospect-to-Lead Bridge
+- **Email reply detected** (SendGrid Inbound Parse → `sendgrid-inbound.ts`): Prospect status → REPLIED, `lead.created` event fired
+- **Cal.com booking** (`cal.ts` webhook): If attendee matches a prospect → status MEETING_BOOKED. If no prospect match → inbound `lead.created` event.
+- **Reply sentiment** auto-classified: POSITIVE, NEUTRAL, NEGATIVE, OOO, UNSUBSCRIBE
+
+---
+
 ## Deployment
 
-| App/Service | Platform | Notes |
+| App/Service | Platform | Domain |
 |---|---|---|
-| `apps/web` | Vercel | Auto-deploy from main branch |
-| `apps/platform` | Vercel | Auto-deploy from main branch |
-| `apps/api` + all `services/*` | Railway | Docker container per service |
+| `apps/web` | Vercel | embedo.io |
+| `apps/platform` | Vercel | platform.embedo.io |
+| `apps/api` | Railway | embedoapi-production.up.railway.app |
+| `services/prospector` | Railway | prospector-production-bc03.up.railway.app |
 | Database | Supabase | Cloud-hosted PostgreSQL |
-| Redis | Upstash | Serverless Redis for BullMQ |
+| Redis | Upstash | Serverless Redis for BullMQ (local Docker in dev) |
 
 ---
 
