@@ -50,12 +50,13 @@ export async function handleCalendlyWebhook(
 
   // Create or update the contact
   const nameParts = invitee.name.split(' ');
+  const lastName = nameParts.slice(1).join(' ') || undefined;
   const { contact, created } = await createOrUpdateContact({
     businessId,
     email: invitee.email,
-    phone: invitee.text_reminder_number,
-    firstName: nameParts[0],
-    lastName: nameParts.slice(1).join(' ') || undefined,
+    ...(invitee.text_reminder_number != null ? { phone: invitee.text_reminder_number } : {}),
+    ...(nameParts[0] != null ? { firstName: nameParts[0] } : {}),
+    ...(lastName != null ? { lastName } : {}),
     source: 'CALENDLY',
   });
 
