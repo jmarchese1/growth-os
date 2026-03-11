@@ -36,7 +36,17 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
 
   // ─── Onboarding ──────────────────────────────────────────────────────────
   app.post('/onboarding', async (request, reply) => {
-    const data = validate(onboardingSchema, request.body);
+    const parsed = validate(onboardingSchema, request.body);
+    const data: OnboardingRequest = {
+      name: parsed.name,
+      type: parsed.type ?? 'RESTAURANT',
+      ...(parsed.phone != null ? { phone: parsed.phone } : {}),
+      ...(parsed.email != null ? { email: parsed.email } : {}),
+      ...(parsed.website != null ? { website: parsed.website } : {}),
+      ...(parsed.address != null ? { address: parsed.address } : {}),
+      ...(parsed.timezone != null ? { timezone: parsed.timezone } : {}),
+      ...(parsed.settings != null ? { settings: parsed.settings } : {}),
+    };
     const result = await onboardBusiness(data);
     return reply.code(201).send(result);
   });
