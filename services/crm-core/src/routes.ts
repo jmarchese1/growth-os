@@ -43,7 +43,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       ...(parsed.phone != null ? { phone: parsed.phone } : {}),
       ...(parsed.email != null ? { email: parsed.email } : {}),
       ...(parsed.website != null ? { website: parsed.website } : {}),
-      ...(parsed.address != null ? { address: { street: parsed.address.street, city: parsed.address.city, state: parsed.address.state, zip: parsed.address.zip, country: parsed.address.country } } : {}),
+      ...(parsed.address != null ? { address: { street: parsed.address.street, city: parsed.address.city, state: parsed.address.state, zip: parsed.address.zip, country: parsed.address.country ?? 'US' } } : {}),
       ...(parsed.timezone != null ? { timezone: parsed.timezone } : {}),
       ...(parsed.settings != null ? { settings: parsed.settings } : {}),
     };
