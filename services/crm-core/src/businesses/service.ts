@@ -24,7 +24,7 @@ export async function createBusiness(data: OnboardingRequest): Promise<Business>
       ...(data.website != null ? { website: data.website } : {}),
       ...(data.address != null ? { address: data.address as unknown as Prisma.InputJsonValue } : {}),
       timezone: data.timezone ?? 'America/New_York',
-      ...(data.settings != null ? { settings: data.settings } : {}),
+      ...(data.settings != null ? { settings: data.settings as unknown as Prisma.InputJsonValue } : {}),
       status: 'PENDING',
     },
   });
