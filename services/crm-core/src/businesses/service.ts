@@ -22,9 +22,9 @@ export async function createBusiness(data: OnboardingRequest): Promise<Business>
       phone: data.phone,
       email: data.email,
       website: data.website,
-      address: data.address ?? undefined,
+      ...(data.address != null ? { address: data.address } : {}),
       timezone: data.timezone ?? 'America/New_York',
-      settings: data.settings ?? undefined,
+      ...(data.settings != null ? { settings: data.settings } : {}),
       status: 'PENDING',
     },
   });
