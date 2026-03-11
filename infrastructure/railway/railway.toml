@@ -63,3 +63,10 @@ dockerfilePath = "services/proposal-engine/Dockerfile"
 startCommand = "node services/proposal-engine/dist/index.js"
 port = 3008
 healthcheckPath = "/health"
+
+[[services]]
+name = "prospector"
+dockerfilePath = "services/prospector/Dockerfile"
+startCommand = "node services/prospector/dist/index.js"
+port = 3009
+healthcheckPath = "/health"
