@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { STEP2_SUBJECT, STEP2_BODY, STEP3_SUBJECT, STEP3_BODY } from './templates';
 
 interface Step {
   stepNumber: number;
@@ -14,16 +15,12 @@ interface Props {
   campaignId: string;
   currentSteps: Step[] | null;
   prospectorUrl: string;
-  contactedCount: number; // prospects eligible for retroactive requeue
+  contactedCount: number;
 }
 
-const STEP2_BODY = `<div style="font-family: Arial, sans-serif; max-width: 540px; color: #1a1a1a; line-height: 1.65; font-size: 15px;"><p>Hey {{businessName}},</p><p>Wanted to follow up in case my last message got buried. A lot of restaurants in {{city}} are quietly using AI to handle the stuff that slips through the cracks — missed calls, slow follow-ups, re-engaging regulars who went quiet.</p><p>Takes about a week to set up and most places see the difference in the first few days. Happy to walk you through exactly what it'd look like for your spot.</p><p style="margin-top: 20px;"><a href="{{calLink}}" style="display: inline-block; background: #4f46e5; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600;">Book a 10-min call →</a></p><table style="margin-top: 28px; padding-top: 20px; border-collapse: collapse; width: 100%;" cellpadding="0" cellspacing="0"><tr><td style="padding-right: 12px; vertical-align: middle; width: 56px;"><img src="https://i.imgur.com/RDXkWkD.jpeg" alt="Jason" width="48" height="48" style="border-radius: 50%; display: block; object-fit: cover;" /></td><td style="vertical-align: middle;"><p style="margin: 0; font-size: 14px; font-weight: 700; color: #1a1a1a;">Jason</p><p style="margin: 2px 0 0; font-size: 13px; color: #666;">Data Scientist · <a href="https://embedo.io" style="color: #4f46e5; text-decoration: none;">embedo.io</a></p></td></tr></table><p style="margin-top: 32px; font-size: 11px; color: #bbb;"><a href="mailto:{{replyEmail}}?subject=Unsubscribe" style="color: #bbb;">Unsubscribe</a></p></div>`;
-
-const STEP3_BODY = `<div style="font-family: Arial, sans-serif; max-width: 540px; color: #1a1a1a; line-height: 1.65; font-size: 15px;"><p>Hey {{businessName}},</p><p>This is my last note — I don't want to keep hitting your inbox if the timing isn't right.</p><p>If things change and you ever want to see what an AI layer could do for your restaurant, just reply to this and I'll pick it up from there. No pitch, just a conversation.</p><p>Either way, good luck with the season. Hope it's a busy one.</p><table style="margin-top: 28px; padding-top: 20px; border-collapse: collapse; width: 100%;" cellpadding="0" cellspacing="0"><tr><td style="padding-right: 12px; vertical-align: middle; width: 56px;"><img src="https://i.imgur.com/RDXkWkD.jpeg" alt="Jason" width="48" height="48" style="border-radius: 50%; display: block; object-fit: cover;" /></td><td style="vertical-align: middle;"><p style="margin: 0; font-size: 14px; font-weight: 700; color: #1a1a1a;">Jason</p><p style="margin: 2px 0 0; font-size: 13px; color: #666;">Data Scientist · <a href="https://embedo.io" style="color: #4f46e5; text-decoration: none;">embedo.io</a></p></td></tr></table><p style="margin-top: 32px; font-size: 11px; color: #bbb;"><a href="mailto:{{replyEmail}}?subject=Unsubscribe" style="color: #bbb;">Unsubscribe</a></p></div>`;
-
-const DEFAULT_STEPS: Step[] = [
-  { stepNumber: 2, delayHours: 72, subject: 'Re: quick question for {{businessName}}', bodyHtml: STEP2_BODY },
-  { stepNumber: 3, delayHours: 192, subject: 'closing the loop — {{businessName}}', bodyHtml: STEP3_BODY },
+const DEFAULT_FOLLOW_UPS: Step[] = [
+  { stepNumber: 2, delayHours: 72,  subject: STEP2_SUBJECT, bodyHtml: STEP2_BODY },
+  { stepNumber: 3, delayHours: 192, subject: STEP3_SUBJECT, bodyHtml: STEP3_BODY },
 ];
 
 export function ManageSequenceButton({ campaignId, currentSteps, prospectorUrl, contactedCount }: Props) {
@@ -35,32 +32,21 @@ export function ManageSequenceButton({ campaignId, currentSteps, prospectorUrl, 
   const [success, setSuccess] = useState('');
   const [applyToExisting, setApplyToExisting] = useState(true);
 
-  // Only follow-up steps (step 1 is the cold email, managed via Edit Email)
   const existingFollowUps = (currentSteps ?? []).filter((s) => s.stepNumber > 1);
-  const [steps, setSteps] = useState<Step[]>(
-    existingFollowUps.length > 0 ? existingFollowUps : DEFAULT_STEPS
+  const initialLength = existingFollowUps.length > 0 ? existingFollowUps.length + 1 : 1;
+
+  const [sequenceLength, setSequenceLength] = useState<1 | 2 | 3>(
+    Math.min(3, Math.max(1, initialLength)) as 1 | 2 | 3
   );
 
-  function addStep() {
-    const nextNum = steps.length > 0 ? Math.max(...steps.map((s) => s.stepNumber)) + 1 : 2;
-    const prevDelay = steps.length > 0 ? steps[steps.length - 1].delayHours : 0;
-    const defaultBody = nextNum === 3 ? STEP3_BODY : STEP2_BODY;
-    const defaultSubject = nextNum === 3 ? 'closing the loop — {{businessName}}' : 'Re: quick question for {{businessName}}';
-    setSteps([...steps, {
-      stepNumber: nextNum,
-      delayHours: prevDelay + 72,
-      subject: defaultSubject,
-      bodyHtml: defaultBody,
-    }]);
-  }
+  // Preserve existing delay/subject/body if already set, otherwise use defaults
+  const [followUps, setFollowUps] = useState<Step[]>([
+    existingFollowUps[0] ?? DEFAULT_FOLLOW_UPS[0],
+    existingFollowUps[1] ?? DEFAULT_FOLLOW_UPS[1],
+  ]);
 
-  function removeStep(idx: number) {
-    const updated = steps.filter((_, i) => i !== idx).map((s, i) => ({ ...s, stepNumber: i + 2 }));
-    setSteps(updated);
-  }
-
-  function updateStep(idx: number, field: keyof Step, value: string | number) {
-    setSteps(steps.map((s, i) => i === idx ? { ...s, [field]: value } : s));
+  function updateDelay(idx: number, hours: number) {
+    setFollowUps((prev) => prev.map((s, i) => i === idx ? { ...s, delayHours: hours } : s));
   }
 
   async function handleSave() {
@@ -68,8 +54,9 @@ export function ManageSequenceButton({ campaignId, currentSteps, prospectorUrl, 
     setError('');
     setSuccess('');
     try {
-      // Save sequence steps (include step 1 placeholder so array is complete)
-      const allSteps = [{ stepNumber: 1, delayHours: 0 }, ...steps];
+      const activeFollowUps = followUps.slice(0, sequenceLength - 1);
+      const allSteps: Step[] = [{ stepNumber: 1, delayHours: 0 }, ...activeFollowUps];
+
       const res = await fetch(`${prospectorUrl}/campaigns/${campaignId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -77,38 +64,34 @@ export function ManageSequenceButton({ campaignId, currentSteps, prospectorUrl, 
       });
       if (!res.ok) {
         const data = (await res.json()) as { error?: string };
-        setError(data.error ?? 'Failed to save steps');
+        setError(data.error ?? 'Failed to save');
         return;
       }
 
-      // Retroactively apply to existing contacted prospects
-      if (applyToExisting && contactedCount > 0 && steps.length > 0) {
+      if (applyToExisting && contactedCount > 0 && sequenceLength > 1) {
         setRequeueing(true);
-        const requeueRes = await fetch(`${prospectorUrl}/campaigns/${campaignId}/requeue-followups`, {
-          method: 'POST',
-        });
-        if (requeueRes.ok) {
-          const data = (await requeueRes.json()) as { queued: number };
-          setSuccess(`Saved. Queued follow-ups for ${data.queued} existing prospect${data.queued !== 1 ? 's' : ''}.`);
+        const reqRes = await fetch(`${prospectorUrl}/campaigns/${campaignId}/requeue-followups`, { method: 'POST' });
+        if (reqRes.ok) {
+          const data = (await reqRes.json()) as { queued: number };
+          setSuccess(`Saved. Queued follow-ups for ${data.queued} prospect${data.queued !== 1 ? 's' : ''}.`);
         } else {
-          setSuccess('Steps saved. (Could not requeue existing prospects — they may already have follow-ups scheduled.)');
+          setSuccess('Saved. (Could not requeue existing prospects.)');
         }
         setRequeueing(false);
       } else {
-        setSuccess('Sequence steps saved. New prospects will follow this sequence.');
+        setSuccess('Sequence saved.');
       }
 
       router.refresh();
     } catch {
-      setError('Network error — is the prospector service running?');
+      setError('Network error — is the prospector running?');
     } finally {
       setLoading(false);
       setRequeueing(false);
     }
   }
 
-  const inputCls = "w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 transition-colors";
-  const labelCls = "block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wide";
+  const activeFollowUps = followUps.slice(0, sequenceLength - 1);
 
   return (
     <>
@@ -116,105 +99,91 @@ export function ManageSequenceButton({ campaignId, currentSteps, prospectorUrl, 
         onClick={() => setOpen(true)}
         className="px-3 py-1.5 bg-white/5 border border-white/10 text-slate-400 text-xs font-medium rounded-lg hover:bg-white/10 hover:text-white transition-colors"
       >
-        Follow-up Sequence
-        {steps.length > 0 && (
-          <span className="ml-1.5 px-1.5 py-0.5 bg-violet-600/30 text-violet-300 rounded text-[10px]">
-            {steps.length} step{steps.length !== 1 ? 's' : ''}
-          </span>
-        )}
+        Sequence
+        <span className="ml-1.5 px-1.5 py-0.5 bg-violet-600/30 text-violet-300 rounded text-[10px]">
+          {sequenceLength} email{sequenceLength !== 1 ? 's' : ''}
+        </span>
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <div className="relative bg-[#0f1117] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
+          <div className="relative bg-[#0f1117] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl">
 
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
               <div>
                 <h2 className="text-base font-semibold text-white">Follow-up Sequence</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Step 1 is the cold email. Add steps 2+ here for automatic follow-ups.</p>
+                <p className="text-xs text-slate-500 mt-0.5">Set length and timing. Edit email copy via "Edit Emails".</p>
               </div>
-              <button onClick={() => setOpen(false)} className="text-slate-500 hover:text-white transition-colors text-lg leading-none">✕</button>
+              <button onClick={() => setOpen(false)} className="text-slate-500 hover:text-white transition-colors text-xl leading-none">✕</button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div className="p-6 space-y-6">
 
-              {/* Step 1 — read-only reference */}
-              <div className="flex items-center gap-3 bg-white/[0.03] border border-white/5 rounded-xl px-4 py-3 opacity-50">
-                <div className="w-7 h-7 rounded-full bg-violet-600/30 border border-violet-500/30 flex items-center justify-center flex-shrink-0">
-                  <span className="text-[10px] font-bold text-violet-300">1</span>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-300">Cold Email — Day 0</p>
-                  <p className="text-[10px] text-slate-600">Edit via "Edit Email" button</p>
+              {/* Length picker */}
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Sequence Length</p>
+                <div className="flex gap-2">
+                  {([1, 2, 3] as const).map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => setSequenceLength(n)}
+                      className={`flex-1 py-3 rounded-xl text-sm font-semibold border transition-colors ${
+                        sequenceLength === n
+                          ? 'bg-violet-600/30 border-violet-500/50 text-violet-200'
+                          : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      {n}
+                      <span className="block text-[10px] font-normal mt-0.5 opacity-60">
+                        {n === 1 ? 'cold email only' : n === 2 ? '+ 1 follow-up' : '+ 2 follow-ups'}
+                      </span>
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Follow-up steps */}
-              {steps.map((step, idx) => (
-                <div key={idx} className="bg-white/[0.03] border border-white/10 rounded-xl p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 rounded-full bg-indigo-600/30 border border-indigo-500/30 flex items-center justify-center flex-shrink-0">
+              {/* Timing per step */}
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Timing</p>
+
+                <div className="flex items-center justify-between py-2.5 px-3 bg-white/[0.03] rounded-lg border border-white/5">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-6 h-6 rounded-full bg-violet-600/30 border border-violet-500/30 flex items-center justify-center flex-shrink-0">
+                      <span className="text-[10px] font-bold text-violet-300">1</span>
+                    </div>
+                    <p className="text-xs font-medium text-slate-300">Cold Email</p>
+                  </div>
+                  <span className="text-xs text-slate-600">Day 0 — immediate</span>
+                </div>
+
+                {activeFollowUps.map((step, idx) => (
+                  <div key={idx} className="flex items-center justify-between py-2.5 px-3 bg-white/[0.03] rounded-lg border border-white/10">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-6 h-6 rounded-full bg-indigo-600/30 border border-indigo-500/30 flex items-center justify-center flex-shrink-0">
                         <span className="text-[10px] font-bold text-indigo-300">{step.stepNumber}</span>
                       </div>
-                      <span className="text-sm font-medium text-white">Follow-up {idx + 1}</span>
+                      <p className="text-xs font-medium text-slate-300">{idx === 0 ? 'Follow-up' : 'Break-up'}</p>
                     </div>
-                    <button
-                      onClick={() => removeStep(idx)}
-                      className="text-xs text-slate-600 hover:text-red-400 transition-colors px-2 py-1 rounded"
-                    >
-                      Remove
-                    </button>
-                  </div>
-
-                  <div>
-                    <label className={labelCls}>Send after (hours from cold email)</label>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <input
                         type="number"
                         min={1}
                         value={step.delayHours}
-                        onChange={(e) => updateStep(idx, 'delayHours', parseInt(e.target.value) || 72)}
-                        className="w-28 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-1 focus:ring-violet-500"
+                        onChange={(e) => updateDelay(idx, parseInt(e.target.value) || 72)}
+                        className="w-16 px-2 py-1 bg-white/5 border border-white/10 rounded text-xs text-white text-center focus:outline-none focus:ring-1 focus:ring-violet-500"
                       />
-                      <span className="text-xs text-slate-500">
-                        = {step.delayHours >= 24 ? `${Math.round(step.delayHours / 24)} days` : `${step.delayHours}h`} after cold email
+                      <span className="text-[10px] text-slate-500">hrs</span>
+                      <span className="text-[10px] text-slate-600 ml-1">
+                        (Day {Math.round(step.delayHours / 24)})
                       </span>
                     </div>
                   </div>
-
-                  <div>
-                    <label className={labelCls}>Subject (optional — defaults to Re: cold email subject)</label>
-                    <input
-                      value={step.subject ?? ''}
-                      onChange={(e) => updateStep(idx, 'subject', e.target.value)}
-                      placeholder="Re: quick question for {{businessName}}"
-                      className={inputCls}
-                    />
-                  </div>
-
-                  <div>
-                    <label className={labelCls}>Body HTML</label>
-                    <textarea
-                      rows={8}
-                      value={step.bodyHtml ?? ''}
-                      onChange={(e) => updateStep(idx, 'bodyHtml', e.target.value)}
-                      className={inputCls + ' font-mono resize-y text-xs'}
-                    />
-                  </div>
-                </div>
-              ))}
-
-              <button
-                onClick={addStep}
-                className="w-full py-2.5 border border-dashed border-white/10 rounded-xl text-xs text-slate-500 hover:text-violet-400 hover:border-violet-500/40 transition-colors"
-              >
-                + Add Follow-up Step
-              </button>
+                ))}
+              </div>
 
               {/* Apply to existing */}
-              {contactedCount > 0 && steps.length > 0 && (
+              {contactedCount > 0 && sequenceLength > 1 && (
                 <label className="flex items-start gap-3 bg-violet-500/5 border border-violet-500/20 rounded-xl px-4 py-3 cursor-pointer">
                   <input
                     type="checkbox"
@@ -223,11 +192,8 @@ export function ManageSequenceButton({ campaignId, currentSteps, prospectorUrl, 
                     className="mt-0.5 accent-violet-500"
                   />
                   <div>
-                    <p className="text-xs font-semibold text-violet-300">Apply to existing contacted prospects</p>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
-                      {contactedCount} prospect{contactedCount !== 1 ? 's' : ''} already received the cold email with no follow-up scheduled.
-                      Queue follow-up steps for them now, timed from when they were first emailed.
-                    </p>
+                    <p className="text-xs font-semibold text-violet-300">Apply to {contactedCount} existing prospects</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">Queue follow-ups for prospects who already received the cold email.</p>
                   </div>
                 </label>
               )}
@@ -242,7 +208,7 @@ export function ManageSequenceButton({ campaignId, currentSteps, prospectorUrl, 
                 disabled={loading || requeueing}
                 className="px-5 py-2 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-500 transition-colors disabled:opacity-50"
               >
-                {requeueing ? 'Applying to prospects…' : loading ? 'Saving…' : 'Save Sequence'}
+                {requeueing ? 'Applying…' : loading ? 'Saving…' : 'Save'}
               </button>
               <button
                 onClick={() => setOpen(false)}
@@ -251,7 +217,6 @@ export function ManageSequenceButton({ campaignId, currentSteps, prospectorUrl, 
                 Cancel
               </button>
             </div>
-
           </div>
         </div>
       )}
