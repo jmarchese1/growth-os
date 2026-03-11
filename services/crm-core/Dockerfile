@@ -3,7 +3,7 @@ RUN npm install -g pnpm
 
 FROM base AS builder
 WORKDIR /app
-COPY pnpm-workspace.yaml package.json turbo.json pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml package.json turbo.json pnpm-lock.yaml tsconfig.base.json ./
 COPY packages/ packages/
 COPY services/crm-core/ services/crm-core/
 RUN pnpm install --no-frozen-lockfile
