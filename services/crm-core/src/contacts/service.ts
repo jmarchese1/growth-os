@@ -1,5 +1,5 @@
-import { db } from '@embedo/db';
-import type { Contact, ContactStatus, LeadSource, ActivityType, Prisma } from '@embedo/db';
+import { db, Prisma } from '@embedo/db';
+import type { Contact, ContactStatus, LeadSource, ActivityType } from '@embedo/db';
 import { NotFoundError } from '@embedo/utils';
 
 export async function createOrUpdateContact(params: {
