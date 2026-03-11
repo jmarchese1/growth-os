@@ -261,7 +261,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       }),
     ]);
 
-    const stats = Object.fromEntries(byStatus.map((s) => [s.status, s._count._all]));
+    const stats = Object.fromEntries(byStatus.map((s: { status: string; _count: { _all: number } }) => [s.status, s._count._all]));
 
     const replies = await db.outreachMessage.count({
       where: {
