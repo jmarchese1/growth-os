@@ -1,0 +1,21 @@
+FROM node:20-alpine AS base
+RUN npm install -g pnpm
+
+FROM base AS builder
+WORKDIR /app
+COPY pnpm-workspace.yaml package.json turbo.json tsconfig.base.json ./
+COPY packages/ packages/
+COPY services/prospector/ services/prospector/
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @embedo/prospector build
+
+FROM base AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/services/prospector/dist ./services/prospector/dist
+COPY --from=builder /app/services/prospector/package.json ./services/prospector/
+
+EXPOSE 3009
+CMD ["node", "services/prospector/dist/index.js"]
