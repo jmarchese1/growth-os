@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { db } from '@embedo/db';
 import { createLogger } from '@embedo/utils';
+import { leadCreatedQueue } from '@embedo/queue';
 import sgMail from '@sendgrid/mail';
 import twilio from 'twilio';
 
