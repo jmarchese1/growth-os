@@ -32,8 +32,8 @@ export async function onboardBusiness(data: OnboardingRequest): Promise<{
       businessId: business.id,
       businessName: business.name,
       businessType: business.type,
-      email: business.email ?? undefined,
-      phone: business.phone ?? undefined,
+      ...(business.email != null ? { email: business.email } : {}),
+      ...(business.phone != null ? { phone: business.phone } : {}),
     },
     {
       jobId: `onboard:${business.id}`,
