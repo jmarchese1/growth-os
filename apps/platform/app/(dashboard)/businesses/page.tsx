@@ -14,7 +14,9 @@ interface Business {
 async function getBusinesses(): Promise<{ items: Business[]; total: number }> {
   try {
     const res = await fetch(`${API_URL}/businesses?pageSize=50`, { cache: 'no-store' });
-    return res.json() as Promise<{ items: Business[]; total: number }>;
+    if (!res.ok) return { items: [], total: 0 };
+    const data = await res.json();
+    return { items: data.items ?? [], total: data.total ?? 0 };
   } catch {
     return { items: [], total: 0 };
   }
