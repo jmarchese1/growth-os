@@ -32,6 +32,8 @@ export function ManageSequenceButton({ campaignId, currentSteps, prospectorUrl, 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [applyToExisting, setApplyToExisting] = useState(true);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const existingFollowUps = (currentSteps ?? []).filter((s) => s.stepNumber > 1);
   const initialLength = existingFollowUps.length > 0 ? existingFollowUps.length + 1 : 1;
