@@ -88,16 +88,20 @@ pnpm db:studio        # Open Prisma Studio
 - Never modify the DB directly — always through Prisma migrations
 
 ### Key Models
-- `Business` — anchor entity; stores integration IDs (ElevenLabs, Twilio, Calendly, social)
+- `Business` — anchor entity; stores integration IDs, product modules in `settings` JSON
 - `Contact` — unified customer record, source-tracked, lead-scored
 - `Lead` — raw capture before normalization to a Contact
+- `OutboundCampaign` — cold outreach campaign (target city, industry, sequence steps)
+- `ProspectBusiness` — individual prospect in a campaign; statuses: NEW → ENRICHED → CONTACTED → OPENED → REPLIED → MEETING_BOOKED → CONVERTED (or UNSUBSCRIBED/BOUNCED/DEAD)
+- `OutreachMessage` — individual email sent to a prospect (tracks step number, opens, replies, sentiment)
+- `OutreachSuppression` — global email suppression list (bounces, unsubscribes)
+- `Appointment` — Cal.com booking events, reminders, status tracking
 - `VoiceCallLog` — transcript, intent, extracted data from calls
 - `ChatSession` — conversation messages JSON, channel, lead capture flag
 - `Survey + SurveyResponse` — question schema, answers, trigger timestamps
 - `ContentPost` — social posts with scheduling and engagement metrics
 - `Proposal` — AI-generated proposals with share token and PDF link
 - `GeneratedWebsite` — template config and Vercel deployment info
-- `Appointment` — Calendly events, reminders, status tracking
 
 ---
 
