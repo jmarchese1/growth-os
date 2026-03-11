@@ -116,12 +116,13 @@ pnpm db:studio        # Open Prisma Studio
 
 ### Key Event Flows
 ```
-lead.created      → [lead-engine, crm-core]
-call.completed    → [lead-engine, crm-core, survey-engine]
-survey.response   → [lead-engine, crm-core]
+lead.created       → [lead-engine, crm-core]          # From prospect replies, Cal.com bookings, inbound forms
+outreach.send      → [prospector outreach-worker]      # Sends cold emails via SendGrid
+call.completed     → [lead-engine, crm-core, survey-engine]
+survey.response    → [lead-engine, crm-core]
 appointment.booked → [lead-engine, survey-engine]
 business.onboarded → [voice-agent, chatbot-agent, website-gen, social-media]
-proposal.viewed   → [crm-core, lead-engine]
+proposal.viewed    → [crm-core, lead-engine]
 ```
 
 ---
