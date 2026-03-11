@@ -6,7 +6,8 @@ WORKDIR /app
 COPY pnpm-workspace.yaml package.json turbo.json ./
 COPY packages/ packages/
 COPY services/crm-core/ services/crm-core/
-RUN pnpm install --frozen-lockfile
+COPY pnpm-lock.yaml ./
+RUN pnpm install --no-frozen-lockfile
 RUN pnpm --filter @embedo/crm-core build
 
 FROM base AS runner
