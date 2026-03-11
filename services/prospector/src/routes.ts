@@ -132,7 +132,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     if (parsed.smsBody !== undefined) createData['smsBody'] = parsed.smsBody;
     if (parsed.maxProspects != null) createData['maxProspects'] = parsed.maxProspects;
     if (parsed.sequenceSteps !== undefined) {
-      createData['sequenceSteps'] = parsed.sequenceSteps.sort((a, b) => a.stepNumber - b.stepNumber);
+      createData['sequenceSteps'] = parsed.sequenceSteps.sort((a: { stepNumber: number }, b: { stepNumber: number }) => a.stepNumber - b.stepNumber);
     }
     const campaign = await db.outboundCampaign.create({ data: createData as never });
     log.info({ campaignId: campaign.id, name: campaign.name }, 'Campaign created');
