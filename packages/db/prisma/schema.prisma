@@ -38,6 +38,7 @@ enum LeadSource {
   WEBSITE
   MANUAL
   CALENDLY
+  OUTBOUND
 }
 
 enum LeadStatus {
