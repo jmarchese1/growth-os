@@ -82,7 +82,15 @@ export async function updateBusiness(
   }>,
 ): Promise<Business> {
   await getBusinessById(id);
-  return db.business.update({ where: { id }, data });
+  // Build update payload, filtering out undefined values for exactOptionalPropertyTypes
+  const { address, settings, ...rest } = data;
+  const updateData: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(rest)) {
+    if (value !== undefined) updateData[key] = value;
+  }
+  if (address !== undefined) updateData['address'] = address;
+  if (settings !== undefined) updateData['settings'] = settings;
+  return db.business.update({ where: { id }, data: updateData });
 }
 
 export async function logOnboardingStep(
