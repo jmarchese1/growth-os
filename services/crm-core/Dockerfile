@@ -3,11 +3,11 @@ RUN npm install -g pnpm
 
 FROM base AS builder
 WORKDIR /app
-COPY pnpm-workspace.yaml package.json turbo.json ./
+COPY pnpm-workspace.yaml package.json turbo.json pnpm-lock.yaml ./
 COPY packages/ packages/
 COPY services/crm-core/ services/crm-core/
-COPY pnpm-lock.yaml ./
 RUN pnpm install --no-frozen-lockfile
+RUN pnpm --filter @embedo/db db:generate
 RUN pnpm --filter @embedo/crm-core build
 
 FROM base AS runner
