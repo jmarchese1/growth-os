@@ -37,6 +37,8 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState(0);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   // Step 1 state
   const [step1Subject, setStep1Subject] = useState(currentSubject);
