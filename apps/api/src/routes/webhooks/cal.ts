@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { db } from '@embedo/db';
 import { createLogger } from '@embedo/utils';
-import { appointmentBookedQueue } from '@embedo/queue';
+import { appointmentBookedQueue, leadCreatedQueue } from '@embedo/queue';
 import twilio from 'twilio';
 
 const log = createLogger('api:webhook:cal');
