@@ -39,8 +39,8 @@ const NODES = TOOLS.map((t, i) => {
   const rad = (angleDeg * Math.PI) / 180;
   return {
     ...t,
-    left: ORBIT_R + ORBIT_R * Math.cos(rad) - NODE_D / 2,
-    top:  ORBIT_R + ORBIT_R * Math.sin(rad) - NODE_D / 2,
+    left: Math.round((ORBIT_R + ORBIT_R * Math.cos(rad) - NODE_D / 2) * 100) / 100,
+    top:  Math.round((ORBIT_R + ORBIT_R * Math.sin(rad) - NODE_D / 2) * 100) / 100,
   };
 });
 
