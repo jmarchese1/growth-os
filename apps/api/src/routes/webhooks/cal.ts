@@ -170,7 +170,7 @@ export async function calWebhookRoutes(app: FastifyInstance): Promise<void> {
         await client.messages.create({
           to: ownerPhone,
           from: twilioFrom,
-          body: `New call booked: ${attendee.name} (${attendee.email}) — ${startFormatted}`,
+          body: `New call booked${isOutboundProspect ? ' (from outbound prospect)' : ''}: ${attendee.name} (${attendee.email}) — ${startFormatted}`,
         });
         log.info({ ownerPhone }, 'Owner SMS sent for Cal.com booking');
       } catch (err) {
