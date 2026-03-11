@@ -1,4 +1,4 @@
-import { db } from '@embedo/db';
+import { db, Prisma } from '@embedo/db';
 import type { Business, BusinessType, OnboardingStatus } from '@embedo/db';
 import { NotFoundError, ConflictError } from '@embedo/utils';
 import type { OnboardingRequest } from '@embedo/types';
