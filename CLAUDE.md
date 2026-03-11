@@ -26,6 +26,7 @@ embedo/
 │   └── config/       Zod env validation schemas per service
 ├── services/
 │   ├── crm-core/     Business + Contact master data; onboarding orchestration
+│   ├── prospector/   Cold outreach engine — prospect discovery, email campaigns, follow-up sequences
 │   ├── voice-agent/  ElevenLabs + Twilio; inbound calls, reservations, lead capture
 │   ├── chatbot-agent/ Claude chatbot; web widget, IG/FB DMs, lead capture
 │   ├── lead-engine/  Lead normalization, deduplication, SMS/email sequences
