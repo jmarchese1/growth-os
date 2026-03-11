@@ -170,7 +170,8 @@ services/[service-name]/
 | Twilio SMS | lead-engine, survey-engine | One provisioned number per business for outbound |
 | Anthropic Claude | chatbot-agent, social-media, proposal-engine | Use `claude-haiku-4-5-20251001` for high-volume (chatbot, social). Use `claude-sonnet-4-6` for proposals. |
 | Instagram Graph API | social-media | Access tokens expire — implement refresh. Store encrypted in `Business.settings`. |
-| Calendly | crm-core | Webhooks must be registered per business. Verify signatures. |
+| Cal.com | api (webhook) | `BOOKING_CREATED` webhook → creates appointment, bridges prospect pipeline |
+| Apollo.io | prospector | Email enrichment for prospects ($49/mo Basic, 10k credits). `APOLLO_API_KEY` env var. |
 | SendGrid | lead-engine, survey-engine, proposal-engine | Use Dynamic Templates for email sequences |
 | Vercel API | website-gen | Each generated site = one Vercel project. Store project ID on `GeneratedWebsite`. |
 | Supabase Storage | proposal-engine | Store proposal PDFs here. Public bucket for shareable links. |
