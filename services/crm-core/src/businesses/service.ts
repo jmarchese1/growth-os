@@ -105,8 +105,8 @@ export async function logOnboardingStep(
       businessId,
       step,
       status,
-      message,
-      data: data ?? undefined,
+      message: message ?? null,
+      ...(data != null ? { data } : {}),
     },
   });
 }
