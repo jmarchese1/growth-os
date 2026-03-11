@@ -27,6 +27,11 @@ const NAV = [
           </svg>
         ),
       },
+    ],
+  },
+  {
+    section: 'PIPELINE',
+    items: [
       {
         href: '/leads',
         label: 'Leads',
