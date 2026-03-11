@@ -198,6 +198,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
               campaignId={id}
               currentSubject={campaign.emailSubject}
               currentBodyHtml={campaign.emailBodyHtml}
+              sequenceSteps={campaign.sequenceSteps}
               prospectorUrl={PROSPECTOR_URL}
             />
           </div>
