@@ -8,7 +8,7 @@ COPY packages/ packages/
 COPY services/crm-core/ services/crm-core/
 RUN pnpm install --no-frozen-lockfile
 RUN pnpm --filter @embedo/db db:generate
-RUN pnpm --filter @embedo/crm-core build
+RUN pnpm turbo run build --filter=@embedo/crm-core
 
 FROM base AS runner
 WORKDIR /app
