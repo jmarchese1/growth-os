@@ -7,7 +7,7 @@ COPY pnpm-workspace.yaml pnpm-lock.yaml package.json turbo.json tsconfig.base.js
 COPY packages/ packages/
 COPY services/prospector/ services/prospector/
 RUN pnpm install --no-frozen-lockfile
-RUN pnpm --filter @embedo/prospector build
+RUN pnpm --filter @embedo/prospector... build
 
 FROM base AS runner
 WORKDIR /app
