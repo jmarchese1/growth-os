@@ -15,7 +15,7 @@ async function start() {
   await app.register(cors, { origin: true });
   await app.register(helmet, { contentSecurityPolicy: false });
 
-  app.setErrorHandler((error, _request, reply) => {
+  app.setErrorHandler((error: Error & { statusCode?: number; code?: string }, _request, reply) => {
     if (isEmbedoError(error)) {
       return reply.code(error.statusCode).send({ success: false, error: error.message, code: error.code });
     }
