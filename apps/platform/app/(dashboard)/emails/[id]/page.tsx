@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ComposeEmail } from './compose-email';
+import { PendingSequence } from './pending-sequence';
 
 const PROSPECTOR_URL = process.env['PROSPECTOR_URL'] ?? 'http://localhost:3009';
 
@@ -109,8 +110,20 @@ function MessageStatusBadge({ status }: { status: string }) {
   return <span className={`text-[10px] font-semibold uppercase tracking-wider ${cfg.color}`}>{cfg.label}</span>;
 }
 
-function stripTrackingPixels(html: string): string {
-  return html.replace(/<img[^>]*\/track\/open\/[^>]*>/gi, '');
+/** Strip tracking pixels AND inject white background so text is visible in dark UI */
+function prepareEmailHtml(html: string): string {
+  const stripped = html.replace(/<img[^>]*\/track\/open\/[^>]*>/gi, '');
+  // Wrap in a full HTML doc with white background so the iframe content is readable
+  return `<!DOCTYPE html>
+<html>
+<head><style>
+  body { background: #ffffff !important; color: #1a1a1a !important; margin: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6; }
+  a { color: #6d28d9; }
+  img { max-width: 100%; height: auto; }
+  p { margin: 0 0 8px 0; }
+</style></head>
+<body>${stripped}</body>
+</html>`;
 }
 
 // ─── Page ────────────────────────────────────────────────────────────────────
@@ -144,14 +157,18 @@ export default async function EmailDetailPage({ params }: {
     <div className="relative p-8 animate-fade-up min-h-screen">
       {/* Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute -top-20 right-[10%] w-[380px] h-[380px] opacity-[0.05]">
+          <div className="absolute inset-0 rounded-full border border-violet-400 animate-orbital-slow" />
+          <div className="absolute inset-[80px] rounded-full border border-indigo-400 animate-orbital-reverse" />
+        </div>
         <div className="absolute top-10 right-16 w-64 h-64 rounded-full bg-violet-600/8 blur-[90px] animate-float-orb" />
-        <div className="absolute bottom-20 right-0 w-48 h-48 rounded-full bg-indigo-600/6 blur-[70px] animate-float-orb-b" />
+        <div className="absolute bottom-20 left-10 w-48 h-48 rounded-full bg-indigo-600/6 blur-[70px] animate-float-orb-b" />
       </div>
 
-      <div className="relative z-10 space-y-6">
+      <div className="relative z-10 space-y-6 max-w-6xl">
         {/* Breadcrumb + header */}
         <div>
-          <div className="flex items-center gap-2 text-sm text-slate-500 mb-1">
+          <div className="flex items-center gap-2 text-sm text-slate-500 mb-2">
             <Link href="/" className="hover:text-violet-400 transition-colors flex items-center gap-1">
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
               Overview
@@ -159,34 +176,34 @@ export default async function EmailDetailPage({ params }: {
             <span className="text-slate-700">/</span>
             <Link href="/emails" className="hover:text-violet-400 transition-colors">Emails</Link>
             <span className="text-slate-700">/</span>
-            <span className="text-slate-300 truncate max-w-[200px]">{prospect.name}</span>
+            <span className="text-white font-medium truncate max-w-[250px]">{prospect.name}</span>
           </div>
 
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-white tracking-tight">{prospect.name}</h1>
-              <div className="flex items-center gap-3 mt-1">
+              <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                 <StatusBadge status={prospect.status} />
-                {cityState && <span className="text-sm text-slate-400">{cityState}</span>}
+                {cityState && <span className="text-sm text-slate-300">{cityState}</span>}
                 {prospect.googleRating && (
                   <span className="text-sm text-amber-400">
                     ★ {prospect.googleRating}
-                    <span className="text-slate-600 ml-1">({prospect.googleReviewCount ?? 0})</span>
+                    <span className="text-slate-500 ml-1">({prospect.googleReviewCount ?? 0})</span>
+                  </span>
+                )}
+                {isMeetingBooked && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-cyan-500/15 text-cyan-400 border border-cyan-500/25">
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" /></svg>
+                    Cal.com Booking
                   </span>
                 )}
               </div>
-              {isMeetingBooked && (
-                <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
-                  <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cyan-400"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" /></svg>
-                  <span className="text-xs font-semibold text-cyan-400">Cal.com Meeting Booked</span>
-                </div>
-              )}
             </div>
             <Link
               href={`/campaigns/${prospect.campaign.id}/prospects/${prospect.id}`}
-              className="px-3 py-2 text-xs bg-white/5 border border-white/10 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              className="flex-shrink-0 px-3 py-2 text-xs bg-white/5 border border-white/10 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
             >
-              View Full Prospect Detail →
+              View Full Prospect →
             </Link>
           </div>
         </div>
@@ -194,45 +211,50 @@ export default async function EmailDetailPage({ params }: {
         {/* Top grid: Contact + Campaign + Quick Stats */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Contact Info */}
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5">
-            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Contact Info</h3>
-            <div className="space-y-2.5">
+          <div className="bg-white/[0.04] backdrop-blur-sm rounded-xl border border-white/10 p-5">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-violet-400/60"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
+              Contact Info
+            </h3>
+            <div className="space-y-3">
               {prospect.contactFirstName && (
                 <div>
-                  <p className="text-[10px] text-slate-600 uppercase tracking-wider">Name</p>
-                  <p className="text-sm text-white">{prospect.contactFirstName} {prospect.contactLastName ?? ''}</p>
-                  {prospect.contactTitle && <p className="text-xs text-slate-500">{prospect.contactTitle}</p>}
+                  <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Name</p>
+                  <p className="text-sm text-white font-medium">{prospect.contactFirstName} {prospect.contactLastName ?? ''}</p>
+                  {prospect.contactTitle && <p className="text-xs text-slate-400">{prospect.contactTitle}</p>}
                 </div>
               )}
               <div>
-                <p className="text-[10px] text-slate-600 uppercase tracking-wider">Email</p>
+                <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Email</p>
                 {prospect.email ? (
-                  <a href={`mailto:${prospect.email}`} className="text-sm text-violet-400 hover:text-violet-300 font-mono">{prospect.email}</a>
+                  <div className="flex items-center gap-2">
+                    <a href={`mailto:${prospect.email}`} className="text-sm text-violet-400 hover:text-violet-300 font-mono transition-colors">{prospect.email}</a>
+                    {prospect.emailSource && (
+                      <span className="text-[8px] font-bold uppercase tracking-wider text-purple-400/50 bg-purple-400/5 px-1.5 py-0.5 rounded">via {prospect.emailSource}</span>
+                    )}
+                  </div>
                 ) : (
-                  <p className="text-sm text-slate-600">No email</p>
-                )}
-                {prospect.emailSource && (
-                  <span className="text-[9px] font-semibold uppercase tracking-wider text-purple-400/60 ml-2">via {prospect.emailSource}</span>
+                  <p className="text-sm text-slate-600 italic">No email found</p>
                 )}
               </div>
               {prospect.phone && (
                 <div>
-                  <p className="text-[10px] text-slate-600 uppercase tracking-wider">Phone</p>
-                  <a href={`tel:${prospect.phone}`} className="text-sm text-slate-300 font-mono">{prospect.phone}</a>
+                  <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Phone</p>
+                  <a href={`tel:${prospect.phone}`} className="text-sm text-slate-200 font-mono">{prospect.phone}</a>
                 </div>
               )}
               {prospect.website && (
                 <div>
-                  <p className="text-[10px] text-slate-600 uppercase tracking-wider">Website</p>
-                  <a href={prospect.website} target="_blank" rel="noopener noreferrer" className="text-sm text-violet-400 hover:text-violet-300 truncate block">
+                  <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Website</p>
+                  <a href={prospect.website} target="_blank" rel="noopener noreferrer" className="text-sm text-violet-400 hover:text-violet-300 truncate block transition-colors">
                     {prospect.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
                   </a>
                 </div>
               )}
               {prospect.contactLinkedIn && (
                 <div>
-                  <p className="text-[10px] text-slate-600 uppercase tracking-wider">LinkedIn</p>
-                  <a href={prospect.contactLinkedIn} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:text-blue-300 truncate block">
+                  <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">LinkedIn</p>
+                  <a href={prospect.contactLinkedIn} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:text-blue-300 truncate block transition-colors">
                     {prospect.contactLinkedIn.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, '')}
                   </a>
                 </div>
@@ -241,31 +263,34 @@ export default async function EmailDetailPage({ params }: {
           </div>
 
           {/* Campaign Info */}
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5">
-            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Campaign</h3>
-            <div className="space-y-2.5">
+          <div className="bg-white/[0.04] backdrop-blur-sm rounded-xl border border-white/10 p-5">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-violet-400/60"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
+              Campaign
+            </h3>
+            <div className="space-y-3">
               <div>
-                <p className="text-[10px] text-slate-600 uppercase tracking-wider">Campaign Name</p>
-                <Link href={`/campaigns/${prospect.campaign.id}`} className="text-sm text-violet-400 hover:text-violet-300 transition-colors">
+                <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Campaign</p>
+                <Link href={`/campaigns/${prospect.campaign.id}`} className="text-sm text-violet-400 hover:text-violet-300 transition-colors font-medium">
                   {prospect.campaign.name}
                 </Link>
               </div>
               <div>
-                <p className="text-[10px] text-slate-600 uppercase tracking-wider">Target</p>
-                <p className="text-sm text-slate-300">{prospect.campaign.targetCity} · {prospect.campaign.targetIndustry}</p>
+                <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Target</p>
+                <p className="text-sm text-slate-200">{prospect.campaign.targetCity} · {prospect.campaign.targetIndustry}</p>
               </div>
               <div>
-                <p className="text-[10px] text-slate-600 uppercase tracking-wider">Sequence Steps</p>
-                <p className="text-sm text-slate-300">{sequenceSteps.length > 0 ? `${sequenceSteps.length + 1} steps` : '1 step (cold email only)'}</p>
+                <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Sequence</p>
+                <p className="text-sm text-slate-200">{sequenceSteps.length > 0 ? `${sequenceSteps.length + 1} steps` : '1 step (cold email only)'}</p>
               </div>
               <div>
-                <p className="text-[10px] text-slate-600 uppercase tracking-wider">First Contact</p>
-                <p className="text-sm text-slate-400">{fmtFull(prospect.createdAt)}</p>
+                <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">First Contact</p>
+                <p className="text-sm text-slate-300">{fmtFull(prospect.createdAt)}</p>
               </div>
               {prospect.convertedToBusinessId && (
                 <div>
-                  <p className="text-[10px] text-slate-600 uppercase tracking-wider">Converted To</p>
-                  <Link href={`/businesses`} className="text-sm text-green-400 hover:text-green-300 transition-colors">
+                  <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Converted To</p>
+                  <Link href="/businesses" className="text-sm text-green-400 hover:text-green-300 transition-colors font-medium">
                     View Business →
                   </Link>
                 </div>
@@ -274,33 +299,36 @@ export default async function EmailDetailPage({ params }: {
           </div>
 
           {/* Quick Stats */}
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5">
-            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Email Stats</h3>
+          <div className="bg-white/[0.04] backdrop-blur-sm rounded-xl border border-white/10 p-5">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-violet-400/60"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
+              Email Stats
+            </h3>
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white/5 rounded-lg p-3">
-                <p className="text-[10px] text-slate-600 uppercase tracking-wider">Sent</p>
-                <p className="text-xl font-bold text-violet-400">{sentMessages.length}</p>
+              <div className="bg-violet-500/5 rounded-lg p-3 border border-violet-500/10">
+                <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Sent</p>
+                <p className="text-2xl font-bold text-violet-400">{sentMessages.length}</p>
               </div>
-              <div className="bg-white/5 rounded-lg p-3">
-                <p className="text-[10px] text-slate-600 uppercase tracking-wider">Opened</p>
-                <p className="text-xl font-bold text-amber-400">{sentMessages.filter((m) => m.openedAt).length}</p>
+              <div className="bg-amber-500/5 rounded-lg p-3 border border-amber-500/10">
+                <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Opened</p>
+                <p className="text-2xl font-bold text-amber-400">{sentMessages.filter((m) => m.openedAt).length}</p>
               </div>
-              <div className="bg-white/5 rounded-lg p-3">
-                <p className="text-[10px] text-slate-600 uppercase tracking-wider">Replied</p>
-                <p className="text-xl font-bold text-emerald-400">{replyMsg ? 'Yes' : 'No'}</p>
+              <div className="bg-emerald-500/5 rounded-lg p-3 border border-emerald-500/10">
+                <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Replied</p>
+                <p className="text-2xl font-bold text-emerald-400">{replyMsg ? 'Yes' : 'No'}</p>
               </div>
-              <div className="bg-white/5 rounded-lg p-3">
-                <p className="text-[10px] text-slate-600 uppercase tracking-wider">Pending</p>
-                <p className="text-xl font-bold text-amber-400">{pendingSteps.length}</p>
+              <div className="bg-orange-500/5 rounded-lg p-3 border border-orange-500/10">
+                <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Pending</p>
+                <p className="text-2xl font-bold text-orange-400">{pendingSteps.length}</p>
               </div>
             </div>
             {replyMsg?.replyCategory && (
-              <div className="mt-3 px-3 py-2 bg-white/5 rounded-lg">
-                <p className="text-[10px] text-slate-600 uppercase tracking-wider">Reply Sentiment</p>
-                <p className={`text-sm font-semibold ${
+              <div className="mt-3 px-3 py-2.5 bg-white/[0.03] rounded-lg border border-white/5">
+                <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Reply Sentiment</p>
+                <p className={`text-sm font-bold mt-0.5 ${
                   replyMsg.replyCategory === 'POSITIVE' ? 'text-emerald-400' :
                   replyMsg.replyCategory === 'NEGATIVE' ? 'text-red-400' :
-                  replyMsg.replyCategory === 'OOO' ? 'text-amber-400' : 'text-slate-400'
+                  replyMsg.replyCategory === 'OOO' ? 'text-amber-400' : 'text-slate-300'
                 }`}>
                   {replyMsg.replyCategory}
                 </p>
@@ -319,65 +347,67 @@ export default async function EmailDetailPage({ params }: {
           />
         )}
 
-        {/* Pending Sequence Steps */}
+        {/* Pending Sequence Steps (interactive client component) */}
         {pendingSteps.length > 0 && prospect.nextFollowUpAt && (
-          <div className="bg-amber-500/5 backdrop-blur-sm rounded-xl border border-amber-500/20 p-5">
-            <h3 className="text-xs font-semibold text-amber-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-              Pending Sequence Messages
-            </h3>
-            <p className="text-xs text-slate-400 mb-3">
-              These follow-up emails are scheduled to send automatically as part of the campaign sequence.
-            </p>
-            <div className="space-y-2">
-              {pendingSteps.map((step) => {
-                const fireAt = new Date(new Date(prospect.createdAt).getTime() + step.delayHours * 60 * 60 * 1000);
-                const isFuture = fireAt > new Date();
-                return (
-                  <div key={step.stepNumber} className="flex items-center gap-3 px-3 py-2.5 bg-white/5 rounded-lg border border-white/5">
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                      isFuture ? 'bg-amber-500/20 text-amber-400' : 'bg-violet-500/20 text-violet-400'
-                    }`}>
-                      {step.stepNumber}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-slate-300 truncate">
-                        {step.subject ?? `Follow-up #${step.stepNumber - 1}`}
-                      </p>
-                      <p className="text-[10px] text-slate-600">
-                        {step.delayHours}h after first contact · {isFuture ? `Fires ${fmt(fireAt.toISOString())}` : 'Ready to send'}
-                      </p>
-                    </div>
-                    <span className={`text-[9px] font-semibold uppercase tracking-wider ${isFuture ? 'text-amber-500' : 'text-violet-400'}`}>
-                      {isFuture ? 'Scheduled' : 'Sending soon'}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <PendingSequence
+            prospectId={prospect.id}
+            prospectName={prospect.name}
+            campaignId={prospect.campaign.id}
+            campaignName={prospect.campaign.name}
+            prospectCreatedAt={prospect.createdAt}
+            nextFollowUpAt={prospect.nextFollowUpAt}
+            steps={pendingSteps}
+            prospectorUrl={PROSPECTOR_URL}
+          />
         )}
 
         {/* Email History */}
-        <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-          <div className="px-5 py-4 border-b border-white/10">
-            <h3 className="text-sm font-semibold text-white">Email History</h3>
-            <p className="text-xs text-slate-500 mt-0.5">{sentMessages.length} email{sentMessages.length !== 1 ? 's' : ''} sent</p>
+        <div className="bg-white/[0.04] backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
+          <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-white">Email History</h3>
+              <p className="text-xs text-slate-500 mt-0.5">{sentMessages.length} email{sentMessages.length !== 1 ? 's' : ''} sent to this business</p>
+            </div>
+            <div className="flex items-center gap-4 text-[10px] text-slate-600">
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-violet-400" /> Sent
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" /> Opened
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Replied
+              </span>
+            </div>
           </div>
 
           {sentMessages.length === 0 ? (
             <div className="p-12 text-center">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-8 h-8 text-slate-700 mx-auto mb-3">
+                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+              </svg>
               <p className="text-slate-500 text-sm">No emails sent yet.</p>
+              <p className="text-slate-600 text-xs mt-1">Use the compose form above to send the first email.</p>
             </div>
           ) : (
             <div className="divide-y divide-white/5">
-              {sentMessages.map((msg) => (
-                <div key={msg.id} className="p-5">
+              {sentMessages.map((msg, idx) => (
+                <div key={msg.id} className={`p-5 ${idx === 0 ? 'bg-white/[0.01]' : ''}`}>
                   {/* Message header */}
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-xs font-bold text-violet-400">
-                        {msg.stepNumber ?? 1}
+                      {/* Step circle with status ring */}
+                      <div className="relative">
+                        <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold ${
+                          msg.repliedAt
+                            ? 'bg-emerald-600/20 border-2 border-emerald-500/40 text-emerald-400'
+                            : msg.openedAt
+                              ? 'bg-amber-600/20 border-2 border-amber-500/40 text-amber-400'
+                              : 'bg-violet-600/20 border-2 border-violet-500/30 text-violet-400'
+                        }`}>
+                          {msg.stepNumber ?? 1}
+                        </div>
                       </div>
                       <div>
                         <p className="text-sm text-white font-medium">{msg.subject ?? '(no subject)'}</p>
@@ -389,31 +419,31 @@ export default async function EmailDetailPage({ params }: {
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-xs text-slate-500">{fmtFull(msg.sentAt)}</p>
-                      <div className="flex items-center gap-3 mt-1 justify-end">
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-xs text-slate-400">{fmtFull(msg.sentAt)}</p>
+                      <div className="flex items-center gap-3 mt-1.5 justify-end">
                         {msg.openedAt && (
-                          <span className="text-[10px] text-amber-400 flex items-center gap-1">
+                          <span className="text-[10px] text-amber-400 flex items-center gap-1 bg-amber-500/5 px-2 py-0.5 rounded-full">
                             <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/></svg>
-                            Opened {fmt(msg.openedAt)}
+                            {fmt(msg.openedAt)}
                           </span>
                         )}
                         {msg.repliedAt && (
-                          <span className="text-[10px] text-emerald-400 flex items-center gap-1">
+                          <span className="text-[10px] text-emerald-400 flex items-center gap-1 bg-emerald-500/5 px-2 py-0.5 rounded-full">
                             <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M7.707 3.293a1 1 0 010 1.414L5.414 7H11a7 7 0 017 7v2a1 1 0 11-2 0v-2a5 5 0 00-5-5H5.414l2.293 2.293a1 1 0 11-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
-                            Replied {fmt(msg.repliedAt)}
+                            {fmt(msg.repliedAt)}
                           </span>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  {/* Email body preview */}
-                  <div className="bg-white/[0.03] rounded-lg border border-white/5 overflow-hidden">
+                  {/* Email body preview — white background for readability */}
+                  <div className="rounded-lg border border-white/10 overflow-hidden shadow-lg">
                     <iframe
-                      srcDoc={stripTrackingPixels(msg.body)}
-                      className="w-full border-0"
-                      style={{ height: '280px' }}
+                      srcDoc={prepareEmailHtml(msg.body)}
+                      className="w-full border-0 rounded-lg"
+                      style={{ height: '300px', background: '#ffffff' }}
                       title={`Email step ${msg.stepNumber ?? 1}`}
                       sandbox="allow-same-origin"
                     />
@@ -422,9 +452,9 @@ export default async function EmailDetailPage({ params }: {
                   {/* Reply */}
                   {msg.replyBody && (
                     <div className="mt-3 px-4 py-3 bg-emerald-500/5 rounded-lg border border-emerald-500/20">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-2">
                         <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-emerald-400"><path fillRule="evenodd" d="M7.707 3.293a1 1 0 010 1.414L5.414 7H11a7 7 0 017 7v2a1 1 0 11-2 0v-2a5 5 0 00-5-5H5.414l2.293 2.293a1 1 0 11-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
-                        <span className="text-xs font-semibold text-emerald-400">Reply</span>
+                        <span className="text-xs font-semibold text-emerald-400">Their Reply</span>
                         {msg.replyCategory && (
                           <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
                             msg.replyCategory === 'POSITIVE' ? 'bg-emerald-500/15 text-emerald-400' :
@@ -435,8 +465,9 @@ export default async function EmailDetailPage({ params }: {
                             {msg.replyCategory}
                           </span>
                         )}
+                        <span className="text-[10px] text-slate-600 ml-auto">{fmt(msg.repliedAt)}</span>
                       </div>
-                      <p className="text-sm text-slate-300 whitespace-pre-wrap">{msg.replyBody}</p>
+                      <p className="text-sm text-white whitespace-pre-wrap leading-relaxed">{msg.replyBody}</p>
                     </div>
                   )}
                 </div>
