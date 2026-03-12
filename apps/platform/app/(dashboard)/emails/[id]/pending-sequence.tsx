@@ -235,7 +235,7 @@ export function PendingSequence({
                       {step.delayHours}h after first contact
                     </span>
                     <span className="text-[10px] text-slate-600">|</span>
-                    <span className={`text-[10px] font-medium ${isFuture ? 'text-amber-400' : 'text-violet-400'}`}>
+                    <span className={`text-[10px] font-medium ${isFuture ? 'text-sky-400' : 'text-sky-400'}`}>
                       {isFuture ? `Fires ${fmtDate(fireAt.toISOString())}` : 'Sending soon'}
                     </span>
                   </div>
