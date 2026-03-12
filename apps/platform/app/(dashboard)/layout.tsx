@@ -223,12 +223,24 @@ function Sidebar({
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { user } = useSession();
+  const router = useRouter();
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_WIDTH);
   const isDragging = useRef(false);
   const startX = useRef(0);
   const startWidth = useRef(DEFAULT_WIDTH);
 
   const collapsed = sidebarWidth <= COLLAPSED_WIDTH + 10;
+
+  const userEmail = user?.email ?? null;
+  const userInitial = (user?.email?.[0] ?? 'U').toUpperCase();
+
+  const handleLogout = useCallback(async () => {
+    const supabase = createSupabaseBrowserClient();
+    await supabase.auth.signOut();
+    router.push('/login');
+    router.refresh();
+  }, [router]);
 
   const handleDragStart = useCallback((e: React.MouseEvent) => {
     isDragging.current = true;
