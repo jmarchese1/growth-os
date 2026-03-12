@@ -309,17 +309,17 @@ export default async function EmailDetailPage({ params }: {
                 <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Sent</p>
                 <p className="text-2xl font-bold text-violet-400">{sentMessages.length}</p>
               </div>
-              <div className="bg-amber-500/5 rounded-lg p-3 border border-amber-500/10">
+              <div className={`rounded-lg p-3 border ${sentMessages.filter((m) => m.openedAt).length > 0 ? 'bg-teal-500/5 border-teal-500/10' : 'bg-amber-500/5 border-amber-500/10'}`}>
                 <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Opened</p>
-                <p className="text-2xl font-bold text-amber-400">{sentMessages.filter((m) => m.openedAt).length}</p>
+                <p className={`text-2xl font-bold ${sentMessages.filter((m) => m.openedAt).length > 0 ? 'text-teal-400' : 'text-amber-400'}`}>{sentMessages.filter((m) => m.openedAt).length}</p>
               </div>
               <div className={`rounded-lg p-3 border ${replyMsg ? 'bg-emerald-500/5 border-emerald-500/10' : 'bg-orange-500/5 border-orange-500/10'}`}>
                 <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Replied</p>
                 <p className={`text-2xl font-bold ${replyMsg ? 'text-emerald-400' : 'text-orange-400'}`}>{replyMsg ? 'Yes' : 'No'}</p>
               </div>
-              <div className="bg-orange-500/5 rounded-lg p-3 border border-orange-500/10">
+              <div className="bg-sky-500/5 rounded-lg p-3 border border-sky-500/10">
                 <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Pending</p>
-                <p className="text-2xl font-bold text-orange-400">{pendingSteps.length}</p>
+                <p className="text-2xl font-bold text-sky-400">{pendingSteps.length}</p>
               </div>
             </div>
             {replyMsg?.replyCategory && (
