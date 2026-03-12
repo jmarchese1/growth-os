@@ -69,6 +69,7 @@ export async function buildApp() {
   await app.register(sendgridInboundRoutes);
   await app.register(sendgridEventRoutes);
   await app.register(trackRoutes);
+  await app.register(leadCaptureRoutes);
 
   log.info('API Gateway configured');
   return app;
