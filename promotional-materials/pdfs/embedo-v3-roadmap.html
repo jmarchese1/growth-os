@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Embedo — Your AI Roadmap</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #6366F1; --violet: #7C3AED; --violet-light: #c4b5fd;
+      --green: #22c55e; --amber: #f59e0b; --blue: #3b82f6;
+      --black: #0c0a18; --gray-50: #f9f9f9; --gray-100: #f0f0f0;
+      --gray-200: #e0e0e0; --gray-500: #888; --gray-700: #444; --gray-900: #1a1a1a;
+      --white: #fff;
+    }
+    @page { size: A4; margin: 0; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; color: var(--gray-900); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { width: 210mm; min-height: 297mm; margin: 0 auto; background: var(--white); overflow: hidden; position: relative; }
+    @media print { body { background: white; } }
+    @media screen { body { background: #e5e5e5; padding: 20px; } .page { box-shadow: 0 4px 24px rgba(0,0,0,0.12); } }
+
+    /* Full dark theme */
+    .page { background: linear-gradient(180deg, var(--black) 0%, #110e24 50%, #1a1640 100%); color: var(--white); }
+
+    .header { padding: 32px 40px 0; display: flex; justify-content: space-between; align-items: center; }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-cube { width: 32px; height: 32px; }
+    .logo-text { font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 24px; background: linear-gradient(135deg, #c4b5fd, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .tag { font-size: 10px; font-weight: 600; color: var(--violet-light); background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.25); padding: 4px 12px; border-radius: 16px; }
+
+    .hero { padding: 28px 40px 24px; text-align: center; }
+    .hero h1 { font-family: 'DM Sans', sans-serif; font-size: 30px; font-weight: 800; line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 8px; }
+    .hero h1 span { background: linear-gradient(135deg, #4ade80, #22c55e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { font-size: 12.5px; color: rgba(255,255,255,0.5); max-width: 440px; margin: 0 auto; line-height: 1.5; }
+
+    /* Roadmap Timeline */
+    .roadmap { padding: 0 40px; position: relative; }
+
+    .timeline { position: relative; padding-left: 36px; }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 13px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, var(--green), var(--primary), var(--violet), var(--amber));
+      border-radius: 2px;
+    }
+
+    .phase { margin-bottom: 22px; position: relative; }
+    .phase:last-child { margin-bottom: 0; }
+
+    .phase-dot {
+      position: absolute;
+      left: -36px;
+      top: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--white);
+      z-index: 1;
+    }
+    .phase-1 .phase-dot { background: var(--green); box-shadow: 0 0 16px rgba(34,197,94,0.4); }
+    .phase-2 .phase-dot { background: var(--primary); box-shadow: 0 0 16px rgba(99,102,241,0.4); }
+    .phase-3 .phase-dot { background: var(--violet); box-shadow: 0 0 16px rgba(124,58,237,0.4); }
+    .phase-4 .phase-dot { background: var(--amber); box-shadow: 0 0 16px rgba(245,158,11,0.4); }
+
+    .phase-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+    .phase-time { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; padding: 3px 8px; border-radius: 4px; }
+    .phase-1 .phase-time { color: #16a34a; background: rgba(34,197,94,0.12); }
+    .phase-2 .phase-time { color: #818CF8; background: rgba(99,102,241,0.12); }
+    .phase-3 .phase-time { color: var(--violet-light); background: rgba(124,58,237,0.12); }
+    .phase-4 .phase-time { color: #fcd34d; background: rgba(245,158,11,0.12); }
+
+    .phase-title { font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; }
+
+    .phase-items { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .phase-item {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .pi-icon { font-size: 16px; flex-shrink: 0; }
+    .pi-text { font-size: 10.5px; color: rgba(255,255,255,0.7); line-height: 1.35; }
+    .pi-text strong { color: var(--white); font-weight: 600; }
+
+    /* Bottom results */
+    .results-bar { margin: 24px 40px 0; display: flex; gap: 10px; }
+    .result-card {
+      flex: 1;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+    .rc-green { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); }
+    .rc-purple { background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2); }
+    .rc-violet { background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.2); }
+    .rc-value { font-family: 'DM Sans', sans-serif; font-size: 24px; font-weight: 800; line-height: 1; }
+    .rc-green .rc-value { color: #4ade80; }
+    .rc-purple .rc-value { color: #818CF8; }
+    .rc-violet .rc-value { color: var(--violet-light); }
+    .rc-label { font-size: 9.5px; color: rgba(255,255,255,0.5); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
+
+    /* Footer */
+    .footer { margin-top: 24px; padding: 24px 40px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; align-items: center; }
+    .footer-cta { font-family: 'DM Sans', sans-serif; font-size: 18px; font-weight: 700; }
+    .footer-cta span { background: linear-gradient(135deg, #4ade80, #22c55e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .footer-sub { font-size: 10.5px; color: rgba(255,255,255,0.35); margin-top: 2px; }
+    .footer-contact { text-align: right; }
+    .footer-contact a { display: block; font-size: 11px; color: var(--violet-light); text-decoration: none; }
+    .footer-contact .fc-big { font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; color: var(--white); margin-bottom: 2px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <div class="header">
+      <div class="logo">
+        <svg class="logo-cube" viewBox="0 0 40 40" fill="none">
+          <path d="M20 4L36 13V27L20 36L4 27V13L20 4Z" fill="#4C1D95"/>
+          <path d="M20 4L36 13L20 22L4 13L20 4Z" fill="#7C3AED"/>
+          <path d="M20 22L36 13V27L20 36V22Z" fill="#6D28D9"/>
+          <path d="M4 13L20 22V36L4 27V13Z" fill="#4C1D95"/>
+        </svg>
+        <span class="logo-text">embedo</span>
+      </div>
+      <div class="tag">Your AI Deployment Roadmap</div>
+    </div>
+
+    <div class="hero">
+      <h1>From First Call to <span>Fully Automated</span><br>in 30 Days.</h1>
+      <p>Here's exactly what happens when you partner with Embedo — a clear, phased rollout so you see results from day one.</p>
+    </div>
+
+    <div class="roadmap">
+      <div class="timeline">
+
+        <div class="phase phase-1">
+          <div class="phase-dot">1</div>
+          <div class="phase-header">
+            <div class="phase-time">Day 1-2</div>
+            <div class="phase-title">Discovery & Deployment</div>
+          </div>
+          <div class="phase-items">
+            <div class="phase-item"><div class="pi-icon">📞</div><div class="pi-text"><strong>15-min discovery call</strong> — we learn your menu, hours, pain points</div></div>
+            <div class="phase-item"><div class="pi-icon">🤖</div><div class="pi-text"><strong>AI Voice Agent live</strong> — answers calls 24/7, takes reservations</div></div>
+            <div class="phase-item"><div class="pi-icon">💬</div><div class="pi-text"><strong>Chatbot deployed</strong> — on your website, Instagram & Facebook</div></div>
+            <div class="phase-item"><div class="pi-icon">🌐</div><div class="pi-text"><strong>New website generated</strong> — premium design, mobile-first, live</div></div>
+          </div>
+        </div>
+
+        <div class="phase phase-2">
+          <div class="phase-dot">2</div>
+          <div class="phase-header">
+            <div class="phase-time">Week 1</div>
+            <div class="phase-title">Lead Capture & Social</div>
+          </div>
+          <div class="phase-items">
+            <div class="phase-item"><div class="pi-icon">📊</div><div class="pi-text"><strong>Lead engine activated</strong> — captures, scores & routes every inquiry</div></div>
+            <div class="phase-item"><div class="pi-icon">📱</div><div class="pi-text"><strong>Social media AI running</strong> — auto-posts, comment monitoring, DM replies</div></div>
+            <div class="phase-item"><div class="pi-icon">👥</div><div class="pi-text"><strong>CRM populated</strong> — contacts, appointments, call history centralized</div></div>
+            <div class="phase-item"><div class="pi-icon">📈</div><div class="pi-text"><strong>First results visible</strong> — calls answered, leads captured, time saved</div></div>
+          </div>
+        </div>
+
+        <div class="phase phase-3">
+          <div class="phase-dot">3</div>
+          <div class="phase-header">
+            <div class="phase-time">Week 2-3</div>
+            <div class="phase-title">Automation & Nurturing</div>
+          </div>
+          <div class="phase-items">
+            <div class="phase-item"><div class="pi-icon">📋</div><div class="pi-text"><strong>Survey automation</strong> — post-visit feedback via SMS with auto follow-up</div></div>
+            <div class="phase-item"><div class="pi-icon">✉️</div><div class="pi-text"><strong>Email sequences live</strong> — re-engage past customers automatically</div></div>
+            <div class="phase-item"><div class="pi-icon">🔄</div><div class="pi-text"><strong>AI fine-tuned</strong> — voice agent learns your specials, events, policies</div></div>
+            <div class="phase-item"><div class="pi-icon">📝</div><div class="pi-text"><strong>Proposal system ready</strong> — auto-generate catering & event proposals</div></div>
+          </div>
+        </div>
+
+        <div class="phase phase-4">
+          <div class="phase-dot">4</div>
+          <div class="phase-header">
+            <div class="phase-time">Day 30+</div>
+            <div class="phase-title">Full Autopilot</div>
+          </div>
+          <div class="phase-items">
+            <div class="phase-item"><div class="pi-icon">🚀</div><div class="pi-text"><strong>All 8 modules running</strong> — your restaurant has a complete AI layer</div></div>
+            <div class="phase-item"><div class="pi-icon">💰</div><div class="pi-text"><strong>ROI clear</strong> — more bookings, less busywork, lower tool costs</div></div>
+            <div class="phase-item"><div class="pi-icon">📊</div><div class="pi-text"><strong>Analytics dashboard</strong> — see calls, leads, bookings, and engagement data</div></div>
+            <div class="phase-item"><div class="pi-icon">🎯</div><div class="pi-text"><strong>You focus on growth</strong> — AI handles operations, you scale the business</div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="results-bar">
+      <div class="result-card rc-green"><div class="rc-value">$2,400+</div><div class="rc-label">Monthly Savings</div></div>
+      <div class="result-card rc-purple"><div class="rc-value">100%</div><div class="rc-label">Calls Answered</div></div>
+      <div class="result-card rc-violet"><div class="rc-value">15+ hrs</div><div class="rc-label">Saved Weekly</div></div>
+    </div>
+
+    <div class="footer">
+      <div>
+        <div class="footer-cta">Ready to start <span>your roadmap?</span></div>
+        <div class="footer-sub">15-minute call. No contracts. Results in week one.</div>
+      </div>
+      <div class="footer-contact">
+        <div class="fc-big">embedo.io</div>
+        <a href="mailto:jason@embedo.io">jason@embedo.io</a>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
