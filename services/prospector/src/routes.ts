@@ -122,6 +122,108 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     return reply.send({ html });
   });
 
+  // ─── AI generate follow-up / compose email ─────────────────────────────────
+  app.post('/ai/generate-email', async (request, reply) => {
+    if (!env.ANTHROPIC_API_KEY) {
+      return reply.code(400).send({ error: 'ANTHROPIC_API_KEY not configured' });
+    }
+
+    const { prospectId, prompt, type } = request.body as {
+      prospectId?: string;
+      prompt?: string;
+      type?: 'followup' | 'compose' | 'rewrite';
+    };
+
+    // If prospectId given, load context
+    let prospectContext = '';
+    let prospectName = 'the business';
+    if (prospectId) {
+      const prospect = await db.prospectBusiness.findUnique({
+        where: { id: prospectId },
+        include: {
+          campaign: { select: { name: true, targetCity: true } },
+          messages: { orderBy: { createdAt: 'desc' }, take: 3, select: { subject: true, body: true, replyBody: true, stepNumber: true } },
+        },
+      });
+      if (prospect) {
+        prospectName = prospect.name;
+        const city = (prospect.address as Record<string, string> | null)?.['city'] ?? prospect.campaign.targetCity;
+        prospectContext = [
+          `Business: ${prospect.name}`,
+          `City: ${city}`,
+          prospect.website ? `Website: ${prospect.website}` : null,
+          prospect.email ? `Email: ${prospect.email}` : null,
+          prospect.contactFirstName ? `Contact: ${prospect.contactFirstName} ${prospect.contactLastName ?? ''}` : null,
+          prospect.googleRating ? `Google rating: ${prospect.googleRating} (${prospect.googleReviewCount} reviews)` : null,
+          prospect.messages.length > 0 ? `\nPrevious emails sent (most recent first):\n${prospect.messages.map((m) =>
+            `- Step ${m.stepNumber}: "${m.subject}"${m.replyBody ? ` → They replied: "${m.replyBody.slice(0, 100)}"` : ''}`
+          ).join('\n')}` : null,
+        ].filter(Boolean).join('\n');
+      }
+    }
+
+    const typeInstructions: Record<string, string> = {
+      followup: `Write a follow-up email for a cold outreach sequence. It should reference that you've reached out before without being pushy. Keep it short (2-3 sentences), casual, and conversational. Include a soft CTA.`,
+      compose: `Write a personalized email to this business. It should feel like a genuine 1-on-1 message, not a mass email. Keep it short (2-3 paragraphs max), casual, and conversational.`,
+      rewrite: `Rewrite/improve the email content based on the user's instructions below. Keep the same general intent but apply the requested changes.`,
+    };
+
+    const Anthropic = (await import('@anthropic-ai/sdk')).default;
+    const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+
+    try {
+      const response = await client.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 600,
+        messages: [{
+          role: 'user',
+          content: `You are Jason Marchese, a data scientist who runs Embedo — an AI infrastructure platform for local businesses (restaurants, etc.). Embedo embeds a full AI ecosystem: voice receptionist, chatbot, lead engine, social media automation, surveys, website generation, SMS/email sequences — all woven into how the business already operates.
+
+${typeInstructions[type ?? 'compose'] ?? typeInstructions['compose']}
+
+${prospectContext ? `Business context:\n${prospectContext}\n` : ''}
+${prompt ? `User instructions: ${prompt}\n` : ''}
+Output format:
+- Return a JSON object: { "subject": "...", "body": "..." }
+- Subject: short, casual, no caps lock
+- Body: plain text only (no HTML). Use \\n for paragraph breaks.
+- Sign off as "Jason" only, no title or company
+- Do NOT include greeting line — that gets added separately
+- Keep it under 100 words for follow-ups, under 150 for compose`,
+        }],
+      });
+
+      const text = response.content[0]?.type === 'text' ? response.content[0].text.trim() : '';
+
+      // Parse JSON from response
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        return reply.code(500).send({ error: 'AI did not return valid JSON' });
+      }
+
+      const parsed = JSON.parse(jsonMatch[0]) as { subject: string; body: string };
+
+      // Convert body to HTML
+      const htmlBody = parsed.body
+        .split(/\n{2,}/)
+        .map((p: string) => p.trim())
+        .filter(Boolean)
+        .map((p: string) => `<p style="margin:0 0 12px;font-family:sans-serif;font-size:14px;color:#333;">${p.replace(/\n/g, '<br>')}</p>`)
+        .join('\n');
+
+      return reply.send({
+        subject: parsed.subject,
+        bodyText: parsed.body,
+        bodyHtml: htmlBody,
+        prospectName,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      log.error({ err }, 'AI email generation failed');
+      return reply.code(500).send({ error: msg });
+    }
+  });
+
   // ─── Create campaign ──────────────────────────────────────────────────────
   app.post('/campaigns', async (request, reply) => {
     const parsed = validate(createCampaignSchema, request.body);
