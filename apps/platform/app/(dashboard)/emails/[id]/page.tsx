@@ -153,6 +153,15 @@ export default async function EmailDetailPage({ params }: {
   const maxStepSent = Math.max(0, ...sentMessages.map((m) => m.stepNumber ?? 0));
   const pendingSteps = sequenceSteps.filter((s) => s.stepNumber > maxStepSent);
 
+  /** Replace all template variables with actual prospect data */
+  function fillTemplate(text: string): string {
+    return text
+      .replace(/\{\{businessName\}\}/g, prospect.name)
+      .replace(/\{\{city\}\}/g, prospect.address?.city ?? prospect.campaign.targetCity ?? '')
+      .replace(/\{\{calLink\}\}/g, 'https://cal.com/embedo')
+      .replace(/\{\{replyEmail\}\}/g, 'jason@embedo.io');
+  }
+
   return (
     <div className="relative p-8 animate-fade-up min-h-screen">
       {/* Background */}
