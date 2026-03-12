@@ -531,7 +531,7 @@ export default async function EmailDetailPage({ params }: {
                     {step.bodyHtml ? (
                       <div className="rounded-lg border border-sky-500/15 overflow-hidden shadow-lg opacity-80">
                         <iframe
-                          srcDoc={prepareEmailHtml(step.bodyHtml.replace(/\{\{businessName\}\}/g, prospect.name))}
+                          srcDoc={prepareEmailHtml(fillTemplate(step.bodyHtml))}
                           className="w-full border-0 rounded-lg"
                           style={{ height: '250px', background: '#ffffff' }}
                           title={`Pending step ${step.stepNumber}`}
