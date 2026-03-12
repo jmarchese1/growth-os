@@ -244,8 +244,8 @@ export function PendingSequence({
                 {/* Status label */}
                 <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider flex-shrink-0 ${
                   isFuture
-                    ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                    : 'bg-violet-500/10 text-violet-400 border border-violet-500/20 animate-pulse'
+                    ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20'
+                    : 'bg-sky-500/10 text-sky-400 border border-sky-500/20 animate-pulse'
                 }`}>
                   {isFuture ? 'Scheduled' : 'Sending'}
                 </span>
