@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { createLogger, validate, NotFoundError } from '@embedo/utils';
