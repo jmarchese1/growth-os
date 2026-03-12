@@ -251,7 +251,7 @@ export function PendingSequence({
                 </span>
 
                 {/* Action buttons */}
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                <div className="flex items-center gap-1 opacity-70 hover:opacity-100 transition-opacity flex-shrink-0">
                   <button
                     onClick={() => openEdit(step)}
                     className="p-1.5 rounded-md bg-white/5 border border-white/10 text-slate-400 hover:text-violet-400 hover:bg-violet-500/10 hover:border-violet-500/30 transition-colors"
