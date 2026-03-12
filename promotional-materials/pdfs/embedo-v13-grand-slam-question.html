@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Embedo — Grand Slam Offer (Question)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #6366F1; --violet: #7C3AED; --violet-light: #ede9fe;
+      --green: #16a34a; --green-bg: #f0fdf4; --green-border: #bbf7d0;
+      --red: #dc2626; --red-light: #fef2f2;
+      --amber: #d97706; --amber-bg: #fffbeb; --amber-border: #fde68a;
+      --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb;
+      --gray-400: #9ca3af; --gray-500: #6b7280; --gray-700: #374151; --gray-900: #111827;
+      --white: #fff;
+    }
+    @page { size: A4; margin: 0; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; color: var(--gray-900); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { width: 210mm; min-height: 297mm; margin: 0 auto; background: var(--white); overflow: hidden; }
+    @media print { body { background: white; } }
+    @media screen { body { background: #e5e5e5; padding: 20px; } .page { box-shadow: 0 4px 24px rgba(0,0,0,0.1); } }
+
+    .header { padding: 26px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--gray-200); }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-cube { width: 30px; height: 30px; }
+    .logo-text { font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 22px; background: linear-gradient(135deg, var(--primary), var(--violet)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header-site { font-size: 11px; font-weight: 600; color: var(--gray-500); }
+
+    /* Pain-point hero */
+    .hero { padding: 28px 40px 20px; }
+    .hero h1 { font-family: 'DM Sans', sans-serif; font-size: 25px; font-weight: 800; line-height: 1.2; letter-spacing: -0.5px; color: var(--gray-900); margin-bottom: 12px; }
+
+    /* Checklist of pain points */
+    .pain-list { list-style: none; margin-bottom: 12px; }
+    .pain-list li { display: flex; align-items: flex-start; gap: 8px; font-size: 11.5px; color: var(--gray-700); line-height: 1.4; margin-bottom: 6px; }
+    .pain-check { color: var(--red); font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+
+    .hero-bridge { font-size: 13px; font-weight: 700; color: var(--primary); margin-top: 10px; }
+
+    /* What if section */
+    .what-if { padding: 0 40px 16px; }
+    .what-if h2 { font-family: 'DM Sans', sans-serif; font-size: 20px; font-weight: 800; color: var(--green); margin-bottom: 10px; }
+    .solution-list { list-style: none; }
+    .solution-list li { display: flex; align-items: flex-start; gap: 8px; font-size: 11.5px; color: var(--gray-700); line-height: 1.4; margin-bottom: 6px; }
+    .sol-check { color: var(--green); font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+
+    /* Divider */
+    .divider { height: 2px; margin: 4px 40px 14px; background: linear-gradient(90deg, var(--gray-200), var(--primary), var(--gray-200)); opacity: 0.3; }
+
+    /* Value Stack table */
+    .stack-section { padding: 0 40px; }
+    .stack-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--gray-400); margin-bottom: 8px; }
+    .stack-table { width: 100%; border-collapse: collapse; }
+    .stack-table tr { border-bottom: 1px solid var(--gray-100); }
+    .stack-table tr:last-child { border-bottom: none; }
+    .stack-table td { padding: 7px 0; vertical-align: middle; }
+    .st-left { display: flex; align-items: center; gap: 10px; }
+    .st-icon { font-size: 15px; width: 26px; height: 26px; background: var(--gray-50); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .st-name { font-size: 11.5px; font-weight: 600; color: var(--gray-900); }
+    .st-detail { font-size: 9px; color: var(--gray-400); margin-top: 1px; }
+    .st-value { font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 700; color: var(--gray-400); text-decoration: line-through; text-decoration-color: var(--red); text-align: right; width: 70px; }
+    .st-included { font-size: 9px; font-weight: 700; color: var(--green); background: var(--green-bg); border: 1px solid var(--green-border); padding: 2px 10px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+
+    /* Price block */
+    .price-block { display: flex; justify-content: center; align-items: center; gap: 32px; padding: 14px 40px; }
+    .pb-old { text-align: center; }
+    .pb-old-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gray-400); margin-bottom: 3px; }
+    .pb-old-amount { font-family: 'DM Sans', sans-serif; font-size: 34px; font-weight: 800; color: #d1d5db; text-decoration: line-through; text-decoration-color: var(--red); text-decoration-thickness: 3px; line-height: 1; }
+    .pb-arrow { font-size: 24px; color: #d1d5db; }
+    .pb-new { text-align: center; }
+    .pb-new-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--green); margin-bottom: 3px; }
+    .pb-new-amount { font-family: 'DM Sans', sans-serif; font-size: 46px; font-weight: 800; color: var(--green); line-height: 1; }
+    .pb-new-period { font-size: 12px; color: var(--gray-500); }
+    .savings-pill { display: block; margin: 6px auto 0; font-size: 11px; font-weight: 700; color: var(--green); background: var(--green-bg); border: 1px solid var(--green-border); padding: 4px 16px; border-radius: 16px; text-align: center; width: fit-content; }
+
+    /* Bonuses */
+    .bonuses { padding: 12px 40px 0; }
+    .bonus-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--amber); margin-bottom: 6px; }
+    .bonus-row { display: flex; gap: 8px; }
+    .bonus-card { flex: 1; padding: 10px 12px; background: var(--amber-bg); border: 1px solid var(--amber-border); border-radius: 8px; }
+    .bc-title { font-size: 10.5px; font-weight: 700; color: var(--gray-900); }
+    .bc-val { font-size: 9px; font-weight: 700; color: var(--amber); margin-top: 3px; }
+
+    /* Guarantee */
+    .guarantee { margin: 12px 40px 0; padding: 14px 18px; border-radius: 10px; background: var(--violet-light); border: 1px solid #ddd6fe; text-align: center; }
+    .guarantee-title { font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 800; color: var(--violet); margin-bottom: 3px; }
+    .guarantee-desc { font-size: 10px; color: var(--gray-500); line-height: 1.45; }
+
+    /* Bottom strip */
+    .bottom-strip { display: flex; margin: 12px 40px 0; gap: 8px; }
+    .bs-card { flex: 1; text-align: center; padding: 10px 8px; border-radius: 8px; background: var(--gray-50); border: 1px solid var(--gray-200); }
+    .bs-icon { font-size: 14px; margin-bottom: 2px; }
+    .bs-title { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 700; color: var(--gray-900); }
+    .bs-desc { font-size: 8.5px; color: var(--gray-400); line-height: 1.3; margin-top: 1px; }
+
+    /* Footer */
+    .footer { margin-top: 12px; background: var(--gray-900); padding: 22px 40px; display: flex; justify-content: space-between; align-items: center; }
+    .footer h3 { font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; color: var(--white); margin-bottom: 3px; }
+    .footer h3 .accent { color: #4ade80; }
+    .footer p { font-size: 10px; color: rgba(255,255,255,0.4); }
+    .footer-r { text-align: right; }
+    .footer-site { font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; color: var(--white); }
+    .footer-email { font-size: 11px; color: #c4b5fd; }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <div class="header">
+      <div class="logo">
+        <svg class="logo-cube" viewBox="0 0 40 40" fill="none">
+          <path d="M20 4L36 13V27L20 36L4 27V13L20 4Z" fill="#4C1D95"/>
+          <path d="M20 4L36 13L20 22L4 13L20 4Z" fill="#7C3AED"/>
+          <path d="M20 22L36 13V27L20 36V22Z" fill="#6D28D9"/>
+          <path d="M4 13L20 22V36L4 27V13Z" fill="#4C1D95"/>
+        </svg>
+        <span class="logo-text">embedo</span>
+      </div>
+      <div class="header-site">embedo.io</div>
+    </div>
+
+    <div class="hero">
+      <h1>Be honest — how many of these<br>sound like your restaurant?</h1>
+      <ul class="pain-list">
+        <li><span class="pain-check">&#10007;</span>Missed calls during the lunch rush that never get returned</li>
+        <li><span class="pain-check">&#10007;</span>Social media you haven't posted on in weeks (or months)</li>
+        <li><span class="pain-check">&#10007;</span>A website that was "fine" three years ago but now looks dated</li>
+        <li><span class="pain-check">&#10007;</span>DMs and form submissions you find days later — if at all</li>
+        <li><span class="pain-check">&#10007;</span>No system for follow-up, feedback, or reviews</li>
+        <li><span class="pain-check">&#10007;</span>Paying for 5+ tools that don't talk to each other</li>
+      </ul>
+      <div class="hero-bridge">What if one platform fixed all of this — for $240/mo?</div>
+    </div>
+
+    <div class="what-if">
+      <h2>Here's what changes with Embedo:</h2>
+      <ul class="solution-list">
+        <li><span class="sol-check">&#10003;</span>Every single call answered 24/7 by an AI that sounds human</li>
+        <li><span class="sol-check">&#10003;</span>Social posts created, scheduled, and published automatically</li>
+        <li><span class="sol-check">&#10003;</span>A fast, modern website deployed in 48 hours with built-in booking</li>
+        <li><span class="sol-check">&#10003;</span>Every DM, form, and inquiry captured and followed up on instantly</li>
+        <li><span class="sol-check">&#10003;</span>Post-visit surveys, review requests, and re-engagement — on autopilot</li>
+        <li><span class="sol-check">&#10003;</span>One platform replaces your answering service, social tools, CRM, and more</li>
+      </ul>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="stack-section">
+      <div class="stack-label">What you'd pay separately vs. what you pay with Embedo</div>
+      <table class="stack-table">
+        <tr>
+          <td><div class="st-left"><div class="st-icon">🤖</div><div><div class="st-name">AI Voice Agent</div></div></div></td>
+          <td class="st-value">$300/mo</td>
+          <td><span class="st-included">Included</span></td>
+        </tr>
+        <tr>
+          <td><div class="st-left"><div class="st-icon">📱</div><div><div class="st-name">Social Media Automation</div></div></div></td>
+          <td class="st-value">$800/mo</td>
+          <td><span class="st-included">Included</span></td>
+        </tr>
+        <tr>
+          <td><div class="st-left"><div class="st-icon">💬</div><div><div class="st-name">Chatbot + Website + CRM</div></div></div></td>
+          <td class="st-value">$550/mo</td>
+          <td><span class="st-included">Included</span></td>
+        </tr>
+        <tr>
+          <td><div class="st-left"><div class="st-icon">📊</div><div><div class="st-name">Lead Engine + Surveys + Proposals</div></div></div></td>
+          <td class="st-value">$250/mo</td>
+          <td><span class="st-included">Included</span></td>
+        </tr>
+        <tr>
+          <td><div class="st-left"><div class="st-icon">⏰</div><div><div class="st-name">15+ Hours of Your Time Back</div></div></div></td>
+          <td class="st-value">$500/mo</td>
+          <td><span class="st-included">Included</span></td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="price-block">
+      <div class="pb-old">
+        <div class="pb-old-label">Separately</div>
+        <div class="pb-old-amount">$2,400</div>
+      </div>
+      <div class="pb-arrow">→</div>
+      <div class="pb-new">
+        <div class="pb-new-label">With Embedo</div>
+        <div class="pb-new-amount">$240</div>
+        <div class="pb-new-period">per month</div>
+      </div>
+    </div>
+    <div class="savings-pill">Save $2,160/mo — 90% less than doing it yourself</div>
+
+    <div class="bonuses">
+      <div class="bonus-label">Start this month and get these free</div>
+      <div class="bonus-row">
+        <div class="bonus-card"><div class="bc-title">48-Hour Priority Launch</div><div class="bc-val">$500 value — FREE</div></div>
+        <div class="bonus-card"><div class="bc-title">Custom Menu Training</div><div class="bc-val">$300 value — FREE</div></div>
+        <div class="bonus-card"><div class="bc-title">Dedicated Onboarding</div><div class="bc-val">$200 value — FREE</div></div>
+      </div>
+    </div>
+
+    <div class="guarantee">
+      <div class="guarantee-title">🛡️ 30-Day "See It Work" Guarantee</div>
+      <div class="guarantee-desc">Not impressed after 30 days? Full refund. No hoops, no contracts, no fine print. If it doesn't work, you don't pay.</div>
+    </div>
+
+    <div class="bottom-strip">
+      <div class="bs-card"><div class="bs-icon">📍</div><div class="bs-title">1 Per Zip Code</div><div class="bs-desc">Exclusive territory</div></div>
+      <div class="bs-card"><div class="bs-icon">⚡</div><div class="bs-title">Live in 48 Hours</div><div class="bs-desc">We do the setup</div></div>
+      <div class="bs-card"><div class="bs-icon">🔓</div><div class="bs-title">No Contracts</div><div class="bs-desc">Cancel anytime</div></div>
+      <div class="bs-card"><div class="bs-icon">📞</div><div class="bs-title">15-Min Call</div><div class="bs-desc">That's all it takes</div></div>
+    </div>
+
+    <div class="footer">
+      <div>
+        <h3>Sound familiar? <span class="accent">Let's fix it.</span></h3>
+        <p>One 15-minute call. Your AI team is live in 48 hours.</p>
+      </div>
+      <div class="footer-r">
+        <div class="footer-site">embedo.io</div>
+        <div class="footer-email">jason@embedo.io</div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
