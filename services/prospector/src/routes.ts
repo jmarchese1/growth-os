@@ -808,7 +808,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
 
     await db.outboundCampaign.update({
       where: { id },
-      data: { sequenceSteps: filtered },
+      data: { sequenceSteps: filtered as unknown as Record<string, unknown>[] },
     });
 
     log.info({ campaignId: id, removedStep: stepNum }, 'Sequence step removed');
