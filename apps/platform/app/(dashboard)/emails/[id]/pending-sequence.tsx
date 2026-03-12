@@ -307,6 +307,42 @@ export function PendingSequence({
                 </p>
               </div>
 
+              {/* AI Rewrite */}
+              <div className="p-3 bg-indigo-500/5 rounded-lg border border-indigo-500/15">
+                <div className="flex items-center gap-2 mb-2">
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-indigo-400 flex-shrink-0">
+                    <path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-xs font-semibold text-indigo-400">Rewrite with Claude AI</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    placeholder="e.g. make it shorter, add urgency, mention a case study..."
+                    className="flex-1 px-2.5 py-1.5 bg-white/5 border border-white/10 rounded text-xs text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAiRewrite(); } }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAiRewrite}
+                    disabled={aiGenerating}
+                    className="px-3 py-1.5 rounded text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors flex items-center gap-1.5 whitespace-nowrap"
+                  >
+                    {aiGenerating ? (
+                      <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3">
+                        <path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                    {aiGenerating ? 'Generating...' : 'Rewrite'}
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-600 mt-1.5">Claude will rewrite the subject and body based on your instructions</p>
+              </div>
+
               {/* Subject */}
               <div>
                 <label className="block text-xs font-medium text-slate-400 mb-1">Subject</label>
