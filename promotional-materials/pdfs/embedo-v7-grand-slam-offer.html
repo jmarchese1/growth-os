@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Embedo — Grand Slam Offer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #6366F1; --violet: #7C3AED; --violet-light: #c4b5fd;
+      --green: #22c55e; --green-dark: #16a34a; --red: #ef4444;
+      --black: #0c0a18; --dark: #110e24; --dark2: #17132b;
+      --white: #fff; --amber: #f59e0b;
+    }
+    @page { size: A4; margin: 0; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { width: 210mm; min-height: 297mm; margin: 0 auto; background: var(--black); color: var(--white); overflow: hidden; position: relative; }
+    @media print { body { background: white; } }
+    @media screen { body { background: #000; padding: 20px; } .page { box-shadow: 0 4px 40px rgba(124,58,237,0.15); } }
+
+    /* Ambient glow */
+    .page::before { content: ''; position: absolute; top: -80px; right: -80px; width: 350px; height: 350px; background: radial-gradient(circle, rgba(34,197,94,0.06) 0%, transparent 70%); pointer-events: none; }
+    .page::after { content: ''; position: absolute; bottom: -80px; left: -80px; width: 300px; height: 300px; background: radial-gradient(circle, rgba(99,102,241,0.05) 0%, transparent 70%); pointer-events: none; }
+
+    .header { padding: 28px 40px 0; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1; }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-cube { width: 30px; height: 30px; }
+    .logo-text { font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 22px; background: linear-gradient(135deg, #c4b5fd, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header-tag { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--green); background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.2); padding: 4px 12px; border-radius: 12px; }
+
+    /* Hero */
+    .hero { padding: 24px 40px 20px; text-align: center; position: relative; z-index: 1; }
+    .hero-eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; color: var(--amber); margin-bottom: 10px; }
+    .hero h1 { font-family: 'DM Sans', sans-serif; font-size: 28px; font-weight: 800; line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 8px; }
+    .hero h1 .green { background: linear-gradient(135deg, #4ade80, #22c55e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero-sub { font-size: 12px; color: rgba(255,255,255,0.45); line-height: 1.5; max-width: 420px; margin: 0 auto; }
+
+    /* Value Stack */
+    .stack-section { padding: 18px 40px 0; position: relative; z-index: 1; }
+    .stack-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,0.3); margin-bottom: 10px; }
+
+    .stack-item { display: flex; align-items: center; justify-content: space-between; padding: 9px 16px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .stack-item:last-child { border-bottom: none; }
+    .si-left { display: flex; align-items: center; gap: 10px; }
+    .si-icon { font-size: 16px; }
+    .si-name { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.85); }
+    .si-detail { font-size: 9.5px; color: rgba(255,255,255,0.35); margin-top: 1px; }
+    .si-value { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.5); text-decoration: line-through; text-decoration-color: rgba(239,68,68,0.5); }
+
+    /* Bonus section */
+    .bonuses { padding: 14px 40px 0; position: relative; z-index: 1; }
+    .bonus-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--amber); margin-bottom: 8px; }
+    .bonus-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; background: rgba(245,158,11,0.04); border: 1px solid rgba(245,158,11,0.08); border-radius: 8px; margin-bottom: 6px; }
+    .bi-left { display: flex; align-items: center; gap: 10px; }
+    .bi-icon { font-size: 15px; }
+    .bi-name { font-size: 11.5px; font-weight: 600; color: var(--white); }
+    .bi-detail { font-size: 9px; color: rgba(255,255,255,0.35); margin-top: 1px; }
+    .bi-value { font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.45); text-decoration: line-through; text-decoration-color: rgba(239,68,68,0.5); }
+    .bi-free { font-size: 9px; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: 0.5px; margin-left: 6px; }
+
+    /* Divider */
+    .glow-divider { height: 1px; margin: 16px 40px; background: linear-gradient(90deg, transparent, rgba(124,58,237,0.25), transparent); }
+
+    /* Total value */
+    .total-value { padding: 0 40px; text-align: center; position: relative; z-index: 1; }
+    .tv-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,0.35); margin-bottom: 4px; }
+    .tv-amount { font-family: 'DM Sans', sans-serif; font-size: 46px; font-weight: 800; color: rgba(255,255,255,0.25); text-decoration: line-through; text-decoration-color: var(--red); text-decoration-thickness: 3px; line-height: 1.1; }
+
+    /* Your price */
+    .your-price { padding: 14px 40px 0; text-align: center; position: relative; z-index: 1; }
+    .yp-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,0.35); margin-bottom: 4px; }
+    .yp-amount { font-family: 'DM Sans', sans-serif; font-size: 56px; font-weight: 800; background: linear-gradient(135deg, #4ade80, #22c55e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; }
+    .yp-period { font-size: 14px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+    .yp-savings { display: inline-block; margin-top: 6px; font-size: 11px; font-weight: 700; color: var(--green); background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); padding: 4px 14px; border-radius: 16px; }
+
+    /* Guarantee */
+    .guarantee { margin: 16px 40px 0; padding: 16px 20px; border-radius: 10px; background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.12); text-align: center; position: relative; z-index: 1; }
+    .guarantee-icon { font-size: 22px; margin-bottom: 4px; }
+    .guarantee-title { font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 800; color: var(--white); margin-bottom: 4px; }
+    .guarantee-desc { font-size: 10.5px; color: rgba(255,255,255,0.45); line-height: 1.45; max-width: 400px; margin: 0 auto; }
+
+    /* Urgency strip */
+    .urgency { margin: 14px 40px 0; display: flex; gap: 10px; position: relative; z-index: 1; }
+    .urgency-card { flex: 1; text-align: center; padding: 12px 8px; border-radius: 8px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
+    .uc-icon { font-size: 18px; margin-bottom: 3px; }
+    .uc-title { font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 700; color: var(--white); margin-bottom: 2px; }
+    .uc-desc { font-size: 9px; color: rgba(255,255,255,0.35); line-height: 1.35; }
+
+    /* CTA */
+    .cta { padding: 18px 40px 24px; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1; }
+    .cta-left h2 { font-family: 'DM Sans', sans-serif; font-size: 18px; font-weight: 800; line-height: 1.2; margin-bottom: 4px; }
+    .cta-left h2 .green { background: linear-gradient(135deg, #4ade80, #22c55e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .cta-left p { font-size: 10px; color: rgba(255,255,255,0.3); }
+    .cta-right { text-align: right; }
+    .cta-site { font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; color: var(--white); margin-bottom: 2px; }
+    .cta-email { font-size: 11px; color: var(--violet-light); }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <div class="header">
+      <div class="logo">
+        <svg class="logo-cube" viewBox="0 0 40 40" fill="none">
+          <path d="M20 4L36 13V27L20 36L4 27V13L20 4Z" fill="#4C1D95"/>
+          <path d="M20 4L36 13L20 22L4 13L20 4Z" fill="#7C3AED"/>
+          <path d="M20 22L36 13V27L20 36V22Z" fill="#6D28D9"/>
+          <path d="M4 13L20 22V36L4 27V13Z" fill="#4C1D95"/>
+        </svg>
+        <span class="logo-text">embedo</span>
+      </div>
+      <div class="header-tag">Limited Availability</div>
+    </div>
+
+    <div class="hero">
+      <div class="hero-eyebrow">The "Never Miss A Customer" Package</div>
+      <h1>Everything Your Restaurant Needs<br>to Run on <span class="green">Autopilot.</span></h1>
+      <div class="hero-sub">8 AI-powered modules that replace $2,400+/mo in tools, staff, and wasted time — for a fraction of the cost.</div>
+    </div>
+
+    <!-- VALUE STACK -->
+    <div class="stack-section">
+      <div class="stack-label">Here's everything you get</div>
+
+      <div class="stack-item">
+        <div class="si-left">
+          <div class="si-icon">🤖</div>
+          <div><div class="si-name">AI Voice Agent</div><div class="si-detail">Answers every call 24/7. Takes reservations, handles FAQs, captures leads.</div></div>
+        </div>
+        <div class="si-value">$300/mo</div>
+      </div>
+
+      <div class="stack-item">
+        <div class="si-left">
+          <div class="si-icon">💬</div>
+          <div><div class="si-name">Intelligent Chatbot</div><div class="si-detail">Instant replies on your website, Instagram, and Facebook — day or night.</div></div>
+        </div>
+        <div class="si-value">$150/mo</div>
+      </div>
+
+      <div class="stack-item">
+        <div class="si-left">
+          <div class="si-icon">🌐</div>
+          <div><div class="si-name">Premium Website</div><div class="si-detail">Mobile-first restaurant site generated and deployed in 48 hours.</div></div>
+        </div>
+        <div class="si-value">$200/mo</div>
+      </div>
+
+      <div class="stack-item">
+        <div class="si-left">
+          <div class="si-icon">📱</div>
+          <div><div class="si-name">Social Media Engine</div><div class="si-detail">AI creates posts, schedules at peak times, replies to comments and DMs.</div></div>
+        </div>
+        <div class="si-value">$800/mo</div>
+      </div>
+
+      <div class="stack-item">
+        <div class="si-left">
+          <div class="si-icon">📊</div>
+          <div><div class="si-name">Lead Capture Engine</div><div class="si-detail">Every inquiry scored, routed, and followed up automatically.</div></div>
+        </div>
+        <div class="si-value">$200/mo</div>
+      </div>
+
+      <div class="stack-item">
+        <div class="si-left">
+          <div class="si-icon">📋</div>
+          <div><div class="si-name">Smart Surveys & Reviews</div><div class="si-detail">Post-visit feedback via SMS. Positive reviews amplified, issues flagged.</div></div>
+        </div>
+        <div class="si-value">$50/mo</div>
+      </div>
+
+      <div class="stack-item">
+        <div class="si-left">
+          <div class="si-icon">📝</div>
+          <div><div class="si-name">AI Proposal Generator</div><div class="si-detail">Catering and event proposals auto-generated, shared, and tracked.</div></div>
+        </div>
+        <div class="si-value">$100/mo</div>
+      </div>
+
+      <div class="stack-item">
+        <div class="si-left">
+          <div class="si-icon">👥</div>
+          <div><div class="si-name">Unified CRM</div><div class="si-detail">Every contact, call, appointment, and interaction in one place.</div></div>
+        </div>
+        <div class="si-value">$100/mo</div>
+      </div>
+
+      <div class="stack-item">
+        <div class="si-left">
+          <div class="si-icon">⏰</div>
+          <div><div class="si-name">15+ Hours Saved Weekly</div><div class="si-detail">Your time back — no more answering calls, posting content, or chasing leads.</div></div>
+        </div>
+        <div class="si-value">$500/mo</div>
+      </div>
+    </div>
+
+    <!-- BONUSES -->
+    <div class="bonuses">
+      <div class="bonus-label">Fast-Action Bonuses</div>
+      <div class="bonus-item">
+        <div class="bi-left">
+          <div class="bi-icon">🚀</div>
+          <div><div class="bi-name">48-Hour Priority Deployment</div><div class="bi-detail">Your entire AI stack live in 2 days, not 2 weeks</div></div>
+        </div>
+        <div><span class="bi-value">$500</span><span class="bi-free">Free</span></div>
+      </div>
+      <div class="bonus-item">
+        <div class="bi-left">
+          <div class="bi-icon">🎯</div>
+          <div><div class="bi-name">Custom AI Training on Your Menu & Brand</div><div class="bi-detail">Voice agent and chatbot trained on your exact menu, specials, and policies</div></div>
+        </div>
+        <div><span class="bi-value">$300</span><span class="bi-free">Free</span></div>
+      </div>
+    </div>
+
+    <div class="glow-divider"></div>
+
+    <!-- TOTAL VALUE vs PRICE -->
+    <div class="total-value">
+      <div class="tv-label">Total Value</div>
+      <div class="tv-amount">$2,400/mo</div>
+    </div>
+
+    <div class="your-price">
+      <div class="yp-label">Your Investment</div>
+      <div class="yp-amount">$240</div>
+      <div class="yp-period">per month — that's it.</div>
+      <div class="yp-savings">You save $2,160 every single month</div>
+    </div>
+
+    <!-- GUARANTEE -->
+    <div class="guarantee">
+      <div class="guarantee-icon">🛡️</div>
+      <div class="guarantee-title">The "It Pays for Itself" Guarantee</div>
+      <div class="guarantee-desc">If Embedo doesn't save you more than it costs in the first 30 days — you don't pay. No contracts, no commitments, no risk. Cancel anytime with one click.</div>
+    </div>
+
+    <!-- URGENCY -->
+    <div class="urgency">
+      <div class="urgency-card">
+        <div class="uc-icon">📍</div>
+        <div class="uc-title">One Per Zip Code</div>
+        <div class="uc-desc">We only onboard one restaurant per zip code to keep your competitive edge.</div>
+      </div>
+      <div class="urgency-card">
+        <div class="uc-icon">⚡</div>
+        <div class="uc-title">Live in 48 Hours</div>
+        <div class="uc-desc">One 15-min call and your AI team is deployed by the next business day.</div>
+      </div>
+      <div class="urgency-card">
+        <div class="uc-icon">🔓</div>
+        <div class="uc-title">No Lock-In</div>
+        <div class="uc-desc">Month-to-month. No contracts. Stay because it works, not because you have to.</div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta">
+      <div class="cta-left">
+        <h2>This offer won't last.<br><span class="green">Claim your zip code.</span></h2>
+        <p>15-minute call. Deployed in 48 hours. Zero risk.</p>
+      </div>
+      <div class="cta-right">
+        <div class="cta-site">embedo.io</div>
+        <div class="cta-email">jason@embedo.io</div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
