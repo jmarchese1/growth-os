@@ -14,6 +14,9 @@ export function ComposeEmail({ prospectId, prospectName, prospectEmail, prospect
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [sending, setSending] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [showAiPrompt, setShowAiPrompt] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -25,7 +28,6 @@ export function ComposeEmail({ prospectId, prospectName, prospectEmail, prospect
     setResult(null);
 
     try {
-      // Wrap the plain text body in basic HTML
       const htmlBody = body
         .split('\n')
         .map((line) => (line.trim() === '' ? '<br>' : `<p style="margin:0 0 8px 0;font-family:sans-serif;font-size:14px;color:#333;">${line}</p>`))
@@ -54,6 +56,37 @@ export function ComposeEmail({ prospectId, prospectName, prospectEmail, prospect
       setResult({ ok: false, message: 'Network error — check if services are running' });
     } finally {
       setSending(false);
+    }
+  }
+
+  async function handleAiGenerate(type: 'compose' | 'followup') {
+    setGenerating(true);
+    setResult(null);
+    try {
+      const res = await fetch(`${prospectorUrl}/ai/generate-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prospectId,
+          prompt: aiPrompt || undefined,
+          type,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json() as { subject: string; bodyText: string };
+        setSubject(data.subject);
+        setBody(data.bodyText);
+        setShowAiPrompt(false);
+        setAiPrompt('');
+      } else {
+        const data = await res.json();
+        setResult({ ok: false, message: data.error ?? 'AI generation failed' });
+      }
+    } catch {
+      setResult({ ok: false, message: 'Network error — is the prospector service running?' });
+    } finally {
+      setGenerating(false);
     }
   }
 
@@ -90,6 +123,53 @@ export function ComposeEmail({ prospectId, prospectName, prospectEmail, prospect
       </div>
 
       <form ref={formRef} onSubmit={handleSend} className="p-4 space-y-3">
+        {/* AI Generate bar */}
+        <div className="flex items-center gap-2 p-2.5 bg-indigo-500/5 rounded-lg border border-indigo-500/15">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-indigo-400 flex-shrink-0">
+            <path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clipRule="evenodd" />
+          </svg>
+
+          {showAiPrompt ? (
+            <div className="flex-1 flex items-center gap-2">
+              <input
+                type="text"
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="Optional: tell Claude what to write about..."
+                className="flex-1 px-2.5 py-1.5 bg-white/5 border border-white/10 rounded text-xs text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAiGenerate('compose'); } }}
+              />
+              <button
+                type="button"
+                onClick={() => handleAiGenerate('compose')}
+                disabled={generating}
+                className="px-2.5 py-1.5 rounded text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors flex items-center gap-1"
+              >
+                {generating ? <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'Generate'}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAiGenerate('followup')}
+                disabled={generating}
+                className="px-2.5 py-1.5 rounded text-xs font-medium bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 disabled:opacity-50 transition-colors whitespace-nowrap"
+              >
+                Follow-up
+              </button>
+              <button type="button" onClick={() => setShowAiPrompt(false)} className="text-slate-500 hover:text-white transition-colors">
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowAiPrompt(true)}
+              className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+            >
+              Write with Claude AI — generate a personalized email automatically
+            </button>
+          )}
+        </div>
+
         {/* To */}
         <div className="flex items-center gap-2 text-xs">
           <span className="text-slate-500 font-medium w-12">To:</span>
