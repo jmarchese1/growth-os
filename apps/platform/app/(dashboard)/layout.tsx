@@ -120,11 +120,17 @@ function Sidebar({
   collapsed,
   onDragStart,
   onToggle,
+  userEmail,
+  userInitial,
+  onLogout,
 }: {
   width: number;
   collapsed: boolean;
   onDragStart: (e: React.MouseEvent) => void;
   onToggle: () => void;
+  userEmail: string | null;
+  userInitial: string;
+  onLogout: () => void;
 }) {
   const pathname = usePathname();
 
