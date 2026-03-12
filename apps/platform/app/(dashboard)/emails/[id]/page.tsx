@@ -386,7 +386,7 @@ export default async function EmailDetailPage({ params }: {
             </div>
           </div>
 
-          {sentMessages.length === 0 ? (
+          {sentMessages.length === 0 && pendingSteps.length === 0 ? (
             <div className="p-12 text-center">
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-8 h-8 text-slate-700 mx-auto mb-3">
                 <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
@@ -397,6 +397,7 @@ export default async function EmailDetailPage({ params }: {
             </div>
           ) : (
             <div className="divide-y divide-white/5">
+              {/* Sent messages */}
               {sentMessages.map((msg, idx) => (
                 <div key={msg.id} className={`p-5 ${idx === 0 ? 'bg-white/[0.01]' : ''}`}>
                   {/* Message header */}
@@ -477,6 +478,69 @@ export default async function EmailDetailPage({ params }: {
                   )}
                 </div>
               ))}
+
+              {/* Pending scheduled emails */}
+              {pendingSteps.map((step) => {
+                const fireAt = new Date(new Date(prospect.createdAt).getTime() + step.delayHours * 60 * 60 * 1000);
+                return (
+                  <div key={`pending-${step.stepNumber}`} className="p-5 relative">
+                    {/* Scheduled overlay bar */}
+                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-sky-500/40 via-sky-400/20 to-transparent" />
+
+                    {/* Message header */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold bg-sky-600/20 border-2 border-sky-500/30 text-sky-400 border-dashed">
+                            {step.stepNumber}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm text-slate-300 font-medium">
+                            {step.subject?.replace(/\{\{businessName\}\}/g, prospect.name) ?? `Follow-up #${step.stepNumber - 1}`}
+                          </p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-sky-400">Scheduled</span>
+                            <span className="text-[10px] text-slate-600">
+                              Step {step.stepNumber}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-xs text-slate-500">{fmtFull(fireAt.toISOString())}</p>
+                        <span className="inline-flex items-center gap-1 mt-1.5 text-[10px] text-sky-400 bg-sky-500/5 px-2 py-0.5 rounded-full">
+                          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.828a1 1 0 101.415-1.414L11 9.586V6z" clipRule="evenodd" />
+                          </svg>
+                          {step.delayHours}h after first contact
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Email body preview */}
+                    {step.bodyHtml ? (
+                      <div className="rounded-lg border border-sky-500/15 overflow-hidden shadow-lg opacity-80">
+                        <iframe
+                          srcDoc={prepareEmailHtml(step.bodyHtml.replace(/\{\{businessName\}\}/g, prospect.name))}
+                          className="w-full border-0 rounded-lg"
+                          style={{ height: '250px', background: '#ffffff' }}
+                          title={`Pending step ${step.stepNumber}`}
+                          sandbox="allow-same-origin"
+                        />
+                      </div>
+                    ) : (
+                      <div className="rounded-lg border border-sky-500/15 bg-sky-500/[0.03] p-6 text-center">
+                        <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-sky-500/40 mx-auto mb-2">
+                          <path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clipRule="evenodd" />
+                        </svg>
+                        <p className="text-xs text-slate-500">AI-generated at send time</p>
+                        <p className="text-[10px] text-slate-600 mt-0.5">Content will be personalized using the template when this step fires</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
