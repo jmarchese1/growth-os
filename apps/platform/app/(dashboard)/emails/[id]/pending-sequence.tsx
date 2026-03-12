@@ -61,6 +61,36 @@ export function PendingSequence({
     }
   }
 
+  async function handleAiRewrite() {
+    if (!editingStep) return;
+    setAiGenerating(true);
+    setFeedback(null);
+    try {
+      const res = await fetch(`${prospectorUrl}/ai/generate-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: aiPrompt || undefined,
+          type: 'rewrite' as const,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json() as { subject: string; bodyText: string; bodyHtml?: string };
+        setEditSubject(data.subject);
+        setEditBody(data.bodyHtml ?? data.bodyText);
+        setAiPrompt('');
+        setFeedback({ ok: true, msg: 'AI draft generated — review and save' });
+      } else {
+        const data = await res.json();
+        setFeedback({ ok: false, msg: data.error ?? 'AI generation failed' });
+      }
+    } catch {
+      setFeedback({ ok: false, msg: 'Network error — is the prospector service running?' });
+    } finally {
+      setAiGenerating(false);
+    }
+  }
+
   function openEdit(step: SequenceStep) {
     setEditingStep(step);
     setEditSubject(step.subject ?? '');
