@@ -506,7 +506,7 @@ export default async function EmailDetailPage({ params }: {
                         </div>
                         <div>
                           <p className="text-sm text-slate-300 font-medium">
-                            {step.subject ? fillTemplate(step.subject) : undefined ?? `Follow-up #${step.stepNumber - 1}`}
+                            {step.subject ? fillTemplate(step.subject) : `Follow-up #${step.stepNumber - 1}`}
                           </p>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-[10px] font-semibold uppercase tracking-wider text-sky-400">Scheduled</span>
