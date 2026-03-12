@@ -179,15 +179,26 @@ function Sidebar({
       <div className={`relative border-t border-white/[0.06] flex items-center ${collapsed ? 'justify-center py-4 px-2' : 'px-4 py-4 gap-2.5'}`}>
         <div className="relative w-7 h-7 flex-shrink-0">
           <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold">
-            J
+            {userInitial}
           </div>
           <div className="absolute inset-0 rounded-full bg-violet-500/30 blur-sm" />
         </div>
         {!collapsed && (
-          <div>
-            <p className="text-xs font-semibold text-slate-300 leading-none">Jason Marchese</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-slate-300 leading-none truncate">{userEmail ?? 'User'}</p>
             <p className="text-[10px] text-slate-600 mt-0.5 leading-none">Owner</p>
           </div>
+        )}
+        {!collapsed && (
+          <button
+            onClick={onLogout}
+            title="Sign out"
+            className="flex-shrink-0 p-1.5 rounded-md text-slate-600 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+              <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H3zm11 4.414l-4.293 4.293a1 1 0 01-1.414-1.414L11.586 7H7a1 1 0 110-2h6a1 1 0 011 1v6a1 1 0 11-2 0V7.414z" clipRule="evenodd" />
+            </svg>
+          </button>
         )}
       </div>
 
