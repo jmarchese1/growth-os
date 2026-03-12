@@ -38,6 +38,13 @@ export default function Home() {
 
       <CalendlySection />
 
+      <ScrollReveal>
+        <LeadCaptureSection />
+      </ScrollReveal>
+
+      {/* gray-50 → white */}
+      <SectionBleed from="#f9fafb" to="#ffffff" height={48} />
+
       <ProposalCTA />
 
       {/* white → dark footer */}
