@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import EmbedoLogo from '../../components/EmbedoLogo';
+import { useSession } from '../../components/auth/session-provider';
+import { createSupabaseBrowserClient } from '../../lib/supabase/client';
 
 const NAV = [
   {
