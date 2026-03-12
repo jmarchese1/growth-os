@@ -173,13 +173,13 @@ export function PendingSequence({
 
   return (
     <>
-      <div className="bg-gradient-to-br from-amber-500/5 to-orange-500/5 backdrop-blur-sm rounded-xl border border-amber-500/20 overflow-hidden">
+      <div className="bg-gradient-to-br from-sky-500/5 to-sky-500/[0.02] backdrop-blur-sm rounded-xl border border-sky-500/20 overflow-hidden">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-amber-500/10 flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-sky-500/10 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
+            <span className="w-2.5 h-2.5 rounded-full bg-sky-400 animate-pulse" />
             <h3 className="text-sm font-semibold text-white">Pending Sequence Messages</h3>
-            <span className="text-xs text-amber-400/60 font-mono">{steps.length} step{steps.length !== 1 ? 's' : ''}</span>
+            <span className="text-xs text-sky-400/60 font-mono">{steps.length} step{steps.length !== 1 ? 's' : ''}</span>
           </div>
           <button
             onClick={handleCancelAll}
