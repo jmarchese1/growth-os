@@ -13,6 +13,12 @@ datasource db {
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
+enum UserRole {
+  OWNER   // Embedo staff — sees everything, not scoped to a business
+  ADMIN   // Business admin — full access to their business
+  MEMBER  // Business team member — limited access
+}
+
 enum BusinessType {
   RESTAURANT
   SALON
