@@ -125,6 +125,33 @@ export async function calWebhookRoutes(app: FastifyInstance): Promise<void> {
         });
         isOutboundProspect = true;
         log.info({ prospectId: prospect.id, email: attendeeEmail }, 'Prospect status updated to MEETING_BOOKED');
+
+        // Also create a lead so they appear in the Leads pipeline
+        try {
+          await leadCreatedQueue().add(`cal-prospect:${payload.uid}`, {
+            businessId,
+            source: 'OUTBOUND',
+            sourceId: payload.uid,
+            rawData: {
+              name: attendee.name,
+              email: attendeeEmail,
+              phone: attendee.phoneNumber ?? prospect.phone ?? null,
+              businessName: prospect.name,
+              website: prospect.website,
+              prospectId: prospect.id,
+              campaignId: prospect.campaignId,
+              title: payload.title,
+              startTime: payload.startTime,
+              appointmentId: appointment.id,
+              contactId: contact.id,
+              channel: 'cal.com',
+              interest: 'meeting-booked',
+            },
+          });
+          log.info({ prospectId: prospect.id }, 'Lead created from outbound prospect Cal.com booking');
+        } catch (err) {
+          log.error({ err }, 'Failed to queue lead.created from prospect booking — non-fatal');
+        }
       } else {
         // No prospect match — this is an inbound lead from the landing page / direct booking
         try {
