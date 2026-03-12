@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Embedo — Grand Slam Offer (Minimal)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #6366F1; --violet: #7C3AED;
+      --green: #059669; --green-light: #ecfdf5;
+      --red: #dc2626;
+      --amber: #b45309;
+      --gray-100: #f3f4f6; --gray-200: #e5e7eb; --gray-300: #d1d5db;
+      --gray-400: #9ca3af; --gray-500: #6b7280; --gray-700: #374151; --gray-900: #111827;
+      --white: #fff;
+    }
+    @page { size: A4; margin: 0; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; color: var(--gray-900); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { width: 210mm; min-height: 297mm; margin: 0 auto; background: var(--white); overflow: hidden; }
+    @media print { body { background: white; } }
+    @media screen { body { background: #e5e5e5; padding: 20px; } .page { box-shadow: 0 4px 24px rgba(0,0,0,0.1); } }
+
+    /* Minimal header */
+    .header { padding: 32px 48px 0; display: flex; justify-content: space-between; align-items: center; }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-cube { width: 28px; height: 28px; }
+    .logo-text { font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 20px; color: var(--gray-900); }
+
+    /* Hero — left aligned, editorial feel */
+    .hero { padding: 40px 48px 28px; }
+    .hero-tag { display: inline-block; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--primary); background: #eef2ff; padding: 4px 12px; border-radius: 4px; margin-bottom: 14px; }
+    .hero h1 { font-family: 'DM Sans', sans-serif; font-size: 32px; font-weight: 800; line-height: 1.12; letter-spacing: -1px; color: var(--gray-900); margin-bottom: 10px; }
+    .hero h1 .green { color: var(--green); }
+    .hero-sub { font-size: 13px; color: var(--gray-500); line-height: 1.55; max-width: 460px; }
+
+    /* Two-column stack + price */
+    .main-grid { display: grid; grid-template-columns: 1fr 200px; gap: 0; padding: 0 48px; }
+
+    /* Left: value stack */
+    .value-list { border-right: 1px solid var(--gray-200); padding-right: 28px; }
+    .vl-label { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--gray-400); margin-bottom: 10px; }
+
+    .vl-item { display: flex; justify-content: space-between; align-items: baseline; padding: 7px 0; border-bottom: 1px solid var(--gray-100); }
+    .vl-item:last-child { border-bottom: none; }
+    .vl-name { font-size: 12px; font-weight: 600; color: var(--gray-700); }
+    .vl-val { font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 700; color: var(--gray-400); text-decoration: line-through; text-decoration-color: rgba(220,38,38,0.4); }
+
+    .vl-total { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 0 0; margin-top: 6px; border-top: 2px solid var(--gray-900); }
+    .vl-total-label { font-size: 12px; font-weight: 800; color: var(--gray-900); }
+    .vl-total-val { font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 800; color: var(--gray-400); text-decoration: line-through; text-decoration-color: var(--red); text-decoration-thickness: 2px; }
+
+    /* Right: price card */
+    .price-side { padding-left: 28px; display: flex; flex-direction: column; justify-content: center; }
+    .ps-label { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--gray-400); margin-bottom: 6px; }
+    .ps-amount { font-family: 'DM Sans', sans-serif; font-size: 52px; font-weight: 800; color: var(--green); line-height: 1; }
+    .ps-period { font-size: 13px; color: var(--gray-500); margin-bottom: 12px; }
+    .ps-save { font-size: 10px; font-weight: 700; color: var(--green); background: var(--green-light); padding: 4px 10px; border-radius: 4px; display: inline-block; }
+    .ps-ratio { font-size: 9px; color: var(--gray-400); margin-top: 8px; line-height: 1.4; }
+
+    /* Bonuses bar */
+    .bonuses-bar { margin: 22px 48px 0; display: flex; gap: 10px; }
+    .bb-card { flex: 1; padding: 14px 16px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .bb-title { font-size: 11px; font-weight: 700; color: var(--gray-900); margin-bottom: 2px; }
+    .bb-desc { font-size: 9.5px; color: var(--gray-500); line-height: 1.35; }
+    .bb-val { font-size: 9px; font-weight: 700; color: var(--amber); margin-top: 4px; }
+
+    /* Guarantee */
+    .guarantee { margin: 18px 48px 0; padding: 18px 24px; background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 8px; display: flex; gap: 14px; align-items: flex-start; }
+    .g-shield { font-size: 26px; flex-shrink: 0; }
+    .g-title { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 800; color: var(--violet); margin-bottom: 3px; }
+    .g-desc { font-size: 10.5px; color: var(--gray-500); line-height: 1.45; }
+
+    /* 3-column proof */
+    .proof { margin: 18px 48px 0; display: flex; gap: 10px; }
+    .proof-card { flex: 1; padding: 14px 12px; text-align: center; background: var(--gray-100); border-radius: 8px; }
+    .pc-val { font-family: 'DM Sans', sans-serif; font-size: 22px; font-weight: 800; color: var(--primary); line-height: 1; }
+    .pc-label { font-size: 9px; color: var(--gray-500); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
+
+    /* Scarcity note */
+    .scarcity { margin: 18px 48px 0; padding: 12px 18px; border-left: 3px solid var(--red); background: #fef2f2; border-radius: 0 6px 6px 0; }
+    .scarcity-text { font-size: 11px; color: #991b1b; line-height: 1.45; }
+    .scarcity-text strong { font-weight: 700; }
+
+    /* Footer */
+    .footer { margin-top: 22px; padding: 24px 48px; background: var(--gray-900); display: flex; justify-content: space-between; align-items: center; }
+    .footer h3 { font-family: 'DM Sans', sans-serif; font-size: 18px; font-weight: 700; color: var(--white); }
+    .footer p { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+    .footer-r { text-align: right; }
+    .footer-site { font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; color: var(--white); }
+    .footer-email { font-size: 11px; color: #c4b5fd; }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <div class="header">
+      <div class="logo">
+        <svg class="logo-cube" viewBox="0 0 40 40" fill="none">
+          <path d="M20 4L36 13V27L20 36L4 27V13L20 4Z" fill="#4C1D95"/>
+          <path d="M20 4L36 13L20 22L4 13L20 4Z" fill="#7C3AED"/>
+          <path d="M20 22L36 13V27L20 36V22Z" fill="#6D28D9"/>
+          <path d="M4 13L20 22V36L4 27V13Z" fill="#4C1D95"/>
+        </svg>
+        <span class="logo-text">embedo</span>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div class="hero-tag">AI Infrastructure for Restaurants</div>
+      <h1>Replace $2,400/mo in Tools<br>With One Platform for <span class="green">$240.</span></h1>
+      <div class="hero-sub">Most restaurants juggle 5-8 separate tools for calls, social, website, CRM, and lead management. Embedo replaces all of them with AI that works 24/7 — for 90% less.</div>
+    </div>
+
+    <div class="main-grid">
+      <div class="value-list">
+        <div class="vl-label">What you're currently paying for</div>
+        <div class="vl-item"><span class="vl-name">Phone answering service</span><span class="vl-val">$300/mo</span></div>
+        <div class="vl-item"><span class="vl-name">Social media manager</span><span class="vl-val">$800/mo</span></div>
+        <div class="vl-item"><span class="vl-name">Website hosting & updates</span><span class="vl-val">$200/mo</span></div>
+        <div class="vl-item"><span class="vl-name">Live chat / chatbot tool</span><span class="vl-val">$150/mo</span></div>
+        <div class="vl-item"><span class="vl-name">CRM + lead management</span><span class="vl-val">$200/mo</span></div>
+        <div class="vl-item"><span class="vl-name">Survey & review tools</span><span class="vl-val">$100/mo</span></div>
+        <div class="vl-item"><span class="vl-name">Email marketing platform</span><span class="vl-val">$100/mo</span></div>
+        <div class="vl-item"><span class="vl-name">Your time (15 hrs/wk)</span><span class="vl-val">$500/mo</span></div>
+        <div class="vl-total"><span class="vl-total-label">Total you're paying now</span><span class="vl-total-val">$2,350/mo</span></div>
+      </div>
+
+      <div class="price-side">
+        <div class="ps-label">With Embedo</div>
+        <div class="ps-amount">$240</div>
+        <div class="ps-period">/month. Everything.</div>
+        <div class="ps-save">Save $2,110/mo</div>
+        <div class="ps-ratio">That's 10x the value<br>for 1/10th the price.</div>
+      </div>
+    </div>
+
+    <div class="bonuses-bar">
+      <div class="bb-card">
+        <div class="bb-title">Bonus: 48-Hour Deployment</div>
+        <div class="bb-desc">Your entire AI stack configured and live in 2 business days. We do all the work.</div>
+        <div class="bb-val">$500 value — included free</div>
+      </div>
+      <div class="bb-card">
+        <div class="bb-title">Bonus: Custom AI Training</div>
+        <div class="bb-desc">Voice agent and chatbot trained on your exact menu, specials, hours, and policies.</div>
+        <div class="bb-val">$300 value — included free</div>
+      </div>
+      <div class="bb-card">
+        <div class="bb-title">Bonus: Dedicated Onboarding</div>
+        <div class="bb-desc">Personal setup call + your own account manager for the first 30 days.</div>
+        <div class="bb-val">$200 value — included free</div>
+      </div>
+    </div>
+
+    <div class="guarantee">
+      <div class="g-shield">🛡️</div>
+      <div>
+        <div class="g-title">The "More Revenue or It's Free" Guarantee</div>
+        <div class="g-desc">If Embedo doesn't generate more revenue than it costs in 30 days, you pay nothing. We'll even help you migrate off. No contracts, no commitments, no fine print. We take all the risk so you don't have to.</div>
+      </div>
+    </div>
+
+    <div class="proof">
+      <div class="proof-card"><div class="pc-val">100%</div><div class="pc-label">Calls Answered</div></div>
+      <div class="proof-card"><div class="pc-val">15+ hrs</div><div class="pc-label">Saved Weekly</div></div>
+      <div class="proof-card"><div class="pc-val">48 hrs</div><div class="pc-label">To Go Live</div></div>
+      <div class="proof-card"><div class="pc-val">$0</div><div class="pc-label">Risk to You</div></div>
+    </div>
+
+    <div class="scarcity">
+      <div class="scarcity-text"><strong>We only work with one restaurant per zip code.</strong> This protects your competitive advantage — when you're in, your competitors can't be. Once your area is claimed, it's gone. Check availability now.</div>
+    </div>
+
+    <div class="footer">
+      <div>
+        <h3>Check if your zip code is still open.</h3>
+        <p>15-minute call. We'll tell you in the first 2 minutes.</p>
+      </div>
+      <div class="footer-r">
+        <div class="footer-site">embedo.io</div>
+        <div class="footer-email">jason@embedo.io</div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
