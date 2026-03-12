@@ -12,6 +12,13 @@ import { env } from './config.js';
 
 const log = createLogger('prospector:routes');
 
+interface SequenceStep {
+  stepNumber: number;
+  delayHours: number;
+  subject?: string;
+  bodyHtml?: string;
+}
+
 const updateCampaignSchema = z.object({
   emailSubject: z.string().min(5).optional(),
   emailBodyHtml: z.string().min(20).optional(),
