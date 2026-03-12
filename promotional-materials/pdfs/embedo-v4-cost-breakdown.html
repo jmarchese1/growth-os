@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Embedo — The Math Speaks for Itself</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #6366F1; --violet: #7C3AED; --violet-light: #c4b5fd;
+      --green: #22c55e; --red: #ef4444;
+      --black: #0c0a18; --gray-50: #f9f9f9; --gray-100: #f0f0f0;
+      --gray-200: #e0e0e0; --gray-500: #888; --gray-700: #444; --gray-900: #1a1a1a;
+      --white: #fff;
+    }
+    @page { size: A4; margin: 0; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; color: var(--gray-900); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { width: 210mm; min-height: 297mm; margin: 0 auto; background: var(--white); overflow: hidden; }
+    @media print { body { background: white; } }
+    @media screen { body { background: #e5e5e5; padding: 20px; } .page { box-shadow: 0 4px 24px rgba(0,0,0,0.12); } }
+
+    .header { background: var(--white); padding: 28px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--gray-200); }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-cube { width: 32px; height: 32px; }
+    .logo-text { font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 22px; background: linear-gradient(135deg, var(--primary), var(--violet)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .tagline { font-size: 10px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: 1px; }
+
+    .hero { padding: 32px 40px 28px; text-align: center; }
+    .hero h1 { font-family: 'DM Sans', sans-serif; font-size: 30px; font-weight: 800; line-height: 1.15; letter-spacing: -0.5px; color: var(--gray-900); margin-bottom: 6px; }
+    .hero h1 span { color: var(--red); }
+    .hero h1 em { font-style: normal; color: var(--green); }
+    .hero p { font-size: 13px; color: var(--gray-500); }
+
+    /* Cost Table */
+    .cost-section { padding: 0 40px 24px; }
+    .section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--primary); margin-bottom: 12px; }
+
+    .cost-table { width: 100%; border-collapse: collapse; }
+    .cost-table th { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-500); text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--gray-200); }
+    .cost-table th:nth-child(2), .cost-table th:nth-child(3) { text-align: center; }
+    .cost-table td { padding: 10px 12px; border-bottom: 1px solid var(--gray-100); font-size: 12px; }
+    .cost-table td:nth-child(2), .cost-table td:nth-child(3) { text-align: center; font-family: 'DM Sans', sans-serif; font-weight: 700; }
+    .cost-table .task-name { display: flex; align-items: center; gap: 8px; }
+    .cost-table .task-icon { font-size: 16px; }
+    .cost-table .task-label { font-weight: 500; color: var(--gray-700); }
+    .cost-old { color: var(--red); text-decoration: line-through; opacity: 0.7; }
+    .cost-new { color: var(--green); }
+    .cost-included { font-size: 10px !important; font-weight: 600 !important; color: var(--green) !important; background: rgba(34,197,94,0.08); padding: 3px 10px; border-radius: 12px; display: inline-block; }
+
+    .cost-total { background: var(--gray-50); }
+    .cost-total td { font-size: 14px !important; font-weight: 800 !important; padding: 14px 12px; border-bottom: none; }
+    .cost-total .cost-old { font-size: 16px !important; }
+    .total-new { background: linear-gradient(135deg, #f0fdf4, #dcfce7) !important; }
+    .total-new td { color: #16a34a !important; }
+
+    /* Savings Callout */
+    .savings-callout { margin: 20px 40px; background: linear-gradient(135deg, var(--black), #1e1b4b); border-radius: 14px; padding: 28px 32px; text-align: center; position: relative; overflow: hidden; }
+    .savings-callout::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--green), #4ade80, var(--primary)); }
+    .savings-amount { font-family: 'DM Sans', sans-serif; font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #4ade80, #22c55e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; }
+    .savings-label { font-size: 14px; color: rgba(255,255,255,0.6); margin-top: 4px; font-weight: 500; }
+    .savings-sub { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 8px; }
+
+    /* What Else */
+    .extras { padding: 24px 40px 0; }
+    .extras-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .extra-card { background: var(--gray-50); border-radius: 8px; padding: 14px 16px; }
+    .extra-title { font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 700; color: var(--gray-900); margin-bottom: 3px; }
+    .extra-desc { font-size: 10.5px; color: var(--gray-500); line-height: 1.4; }
+
+    /* Footer */
+    .footer { margin-top: 24px; background: var(--gray-50); padding: 22px 40px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--gray-200); }
+    .footer h3 { font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; color: var(--gray-900); }
+    .footer p { font-size: 10.5px; color: var(--gray-500); }
+    .footer-links a { display: block; font-size: 11px; color: var(--primary); text-decoration: none; font-weight: 600; text-align: right; }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <div class="header">
+      <div class="logo">
+        <svg class="logo-cube" viewBox="0 0 40 40" fill="none">
+          <path d="M20 4L36 13V27L20 36L4 27V13L20 4Z" fill="#4C1D95"/>
+          <path d="M20 4L36 13L20 22L4 13L20 4Z" fill="#7C3AED"/>
+          <path d="M20 22L36 13V27L20 36V22Z" fill="#6D28D9"/>
+          <path d="M4 13L20 22V36L4 27V13Z" fill="#4C1D95"/>
+        </svg>
+        <span class="logo-text">embedo</span>
+      </div>
+      <div class="tagline">AI Infrastructure for Restaurants</div>
+    </div>
+
+    <div class="hero">
+      <h1>You're Spending <span>$3,200/month</span> on Things<br>AI Does for <em>A Fraction.</em></h1>
+      <p>Here's the honest breakdown. Do the math yourself.</p>
+    </div>
+
+    <div class="cost-section">
+      <div class="section-label">Monthly Cost Comparison</div>
+      <table class="cost-table">
+        <thead>
+          <tr><th>Service</th><th>Doing It Yourself</th><th>With Embedo</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="task-name"><span class="task-icon">📞</span><span class="task-label">Phone answering service</span></div></td>
+            <td class="cost-old">$300/mo</td>
+            <td><span class="cost-included">Included</span></td>
+          </tr>
+          <tr>
+            <td><div class="task-name"><span class="task-icon">📱</span><span class="task-label">Social media management</span></div></td>
+            <td class="cost-old">$800/mo</td>
+            <td><span class="cost-included">Included</span></td>
+          </tr>
+          <tr>
+            <td><div class="task-name"><span class="task-icon">🌐</span><span class="task-label">Website hosting & updates</span></div></td>
+            <td class="cost-old">$200/mo</td>
+            <td><span class="cost-included">Included</span></td>
+          </tr>
+          <tr>
+            <td><div class="task-name"><span class="task-icon">💬</span><span class="task-label">Live chat / chatbot tool</span></div></td>
+            <td class="cost-old">$150/mo</td>
+            <td><span class="cost-included">Included</span></td>
+          </tr>
+          <tr>
+            <td><div class="task-name"><span class="task-icon">📊</span><span class="task-label">CRM & lead management</span></div></td>
+            <td class="cost-old">$100/mo</td>
+            <td><span class="cost-included">Included</span></td>
+          </tr>
+          <tr>
+            <td><div class="task-name"><span class="task-icon">📋</span><span class="task-label">Survey & feedback tools</span></div></td>
+            <td class="cost-old">$50/mo</td>
+            <td><span class="cost-included">Included</span></td>
+          </tr>
+          <tr>
+            <td><div class="task-name"><span class="task-icon">✉️</span><span class="task-label">Email marketing platform</span></div></td>
+            <td class="cost-old">$100/mo</td>
+            <td><span class="cost-included">Included</span></td>
+          </tr>
+          <tr>
+            <td><div class="task-name"><span class="task-icon">⏰</span><span class="task-label">Your time (15 hrs/week @ $20/hr)</span></div></td>
+            <td class="cost-old">$1,200/mo</td>
+            <td><span class="cost-included">Saved</span></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="cost-total">
+            <td><strong>Total Monthly Cost</strong></td>
+            <td class="cost-old">$2,900+</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="savings-callout">
+      <div class="savings-amount">$2,400+</div>
+      <div class="savings-label">saved every single month</div>
+      <div class="savings-sub">Plus 15+ hours of your time back every week. No contracts. Cancel anytime.</div>
+    </div>
+
+    <div class="extras">
+      <div class="section-label">What You Also Get (That Money Can't Buy Easily)</div>
+      <div class="extras-grid">
+        <div class="extra-card">
+          <div class="extra-title">24/7 Availability</div>
+          <div class="extra-desc">Your AI never sleeps, takes breaks, or calls in sick. Every call and message answered, every hour of every day.</div>
+        </div>
+        <div class="extra-card">
+          <div class="extra-title">Instant Scalability</div>
+          <div class="extra-desc">Handle 10 calls or 1,000 — no additional staff needed. AI scales with your demand automatically.</div>
+        </div>
+        <div class="extra-card">
+          <div class="extra-title">Perfect Consistency</div>
+          <div class="extra-desc">Every customer gets the same great experience. No bad days, no training gaps, no turnover.</div>
+        </div>
+        <div class="extra-card">
+          <div class="extra-title">Data & Insights</div>
+          <div class="extra-desc">Know exactly how many calls, leads, and bookings happen. Make decisions based on data, not guesses.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>
+        <h3>The math is simple. Let's talk.</h3>
+        <p>15-minute call. We'll show you exactly what Embedo saves your restaurant.</p>
+      </div>
+      <div class="footer-links">
+        <a href="https://embedo.io">embedo.io</a>
+        <a href="mailto:jason@embedo.io">jason@embedo.io</a>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
