@@ -190,6 +190,7 @@ model Business {
   settings Json? // { hours, menu, chatbotPersona, socialPostingSchedule, etc. }
 
   // Relations
+  users           User[]
   contacts        Contact[]
   leads           Lead[]
   surveys         Survey[]
