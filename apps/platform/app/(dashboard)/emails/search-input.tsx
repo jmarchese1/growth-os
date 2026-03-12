@@ -8,7 +8,7 @@ export function SearchInput({ defaultValue }: { defaultValue: string }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function handleChange(value: string) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
