@@ -556,4 +556,176 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       return reply.code(500).send({ error: msg });
     }
   });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // EMAIL MANAGER — cross-campaign email overview
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ─── Email stats (aggregate across all campaigns) ──────────────────────────
+  app.get('/emails/stats', async () => {
+    const [totalContacted, totalMessages, byStatus, byChannel] = await Promise.all([
+      db.prospectBusiness.count({
+        where: { status: { in: ['CONTACTED', 'OPENED', 'REPLIED', 'MEETING_BOOKED', 'CONVERTED', 'BOUNCED', 'UNSUBSCRIBED'] as never[] } },
+      }),
+      db.outreachMessage.count(),
+      db.outreachMessage.groupBy({
+        by: ['status'],
+        _count: { _all: true },
+      }),
+      db.prospectBusiness.groupBy({
+        by: ['status'],
+        where: { status: { in: ['CONTACTED', 'OPENED', 'REPLIED', 'MEETING_BOOKED', 'CONVERTED', 'BOUNCED', 'UNSUBSCRIBED'] as never[] } },
+        _count: { _all: true },
+      }),
+    ]);
+
+    const msgStats = Object.fromEntries(byStatus.map((s: { status: string; _count: { _all: number } }) => [s.status, s._count._all]));
+    const prospectStats = Object.fromEntries(byChannel.map((s: { status: string; _count: { _all: number } }) => [s.status, s._count._all]));
+
+    const sent = (msgStats['SENT'] ?? 0) + (msgStats['DELIVERED'] ?? 0) + (msgStats['OPENED'] ?? 0) + (msgStats['REPLIED'] ?? 0);
+    const opened = (msgStats['OPENED'] ?? 0) + (msgStats['REPLIED'] ?? 0);
+    const replied = prospectStats['REPLIED'] ?? 0;
+    const meetingBooked = prospectStats['MEETING_BOOKED'] ?? 0;
+    const bounced = prospectStats['BOUNCED'] ?? 0;
+
+    return {
+      totalContacted,
+      totalMessages,
+      sent,
+      opened,
+      openRate: sent > 0 ? Math.round((opened / sent) * 100) : 0,
+      replied,
+      meetingBooked,
+      replyRate: totalContacted > 0 ? Math.round((replied / totalContacted) * 100) : 0,
+      bounced,
+      bounceRate: totalContacted > 0 ? Math.round((bounced / totalContacted) * 100) : 0,
+    };
+  });
+
+  // ─── All emailed businesses (master table) ────────────────────────────────
+  app.get('/emails/all', async (request) => {
+    const { search, status, page = '1', pageSize = '50' } = request.query as Record<string, string>;
+
+    const where: Record<string, unknown> = {
+      messages: { some: {} }, // only prospects that have at least one message
+    };
+
+    if (search) {
+      where['OR'] = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { contactFirstName: { contains: search, mode: 'insensitive' } },
+        { contactLastName: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (status) {
+      if (status.includes(',')) {
+        where['status'] = { in: status.split(',') };
+      } else {
+        where['status'] = status;
+      }
+    }
+
+    const [items, total] = await Promise.all([
+      db.prospectBusiness.findMany({
+        where: where as never,
+        skip: (parseInt(page) - 1) * parseInt(pageSize),
+        take: parseInt(pageSize),
+        orderBy: { updatedAt: 'desc' },
+        include: {
+          campaign: { select: { id: true, name: true, targetCity: true, targetIndustry: true } },
+          messages: {
+            orderBy: { createdAt: 'desc' },
+            select: { id: true, status: true, stepNumber: true, subject: true, sentAt: true, openedAt: true, repliedAt: true, replyBody: true, replyCategory: true },
+          },
+        },
+      }),
+      db.prospectBusiness.count({ where: where as never }),
+    ]);
+
+    return { items, total, page: parseInt(page), pageSize: parseInt(pageSize) };
+  });
+
+  // ─── Compose & send custom email to a prospect ─────────────────────────────
+  const composeSchema = z.object({
+    subject: z.string().min(1),
+    bodyHtml: z.string().min(1),
+  });
+
+  app.post('/prospects/:id/compose', async (request, reply) => {
+    const { id } = request.params as { id: string };
+
+    if (!env.SENDGRID_API_KEY || env.SENDGRID_API_KEY.startsWith('SG....')) {
+      return reply.code(400).send({ error: 'SENDGRID_API_KEY not configured' });
+    }
+
+    const parsed = validate(composeSchema, request.body);
+    const prospect = await db.prospectBusiness.findUnique({
+      where: { id },
+      include: { campaign: true },
+    });
+    if (!prospect) throw new NotFoundError('Prospect', id);
+    if (!prospect.email) return reply.code(400).send({ error: 'Prospect has no email address' });
+
+    try {
+      const sgMail = await import('@sendgrid/mail');
+      sgMail.default.setApiKey(env.SENDGRID_API_KEY);
+
+      const trackingPixelId = randomUUID();
+      const fromEmail = env.SENDGRID_FROM_EMAIL ?? 'jason@embedo.io';
+      const fromName = process.env['SENDGRID_FROM_NAME'] ?? 'Jason at Embedo';
+      const replyTo = env.REPLY_TRACKING_EMAIL ?? fromEmail;
+
+      const pixelUrl = `${env.API_BASE_URL}/track/open/${trackingPixelId}`;
+      const htmlWithPixel = `${parsed.bodyHtml}\n<img src="${pixelUrl}" width="1" height="1" style="display:none" alt="">`;
+
+      const [response] = await sgMail.default.send({
+        to: prospect.email,
+        from: { email: fromEmail, name: fromName },
+        replyTo,
+        subject: parsed.subject,
+        html: htmlWithPixel,
+        customArgs: { trackingPixelId, prospectId: prospect.id },
+      });
+
+      const messageId = (response.headers as Record<string, string>)['x-message-id'] ?? trackingPixelId;
+
+      // Get the highest step number to set the next one
+      const lastMsg = await db.outreachMessage.findFirst({
+        where: { prospectId: id },
+        orderBy: { stepNumber: 'desc' },
+        select: { stepNumber: true },
+      });
+      const nextStep = (lastMsg?.stepNumber ?? 0) + 1;
+
+      await db.outreachMessage.create({
+        data: {
+          prospectId: id,
+          channel: 'EMAIL',
+          subject: parsed.subject,
+          body: htmlWithPixel,
+          status: 'SENT',
+          stepNumber: nextStep,
+          sentAt: new Date(),
+          externalId: messageId,
+          trackingPixelId,
+        },
+      });
+
+      if (prospect.status === 'NEW' || prospect.status === 'ENRICHED') {
+        await db.prospectBusiness.update({
+          where: { id },
+          data: { status: 'CONTACTED' },
+        });
+      }
+
+      log.info({ prospectId: id, subject: parsed.subject }, 'Custom email composed and sent');
+      return reply.send({ ok: true, messageId });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      log.error({ prospectId: id, err }, 'Compose email failed');
+      return reply.code(500).send({ error: msg });
+    }
+  });
 }
