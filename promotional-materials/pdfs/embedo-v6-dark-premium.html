@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Embedo — Premium AI for Restaurants</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #6366F1; --violet: #7C3AED; --violet-light: #c4b5fd;
+      --green: #22c55e; --green-light: #4ade80;
+      --black: #0c0a18; --dark: #110e24; --dark2: #17132b;
+      --white: #fff;
+    }
+    @page { size: A4; margin: 0; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { width: 210mm; min-height: 297mm; margin: 0 auto; background: var(--black); color: var(--white); overflow: hidden; position: relative; }
+    @media print { body { background: white; } }
+    @media screen { body { background: #000; padding: 20px; } .page { box-shadow: 0 4px 40px rgba(124,58,237,0.15); } }
+
+    /* Ambient glow */
+    .page::before { content: ''; position: absolute; top: -100px; right: -100px; width: 400px; height: 400px; background: radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%); pointer-events: none; }
+    .page::after { content: ''; position: absolute; bottom: -100px; left: -100px; width: 350px; height: 350px; background: radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%); pointer-events: none; }
+
+    .header { padding: 36px 44px 0; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1; }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-cube { width: 36px; height: 36px; }
+    .logo-text { font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 26px; background: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 40%, #7c3aed 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    .hero { padding: 40px 44px 32px; position: relative; z-index: 1; }
+    .hero-eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; color: var(--violet-light); margin-bottom: 12px; }
+    .hero h1 { font-family: 'DM Sans', sans-serif; font-size: 36px; font-weight: 800; line-height: 1.1; letter-spacing: -1px; margin-bottom: 12px; }
+    .hero h1 span { background: linear-gradient(135deg, #4ade80, #22c55e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero-desc { font-size: 14px; color: rgba(255,255,255,0.45); line-height: 1.6; max-width: 420px; }
+
+    /* Glowing divider */
+    .glow-divider { height: 1px; margin: 0 44px; background: linear-gradient(90deg, transparent, rgba(124,58,237,0.3), transparent); }
+
+    /* Modules - 2 column elegant */
+    .modules-section { padding: 28px 44px; position: relative; z-index: 1; }
+    .modules-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 2.5px; color: rgba(255,255,255,0.3); margin-bottom: 18px; }
+    .modules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .mod-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 18px 20px; position: relative; overflow: hidden; }
+    .mod-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(124,58,237,0.2), transparent); }
+    .mod-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .mod-icon { font-size: 20px; }
+    .mod-name { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; }
+    .mod-desc { font-size: 10.5px; color: rgba(255,255,255,0.45); line-height: 1.45; }
+
+    /* Stats row */
+    .stats-row { display: flex; margin: 24px 44px; gap: 12px; position: relative; z-index: 1; }
+    .stat-card { flex: 1; text-align: center; padding: 20px 12px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
+    .stat-val { font-family: 'DM Sans', sans-serif; font-size: 30px; font-weight: 800; line-height: 1; }
+    .sv-green { background: linear-gradient(135deg, #4ade80, #22c55e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .sv-purple { background: linear-gradient(135deg, var(--primary), var(--violet-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .stat-desc { font-size: 9px; color: rgba(255,255,255,0.35); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+
+    /* Testimonial */
+    .testi { margin: 0 44px; padding: 24px 28px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); position: relative; z-index: 1; }
+    .testi-stars { color: var(--amber, #f59e0b); font-size: 14px; letter-spacing: 2px; margin-bottom: 8px; }
+    .testi-quote { font-size: 13px; font-style: italic; color: rgba(255,255,255,0.6); line-height: 1.55; margin-bottom: 10px; }
+    .testi-author { font-size: 11px; font-weight: 700; }
+    .testi-role { font-size: 10px; color: rgba(255,255,255,0.35); }
+
+    /* CTA */
+    .cta-section { padding: 32px 44px; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1; }
+    .cta-left h2 { font-family: 'DM Sans', sans-serif; font-size: 22px; font-weight: 800; line-height: 1.2; margin-bottom: 6px; }
+    .cta-left h2 span { background: linear-gradient(135deg, #4ade80, #22c55e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .cta-left p { font-size: 11px; color: rgba(255,255,255,0.35); }
+    .cta-right { text-align: right; }
+    .cta-site { font-family: 'DM Sans', sans-serif; font-size: 18px; font-weight: 700; color: var(--white); margin-bottom: 3px; }
+    .cta-email { font-size: 12px; color: var(--violet-light); }
+    .cta-note { font-size: 9px; color: rgba(255,255,255,0.2); margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <div class="header">
+      <div class="logo">
+        <svg class="logo-cube" viewBox="0 0 40 40" fill="none">
+          <path d="M20 4L36 13V27L20 36L4 27V13L20 4Z" fill="#4C1D95"/>
+          <path d="M20 4L36 13L20 22L4 13L20 4Z" fill="#7C3AED"/>
+          <path d="M20 22L36 13V27L20 36V22Z" fill="#6D28D9"/>
+          <path d="M4 13L20 22V36L4 27V13Z" fill="#4C1D95"/>
+        </svg>
+        <span class="logo-text">embedo</span>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div class="hero-eyebrow">AI Infrastructure for Restaurants</div>
+      <h1>The AI Team Your<br>Restaurant <span>Deserves.</span></h1>
+      <div class="hero-desc">Eight intelligent modules that work together as one seamless system. Calls answered. Leads captured. Social managed. Website deployed. All running 24/7 while you do what you do best.</div>
+    </div>
+
+    <div class="glow-divider"></div>
+
+    <div class="modules-section">
+      <div class="modules-label">Your Complete AI Stack</div>
+      <div class="modules-grid">
+        <div class="mod-card">
+          <div class="mod-header"><div class="mod-icon">🤖</div><div class="mod-name">AI Voice Agent</div></div>
+          <div class="mod-desc">Natural-sounding AI answers every call. Takes reservations, handles FAQs, captures leads. Customers can't tell the difference.</div>
+        </div>
+        <div class="mod-card">
+          <div class="mod-header"><div class="mod-icon">💬</div><div class="mod-name">Intelligent Chatbot</div></div>
+          <div class="mod-desc">Lives on your website, Instagram, and Facebook. Instant replies to every message and DM, day or night.</div>
+        </div>
+        <div class="mod-card">
+          <div class="mod-header"><div class="mod-icon">🌐</div><div class="mod-name">Website Generator</div></div>
+          <div class="mod-desc">Premium, mobile-first restaurant website generated and deployed in under 48 hours. Built-in booking and lead capture.</div>
+        </div>
+        <div class="mod-card">
+          <div class="mod-header"><div class="mod-icon">📱</div><div class="mod-name">Social Media Engine</div></div>
+          <div class="mod-desc">AI creates on-brand content, schedules posts at peak times, monitors comments, and auto-responds to engagement.</div>
+        </div>
+        <div class="mod-card">
+          <div class="mod-header"><div class="mod-icon">📊</div><div class="mod-name">Lead Engine</div></div>
+          <div class="mod-desc">Every inquiry — call, chat, form, DM — gets captured, scored, and routed. Automated follow-up sequences convert more.</div>
+        </div>
+        <div class="mod-card">
+          <div class="mod-header"><div class="mod-icon">📋</div><div class="mod-name">Smart Surveys</div></div>
+          <div class="mod-desc">Post-visit feedback via SMS and email. Positive reviews get amplified. Issues get flagged before they hit Yelp.</div>
+        </div>
+        <div class="mod-card">
+          <div class="mod-header"><div class="mod-icon">📝</div><div class="mod-name">AI Proposals</div></div>
+          <div class="mod-desc">Catering and event proposals generated automatically with custom pricing. Shared via link, tracked for opens.</div>
+        </div>
+        <div class="mod-card">
+          <div class="mod-header"><div class="mod-icon">👥</div><div class="mod-name">Unified CRM</div></div>
+          <div class="mod-desc">Every contact, appointment, call log, and interaction in one place. Full customer history at a glance.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-val sv-green">$2,400+</div><div class="stat-desc">Monthly Savings</div></div>
+      <div class="stat-card"><div class="stat-val sv-purple">100%</div><div class="stat-desc">Calls Answered</div></div>
+      <div class="stat-card"><div class="stat-val sv-green">15+ hrs</div><div class="stat-desc">Saved Weekly</div></div>
+      <div class="stat-card"><div class="stat-val sv-purple">48 hrs</div><div class="stat-desc">To Go Live</div></div>
+    </div>
+
+    <div class="testi">
+      <div class="testi-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+      <div class="testi-quote">"Embedo is like hiring 8 people who never sleep, never make mistakes, and cost less than one part-timer. My revenue is up, my stress is down, and I finally feel like I'm running the restaurant instead of it running me."</div>
+      <div class="testi-author">David K.</div>
+      <div class="testi-role">Owner & Head Chef, Sakura House — Portland, OR</div>
+    </div>
+
+    <div class="cta-section">
+      <div class="cta-left">
+        <h2>Ready to meet <span>your AI team?</span></h2>
+        <p>One 15-minute call. Deployed in 48 hours. No contracts.</p>
+      </div>
+      <div class="cta-right">
+        <div class="cta-site">embedo.io</div>
+        <div class="cta-email">jason@embedo.io</div>
+        <div class="cta-note">No commitment required</div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
