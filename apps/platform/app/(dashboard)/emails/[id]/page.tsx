@@ -313,7 +313,7 @@ export default async function EmailDetailPage({ params }: {
                 <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Opened</p>
                 <p className="text-2xl font-bold text-amber-400">{sentMessages.filter((m) => m.openedAt).length}</p>
               </div>
-              <div className="bg-emerald-500/5 rounded-lg p-3 border border-emerald-500/10">
+              <div className={`rounded-lg p-3 border ${replyMsg ? 'bg-emerald-500/5 border-emerald-500/10' : 'bg-orange-500/5 border-orange-500/10'}`}>
                 <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Replied</p>
                 <p className={`text-2xl font-bold ${replyMsg ? 'text-emerald-400' : 'text-orange-400'}`}>{replyMsg ? 'Yes' : 'No'}</p>
               </div>
