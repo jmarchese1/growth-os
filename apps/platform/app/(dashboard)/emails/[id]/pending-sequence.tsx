@@ -220,7 +220,7 @@ export function PendingSequence({
               >
                 {/* Step number */}
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                  isFuture ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-violet-500/20 text-violet-400 border border-violet-500/30'
+                  isFuture ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30' : 'bg-sky-500/20 text-sky-400 border border-sky-500/30 animate-pulse'
                 }`}>
                   {step.stepNumber}
                 </div>
