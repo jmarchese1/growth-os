@@ -6,6 +6,7 @@ import SystemOverview from '@/components/sections/SystemOverview';
 import FeaturesSection from '@/components/sections/FeaturesSection';
 import ProposalCTA from '@/components/proposal/ProposalCTA';
 import CalendlySection from '@/components/booking/CalendlySection';
+import LeadCaptureSection from '@/components/lead-capture/LeadCaptureSection';
 import Footer from '@/components/shared/Footer';
 import ScrollReveal from '@/components/ui/ScrollReveal';
 import SectionBleed from '@/components/ui/SectionBleed';
