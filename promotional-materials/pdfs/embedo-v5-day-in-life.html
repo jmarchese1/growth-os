@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Embedo — A Day With AI Running Your Restaurant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #6366F1; --violet: #7C3AED; --violet-light: #c4b5fd;
+      --green: #22c55e; --amber: #f59e0b;
+      --black: #0c0a18; --gray-50: #f9f9f9; --gray-100: #f0f0f0;
+      --gray-200: #e0e0e0; --gray-500: #888; --gray-700: #444; --gray-900: #1a1a1a;
+      --white: #fff;
+    }
+    @page { size: A4; margin: 0; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; color: var(--gray-900); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { width: 210mm; min-height: 297mm; margin: 0 auto; background: var(--white); overflow: hidden; }
+    @media print { body { background: white; } }
+    @media screen { body { background: #e5e5e5; padding: 20px; } .page { box-shadow: 0 4px 24px rgba(0,0,0,0.12); } }
+
+    .header { background: linear-gradient(135deg, var(--black), #1e1b4b); padding: 28px 40px; display: flex; justify-content: space-between; align-items: center; }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-cube { width: 30px; height: 30px; }
+    .logo-text { font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 22px; background: linear-gradient(135deg, #c4b5fd, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header-right { font-size: 10px; color: var(--violet-light); font-weight: 500; }
+
+    .hero { background: linear-gradient(180deg, #1e1b4b, var(--black)); padding: 0 40px 28px; text-align: center; }
+    .hero h1 { font-family: 'DM Sans', sans-serif; font-size: 26px; font-weight: 800; color: var(--white); line-height: 1.2; letter-spacing: -0.5px; margin-bottom: 6px; }
+    .hero h1 span { background: linear-gradient(135deg, var(--primary), var(--violet-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { font-size: 12px; color: rgba(255,255,255,0.45); }
+
+    /* Timeline */
+    .timeline-section { padding: 24px 40px; }
+    .section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--primary); margin-bottom: 16px; }
+
+    .day-timeline { position: relative; }
+
+    .time-block { display: flex; gap: 16px; margin-bottom: 12px; position: relative; }
+    .time-block:last-child { margin-bottom: 0; }
+
+    .time-col { width: 56px; flex-shrink: 0; text-align: right; padding-top: 2px; }
+    .time-value { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; color: var(--gray-900); }
+    .time-period { font-size: 9px; color: var(--gray-500); text-transform: uppercase; font-weight: 600; }
+
+    .time-dot-col { width: 20px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
+    .time-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--primary); background: var(--white); flex-shrink: 0; position: relative; z-index: 1; }
+    .time-dot.active { background: var(--primary); box-shadow: 0 0 8px rgba(99,102,241,0.3); }
+    .time-dot.green { border-color: var(--green); background: var(--green); box-shadow: 0 0 8px rgba(34,197,94,0.3); }
+    .time-line { width: 2px; flex: 1; background: var(--gray-200); margin-top: 2px; }
+
+    .time-content { flex: 1; background: var(--gray-50); border-radius: 8px; padding: 12px 14px; border: 1px solid var(--gray-100); }
+    .tc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .tc-title { font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 700; color: var(--gray-900); }
+    .tc-badge { font-size: 8.5px; font-weight: 700; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .badge-ai { background: rgba(99,102,241,0.1); color: var(--primary); }
+    .badge-you { background: rgba(34,197,94,0.1); color: var(--green); }
+    .tc-desc { font-size: 10.5px; color: var(--gray-500); line-height: 1.4; }
+    .tc-desc strong { color: var(--gray-700); }
+
+    /* Bottom Stats */
+    .day-summary { margin: 20px 40px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
+    .ds-card { text-align: center; padding: 14px 8px; border-radius: 10px; }
+    .ds-ai { background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.12); }
+    .ds-value { font-family: 'DM Sans', sans-serif; font-size: 22px; font-weight: 800; color: var(--primary); line-height: 1; }
+    .ds-label { font-size: 9px; color: var(--gray-500); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
+
+    .takeaway { margin: 0 40px; background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1px solid #bbf7d0; border-radius: 10px; padding: 18px 22px; text-align: center; }
+    .takeaway-big { font-family: 'DM Sans', sans-serif; font-size: 18px; font-weight: 800; color: #16a34a; margin-bottom: 4px; }
+    .takeaway-sub { font-size: 11px; color: #166534; }
+
+    .footer { margin-top: 20px; background: var(--black); padding: 22px 40px; display: flex; justify-content: space-between; align-items: center; }
+    .footer h3 { font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; color: var(--white); }
+    .footer p { font-size: 10px; color: rgba(255,255,255,0.4); }
+    .footer-r { text-align: right; }
+    .footer-r a { display: block; font-size: 11px; color: var(--violet-light); text-decoration: none; }
+    .footer-r .big { font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; color: var(--white); }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <div class="header">
+      <div class="logo">
+        <svg class="logo-cube" viewBox="0 0 40 40" fill="none">
+          <path d="M20 4L36 13V27L20 36L4 27V13L20 4Z" fill="#4C1D95"/>
+          <path d="M20 4L36 13L20 22L4 13L20 4Z" fill="#7C3AED"/>
+          <path d="M20 22L36 13V27L20 36V22Z" fill="#6D28D9"/>
+          <path d="M4 13L20 22V36L4 27V13Z" fill="#4C1D95"/>
+        </svg>
+        <span class="logo-text">embedo</span>
+      </div>
+      <div class="header-right">embedo.io</div>
+    </div>
+
+    <div class="hero">
+      <h1>A Day in the Life of a Restaurant<br>With <span>Its Own AI Team</span></h1>
+      <p>From 6 AM to midnight — here's what Embedo handles while you focus on your craft.</p>
+    </div>
+
+    <div class="timeline-section">
+      <div class="section-label">Your Tuesday, Automated</div>
+      <div class="day-timeline">
+
+        <div class="time-block">
+          <div class="time-col"><div class="time-value">6:15</div><div class="time-period">AM</div></div>
+          <div class="time-dot-col"><div class="time-dot active"></div><div class="time-line"></div></div>
+          <div class="time-content">
+            <div class="tc-header"><div class="tc-title">Corporate office calls to book a 25-person lunch</div><div class="tc-badge badge-ai">AI Handled</div></div>
+            <div class="tc-desc">Voice agent answers, confirms date and headcount, <strong>creates reservation in CRM</strong>, sends confirmation email. You're still asleep.</div>
+          </div>
+        </div>
+
+        <div class="time-block">
+          <div class="time-col"><div class="time-value">8:30</div><div class="time-period">AM</div></div>
+          <div class="time-dot-col"><div class="time-dot active"></div><div class="time-line"></div></div>
+          <div class="time-content">
+            <div class="tc-header"><div class="tc-title">3 Instagram DMs from last night's posts</div><div class="tc-badge badge-ai">AI Handled</div></div>
+            <div class="tc-desc">Chatbot replies with your hours, menu link, and booking option. <strong>One converts to a reservation.</strong> All logged in CRM.</div>
+          </div>
+        </div>
+
+        <div class="time-block">
+          <div class="time-col"><div class="time-value">10:00</div><div class="time-period">AM</div></div>
+          <div class="time-dot-col"><div class="time-dot green"></div><div class="time-line"></div></div>
+          <div class="time-content">
+            <div class="tc-header"><div class="tc-title">You arrive at the restaurant</div><div class="tc-badge badge-you">You</div></div>
+            <div class="tc-desc">Check your dashboard: <strong>4 calls answered, 2 new leads, 1 booking confirmed</strong> — all before you walked in. You focus on prep.</div>
+          </div>
+        </div>
+
+        <div class="time-block">
+          <div class="time-col"><div class="time-value">11:45</div><div class="time-period">AM</div></div>
+          <div class="time-dot-col"><div class="time-dot active"></div><div class="time-line"></div></div>
+          <div class="time-content">
+            <div class="tc-header"><div class="tc-title">Today's social post goes live</div><div class="tc-badge badge-ai">AI Handled</div></div>
+            <div class="tc-desc">AI generated a photo post of your daily special, wrote the caption, and <strong>scheduled it for peak engagement time</strong>. Already getting likes.</div>
+          </div>
+        </div>
+
+        <div class="time-block">
+          <div class="time-col"><div class="time-value">1:30</div><div class="time-period">PM</div></div>
+          <div class="time-dot-col"><div class="time-dot active"></div><div class="time-line"></div></div>
+          <div class="time-content">
+            <div class="tc-header"><div class="tc-title">Lunch rush — 7 calls come in back to back</div><div class="tc-badge badge-ai">AI Handled</div></div>
+            <div class="tc-desc">You're running the kitchen. AI voice agent handles all 7: <strong>3 reservations, 2 takeout orders, 1 catering inquiry, 1 hours question.</strong> Nothing missed.</div>
+          </div>
+        </div>
+
+        <div class="time-block">
+          <div class="time-col"><div class="time-value">4:00</div><div class="time-period">PM</div></div>
+          <div class="time-dot-col"><div class="time-dot active"></div><div class="time-line"></div></div>
+          <div class="time-content">
+            <div class="tc-header"><div class="tc-title">Post-visit surveys sent to yesterday's diners</div><div class="tc-badge badge-ai">AI Handled</div></div>
+            <div class="tc-desc">SMS surveys auto-sent. <strong>3 five-star responses</strong> already in. One mentioned a service issue — flagged for your review.</div>
+          </div>
+        </div>
+
+        <div class="time-block">
+          <div class="time-col"><div class="time-value">7:15</div><div class="time-period">PM</div></div>
+          <div class="time-dot-col"><div class="time-dot active"></div><div class="time-line"></div></div>
+          <div class="time-content">
+            <div class="tc-header"><div class="tc-title">Someone finds you on Google, visits your website</div><div class="tc-badge badge-ai">AI Handled</div></div>
+            <div class="tc-desc">Chatbot greets them, shares tonight's specials, <strong>books a table for 2 at 8:30 PM</strong>. Lead captured, CRM updated. You never knew it happened.</div>
+          </div>
+        </div>
+
+        <div class="time-block">
+          <div class="time-col"><div class="time-value">11:00</div><div class="time-period">PM</div></div>
+          <div class="time-dot-col"><div class="time-dot green"></div></div>
+          <div class="time-content">
+            <div class="tc-header"><div class="tc-title">You close up and head home</div><div class="tc-badge badge-you">You</div></div>
+            <div class="tc-desc">AI keeps working: answering late-night calls, responding to DMs, <strong>preparing tomorrow's social content</strong>. Your restaurant never sleeps.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="day-summary">
+      <div class="ds-card ds-ai"><div class="ds-value">14</div><div class="ds-label">Calls Answered</div></div>
+      <div class="ds-card ds-ai"><div class="ds-value">6</div><div class="ds-label">Bookings Made</div></div>
+      <div class="ds-card ds-ai"><div class="ds-value">8</div><div class="ds-label">Leads Captured</div></div>
+      <div class="ds-card ds-ai"><div class="ds-value">0</div><div class="ds-label">Hours You Spent</div></div>
+    </div>
+
+    <div class="takeaway">
+      <div class="takeaway-big">That's every single day. Without you lifting a finger.</div>
+      <div class="takeaway-sub">Embedo runs 24/7/365. Your AI team never takes a day off.</div>
+    </div>
+
+    <div class="footer">
+      <div>
+        <h3>Want a day like this? Let's set it up.</h3>
+        <p>15-min call. Live in 48 hours. No contracts.</p>
+      </div>
+      <div class="footer-r">
+        <div class="big">embedo.io</div>
+        <a href="mailto:jason@embedo.io">jason@embedo.io</a>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
