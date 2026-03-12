@@ -142,6 +142,28 @@ enum ActivityType {
 
 // ─── Core: Multi-Tenancy Anchor ───────────────────────────────────────────────
 
+model User {
+  id         String   @id @default(cuid())
+  supabaseId String   @unique          // Links to Supabase auth.users.id
+  email      String   @unique
+  firstName  String?
+  lastName   String?
+  role       UserRole @default(MEMBER)
+
+  // Multi-tenant scoping — nullable for OWNER role (sees all businesses)
+  businessId String?
+  business   Business? @relation(fields: [businessId], references: [id])
+
+  lastLoginAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([supabaseId])
+  @@index([businessId])
+}
+
+// ─── Core: Business ───────────────────────────────────────────────────────────
+
 model Business {
   id     String          @id @default(cuid())
   name   String
