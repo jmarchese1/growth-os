@@ -729,4 +729,82 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       return reply.code(500).send({ error: msg });
     }
   });
+
+  // ─── Cancel pending follow-ups for a prospect ──────────────────────────────
+  app.patch('/prospects/:id/cancel-followups', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const prospect = await db.prospectBusiness.findUnique({ where: { id } });
+    if (!prospect) throw new NotFoundError('Prospect', id);
+
+    await db.prospectBusiness.update({
+      where: { id },
+      data: { nextFollowUpAt: null },
+    });
+
+    log.info({ prospectId: id }, 'Follow-up sequence cancelled for prospect');
+    return reply.send({ ok: true, message: 'Follow-up sequence cancelled' });
+  });
+
+  // ─── Edit a specific sequence step on the campaign ─────────────────────────
+  const editStepSchema = z.object({
+    stepNumber: z.number().int().positive(),
+    subject: z.string().min(2).optional(),
+    bodyHtml: z.string().min(10).optional(),
+    delayHours: z.number().min(0).optional(),
+  });
+
+  app.patch('/campaigns/:id/sequence-step', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const parsed = validate(editStepSchema, request.body);
+
+    const campaign = await db.outboundCampaign.findUnique({ where: { id } });
+    if (!campaign) throw new NotFoundError('Campaign', id);
+
+    const steps = (campaign.sequenceSteps as SequenceStep[] | null) ?? [];
+    const stepIndex = steps.findIndex((s: SequenceStep) => s.stepNumber === parsed.stepNumber);
+
+    if (stepIndex === -1) {
+      return reply.code(404).send({ error: `Step ${parsed.stepNumber} not found in sequence` });
+    }
+
+    // Merge updates into the step
+    if (parsed.subject !== undefined) steps[stepIndex]!.subject = parsed.subject;
+    if (parsed.bodyHtml !== undefined) steps[stepIndex]!.bodyHtml = parsed.bodyHtml;
+    if (parsed.delayHours !== undefined) steps[stepIndex]!.delayHours = parsed.delayHours;
+
+    await db.outboundCampaign.update({
+      where: { id },
+      data: { sequenceSteps: steps },
+    });
+
+    log.info({ campaignId: id, stepNumber: parsed.stepNumber }, 'Sequence step updated');
+    return reply.send({ ok: true, step: steps[stepIndex] });
+  });
+
+  // ─── Remove a specific sequence step from the campaign ─────────────────────
+  app.delete('/campaigns/:id/sequence-step/:stepNumber', async (request, reply) => {
+    const { id, stepNumber } = request.params as { id: string; stepNumber: string };
+    const stepNum = parseInt(stepNumber);
+
+    const campaign = await db.outboundCampaign.findUnique({ where: { id } });
+    if (!campaign) throw new NotFoundError('Campaign', id);
+
+    const steps = (campaign.sequenceSteps as SequenceStep[] | null) ?? [];
+    const filtered = steps.filter((s: SequenceStep) => s.stepNumber !== stepNum);
+
+    if (filtered.length === steps.length) {
+      return reply.code(404).send({ error: `Step ${stepNum} not found` });
+    }
+
+    // Renumber remaining steps
+    filtered.forEach((s: SequenceStep, i: number) => { s.stepNumber = i + 2; }); // steps start at 2 (1 is cold email)
+
+    await db.outboundCampaign.update({
+      where: { id },
+      data: { sequenceSteps: filtered },
+    });
+
+    log.info({ campaignId: id, removedStep: stepNum }, 'Sequence step removed');
+    return reply.send({ ok: true, remainingSteps: filtered });
+  });
 }
