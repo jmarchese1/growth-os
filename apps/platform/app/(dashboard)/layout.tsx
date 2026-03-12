@@ -293,6 +293,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         collapsed={collapsed}
         onDragStart={handleDragStart}
         onToggle={handleToggle}
+        userEmail={userEmail}
+        userInitial={userInitial}
+        onLogout={handleLogout}
       />
       <main className="relative flex-1 overflow-auto bg-grid-dark" style={{ zIndex: 2 }}>
         {children}
