@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Embedo — Grand Slam Offer (Light)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #6366F1; --violet: #7C3AED; --violet-light: #ede9fe;
+      --green: #16a34a; --green-bg: #f0fdf4; --green-border: #bbf7d0;
+      --red: #dc2626; --red-light: #fef2f2;
+      --amber: #d97706; --amber-bg: #fffbeb; --amber-border: #fde68a;
+      --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb;
+      --gray-400: #9ca3af; --gray-500: #6b7280; --gray-700: #374151; --gray-900: #111827;
+      --white: #fff;
+    }
+    @page { size: A4; margin: 0; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; color: var(--gray-900); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { width: 210mm; min-height: 297mm; margin: 0 auto; background: var(--white); overflow: hidden; }
+    @media print { body { background: white; } }
+    @media screen { body { background: #e5e5e5; padding: 20px; } .page { box-shadow: 0 4px 24px rgba(0,0,0,0.1); } }
+
+    .header { padding: 28px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--gray-200); }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-cube { width: 30px; height: 30px; }
+    .logo-text { font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 22px; background: linear-gradient(135deg, var(--primary), var(--violet)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header-tag { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--red); background: var(--red-light); border: 1px solid #fecaca; padding: 4px 12px; border-radius: 12px; }
+
+    .hero { padding: 28px 40px 22px; text-align: center; }
+    .hero-eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; color: var(--primary); margin-bottom: 10px; }
+    .hero h1 { font-family: 'DM Sans', sans-serif; font-size: 28px; font-weight: 800; line-height: 1.15; letter-spacing: -0.5px; color: var(--gray-900); margin-bottom: 8px; }
+    .hero h1 .accent { color: var(--green); }
+    .hero-sub { font-size: 12px; color: var(--gray-500); line-height: 1.5; max-width: 440px; margin: 0 auto; }
+
+    /* Value Stack */
+    .stack-section { padding: 14px 40px 0; }
+    .stack-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--gray-400); margin-bottom: 8px; }
+
+    .stack-table { width: 100%; border-collapse: collapse; }
+    .stack-table tr { border-bottom: 1px solid var(--gray-100); }
+    .stack-table tr:last-child { border-bottom: none; }
+    .stack-table td { padding: 8px 0; vertical-align: middle; }
+    .st-left { display: flex; align-items: center; gap: 10px; }
+    .st-icon { font-size: 16px; width: 28px; height: 28px; background: var(--gray-50); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .st-name { font-size: 12px; font-weight: 600; color: var(--gray-900); }
+    .st-detail { font-size: 9.5px; color: var(--gray-400); margin-top: 1px; }
+    .st-value { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; color: var(--gray-400); text-decoration: line-through; text-decoration-color: var(--red); text-align: right; width: 80px; }
+    .st-included { font-size: 9px; font-weight: 700; color: var(--green); background: var(--green-bg); border: 1px solid var(--green-border); padding: 2px 10px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.5px; text-align: right; white-space: nowrap; }
+
+    /* Bonuses */
+    .bonuses { padding: 12px 40px 0; }
+    .bonus-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--amber); margin-bottom: 8px; }
+    .bonus-row { display: flex; gap: 10px; }
+    .bonus-card { flex: 1; padding: 12px 14px; background: var(--amber-bg); border: 1px solid var(--amber-border); border-radius: 8px; }
+    .bc-header { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+    .bc-icon { font-size: 14px; }
+    .bc-title { font-size: 11px; font-weight: 700; color: var(--gray-900); }
+    .bc-desc { font-size: 9.5px; color: var(--gray-500); line-height: 1.35; }
+    .bc-val { display: flex; align-items: center; gap: 6px; margin-top: 5px; }
+    .bc-old { font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 700; color: var(--gray-400); text-decoration: line-through; text-decoration-color: var(--red); }
+    .bc-free { font-size: 9px; font-weight: 700; color: var(--amber); text-transform: uppercase; }
+
+    /* Divider */
+    .divider { height: 2px; margin: 18px 40px; background: linear-gradient(90deg, var(--gray-200), var(--primary), var(--violet), var(--gray-200)); border-radius: 2px; opacity: 0.4; }
+
+    /* Price block */
+    .price-block { display: flex; justify-content: center; align-items: center; gap: 40px; padding: 16px 40px; }
+    .pb-old { text-align: center; }
+    .pb-old-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gray-400); margin-bottom: 4px; }
+    .pb-old-amount { font-family: 'DM Sans', sans-serif; font-size: 38px; font-weight: 800; color: var(--gray-300, #d1d5db); text-decoration: line-through; text-decoration-color: var(--red); text-decoration-thickness: 3px; line-height: 1; }
+    .pb-arrow { font-size: 28px; color: var(--gray-300, #d1d5db); }
+    .pb-new { text-align: center; }
+    .pb-new-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--green); margin-bottom: 4px; }
+    .pb-new-amount { font-family: 'DM Sans', sans-serif; font-size: 50px; font-weight: 800; color: var(--green); line-height: 1; }
+    .pb-new-period { font-size: 13px; color: var(--gray-500); }
+    .savings-pill { display: block; margin: 8px auto 0; font-size: 11px; font-weight: 700; color: var(--green); background: var(--green-bg); border: 1px solid var(--green-border); padding: 5px 18px; border-radius: 16px; text-align: center; width: fit-content; }
+
+    /* Guarantee */
+    .guarantee { margin: 14px 40px 0; padding: 16px 20px; border-radius: 10px; background: var(--violet-light); border: 1px solid #ddd6fe; text-align: center; }
+    .guarantee-title { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 800; color: var(--violet); margin-bottom: 4px; }
+    .guarantee-desc { font-size: 10.5px; color: var(--gray-500); line-height: 1.45; }
+
+    /* Bottom strip */
+    .bottom-strip { display: flex; margin: 14px 40px 0; gap: 8px; }
+    .bs-card { flex: 1; text-align: center; padding: 12px 8px; border-radius: 8px; background: var(--gray-50); border: 1px solid var(--gray-200); }
+    .bs-icon { font-size: 16px; margin-bottom: 2px; }
+    .bs-title { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 700; color: var(--gray-900); }
+    .bs-desc { font-size: 9px; color: var(--gray-400); line-height: 1.3; margin-top: 1px; }
+
+    /* Footer CTA */
+    .footer { margin-top: 14px; background: var(--gray-900); padding: 22px 40px; display: flex; justify-content: space-between; align-items: center; }
+    .footer h3 { font-family: 'DM Sans', sans-serif; font-size: 17px; font-weight: 700; color: var(--white); margin-bottom: 3px; }
+    .footer h3 .accent { color: #4ade80; }
+    .footer p { font-size: 10px; color: rgba(255,255,255,0.4); }
+    .footer-r { text-align: right; }
+    .footer-site { font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; color: var(--white); }
+    .footer-email { font-size: 11px; color: #c4b5fd; }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <div class="header">
+      <div class="logo">
+        <svg class="logo-cube" viewBox="0 0 40 40" fill="none">
+          <path d="M20 4L36 13V27L20 36L4 27V13L20 4Z" fill="#4C1D95"/>
+          <path d="M20 4L36 13L20 22L4 13L20 4Z" fill="#7C3AED"/>
+          <path d="M20 22L36 13V27L20 36V22Z" fill="#6D28D9"/>
+          <path d="M4 13L20 22V36L4 27V13Z" fill="#4C1D95"/>
+        </svg>
+        <span class="logo-text">embedo</span>
+      </div>
+      <div class="header-tag">Limited Spots Available</div>
+    </div>
+
+    <div class="hero">
+      <div class="hero-eyebrow">The "Never Miss A Customer" Package</div>
+      <h1>Get $2,400/mo Worth of AI Tools<br>for <span class="accent">$240/mo.</span></h1>
+      <div class="hero-sub">Your restaurant gets an entire AI team — voice, chat, social, website, CRM, and more. One flat price. No contracts. Cancel anytime.</div>
+    </div>
+
+    <div class="stack-section">
+      <div class="stack-label">What's included (value breakdown)</div>
+      <table class="stack-table">
+        <tr>
+          <td><div class="st-left"><div class="st-icon">🤖</div><div><div class="st-name">AI Voice Agent</div><div class="st-detail">Answers every call 24/7, takes reservations, captures leads</div></div></div></td>
+          <td class="st-value">$300/mo</td>
+          <td><span class="st-included">Included</span></td>
+        </tr>
+        <tr>
+          <td><div class="st-left"><div class="st-icon">💬</div><div><div class="st-name">Intelligent Chatbot</div><div class="st-detail">Website, Instagram, Facebook — instant replies around the clock</div></div></div></td>
+          <td class="st-value">$150/mo</td>
+          <td><span class="st-included">Included</span></td>
+        </tr>
+        <tr>
+          <td><div class="st-left"><div class="st-icon">🌐</div><div><div class="st-name">Premium Website</div><div class="st-detail">Mobile-first, fast-loading, with built-in booking and lead capture</div></div></div></td>
+          <td class="st-value">$200/mo</td>
+          <td><span class="st-included">Included</span></td>
+        </tr>
+        <tr>
+          <td><div class="st-left"><div class="st-icon">📱</div><div><div class="st-name">Social Media Engine</div><div class="st-detail">Auto-creates content, schedules posts, monitors and replies</div></div></div></td>
+          <td class="st-value">$800/mo</td>
+          <td><span class="st-included">Included</span></td>
+        </tr>
+        <tr>
+          <td><div class="st-left"><div class="st-icon">📊</div><div><div class="st-name">Lead Capture & Nurturing</div><div class="st-detail">Every inquiry captured, scored, routed, and followed up on</div></div></div></td>
+          <td class="st-value">$200/mo</td>
+          <td><span class="st-included">Included</span></td>
+        </tr>
+        <tr>
+          <td><div class="st-left"><div class="st-icon">📋</div><div><div class="st-name">Surveys, Reviews & CRM</div><div class="st-detail">Post-visit feedback, review amplification, unified contact history</div></div></div></td>
+          <td class="st-value">$250/mo</td>
+          <td><span class="st-included">Included</span></td>
+        </tr>
+        <tr>
+          <td><div class="st-left"><div class="st-icon">⏰</div><div><div class="st-name">15+ Hours Saved Weekly</div><div class="st-detail">Stop answering phones, posting manually, and chasing leads</div></div></div></td>
+          <td class="st-value">$500/mo</td>
+          <td><span class="st-included">Included</span></td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="bonuses">
+      <div class="bonus-label">Sign up this week and get these free</div>
+      <div class="bonus-row">
+        <div class="bonus-card">
+          <div class="bc-header"><span class="bc-icon">🚀</span><span class="bc-title">48-Hour Priority Deployment</span></div>
+          <div class="bc-desc">Full AI stack live in 2 business days</div>
+          <div class="bc-val"><span class="bc-old">$500 value</span><span class="bc-free">Free</span></div>
+        </div>
+        <div class="bonus-card">
+          <div class="bc-header"><span class="bc-icon">🎯</span><span class="bc-title">Custom Menu & Brand Training</span></div>
+          <div class="bc-desc">AI trained on your exact menu, hours, and policies</div>
+          <div class="bc-val"><span class="bc-old">$300 value</span><span class="bc-free">Free</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="price-block">
+      <div class="pb-old">
+        <div class="pb-old-label">Total Value</div>
+        <div class="pb-old-amount">$2,400</div>
+      </div>
+      <div class="pb-arrow">→</div>
+      <div class="pb-new">
+        <div class="pb-new-label">You Pay</div>
+        <div class="pb-new-amount">$240</div>
+        <div class="pb-new-period">per month</div>
+      </div>
+    </div>
+    <div class="savings-pill">That's 90% off — you save $2,160 every month</div>
+
+    <div class="guarantee">
+      <div class="guarantee-title">🛡️ 30-Day "It Pays for Itself" Guarantee</div>
+      <div class="guarantee-desc">If Embedo doesn't save you more than it costs in your first month, you don't pay. No questions asked. No contracts ever.</div>
+    </div>
+
+    <div class="bottom-strip">
+      <div class="bs-card"><div class="bs-icon">📍</div><div class="bs-title">1 Per Zip Code</div><div class="bs-desc">Exclusive to your area</div></div>
+      <div class="bs-card"><div class="bs-icon">⚡</div><div class="bs-title">Live in 48 Hours</div><div class="bs-desc">One call, fully deployed</div></div>
+      <div class="bs-card"><div class="bs-icon">🔓</div><div class="bs-title">No Contracts</div><div class="bs-desc">Cancel anytime, one click</div></div>
+      <div class="bs-card"><div class="bs-icon">📞</div><div class="bs-title">15-Min Setup Call</div><div class="bs-desc">We handle everything</div></div>
+    </div>
+
+    <div class="footer">
+      <div>
+        <h3>Ready to claim <span class="accent">your zip code?</span></h3>
+        <p>Limited availability. First come, first served.</p>
+      </div>
+      <div class="footer-r">
+        <div class="footer-site">embedo.io</div>
+        <div class="footer-email">jason@embedo.io</div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
