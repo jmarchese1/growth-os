@@ -12,6 +12,7 @@ import { calWebhookRoutes } from './routes/webhooks/cal.js';
 import { sendgridInboundRoutes } from './routes/webhooks/sendgrid-inbound.js';
 import { sendgridEventRoutes } from './routes/webhooks/sendgrid-events.js';
 import { trackRoutes } from './routes/track.js';
+import { leadCaptureRoutes } from './routes/leads.js';
 
 const log = createLogger('api:gateway');
 
