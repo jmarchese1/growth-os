@@ -781,7 +781,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
 
     await db.outboundCampaign.update({
       where: { id },
-      data: { sequenceSteps: steps },
+      data: { sequenceSteps: steps as unknown as Record<string, unknown>[] },
     });
 
     log.info({ campaignId: id, stepNumber: parsed.stepNumber }, 'Sequence step updated');
