@@ -378,6 +378,11 @@ export default async function EmailDetailPage({ params }: {
               <span className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Replied
               </span>
+              {pendingSteps.length > 0 && (
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-400" /> Scheduled
+                </span>
+              )}
             </div>
           </div>
 
