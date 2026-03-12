@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Embedo — AI Infrastructure for Restaurants</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #6366F1;
+      --primary-light: #818CF8;
+      --primary-dark: #4F46E5;
+      --violet: #7C3AED;
+      --violet-light: #c4b5fd;
+      --green: #22c55e;
+      --green-light: #4ade80;
+      --black: #0c0a18;
+      --gray-50: #f9f9f9;
+      --gray-100: #f0f0f0;
+      --gray-200: #e0e0e0;
+      --gray-500: #888888;
+      --gray-700: #444444;
+      --gray-900: #1a1a1a;
+      --white: #ffffff;
+    }
+
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: var(--gray-900);
+      background: var(--white);
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto;
+      background: var(--white);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ─── Header ─────────────────────────────────────────── */
+    .header {
+      background: linear-gradient(135deg, var(--black) 0%, #1e1b4b 100%);
+      padding: 36px 40px 32px;
+      position: relative;
+    }
+
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--violet), var(--primary-light));
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-cube {
+      width: 36px;
+      height: 36px;
+    }
+
+    .logo-text {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: 26px;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 40%, #7c3aed 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-tag {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--violet-light);
+      background: rgba(124, 58, 237, 0.15);
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(124, 58, 237, 0.25);
+    }
+
+    .hero-title {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--white);
+      line-height: 1.2;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .hero-title span {
+      background: linear-gradient(135deg, #4ade80, #22c55e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.5;
+      max-width: 480px;
+    }
+
+    /* ─── Stats Bar ──────────────────────────────────────── */
+    .stats-bar {
+      display: flex;
+      background: var(--gray-50);
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .stat-item {
+      flex: 1;
+      text-align: center;
+      padding: 14px 12px;
+      border-right: 1px solid var(--gray-200);
+    }
+
+    .stat-item:last-child { border-right: none; }
+
+    .stat-number {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--primary);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: var(--gray-500);
+      margin-top: 4px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ─── Main Content ───────────────────────────────────── */
+    .content {
+      padding: 28px 40px;
+    }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+
+    /* ─── Problem Section ────────────────────────────────── */
+    .problem-section {
+      margin-bottom: 24px;
+    }
+
+    .problem-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .problem-card {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .problem-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .problem-text {
+      font-size: 11.5px;
+      color: var(--gray-700);
+      line-height: 1.45;
+    }
+
+    .problem-text strong {
+      color: #b91c1c;
+      font-weight: 600;
+    }
+
+    /* ─── Services Grid ──────────────────────────────────── */
+    .services-section {
+      margin-bottom: 24px;
+    }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .service-card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 14px 12px;
+      text-align: center;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .service-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--violet));
+    }
+
+    .service-icon {
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+
+    .service-name {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gray-900);
+      margin-bottom: 3px;
+    }
+
+    .service-desc {
+      font-size: 9.5px;
+      color: var(--gray-500);
+      line-height: 1.35;
+    }
+
+    /* ─── How It Works ───────────────────────────────────── */
+    .how-section {
+      margin-bottom: 24px;
+    }
+
+    .how-steps {
+      display: flex;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .how-step {
+      flex: 1;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.04), rgba(124, 58, 237, 0.06));
+      border: 1px solid rgba(99, 102, 241, 0.12);
+      border-radius: 10px;
+      padding: 16px 14px;
+      text-align: center;
+      position: relative;
+    }
+
+    .step-number {
+      width: 26px;
+      height: 26px;
+      background: linear-gradient(135deg, var(--primary), var(--violet));
+      color: var(--white);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .step-title {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-900);
+      margin-bottom: 4px;
+    }
+
+    .step-desc {
+      font-size: 10px;
+      color: var(--gray-500);
+      line-height: 1.4;
+    }
+
+    .step-arrow {
+      display: flex;
+      align-items: center;
+      color: var(--primary-light);
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    /* ─── ROI Section ────────────────────────────────────── */
+    .roi-section {
+      margin-bottom: 24px;
+    }
+
+    .roi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .roi-card {
+      background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+      border: 1px solid #bbf7d0;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .roi-value {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      color: #16a34a;
+      line-height: 1;
+    }
+
+    .roi-label {
+      font-size: 10.5px;
+      color: #166534;
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    /* ─── Testimonial ────────────────────────────────────── */
+    .testimonial {
+      background: var(--gray-50);
+      border-radius: 10px;
+      padding: 18px 22px;
+      margin-bottom: 24px;
+      border-left: 3px solid var(--primary);
+    }
+
+    .testimonial-quote {
+      font-size: 12.5px;
+      font-style: italic;
+      color: var(--gray-700);
+      line-height: 1.55;
+      margin-bottom: 8px;
+    }
+
+    .testimonial-author {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--gray-900);
+    }
+
+    .testimonial-role {
+      font-size: 10px;
+      color: var(--gray-500);
+    }
+
+    /* ─── CTA Footer ─────────────────────────────────────── */
+    .cta-footer {
+      background: linear-gradient(135deg, var(--black) 0%, #1e1b4b 100%);
+      padding: 24px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+    }
+
+    .cta-footer::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--green-light), var(--green), var(--primary));
+    }
+
+    .cta-left h3 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 4px;
+    }
+
+    .cta-left p {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .cta-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .cta-button {
+      display: inline-block;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      text-align: center;
+    }
+
+    .cta-primary {
+      background: linear-gradient(135deg, #4ade80, #22c55e);
+      color: var(--black);
+    }
+
+    .cta-secondary {
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--white);
+    }
+
+    .cta-contact {
+      text-align: right;
+    }
+
+    .cta-contact a {
+      display: block;
+      font-size: 11px;
+      color: var(--violet-light);
+      text-decoration: none;
+    }
+
+    .cta-contact a + a {
+      margin-top: 2px;
+    }
+
+    /* ─── Print Optimizations ────────────────────────────── */
+    @media print {
+      body { background: white; }
+      .page { box-shadow: none; }
+    }
+
+    @media screen {
+      body { background: #e5e5e5; padding: 20px; }
+      .page { box-shadow: 0 4px 24px rgba(0,0,0,0.12); }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="header-top">
+        <div class="logo">
+          <svg class="logo-cube" viewBox="0 0 40 40" fill="none">
+            <path d="M20 4L36 13V27L20 36L4 27V13L20 4Z" fill="#4C1D95"/>
+            <path d="M20 4L36 13L20 22L4 13L20 4Z" fill="#7C3AED"/>
+            <path d="M20 22L36 13V27L20 36V22Z" fill="#6D28D9"/>
+            <path d="M4 13L20 22V36L4 27V13Z" fill="#4C1D95"/>
+          </svg>
+          <span class="logo-text">embedo</span>
+        </div>
+        <div class="header-tag">AI Infrastructure for Restaurants</div>
+      </div>
+      <h1 class="hero-title">
+        Your Restaurant Runs on People.<br>
+        Let AI Handle <span>Everything Else.</span>
+      </h1>
+      <p class="hero-subtitle">
+        Embedo deploys a complete AI layer for your restaurant — voice agents, chatbots, websites, social media, and lead management — so you can focus on what matters: your food and your customers.
+      </p>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="stat-item">
+        <div class="stat-number">73%</div>
+        <div class="stat-label">of calls go unanswered</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">15hrs</div>
+        <div class="stat-label">weekly on admin tasks</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">$2,400</div>
+        <div class="stat-label">avg monthly savings</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">3x</div>
+        <div class="stat-label">more leads captured</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- Problem -->
+      <div class="problem-section">
+        <div class="section-label">The Problem</div>
+        <div class="problem-grid">
+          <div class="problem-card">
+            <div class="problem-icon">📞</div>
+            <div class="problem-text"><strong>Missed calls = missed revenue.</strong> Every unanswered call is a lost reservation, catering order, or new customer.</div>
+          </div>
+          <div class="problem-card">
+            <div class="problem-icon">⏰</div>
+            <div class="problem-text"><strong>You're buried in busywork.</strong> Social media, review responses, follow-ups — it never ends and it pulls you from the kitchen.</div>
+          </div>
+          <div class="problem-card">
+            <div class="problem-icon">🌐</div>
+            <div class="problem-text"><strong>Your online presence is outdated.</strong> Stale website, inconsistent social posts, no way to capture leads online.</div>
+          </div>
+          <div class="problem-card">
+            <div class="problem-icon">📉</div>
+            <div class="problem-text"><strong>No system to grow.</strong> No CRM, no follow-ups, no data. Customers come and go without a trace.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Services -->
+      <div class="services-section">
+        <div class="section-label">What You Get — 8 AI Modules, One Platform</div>
+        <div class="services-grid">
+          <div class="service-card">
+            <div class="service-icon">🤖</div>
+            <div class="service-name">AI Voice Agent</div>
+            <div class="service-desc">Answers every call 24/7. Takes reservations, captures leads.</div>
+          </div>
+          <div class="service-card">
+            <div class="service-icon">💬</div>
+            <div class="service-name">AI Chatbot</div>
+            <div class="service-desc">Web, Instagram & Facebook DMs. Instant customer support.</div>
+          </div>
+          <div class="service-card">
+            <div class="service-icon">🌐</div>
+            <div class="service-name">Website Generator</div>
+            <div class="service-desc">Premium site built and deployed in minutes, not weeks.</div>
+          </div>
+          <div class="service-card">
+            <div class="service-icon">📱</div>
+            <div class="service-name">Social Media AI</div>
+            <div class="service-desc">Auto-generates posts, monitors comments, schedules content.</div>
+          </div>
+          <div class="service-card">
+            <div class="service-icon">📊</div>
+            <div class="service-name">Lead Engine</div>
+            <div class="service-desc">Captures, scores & nurtures every lead automatically.</div>
+          </div>
+          <div class="service-card">
+            <div class="service-icon">📋</div>
+            <div class="service-name">Smart Surveys</div>
+            <div class="service-desc">Post-visit feedback via SMS/email with auto follow-up.</div>
+          </div>
+          <div class="service-card">
+            <div class="service-icon">📝</div>
+            <div class="service-name">AI Proposals</div>
+            <div class="service-desc">Custom proposals generated and tracked automatically.</div>
+          </div>
+          <div class="service-card">
+            <div class="service-icon">👥</div>
+            <div class="service-name">CRM</div>
+            <div class="service-desc">Contacts, appointments, history — all in one place.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- How It Works -->
+      <div class="how-section">
+        <div class="section-label">How It Works</div>
+        <div class="how-steps">
+          <div class="how-step">
+            <div class="step-number">1</div>
+            <div class="step-title">15-Min Discovery Call</div>
+            <div class="step-desc">We learn about your restaurant and what you need most.</div>
+          </div>
+          <div class="step-arrow">&rarr;</div>
+          <div class="how-step">
+            <div class="step-number">2</div>
+            <div class="step-title">AI Deployment</div>
+            <div class="step-desc">We configure and launch your AI modules within 48 hours.</div>
+          </div>
+          <div class="step-arrow">&rarr;</div>
+          <div class="how-step">
+            <div class="step-number">3</div>
+            <div class="step-title">You Focus on Food</div>
+            <div class="step-desc">AI handles calls, leads, social, and your online presence.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROI -->
+      <div class="roi-section">
+        <div class="section-label">Expected Results</div>
+        <div class="roi-grid">
+          <div class="roi-card">
+            <div class="roi-value">$2,400+</div>
+            <div class="roi-label">Monthly savings on labor & tools</div>
+          </div>
+          <div class="roi-card">
+            <div class="roi-value">15+ hrs</div>
+            <div class="roi-label">Saved per week on admin work</div>
+          </div>
+          <div class="roi-card">
+            <div class="roi-value">3x</div>
+            <div class="roi-label">More leads captured & converted</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Testimonial -->
+      <div class="testimonial">
+        <div class="testimonial-quote">"We were losing 20+ calls a week. After Embedo, our AI agent picks up every single one. Reservations are up 40% and I haven't touched the phone in months."</div>
+        <div class="testimonial-author">Marco R.</div>
+        <div class="testimonial-role">Owner, Bella Cucina — Austin, TX</div>
+      </div>
+
+    </div>
+
+    <!-- CTA Footer -->
+    <div class="cta-footer">
+      <div class="cta-left">
+        <h3>Ready to automate your restaurant?</h3>
+        <p>No contracts. Cancel anytime. See results in the first week.</p>
+      </div>
+      <div class="cta-actions">
+        <div class="cta-contact">
+          <a href="https://embedo.io">embedo.io</a>
+          <a href="mailto:jason@embedo.io">jason@embedo.io</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
