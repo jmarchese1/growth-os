@@ -39,6 +39,8 @@ export function PendingSequence({
   const [saving, setSaving] = useState(false);
   const [deletingStep, setDeletingStep] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiGenerating, setAiGenerating] = useState(false);
 
   async function handleCancelAll() {
     if (!confirm(`Cancel all pending follow-ups for ${prospectName}? This cannot be undone.`)) return;
