@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useSession } from '../../../components/auth/session-provider';
 
 export default function SettingsPage() {
@@ -9,7 +10,7 @@ export default function SettingsPage() {
     <div className="p-8 animate-fade-up">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Settings</h1>
-        <p className="text-sm text-slate-500 mt-1">Manage your business profile and integrations</p>
+        <p className="text-sm text-slate-500 mt-1">Manage your business profile and team</p>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
@@ -46,20 +47,34 @@ export default function SettingsPage() {
       </div>
 
       <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
-        <h3 className="text-sm font-semibold text-slate-700 mb-4">Integrations</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-slate-700">Integrations</h3>
+          <Link href="/integrations"
+            className="px-3 py-1.5 text-xs font-medium text-violet-600 bg-violet-50 border border-violet-200 rounded-lg hover:bg-violet-100 transition-colors">
+            Manage All
+          </Link>
+        </div>
         <div className="space-y-3">
           {[
-            { name: 'Voice Agent (ElevenLabs)', status: 'Not configured' },
-            { name: 'Phone Number (Twilio)', status: 'Not configured' },
-            { name: 'Instagram', status: 'Not connected' },
-            { name: 'Facebook', status: 'Not connected' },
-            { name: 'Booking Calendar (Cal.com)', status: 'Not configured' },
-            { name: 'Website (Vercel)', status: 'Not deployed' },
+            { name: 'Voice Agent (ElevenLabs)', status: 'Not configured', icon: '🎙' },
+            { name: 'Phone Number (Twilio)', status: 'Not configured', icon: '📞' },
+            { name: 'Instagram', status: 'Not connected', icon: '📷' },
+            { name: 'Facebook', status: 'Not connected', icon: '👤' },
+            { name: 'Booking Calendar (Cal.com)', status: 'Not configured', icon: '📅' },
+            { name: 'Email Delivery (SendGrid)', status: 'Not configured', icon: '📧' },
+            { name: 'AI Engine (Anthropic)', status: 'Not configured', icon: '🤖' },
+            { name: 'Website (Vercel)', status: 'Not deployed', icon: '🌐' },
           ].map(({ name, status }) => (
-            <div key={name} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
+            <Link key={name} href="/integrations"
+              className="flex items-center justify-between py-2.5 px-1 border-b border-slate-100 last:border-0 hover:bg-slate-50 -mx-1 rounded-lg transition-colors group">
               <span className="text-sm text-slate-600">{name}</span>
-              <span className="text-xs text-slate-400">{status}</span>
-            </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-400">{status}</span>
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-slate-300 group-hover:text-violet-500 transition-colors">
+                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+            </Link>
           ))}
         </div>
       </div>
