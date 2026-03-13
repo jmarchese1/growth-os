@@ -4,7 +4,7 @@ export default function ContactsPage() {
   return (
     <div className="p-8 animate-fade-up">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white tracking-tight">Contacts & Leads</h1>
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Contacts & Leads</h1>
         <p className="text-sm text-slate-500 mt-1">Unified customer database from all channels</p>
       </div>
 
@@ -19,31 +19,30 @@ export default function ContactsPage() {
           icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg>} />
       </div>
 
-      {/* Lead Source Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-6">
-          <h3 className="text-sm font-semibold text-slate-300 mb-4">Lead Sources</h3>
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <h3 className="text-sm font-semibold text-slate-700 mb-4">Lead Sources</h3>
           <div className="space-y-3">
             {['Voice Agent', 'Chatbot', 'Website Form', 'Social Media', 'Survey', 'Manual'].map((source) => (
               <div key={source} className="flex items-center justify-between">
-                <span className="text-sm text-slate-400">{source}</span>
+                <span className="text-sm text-slate-600">{source}</span>
                 <div className="flex items-center gap-3">
-                  <div className="w-32 h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
-                    <div className="h-full bg-violet-500/40 rounded-full" style={{ width: '0%' }} />
+                  <div className="w-32 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-violet-400 rounded-full" style={{ width: '0%' }} />
                   </div>
-                  <span className="text-xs text-slate-600 w-8 text-right">0</span>
+                  <span className="text-xs text-slate-400 w-8 text-right">0</span>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-6">
-          <h3 className="text-sm font-semibold text-slate-300 mb-4">Pipeline</h3>
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <h3 className="text-sm font-semibold text-slate-700 mb-4">Pipeline</h3>
           <div className="space-y-3">
             {['New', 'Contacted', 'Qualified', 'Converted'].map((stage) => (
               <div key={stage} className="flex items-center justify-between">
-                <span className="text-sm text-slate-400">{stage}</span>
+                <span className="text-sm text-slate-600">{stage}</span>
                 <span className="text-sm font-medium text-slate-500">0</span>
               </div>
             ))}
@@ -51,23 +50,22 @@ export default function ContactsPage() {
         </div>
       </div>
 
-      {/* Contacts Table */}
       <div>
-        <h2 className="text-sm font-semibold text-slate-300 mb-4">All Contacts</h2>
-        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
+        <h2 className="text-sm font-semibold text-slate-700 mb-4">All Contacts</h2>
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/[0.06]">
-                <th className="text-left text-[10px] font-semibold text-slate-600 uppercase tracking-wider px-5 py-3">Name</th>
-                <th className="text-left text-[10px] font-semibold text-slate-600 uppercase tracking-wider px-5 py-3">Email</th>
-                <th className="text-left text-[10px] font-semibold text-slate-600 uppercase tracking-wider px-5 py-3">Phone</th>
-                <th className="text-left text-[10px] font-semibold text-slate-600 uppercase tracking-wider px-5 py-3">Source</th>
-                <th className="text-left text-[10px] font-semibold text-slate-600 uppercase tracking-wider px-5 py-3">Score</th>
+              <tr className="border-b border-slate-100">
+                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Name</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Email</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Phone</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Source</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Score</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td colSpan={5} className="px-5 py-12 text-center text-sm text-slate-600">
+                <td colSpan={5} className="px-5 py-12 text-center text-sm text-slate-400">
                   No contacts yet. Leads from voice, chat, and web will appear here.
                 </td>
               </tr>

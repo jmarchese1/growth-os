@@ -4,7 +4,7 @@ export default function SocialMediaPage() {
   return (
     <div className="p-8 animate-fade-up">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white tracking-tight">Social Media</h1>
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Social Media</h1>
         <p className="text-sm text-slate-500 mt-1">AI content generation, scheduling & engagement</p>
       </div>
 
@@ -19,29 +19,27 @@ export default function SocialMediaPage() {
           icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" /></svg>} />
       </div>
 
-      {/* Connected Platforms */}
       <div className="mb-8">
-        <h2 className="text-sm font-semibold text-slate-300 mb-4">Connected Platforms</h2>
+        <h2 className="text-sm font-semibold text-slate-700 mb-4">Connected Platforms</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {['Instagram', 'Facebook', 'Google My Business', 'TikTok'].map((platform) => (
-            <div key={platform} className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-white/[0.04] flex items-center justify-center text-slate-600">
+            <div key={platform} className="bg-white border border-slate-200 rounded-xl p-4 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400">
                 <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" /></svg>
               </div>
               <div>
-                <p className="text-sm text-slate-400">{platform}</p>
-                <p className="text-[10px] text-slate-700">Not connected</p>
+                <p className="text-sm text-slate-700">{platform}</p>
+                <p className="text-[10px] text-slate-400">Not connected</p>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Content Calendar */}
       <div>
-        <h2 className="text-sm font-semibold text-slate-300 mb-4">Content Calendar</h2>
-        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-8 text-center">
-          <p className="text-slate-600 text-sm">Connect a social account to start generating and scheduling content.</p>
+        <h2 className="text-sm font-semibold text-slate-700 mb-4">Content Calendar</h2>
+        <div className="bg-white border border-slate-200 rounded-xl p-8 text-center">
+          <p className="text-slate-400 text-sm">Connect a social account to start generating and scheduling content.</p>
         </div>
       </div>
     </div>

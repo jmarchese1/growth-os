@@ -4,43 +4,24 @@ import ModuleStatus from '../../components/ui/module-status';
 export default function DashboardOverview() {
   return (
     <div className="p-8 animate-fade-up">
-      {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Dashboard</h1>
         <p className="text-sm text-slate-500 mt-1">Overview of your Embedo AI services</p>
       </div>
 
-      {/* KPI Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <KpiCard
-          label="Total Contacts"
-          value="0"
-          icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1z" /></svg>}
-          color="violet"
-        />
-        <KpiCard
-          label="Calls This Month"
-          value="0"
-          icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>}
-          color="sky"
-        />
-        <KpiCard
-          label="Chat Conversations"
-          value="0"
-          icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7z" clipRule="evenodd" /></svg>}
-          color="emerald"
-        />
-        <KpiCard
-          label="Appointments"
-          value="0"
-          icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" /></svg>}
-          color="amber"
-        />
+        <KpiCard label="Total Contacts" value="0" color="violet"
+          icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1z" /></svg>} />
+        <KpiCard label="Calls This Month" value="0" color="sky"
+          icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>} />
+        <KpiCard label="Chat Conversations" value="0" color="emerald"
+          icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7z" clipRule="evenodd" /></svg>} />
+        <KpiCard label="Appointments" value="0" color="amber"
+          icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" /></svg>} />
       </div>
 
-      {/* Module Status */}
       <div className="mb-8">
-        <h2 className="text-sm font-semibold text-slate-300 mb-4">Active Modules</h2>
+        <h2 className="text-sm font-semibold text-slate-700 mb-4">Active Modules</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <ModuleStatus name="Voice Agent" active={false} description="AI receptionist for inbound calls"
             icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" /></svg>} />
@@ -61,11 +42,10 @@ export default function DashboardOverview() {
         </div>
       </div>
 
-      {/* Recent Activity */}
       <div>
-        <h2 className="text-sm font-semibold text-slate-300 mb-4">Recent Activity</h2>
-        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-8 text-center">
-          <p className="text-slate-600 text-sm">No activity yet. Your modules will populate data here once activated.</p>
+        <h2 className="text-sm font-semibold text-slate-700 mb-4">Recent Activity</h2>
+        <div className="bg-white border border-slate-200 rounded-xl p-8 text-center">
+          <p className="text-slate-400 text-sm">No activity yet. Your modules will populate data here once activated.</p>
         </div>
       </div>
     </div>

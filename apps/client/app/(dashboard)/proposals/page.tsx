@@ -4,7 +4,7 @@ export default function ProposalsPage() {
   return (
     <div className="p-8 animate-fade-up">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white tracking-tight">Proposals</h1>
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Proposals</h1>
         <p className="text-sm text-slate-500 mt-1">AI-generated proposals with view tracking</p>
       </div>
 
@@ -19,25 +19,20 @@ export default function ProposalsPage() {
           icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3z" clipRule="evenodd" /></svg>} />
       </div>
 
-      {/* Proposals Table */}
       <div>
-        <h2 className="text-sm font-semibold text-slate-300 mb-4">All Proposals</h2>
-        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
+        <h2 className="text-sm font-semibold text-slate-700 mb-4">All Proposals</h2>
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/[0.06]">
-                <th className="text-left text-[10px] font-semibold text-slate-600 uppercase tracking-wider px-5 py-3">Recipient</th>
-                <th className="text-left text-[10px] font-semibold text-slate-600 uppercase tracking-wider px-5 py-3">Created</th>
-                <th className="text-left text-[10px] font-semibold text-slate-600 uppercase tracking-wider px-5 py-3">Status</th>
-                <th className="text-left text-[10px] font-semibold text-slate-600 uppercase tracking-wider px-5 py-3">Views</th>
+              <tr className="border-b border-slate-100">
+                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Recipient</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Created</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Status</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Views</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td colSpan={4} className="px-5 py-12 text-center text-sm text-slate-600">
-                  No proposals yet. Generated proposals and their tracking data will appear here.
-                </td>
-              </tr>
+              <tr><td colSpan={4} className="px-5 py-12 text-center text-sm text-slate-400">No proposals yet. Generated proposals and their tracking data will appear here.</td></tr>
             </tbody>
           </table>
         </div>
