@@ -1,9 +1,149 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '../../lib/supabase/client';
+import EmbedoLogo from '../../components/EmbedoLogo';
 
+/* ── Particle canvas ─────────────────────────────────────────────── */
+interface Particle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  radius: number;
+  opacity: number;
+  violet: boolean;
+}
+
+function OrbitalParticleCanvas() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mouseRef = useRef({ x: -9999, y: -9999 });
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animId: number;
+    const particles: Particle[] = [];
+    const COUNT = 70;
+    const CONNECT_DIST = 160;
+    const MOUSE_DIST = 200;
+
+    const resize = () => {
+      canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+      canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    };
+    resize();
+
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
+
+    const handleMove = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    };
+    window.addEventListener('mousemove', handleMove);
+
+    const w = () => canvas.offsetWidth;
+    const h = () => canvas.offsetHeight;
+
+    for (let i = 0; i < COUNT; i++) {
+      particles.push({
+        x: Math.random() * w(),
+        y: Math.random() * h(),
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        radius: Math.random() * 1.6 + 0.5,
+        opacity: Math.random() * 0.5 + 0.15,
+        violet: Math.random() < 0.5,
+      });
+    }
+
+    const draw = () => {
+      ctx.clearRect(0, 0, w(), h());
+      const mx = mouseRef.current.x;
+      const my = mouseRef.current.y;
+
+      for (let i = 0; i < particles.length; i++) {
+        const a = particles[i];
+
+        // Mouse repulsion
+        const dmx = a.x - mx;
+        const dmy = a.y - my;
+        const md = Math.sqrt(dmx * dmx + dmy * dmy);
+        if (md < MOUSE_DIST && md > 0) {
+          const force = (1 - md / MOUSE_DIST) * 0.4;
+          a.vx += (dmx / md) * force;
+          a.vy += (dmy / md) * force;
+        }
+
+        // Damping
+        a.vx *= 0.995;
+        a.vy *= 0.995;
+
+        // Lines between nearby particles
+        for (let j = i + 1; j < particles.length; j++) {
+          const b = particles[j];
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < CONNECT_DIST) {
+            const alpha = (1 - dist / CONNECT_DIST) * 0.12;
+            const lineColor = (a.violet && b.violet)
+              ? `rgba(139,92,246,${alpha})`
+              : (!a.violet && !b.violet)
+              ? `rgba(99,102,241,${alpha})`
+              : `rgba(120,87,244,${alpha})`;
+            ctx.beginPath();
+            ctx.strokeStyle = lineColor;
+            ctx.lineWidth = 0.8;
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+
+        // Draw particle
+        ctx.beginPath();
+        ctx.arc(a.x, a.y, a.radius, 0, Math.PI * 2);
+        ctx.fillStyle = a.violet
+          ? `rgba(167,139,250,${a.opacity})`
+          : `rgba(99,102,241,${a.opacity})`;
+        ctx.fill();
+
+        // Move
+        a.x += a.vx;
+        a.y += a.vy;
+        if (a.x < 0 || a.x > w()) a.vx *= -1;
+        if (a.y < 0 || a.y > h()) a.vy *= -1;
+      }
+
+      animId = requestAnimationFrame(draw);
+    };
+
+    draw();
+
+    return () => {
+      cancelAnimationFrame(animId);
+      ro.disconnect();
+      window.removeEventListener('mousemove', handleMove);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full"
+      style={{ opacity: 0.6 }}
+    />
+  );
+}
+
+/* ── Login page ──────────────────────────────────────────────────── */
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -61,18 +201,14 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0c0a18] relative overflow-hidden">
-      {/* Ambient background */}
+      {/* Dynamic particle canvas background */}
+      <OrbitalParticleCanvas />
+
+      {/* Ambient glow orbs */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-32 left-1/4 w-[560px] h-[560px] rounded-full bg-violet-700/8 blur-[110px] animate-float-orb" />
         <div className="absolute top-2/3 -right-20 w-[420px] h-[420px] rounded-full bg-indigo-600/6 blur-[100px] animate-float-orb-b" />
         <div className="absolute bottom-0 left-10 w-[300px] h-[300px] rounded-full bg-violet-900/8 blur-[80px]" />
-      </div>
-
-      {/* Orbital rings */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] opacity-[0.04] pointer-events-none">
-        <div className="absolute inset-0 rounded-full border border-violet-400 animate-orbital-slow" />
-        <div className="absolute inset-[100px] rounded-full border border-indigo-400 animate-orbital-reverse" />
-        <div className="absolute inset-[200px] rounded-full border border-violet-300 animate-orbital-slow" />
       </div>
 
       {/* Login card */}
@@ -80,16 +216,12 @@ export default function LoginPage() {
         <div className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-2xl shadow-2xl overflow-hidden">
           {/* Header */}
           <div className="px-8 pt-10 pb-6 text-center">
-            {/* Logo */}
-            <div className="relative w-16 h-16 mx-auto mb-5">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
-                <svg viewBox="0 0 24 24" fill="none" className="w-8 h-8">
-                  <path d="M12 2L2 7l10 5 10-5-10-5z" fill="white" fillOpacity="0.9" />
-                  <path d="M2 17l10 5 10-5" stroke="white" strokeOpacity="0.6" strokeWidth="2" strokeLinecap="round" />
-                  <path d="M2 12l10 5 10-5" stroke="white" strokeOpacity="0.8" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </div>
-              <div className="absolute inset-0 rounded-2xl bg-violet-500/20 blur-xl" />
+            {/* Embedo Logo — isometric cube with orbiting particles */}
+            <div className="relative mx-auto mb-6 flex items-center justify-center" style={{ width: 100, height: 100 }}>
+              {/* Glow behind logo */}
+              <div className="absolute inset-0 rounded-full bg-violet-500/15 blur-2xl" />
+              <div className="absolute inset-4 rounded-full bg-violet-600/10 blur-xl" />
+              <EmbedoLogo size={72} />
             </div>
 
             <h1 className="text-xl font-bold text-white tracking-tight">Welcome back</h1>
