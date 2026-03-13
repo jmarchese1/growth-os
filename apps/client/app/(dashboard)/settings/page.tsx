@@ -48,25 +48,52 @@ export default function SettingsPage() {
 
       <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-slate-700">Integrations</h3>
+          <div>
+            <h3 className="text-sm font-semibold text-slate-700">Integrations</h3>
+            <p className="text-xs text-slate-400 mt-0.5">Services and connected social accounts</p>
+          </div>
           <Link href="/integrations"
             className="px-3 py-1.5 text-xs font-medium text-violet-600 bg-violet-50 border border-violet-200 rounded-lg hover:bg-violet-100 transition-colors">
             Manage All
           </Link>
         </div>
-        <div className="space-y-3">
+
+        <div className="space-y-1">
+          <p className="text-[10px] text-slate-400 uppercase tracking-wider px-1 pt-1 pb-2">Embedo Services</p>
           {[
-            { name: 'Voice Agent (ElevenLabs)', status: 'Not configured', icon: '🎙' },
-            { name: 'Phone Number (Twilio)', status: 'Not configured', icon: '📞' },
-            { name: 'Instagram', status: 'Not connected', icon: '📷' },
-            { name: 'Facebook', status: 'Not connected', icon: '👤' },
-            { name: 'Booking Calendar (Cal.com)', status: 'Not configured', icon: '📅' },
-            { name: 'Email Delivery (SendGrid)', status: 'Not configured', icon: '📧' },
-            { name: 'AI Engine (Anthropic)', status: 'Not configured', icon: '🤖' },
-            { name: 'Website (Vercel)', status: 'Not deployed', icon: '🌐' },
+            { name: 'AI Voice Agent', status: 'Not deployed' },
+            { name: 'Dedicated Phone Number', status: 'Not provisioned' },
+            { name: 'AI Chatbot', status: 'Not deployed' },
+            { name: 'Email Delivery', status: 'Not configured' },
+            { name: 'Booking Calendar', status: 'Not configured' },
+            { name: 'Business Website', status: 'Not deployed' },
           ].map(({ name, status }) => (
             <Link key={name} href="/integrations"
-              className="flex items-center justify-between py-2.5 px-1 border-b border-slate-100 last:border-0 hover:bg-slate-50 -mx-1 rounded-lg transition-colors group">
+              className="flex items-center justify-between py-2.5 px-2 border-b border-slate-100 last:border-0 hover:bg-slate-50 rounded-lg transition-colors group">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-slate-600">{name}</span>
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-violet-50 text-violet-500 border border-violet-100">Managed</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-400">{status}</span>
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-slate-300 group-hover:text-violet-500 transition-colors">
+                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        <div className="space-y-1 mt-4">
+          <p className="text-[10px] text-slate-400 uppercase tracking-wider px-1 pt-1 pb-2">Social Accounts</p>
+          {[
+            { name: 'Instagram', status: 'Not connected' },
+            { name: 'Facebook', status: 'Not connected' },
+            { name: 'Google Business Profile', status: 'Not connected' },
+            { name: 'TikTok', status: 'Not connected' },
+          ].map(({ name, status }) => (
+            <Link key={name} href="/integrations"
+              className="flex items-center justify-between py-2.5 px-2 border-b border-slate-100 last:border-0 hover:bg-slate-50 rounded-lg transition-colors group">
               <span className="text-sm text-slate-600">{name}</span>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-slate-400">{status}</span>
