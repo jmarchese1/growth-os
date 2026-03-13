@@ -6,6 +6,17 @@
         "hooks": [
           {
             "type": "command",
+            "command": "bash /c/Users/jason/.claude/scripts/auto-stage.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
             "command": "bash /c/Users/jason/.claude/scripts/auto-commit.sh"
           }
         ]
