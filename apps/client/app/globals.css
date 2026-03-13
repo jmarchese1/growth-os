@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+  }
+  body {
+    @apply bg-[#0c0a18] text-white;
+    font-family: var(--font-sans), 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 40%, #7c3aed 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .bg-grid-dark {
+    background-image:
+      linear-gradient(rgba(124,58,237,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,58,237,0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .glow-card {
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+  .glow-card:hover {
+    border-color: rgba(124,58,237,0.25) !important;
+    box-shadow: 0 0 28px rgba(124,58,237,0.10), inset 0 0 20px rgba(124,58,237,0.03);
+  }
+}
+
+/* ── Orbital particles ─────────────────────────────────────────────────────── */
+@keyframes logo-orbit {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Background orbs ───────────────────────────────────────────────────────── */
+@keyframes float-orb {
+  0%, 100% { transform: translateY(0px) scale(1);    opacity: 0.7; }
+  50%       { transform: translateY(-24px) scale(1.04); opacity: 1;   }
+}
+@keyframes float-orb-b {
+  0%, 100% { transform: translateY(0px) scale(1);    opacity: 0.5; }
+  50%       { transform: translateY(18px) scale(0.96); opacity: 0.8; }
+}
+
+.animate-float-orb   { animation: float-orb   9s ease-in-out infinite; }
+.animate-float-orb-b { animation: float-orb-b 12s ease-in-out infinite 2s; }
+
+/* ── Shimmer / glow pulse ──────────────────────────────────────────────────── */
+@keyframes shimmer-pulse {
+  0%, 100% { opacity: 0.35; }
+  50%       { opacity: 0.65; }
+}
+.animate-shimmer { animation: shimmer-pulse 4s ease-in-out infinite; }
+
+/* ── Page fade-in ──────────────────────────────────────────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+.animate-fade-up {
+  animation: fade-up 0.35s ease forwards;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.35); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(124,58,237,0.55); }
