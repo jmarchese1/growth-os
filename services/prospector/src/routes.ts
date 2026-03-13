@@ -916,4 +916,95 @@ Output format:
     log.info({ campaignId: id, removedStep: stepNum }, 'Sequence step removed');
     return reply.send({ ok: true, remainingSteps: filtered });
   });
+
+  // ─── Delete a prospect ────────────────────────────────────────────────────
+  app.delete('/prospects/:id', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const prospect = await db.prospectBusiness.findUnique({ where: { id } });
+    if (!prospect) throw new NotFoundError('Prospect', id);
+
+    // Delete messages first (FK constraint)
+    await db.outreachMessage.deleteMany({ where: { prospectId: id } });
+    await db.prospectBusiness.delete({ where: { id } });
+
+    log.info({ prospectId: id, name: prospect.name }, 'Prospect deleted');
+    return reply.send({ ok: true });
+  });
+
+  // ─── Seed a test lead (dev only) ──────────────────────────────────────────
+  app.post('/seed/test-lead', async (_request, reply) => {
+    // Find or create a test campaign
+    let campaign = await db.outboundCampaign.findFirst({
+      where: { name: 'Test Campaign — Seed' },
+    });
+
+    if (!campaign) {
+      campaign = await db.outboundCampaign.create({
+        data: {
+          name: 'Test Campaign — Seed',
+          targetCity: 'Miami',
+          targetState: 'FL',
+          targetCountry: 'US',
+          targetIndustry: 'RESTAURANT',
+          emailSubject: 'Quick question about {{businessName}}',
+          emailBodyHtml: '<p>Hey {{businessName}},</p><p>Wanted to reach out about automating your front-of-house operations.</p><p>Jason</p>',
+          active: true,
+        },
+      });
+    }
+
+    // Create a test prospect that looks like a real replied lead
+    const prospect = await db.prospectBusiness.create({
+      data: {
+        campaignId: campaign.id,
+        name: 'La Rosa Ristorante',
+        email: 'marco@larosamiami.com',
+        phone: '+1 (305) 555-0142',
+        website: 'https://larosamiami.com',
+        emailSource: 'apollo',
+        contactFirstName: 'Marco',
+        contactLastName: 'DeLuca',
+        contactTitle: 'Owner',
+        googleRating: 4.7,
+        googleReviewCount: 328,
+        status: 'REPLIED',
+        address: { street: '1420 Collins Ave', city: 'Miami Beach', state: 'FL', zip: '33139' },
+      },
+    });
+
+    // Create the cold email that was "sent"
+    await db.outreachMessage.create({
+      data: {
+        prospectId: prospect.id,
+        channel: 'EMAIL',
+        subject: 'Quick question about La Rosa Ristorante',
+        body: '<p>Hey La Rosa Ristorante,</p><p>I noticed you have great reviews on Google (4.7 stars!) but I couldn\'t find an easy way to book a table or ask a question after hours. A lot of restaurants in Miami Beach are losing 20-30% of potential reservations from missed calls.</p><p>We built an AI system that handles phone calls, takes reservations, and captures leads 24/7 — all sounding completely natural. Would it be worth a quick chat to see if it\'d work for La Rosa?</p><p>Jason</p>',
+        status: 'DELIVERED',
+        stepNumber: 1,
+        sentAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+        openedAt: new Date(Date.now() - 2.5 * 24 * 60 * 60 * 1000), // opened 12h later
+        trackingPixelId: randomUUID(),
+      },
+    });
+
+    // Create the reply
+    await db.outreachMessage.create({
+      data: {
+        prospectId: prospect.id,
+        channel: 'EMAIL',
+        subject: 'Re: Quick question about La Rosa Ristorante',
+        body: '',
+        status: 'REPLIED',
+        stepNumber: 1,
+        sentAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+        repliedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        replyBody: 'Hey Jason, yeah we definitely lose reservations from missed calls especially on weekends. How does the AI phone thing work exactly? Can it handle our specials and private dining inquiries? Would love to learn more. — Marco',
+        replyCategory: 'POSITIVE',
+        trackingPixelId: randomUUID(),
+      },
+    });
+
+    log.info({ prospectId: prospect.id, campaignId: campaign.id }, 'Test lead seeded');
+    return reply.send({ ok: true, prospectId: prospect.id, campaignId: campaign.id });
+  });
 }

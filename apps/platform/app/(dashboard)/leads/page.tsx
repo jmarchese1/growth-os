@@ -1,5 +1,8 @@
+import Link from 'next/link';
+import { LeadRowActions } from './lead-row-actions';
+import { SeedTestLead } from './seed-button';
+
 const PROSPECTOR_URL = process.env['PROSPECTOR_URL'] ?? 'http://localhost:3009';
-const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3001';
 
 interface ProspectLead {
   id: string;
@@ -37,12 +40,10 @@ interface Campaign {
 
 async function getLeads(): Promise<{ items: ProspectLead[]; total: number }> {
   try {
-    // Fetch all campaigns first to get IDs
     const campaignsRes = await fetch(`${PROSPECTOR_URL}/campaigns`, { cache: 'no-store' });
     if (!campaignsRes.ok) return { items: [], total: 0 };
     const campaigns: Campaign[] = await campaignsRes.json();
 
-    // Fetch REPLIED + MEETING_BOOKED prospects from each campaign
     const allLeads: ProspectLead[] = [];
     for (const campaign of campaigns) {
       const res = await fetch(
@@ -58,9 +59,7 @@ async function getLeads(): Promise<{ items: ProspectLead[]; total: number }> {
       allLeads.push(...items);
     }
 
-    // Sort by most recent activity
     allLeads.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-
     return { items: allLeads, total: allLeads.length };
   } catch {
     return { items: [], total: 0 };
@@ -89,11 +88,14 @@ export default async function LeadsPage() {
 
   return (
     <div className="p-8 space-y-8 animate-fade-up">
-      <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">Leads</h1>
-        <p className="text-slate-400 mt-1 text-sm">
-          Prospects who have engaged — your active sales pipeline.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Leads</h1>
+          <p className="text-slate-400 mt-1 text-sm">
+            Prospects who have engaged — your active sales pipeline.
+          </p>
+        </div>
+        <SeedTestLead prospectorUrl={PROSPECTOR_URL} />
       </div>
 
       {/* Stats */}
@@ -116,9 +118,14 @@ export default async function LeadsPage() {
       <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-x-auto">
         {items.length === 0 ? (
           <div className="p-16 text-center">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-8 h-8 text-slate-700 mx-auto mb-3">
+              <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1z" />
+            </svg>
             <p className="text-slate-500 text-sm">No leads yet.</p>
             <p className="text-slate-600 text-xs mt-2">
               When prospects reply to outbound campaigns, they&apos;ll appear here as leads.
+              <br />
+              Use the <strong className="text-amber-400">Seed Test Lead</strong> button above to create an example.
             </p>
           </div>
         ) : (
@@ -131,6 +138,7 @@ export default async function LeadsPage() {
                 <th className="text-left px-6 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Reply</th>
                 <th className="text-left px-6 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Sentiment</th>
                 <th className="text-left px-6 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Last Activity</th>
+                <th className="text-right px-6 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.04]">
@@ -141,15 +149,15 @@ export default async function LeadsPage() {
                 const sentimentCfg = sentiment ? replyCategory[sentiment] : null;
 
                 return (
-                  <tr key={lead.id} className="hover:bg-white/[0.03] transition-colors">
+                  <tr key={lead.id} className="hover:bg-white/[0.03] transition-colors group">
                     <td className="px-6 py-4">
                       <div>
-                        <a
-                          href={`/campaigns/${lead.campaign.id}`}
+                        <Link
+                          href={`/leads/${lead.id}`}
                           className="font-semibold text-white hover:text-violet-300 transition-colors"
                         >
                           {lead.name}
-                        </a>
+                        </Link>
                         {lead.contactFirstName && (
                           <p className="text-xs text-slate-500 mt-0.5">
                             {lead.contactFirstName} {lead.contactLastName ?? ''}{lead.contactTitle ? ` — ${lead.contactTitle}` : ''}
@@ -187,6 +195,14 @@ export default async function LeadsPage() {
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500">
                       {new Date(lead.updatedAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <LeadRowActions
+                        prospectId={lead.id}
+                        prospectName={lead.name}
+                        status={lead.status}
+                        prospectorUrl={PROSPECTOR_URL}
+                      />
                     </td>
                   </tr>
                 );
