@@ -290,10 +290,11 @@ Campaigns                Leads                    Businesses
 - [ ] **Website generator**: Apple-style restaurant website generation + Vercel auto-deploy
 - [ ] **Social media automation**: Content generation, scheduling, comment monitoring for client businesses
 - [ ] **Survey engine**: Post-call/post-visit surveys with automated follow-up
+- [ ] **Social OAuth flows**: Build OAuth redirect endpoints in API gateway for Instagram, Facebook, Google Business Profile, TikTok — client clicks "Connect with Instagram" → redirects to Meta OAuth → callback stores encrypted token on `Business.settings`. Requires creating developer apps on each platform (Meta App, Google Cloud project, TikTok Developer App) and setting Client ID + Client Secret in API env vars. Client dashboard integrations page already has the UI buttons wired — just needs the backend endpoints (`/auth/:provider/authorize`, `/auth/:provider/callback`).
 
 ### Long-term (Scale & Expand)
 - [ ] **Multi-vertical expansion**: Extend beyond restaurants to other local business types (salons, gyms, clinics)
-- [ ] **Client-facing dashboard**: Let onboarded businesses log in and see their own analytics, leads, appointments
+- [x] **Client-facing dashboard**: `apps/client` (port 3012) — light-themed Next.js app with Supabase auth, 8 module pages, integrations page (managed services + OAuth social accounts), settings
 - [ ] **White-label option**: Allow agencies to resell Embedo under their own brand
 - [ ] **Stripe billing integration**: Automated invoicing and subscription management for onboarded businesses
 - [ ] **AI proposal follow-up**: Auto-detect proposal views and trigger personalized follow-up sequences
