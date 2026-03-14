@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { db } from '@embedo/db';
+import type { OnboardingStatus } from '@embedo/db';
 import { createLogger, NotFoundError } from '@embedo/utils';
 
 const log = createLogger('api:businesses');
@@ -8,7 +9,7 @@ export async function businessRoutes(app: FastifyInstance): Promise<void> {
   // GET /businesses
   app.get('/businesses', async (request) => {
     const { page = '1', pageSize = '20', status } = request.query as Record<string, string>;
-    const where = status ? { status } : {};
+    const where = status ? { status: status as OnboardingStatus } : {};
 
     const [items, total] = await Promise.all([
       db.business.findMany({
