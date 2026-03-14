@@ -41,7 +41,7 @@ interface FormData {
   menuItems: Array<{ name: string; description: string; price: string; category: string }>;
 }
 
-export default function WebsiteBuilder() {
+export default function WebsiteBuilder({ businessId }: { businessId: string }) {
   const [step, setStep] = useState(1);
   const [scraping, setScraping] = useState(false);
   const [scraped, setScraped] = useState(false);
@@ -107,8 +107,6 @@ export default function WebsiteBuilder() {
     setGenerating(true);
     setError('');
     try {
-      // Get businessId from session cookie via Supabase — for now use a placeholder
-      const businessId = 'demo'; // TODO: wire from auth context
       const res = await fetch(`${API_URL}/websites/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

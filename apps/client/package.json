@@ -16,7 +16,8 @@
     "@supabase/ssr": "^0.5.2",
     "lucide-react": "^0.469.0",
     "clsx": "^2.1.0",
-    "@embedo/types": "workspace:*"
+    "@embedo/types": "workspace:*",
+    "@embedo/db": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.7.0",

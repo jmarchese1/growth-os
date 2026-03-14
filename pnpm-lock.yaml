@@ -111,6 +111,9 @@ importers:
 
   apps/client:
     dependencies:
+      '@embedo/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@embedo/types':
         specifier: workspace:*
         version: link:../../packages/types
