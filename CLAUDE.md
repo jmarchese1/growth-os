@@ -251,8 +251,9 @@ Campaigns                Leads                    Businesses
 | `apps/platform` | Vercel | platform.embedo.io |
 | `apps/api` | Railway | embedoapi-production.up.railway.app |
 | `services/prospector` | Railway | prospector-production-bc03.up.railway.app |
-| Database | Supabase | Cloud-hosted PostgreSQL |
-| Redis | Upstash | Serverless Redis for BullMQ (local Docker in dev) |
+| `services/crm-core` | Railway | internal (no public domain) |
+| Database | Supabase | Cloud-hosted PostgreSQL (port 5432) |
+| Redis | Railway | redis.railway.internal:6379 (local Docker in dev) |
 
 ---
 
@@ -271,15 +272,15 @@ Campaigns                Leads                    Businesses
 - [ ] **Cal.com webhook setup**: Configure `BOOKING_CREATED` webhook pointing to `https://embedoapi-production.up.railway.app/webhooks/cal` in Cal.com dashboard
 - [ ] **SendGrid Inbound Parse setup**: Configure inbound parse domain to forward replies to `https://embedoapi-production.up.railway.app/webhooks/sendgrid/inbound`
 - [ ] **SendGrid Event Webhook setup**: Point open/click/bounce events to `https://embedoapi-production.up.railway.app/webhooks/sendgrid/events`
-- [ ] **Deploy CRM Core to Railway**: Currently only API gateway and Prospector are deployed. CRM Core needs its own Railway service for business onboarding to work in production.
-- [ ] **Set `EMBEDO_BUSINESS_ID` env var on Railway**: Required for Cal.com webhook to associate appointments with the correct business
+- [x] **Deploy CRM Core to Railway**: Deployed. Business conversion (leads → businesses) is fully working.
+- [x] **Set `EMBEDO_BUSINESS_ID` env var on Railway**: Set on both API gateway and prospector.
 - [ ] **Run Prisma migration**: `OUTBOUND` was added to `LeadSource` enum but migration hasn't been applied yet (`pnpm db:migrate`)
 - [ ] **Apollo.io API key**: Set `APOLLO_API_KEY` in production env to enable prospect email enrichment
 
 ### Short-term (Platform Features)
 - [ ] **Business detail page** (`/businesses/[id]`): View/edit an onboarded business, see their active products, contacts, appointments
-- [ ] **Lead detail page** (`/leads/[id]`): View lead info, reply history, convert-to-business action
-- [ ] **Proposal builder in platform**: Generate and send proposals from the Leads pipeline
+- [x] **Lead detail page** (`/leads/[id]`): View lead info, reply history, convert-to-business action — working
+- [x] **Proposal builder in platform**: Generate and send proposals from the Leads pipeline — working (routes live on API gateway)
 - [ ] **Reply-to-prospect from dashboard**: Compose and send follow-up emails directly from the Leads page
 - [ ] **Campaign analytics dashboard**: Open rates, reply rates, conversion funnel per campaign
 - [ ] **Automated follow-up sequence builder UI**: Visual editor for multi-step email sequences

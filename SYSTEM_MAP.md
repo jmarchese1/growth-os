@@ -33,17 +33,20 @@ External Traffic
 
 | Service | Port (dev) | Deployed On | Primary Responsibility |
 |---|---|---|---|
-| api (gateway) | 3000 | Railway | Auth, routing, all webhooks |
-| crm-core | 3001 | Railway | Business + Contact master data; onboarding |
-| voice-agent | 3002 | Railway | ElevenLabs + Twilio; calls, reservations |
-| chatbot-agent | 3003 | Railway | Claude chatbot + JS widget delivery |
-| lead-engine | 3004 | Railway | Lead normalization + SMS/email sequences |
-| survey-engine | 3005 | Railway | Survey creation, delivery, response triggers |
-| social-media | 3006 | Railway | Content gen, scheduling, auto-engagement |
-| website-gen | 3007 | Railway | Apple-style site generation + Vercel deploy |
-| proposal-engine | 3008 | Railway | AI proposal generation + PDF |
-| web (Next.js) | 3010 | Vercel | Embedo public landing page |
-| platform (Next.js) | 3011 | Vercel | Admin dashboard |
+| api (gateway) | 3000 | Railway ✅ | Webhooks, proposals, businesses, lead capture |
+| crm-core | 3001 | Railway ✅ | Business + Contact master data; onboarding |
+| prospector | 3009 | Railway ✅ | Cold outreach campaigns, email sequences |
+| voice-agent | 3002 | not deployed | ElevenLabs + Twilio; calls, reservations |
+| chatbot-agent | 3003 | not deployed | Claude chatbot + JS widget delivery |
+| lead-engine | 3004 | not deployed | Lead normalization + SMS/email sequences |
+| survey-engine | 3005 | not deployed | Survey creation, delivery, response triggers |
+| social-media | 3006 | not deployed | Content gen, scheduling, auto-engagement |
+| website-gen | 3007 | not deployed | Apple-style site generation + Vercel deploy |
+| proposal-engine | 3008 | not deployed | Routes merged into api gateway |
+| web (Next.js) | 3010 | Vercel ✅ | Embedo public landing page |
+| platform (Next.js) | 3011 | Vercel ✅ | Admin dashboard |
+| Redis | — | Railway ✅ | BullMQ queues (redis.railway.internal:6379) |
+| PostgreSQL | — | Supabase ✅ | Primary database (port 5432) |
 
 ---
 
@@ -79,6 +82,15 @@ External: Calendly webhook ──► crm-core /webhooks/calendly
                                    ──► survey-engine (schedule post-appointment follow-up)
 ```
 
+### Lead → Business Conversion (CRM)
+```
+platform UI ──► PATCH /prospects/:id/convert (prospector)
+  prospector: creates Business record (status: PROVISIONING)
+  prospector: updates ProspectBusiness.status = CONVERTED
+  prospector: fires business.onboarded queue event
+  platform: businesses page fetches from GET /businesses (api gateway)
+```
+
 ### Business Lifecycle Events
 ```
 crm-core POST /onboarding ──► business.onboarded
@@ -92,9 +104,16 @@ crm-core POST /onboarding ──► business.onboarded
 
 ### Proposal Events
 ```
-proposal-engine ──► proposal.viewed ──► crm-core (log ContactActivity)
-                                     ──► lead-engine (trigger follow-up sequence)
+platform UI ──► POST /proposals/generate (api gateway) ──► Claude AI (content generation)
+                                                         ──► db.proposal.create
+                                                         ──► lead.created queue (non-fatal)
+                                                         ──► owner alert email (non-fatal)
+
+api gateway ──► proposal.viewed (on GET /proposals/:shareToken) ──► crm-core (log ContactActivity)
+                                                                  ──► lead-engine (follow-up)
 ```
+Note: proposal-engine service exists but its routes are merged into the API gateway.
+The `services/proposal-engine` service is not deployed — api gateway handles all /proposals/* routes.
 
 ### Social Engagement Events
 ```
@@ -141,8 +160,8 @@ crm-core ──────────────► Calendly Webhooks + API
 website-gen ───────────► Vercel API (deployment)
 website-gen ───────────► Anthropic Claude API (content fill)
 apps/web + platform ───► Supabase Auth
-all services ──────────► Supabase PostgreSQL (via Prisma)
-all async services ────► Upstash Redis (BullMQ)
+all services ──────────► Supabase PostgreSQL (via Prisma, port 5432)
+all async services ────► Railway Redis (BullMQ, redis.railway.internal:6379)
 ```
 
 ---
