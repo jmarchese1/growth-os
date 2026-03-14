@@ -25,7 +25,8 @@
     "@embedo/config": "workspace:*",
     "zod": "^3.23.0",
     "twilio": "^5.3.7",
-    "@sendgrid/mail": "^8.1.3"
+    "@sendgrid/mail": "^8.1.3",
+    "@anthropic-ai/sdk": "^0.37.0"
   },
   "devDependencies": {
     "typescript": "^5.7.0",

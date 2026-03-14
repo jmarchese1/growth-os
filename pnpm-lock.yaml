@@ -44,6 +44,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.37.0
+        version: 0.37.0
       '@embedo/config':
         specifier: workspace:*
         version: link:../../packages/config

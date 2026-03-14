@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
-const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? process.env['API_BASE_URL'] ?? 'https://embedoapi-production.up.railway.app';
-const PROPOSAL_ENGINE_URL = process.env['NEXT_PUBLIC_PROPOSAL_ENGINE_URL'] ?? 'http://localhost:3008';
+const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'https://embedoapi-production.up.railway.app';
 
 interface Business {
   id: string;
@@ -81,7 +80,7 @@ export function GenerateProposalModal({
     setError('');
 
     try {
-      const res = await fetch(`${PROPOSAL_ENGINE_URL}/proposals/generate`, {
+      const res = await fetch(`${API_URL}/proposals/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

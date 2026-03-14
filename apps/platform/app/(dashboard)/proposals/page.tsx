@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import { GenerateProposalModal } from './generate-proposal-modal';
 import { ProposalPreviewModal } from './proposal-preview-modal';
 
-const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? process.env['API_BASE_URL'] ?? 'https://embedoapi-production.up.railway.app';
-const PROPOSAL_ENGINE_URL = process.env['NEXT_PUBLIC_PROPOSAL_ENGINE_URL'] ?? 'http://localhost:3008';
+const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'https://embedoapi-production.up.railway.app';
 
 interface ProposalIntakeData {
   businessName: string;
@@ -50,7 +49,7 @@ export default function ProposalsPage() {
   useEffect(() => {
     async function fetchProposals() {
       try {
-        const res = await fetch(`${PROPOSAL_ENGINE_URL}/proposals?pageSize=50`);
+        const res = await fetch(`${API_URL}/proposals?pageSize=50`);
         if (res.ok) {
           const data = await res.json();
           setProposals(data.items ?? []);

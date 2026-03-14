@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
-const PROPOSAL_ENGINE_URL = process.env['NEXT_PUBLIC_PROPOSAL_ENGINE_URL'] ?? 'http://localhost:3008';
-const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? process.env['API_BASE_URL'] ?? 'https://embedoapi-production.up.railway.app';
+const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'https://embedoapi-production.up.railway.app';
 
 interface Proposal {
   id: string;
@@ -44,7 +43,7 @@ export function ProposalPreviewModal({
   useEffect(() => {
     async function fetchProposal() {
       try {
-        const res = await fetch(`${PROPOSAL_ENGINE_URL}/proposals/${proposal.shareToken}`);
+        const res = await fetch(`${API_URL}/proposals/${proposal.shareToken}`);
         if (res.ok) {
           const html = await res.text();
           setHtmlContent(html);
@@ -70,7 +69,7 @@ export function ProposalPreviewModal({
     setError('');
 
     try {
-      const res = await fetch(`${PROPOSAL_ENGINE_URL}/proposals/${proposal.id}/send`, {
+      const res = await fetch(`${API_URL}/proposals/${proposal.id}/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
