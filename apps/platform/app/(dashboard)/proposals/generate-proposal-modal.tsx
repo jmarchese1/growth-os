@@ -17,6 +17,54 @@ interface GeneratedProposal {
   content: unknown;
 }
 
+function OrbitLoader({ businessName }: { businessName: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 space-y-8">
+      {/* Orbiting rings */}
+      <div className="relative w-32 h-32">
+        {/* Outer ring */}
+        <div className="absolute inset-0 rounded-full border border-violet-500/20 animate-spin" style={{ animationDuration: '8s' }}>
+          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-violet-400 shadow-[0_0_8px_2px_rgba(139,92,246,0.8)]" />
+        </div>
+        {/* Middle ring */}
+        <div className="absolute inset-3 rounded-full border border-indigo-500/30 animate-spin" style={{ animationDuration: '5s', animationDirection: 'reverse' }}>
+          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-[0_0_6px_2px_rgba(99,102,241,0.8)]" />
+          <div className="absolute top-1/2 -right-1 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-[0_0_6px_2px_rgba(99,102,241,0.8)]" />
+        </div>
+        {/* Inner ring */}
+        <div className="absolute inset-6 rounded-full border border-purple-500/40 animate-spin" style={{ animationDuration: '3s' }}>
+          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-purple-300 shadow-[0_0_4px_2px_rgba(216,180,254,0.8)]" />
+          <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-1 h-1 rounded-full bg-purple-300 shadow-[0_0_4px_2px_rgba(216,180,254,0.8)]" />
+          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-purple-300 shadow-[0_0_4px_2px_rgba(216,180,254,0.8)]" />
+        </div>
+        {/* Center pulse */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-4 h-4 rounded-full bg-violet-500/80 animate-pulse shadow-[0_0_12px_4px_rgba(139,92,246,0.6)]" />
+        </div>
+      </div>
+
+      <div className="text-center space-y-2">
+        <p className="text-white font-semibold text-lg">Generating Proposal</p>
+        {businessName && (
+          <p className="text-slate-400 text-sm">for <span className="text-violet-300">{businessName}</span></p>
+        )}
+        <p className="text-slate-600 text-xs">Claude is writing your AI transformation proposal...</p>
+      </div>
+
+      {/* Animated dots */}
+      <div className="flex gap-1.5">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="w-1.5 h-1.5 rounded-full bg-violet-500/60 animate-bounce"
+            style={{ animationDelay: `${i * 0.15}s` }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function GenerateProposalModal({
   onClose,
   onProposalGenerated,
@@ -96,19 +144,6 @@ export function GenerateProposalModal({
 
       const data: GeneratedProposal = await res.json();
       setGenerated(data);
-
-      // Notify parent after a short delay to show the confirmation
-      setTimeout(() => {
-        onProposalGenerated({
-          id: data.proposalId,
-          shareToken: data.shareUrl.split('/').pop(),
-          status: 'DRAFT',
-          viewedAt: null,
-          acceptedAt: null,
-          createdAt: new Date().toISOString(),
-          intakeData: formData,
-        });
-      }, 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -116,37 +151,68 @@ export function GenerateProposalModal({
     }
   };
 
+  const handleDone = () => {
+    if (generated) {
+      onProposalGenerated({
+        id: generated.proposalId,
+        shareToken: generated.shareUrl.split('/').pop(),
+        status: 'DRAFT',
+        viewedAt: null,
+        acceptedAt: null,
+        createdAt: new Date().toISOString(),
+        intakeData: formData,
+      });
+    }
+    onClose();
+  };
+
+  // Loading state — full modal replaced with orbit animation
+  if (loading) {
+    return createPortal(
+      <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+        <div className="bg-[#0c0a18] rounded-2xl border border-white/10 max-w-md w-full p-8">
+          <OrbitLoader businessName={formData.businessName} />
+        </div>
+      </div>,
+      document.body
+    );
+  }
+
+  // Success state — stays open until user clicks Done or View Proposal
   if (generated) {
     return createPortal(
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
         <div className="bg-[#0c0a18] rounded-2xl border border-white/10 max-w-2xl w-full p-8 space-y-6">
-          <div className="text-center">
+          <div className="text-center space-y-3">
+            <div className="w-14 h-14 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center mx-auto">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-7 h-7 text-emerald-400">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            </div>
             <h2 className="text-2xl font-bold text-white">Proposal Generated!</h2>
-            <p className="text-slate-400 mt-2">Your proposal has been created successfully.</p>
+            <p className="text-slate-400 text-sm">Your AI proposal for <span className="text-white font-medium">{formData.businessName}</span> is ready.</p>
           </div>
 
-          <div className="space-y-4">
-            <div className="bg-emerald-500/10 border border-emerald-500/25 rounded-lg p-4">
-              <p className="text-sm text-emerald-400 font-medium">✓ Proposal created for {formData.businessName}</p>
-              <p className="text-xs text-slate-400 mt-1">Share link: {generated.shareUrl}</p>
-            </div>
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2">
+            <p className="text-xs text-slate-500 font-medium uppercase tracking-widest">Share Link</p>
+            <p className="text-sm text-violet-300 break-all font-mono">{generated.shareUrl}</p>
+          </div>
 
-            <div className="flex gap-3">
-              <a
-                href={generated.shareUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 px-4 py-2 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-500 transition-colors text-center"
-              >
-                View Proposal →
-              </a>
-              <button
-                onClick={onClose}
-                className="flex-1 px-4 py-2 bg-white/10 text-white text-sm font-semibold rounded-lg hover:bg-white/20 transition-colors"
-              >
-                Done
-              </button>
-            </div>
+          <div className="flex gap-3">
+            <a
+              href={generated.shareUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 px-4 py-2.5 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-500 transition-colors text-center"
+            >
+              View Proposal →
+            </a>
+            <button
+              onClick={handleDone}
+              className="flex-1 px-4 py-2.5 bg-white/10 text-white text-sm font-semibold rounded-lg hover:bg-white/20 transition-colors"
+            >
+              Done
+            </button>
           </div>
         </div>
       </div>,
@@ -304,7 +370,7 @@ export function GenerateProposalModal({
               disabled={loading}
               className="flex-1 px-4 py-2 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Generating...' : 'Generate Proposal'}
+              Generate Proposal
             </button>
             <button type="button" onClick={onClose} className="flex-1 px-4 py-2 bg-white/10 text-white text-sm font-semibold rounded-lg hover:bg-white/20 transition-colors">
               Cancel
