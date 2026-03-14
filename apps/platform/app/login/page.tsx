@@ -217,7 +217,7 @@ export default function LoginPage() {
           {/* Header */}
           <div className="px-8 pt-10 pb-6 text-center">
             {/* Embedo Logo — isometric cube with orbiting particles */}
-            <div className="relative mx-auto mb-6 flex items-center justify-center" style={{ width: 100, height: 100 }}>
+            <div className="relative mx-auto mb-6 flex items-center justify-center" style={{ width: 120, height: 120, overflow: 'visible' }}>
               {/* Glow behind logo */}
               <div className="absolute inset-0 rounded-full bg-violet-500/15 blur-2xl" />
               <div className="absolute inset-4 rounded-full bg-violet-600/10 blur-xl" />

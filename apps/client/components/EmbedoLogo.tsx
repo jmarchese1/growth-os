@@ -13,10 +13,11 @@ const PARTICLES = [
 ];
 
 export default function EmbedoLogo({ size = 30 }: EmbedoLogoProps) {
+  const scale = size / 30; // base size is 30, scale particles proportionally
   return (
     <div
       className="relative inline-flex items-center justify-center flex-shrink-0"
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, overflow: 'visible' }}
     >
       {PARTICLES.map((p, i) => (
         <div
@@ -25,18 +26,19 @@ export default function EmbedoLogo({ size = 30 }: EmbedoLogoProps) {
           style={{
             animation: `logo-orbit ${p.duration} linear infinite`,
             animationDelay: p.delay,
+            overflow: 'visible',
           }}
         >
           <div
             className="absolute rounded-full"
             style={{
-              width: p.sz,
-              height: p.sz,
+              width: p.sz * scale,
+              height: p.sz * scale,
               background: `rgba(167, 139, 250, ${p.alpha})`,
               top: '50%',
               left: '50%',
-              transform: `translate(calc(-50% + ${p.radius}px), -50%)`,
-              boxShadow: `0 0 ${p.sz * 2}px rgba(167, 139, 250, ${p.alpha * 0.8})`,
+              transform: `translate(calc(-50% + ${p.radius * scale}px), -50%)`,
+              boxShadow: `0 0 ${p.sz * scale * 2}px rgba(167, 139, 250, ${p.alpha * 0.8})`,
             }}
           />
         </div>

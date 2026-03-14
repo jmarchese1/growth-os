@@ -40,7 +40,7 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-md px-4">
         <div className="bg-white border border-slate-200 rounded-2xl shadow-xl shadow-slate-200/50 overflow-hidden">
           <div className="px-8 pt-10 pb-6 text-center">
-            <div className="relative mx-auto mb-6 flex items-center justify-center" style={{ width: 90, height: 90 }}>
+            <div className="relative mx-auto mb-6 flex items-center justify-center" style={{ width: 110, height: 110, overflow: 'visible' }}>
               <div className="absolute inset-0 rounded-full bg-violet-100/60 blur-xl" />
               <EmbedoLogo size={64} />
             </div>
