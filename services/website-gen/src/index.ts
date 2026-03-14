@@ -11,7 +11,7 @@ async function start() {
   const app = Fastify({ logger: false });
   await app.register(cors, { origin: true });
 
-  app.setErrorHandler((error, _request, reply) => {
+  app.setErrorHandler((error: unknown, _request, reply) => {
     if (isEmbedoError(error)) {
       return reply.code(error.statusCode).send({ success: false, error: error.message });
     }

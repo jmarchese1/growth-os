@@ -67,20 +67,21 @@ export async function websiteRoutes(app: FastifyInstance) {
       copy = await generateWebsiteCopy({ ...merged, businessName: body.businessName }, env.ANTHROPIC_API_KEY);
     }
 
+    const s = scraped as Record<string, unknown>;
     // Render HTML
     const html = renderRestaurantPremium({
       businessName: body.businessName,
-      tagline: body.tagline ?? (scraped as { tagline?: string }).tagline,
-      description: body.description ?? (scraped as { description?: string }).description,
-      cuisine: body.cuisine ?? (scraped as { cuisine?: string }).cuisine,
-      phone: body.phone ?? (scraped as { phone?: string }).phone,
-      address: body.address ?? (scraped as { address?: string }).address,
-      city: body.city ?? (scraped as { city?: string }).city,
-      hours: body.hours ?? (scraped as { hours?: Record<string, string> }).hours,
-      menuItems: body.menuItems ?? (scraped as { menuItems?: typeof body.menuItems }).menuItems,
-      galleryImages: body.galleryImages ?? (scraped as { imageUrls?: string[] }).imageUrls,
+      tagline: body.tagline ?? (s['tagline'] as string | undefined),
+      description: body.description ?? (s['description'] as string | undefined),
+      cuisine: body.cuisine ?? (s['cuisine'] as string | undefined),
+      phone: body.phone ?? (s['phone'] as string | undefined),
+      address: body.address ?? (s['address'] as string | undefined),
+      city: body.city ?? (s['city'] as string | undefined),
+      hours: body.hours ?? (s['hours'] as Record<string, string> | undefined),
+      menuItems: body.menuItems ?? (s['menuItems'] as typeof body.menuItems | undefined),
+      galleryImages: body.galleryImages ?? (s['imageUrls'] as string[] | undefined),
       heroImage: body.heroImage,
-      bookingUrl: body.bookingUrl ?? (scraped as { bookingUrl?: string }).bookingUrl,
+      bookingUrl: body.bookingUrl ?? (s['bookingUrl'] as string | undefined),
       colorScheme: body.colorScheme ?? 'midnight',
       fontPairing: body.fontPairing ?? 'modern',
       heroHeading: copy.heroHeading,

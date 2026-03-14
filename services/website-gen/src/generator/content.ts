@@ -63,7 +63,8 @@ Return ONLY valid JSON:
   };
 
   try {
-    const text = message.content[0].type === 'text' ? message.content[0].text : '';
+    const block = message.content[0];
+    const text = block && block.type === 'text' ? block.text : '';
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]) as GeneratedCopy;

@@ -7,6 +7,11 @@ COPY pnpm-workspace.yaml package.json turbo.json pnpm-lock.yaml tsconfig.base.js
 COPY packages/ packages/
 COPY services/website-gen/ services/website-gen/
 RUN pnpm install --frozen-lockfile
+RUN pnpm --filter "@embedo/types" build
+RUN pnpm --filter "@embedo/utils" build
+RUN pnpm --filter "@embedo/config" build
+RUN pnpm --filter "@embedo/db" build
+RUN pnpm --filter "@embedo/queue" build
 RUN pnpm --filter @embedo/website-gen build
 
 FROM base AS runner

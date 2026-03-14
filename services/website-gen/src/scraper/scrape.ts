@@ -45,7 +45,7 @@ export async function scrapeWebsite(url: string, anthropicKey: string): Promise<
 
   // Pull image URLs from og:image and src attrs
   const imageMatches = Array.from(html.matchAll(/(?:og:image[^>]+content|src)=["']([^"']+(?:jpg|jpeg|png|webp)[^"']*)/gi));
-  const rawImages = imageMatches.map((m) => m[1]).filter((u) => u.startsWith('http')).slice(0, 6);
+  const rawImages = imageMatches.map((m) => m[1]).filter((u): u is string => !!u && u.startsWith('http')).slice(0, 6);
 
   const client = new Anthropic({ apiKey: anthropicKey });
   const message = await client.messages.create({
@@ -78,7 +78,8 @@ ${cleaned}`,
 
   let extracted: ScrapedBusinessInfo = {};
   try {
-    const text = message.content[0].type === 'text' ? message.content[0].text : '';
+    const block = message.content[0];
+    const text = block && block.type === 'text' ? block.text : '';
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) extracted = JSON.parse(jsonMatch[0]) as ScrapedBusinessInfo;
   } catch {
