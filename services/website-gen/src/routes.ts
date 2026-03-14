@@ -68,20 +68,20 @@ export async function websiteRoutes(app: FastifyInstance) {
     }
 
     const s = scraped as Record<string, unknown>;
-    // Render HTML
-    const html = renderRestaurantPremium({
+    // Render HTML — cast via unknown to satisfy exactOptionalPropertyTypes
+    const premiumConfig = {
       businessName: body.businessName,
-      ...(body.tagline ?? s['tagline'] ? { tagline: (body.tagline ?? s['tagline']) as string } : {}),
-      description: body.description ?? (s['description'] as string | undefined),
-      cuisine: body.cuisine ?? (s['cuisine'] as string | undefined),
-      phone: body.phone ?? (s['phone'] as string | undefined),
-      address: body.address ?? (s['address'] as string | undefined),
-      city: body.city ?? (s['city'] as string | undefined),
-      hours: body.hours ?? (s['hours'] as Record<string, string> | undefined),
-      menuItems: body.menuItems ?? (s['menuItems'] as typeof body.menuItems | undefined),
-      galleryImages: body.galleryImages ?? (s['imageUrls'] as string[] | undefined),
+      tagline: body.tagline ?? s['tagline'],
+      description: body.description ?? s['description'],
+      cuisine: body.cuisine ?? s['cuisine'],
+      phone: body.phone ?? s['phone'],
+      address: body.address ?? s['address'],
+      city: body.city ?? s['city'],
+      hours: body.hours ?? s['hours'],
+      menuItems: body.menuItems ?? s['menuItems'],
+      galleryImages: body.galleryImages ?? s['imageUrls'],
       heroImage: body.heroImage,
-      bookingUrl: body.bookingUrl ?? (s['bookingUrl'] as string | undefined),
+      bookingUrl: body.bookingUrl ?? s['bookingUrl'],
       colorScheme: body.colorScheme ?? 'midnight',
       fontPairing: body.fontPairing ?? 'modern',
       heroHeading: copy.heroHeading,
@@ -91,7 +91,8 @@ export async function websiteRoutes(app: FastifyInstance) {
       ctaText: copy.ctaText,
       chatbotEnabled: body.chatbotEnabled ?? false,
       chatbotBusinessId: body.businessId,
-    });
+    };
+    const html = renderRestaurantPremium(premiumConfig as unknown as import('./templates/restaurant/premium.js').PremiumWebsiteConfig);
 
     // Create or update GeneratedWebsite record
     const existing = await db.generatedWebsite.findFirst({ where: { businessId: body.businessId } });
