@@ -1,49 +1,64 @@
+'use client';
+
+import { useState } from 'react';
+import WebsiteBuilder from './website-builder';
+
 export default function WebsitePage() {
+  const [started, setStarted] = useState(false);
+
+  if (started) return <WebsiteBuilder />;
+
   return (
     <div className="p-8 animate-fade-up">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Website</h1>
-        <p className="text-sm text-slate-500 mt-1">Your auto-generated business website</p>
+        <p className="text-sm text-slate-500 mt-1">Your AI-generated business website, live on the web in minutes</p>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-sm font-semibold text-slate-900">Website Status</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Auto-deployed to Vercel</p>
+      {/* Hero CTA */}
+      <div className="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-2xl p-10 text-center mb-8 shadow-lg">
+        <p className="text-violet-200 text-xs font-semibold uppercase tracking-widest mb-3">AI Website Generator</p>
+        <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">Your restaurant, beautifully online</h2>
+        <p className="text-violet-200 text-base max-w-md mx-auto mb-8 leading-relaxed">
+          Point us at your existing website (or start fresh), choose a style, and we&apos;ll generate a stunning Apple-style site and deploy it live — in under 2 minutes.
+        </p>
+        <button
+          onClick={() => setStarted(true)}
+          className="px-8 py-3.5 bg-white text-violet-700 font-semibold rounded-full text-sm hover:bg-violet-50 transition-colors shadow-sm"
+        >
+          Build My Website
+        </button>
+      </div>
+
+      {/* What you get */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        {[
+          { icon: '🌐', title: 'Scrapes Your Current Site', desc: 'Paste your existing URL — we pull your hours, menu, photos, and contact info automatically' },
+          { icon: '🎨', title: 'You Pick the Style', desc: 'Choose a color palette, font pairing, and upload your hero image. Full control over the look.' },
+          { icon: '🚀', title: 'Live in Minutes', desc: 'One click deploys your site live with a shareable URL. Custom domain available anytime.' },
+        ].map(({ icon, title, desc }) => (
+          <div key={title} className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="text-2xl mb-3">{icon}</div>
+            <h3 className="text-sm font-semibold text-slate-800 mb-1.5">{title}</h3>
+            <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>
           </div>
-          <span className="px-3 py-1 bg-slate-100 border border-slate-200 rounded-full text-xs font-medium text-slate-500">Not Deployed</span>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {[
-            { label: 'Live URL', value: '--' },
-            { label: 'Template', value: '--' },
-            { label: 'Last Deployed', value: '--' },
-          ].map(({ label, value }) => (
-            <div key={label} className="bg-slate-50 border border-slate-200/60 rounded-lg p-4">
-              <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">{label}</p>
-              <p className="text-sm text-slate-500">{value}</p>
-            </div>
-          ))}
-        </div>
+        ))}
       </div>
 
-      <div className="mb-8">
-        <h2 className="text-sm font-semibold text-slate-700 mb-4">Website Sections</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {['Hero', 'About', 'Menu', 'Gallery', 'Testimonials', 'Contact', 'Booking', 'Chatbot Widget'].map((section) => (
-            <div key={section} className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between">
-              <span className="text-sm text-slate-600">{section}</span>
-              <div className="w-2 h-2 rounded-full bg-slate-300" />
+      {/* What's included */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <h3 className="text-sm font-semibold text-slate-700 mb-4">What&apos;s included</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {['Hero Section', 'About & Story', 'Menu Highlights', 'Photo Gallery', 'Hours & Location', 'Reservations', 'Chat Widget', 'Mobile Ready'].map((item) => (
+            <div key={item} className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-violet-100 flex items-center justify-center flex-shrink-0">
+                <svg viewBox="0 0 12 12" fill="none" className="w-2.5 h-2.5">
+                  <path d="M2 6l3 3 5-5" stroke="#7c3aed" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <span className="text-xs text-slate-600">{item}</span>
             </div>
           ))}
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-sm font-semibold text-slate-700 mb-4">Traffic Analytics</h2>
-        <div className="bg-white border border-slate-200 rounded-xl p-8 text-center">
-          <p className="text-slate-400 text-sm">Deploy your website to start tracking visitor analytics.</p>
         </div>
       </div>
     </div>

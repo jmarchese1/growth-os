@@ -3,6 +3,7 @@ import cors from '@fastify/cors';
 import { createLogger, isEmbedoError } from '@embedo/utils';
 import { env } from './config.js';
 import { startWorkers } from './workers/website.worker.js';
+import { websiteRoutes } from './routes.js';
 
 const log = createLogger('website-gen');
 
@@ -20,6 +21,7 @@ async function start() {
 
   app.get('/health', async () => ({ ok: true, service: 'website-gen' }));
 
+  await app.register(websiteRoutes);
   startWorkers();
 
   await app.listen({ port: env.PORT, host: '0.0.0.0' });

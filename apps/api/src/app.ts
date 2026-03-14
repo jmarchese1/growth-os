@@ -15,6 +15,7 @@ import { trackRoutes } from './routes/track.js';
 import { leadCaptureRoutes } from './routes/leads.js';
 import { proposalRoutes } from './routes/proposals.js';
 import { businessRoutes } from './routes/businesses.js';
+import { websiteRoutes } from './routes/websites.js';
 
 const log = createLogger('api:gateway');
 
@@ -74,6 +75,7 @@ export async function buildApp() {
   await app.register(leadCaptureRoutes);
   await app.register(proposalRoutes);
   await app.register(businessRoutes);
+  await app.register(websiteRoutes);
 
   log.info('API Gateway configured');
   return app;
