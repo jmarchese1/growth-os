@@ -33,7 +33,7 @@ interface Props {
   business: Business;
 }
 
-const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3001';
+const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? process.env['API_BASE_URL'] ?? 'https://embedoapi-production.up.railway.app';
 
 export function EditBusinessButton({ business }: Props) {
   const router = useRouter();
