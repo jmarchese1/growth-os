@@ -44,7 +44,7 @@ export async function scrapeWebsite(url: string, anthropicKey: string): Promise<
     .slice(0, 8000); // keep under Claude's token budget
 
   // Pull image URLs from og:image and src attrs
-  const imageMatches = [...html.matchAll(/(?:og:image[^>]+content|src)=["']([^"']+(?:jpg|jpeg|png|webp)[^"']*)/gi)];
+  const imageMatches = Array.from(html.matchAll(/(?:og:image[^>]+content|src)=["']([^"']+(?:jpg|jpeg|png|webp)[^"']*)/gi));
   const rawImages = imageMatches.map((m) => m[1]).filter((u) => u.startsWith('http')).slice(0, 6);
 
   const client = new Anthropic({ apiKey: anthropicKey });

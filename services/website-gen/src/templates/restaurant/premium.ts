@@ -46,7 +46,10 @@ const FONT_PAIRINGS: Record<FontPairing, { heading: string; body: string; google
   elegant: { heading: "'Playfair Display', serif", body: "'Lato', sans-serif", googleFont: 'Playfair+Display:wght@400;700;900&family=Lato:wght@300;400;700' },
 };
 
-function hoursTable(hours?: Record<string, string>, colors?: ReturnType<typeof COLOR_SCHEMES[ColorScheme]>): string {
+type Colors = typeof COLOR_SCHEMES[ColorScheme];
+type Fonts = typeof FONT_PAIRINGS[FontPairing];
+
+function hoursTable(hours?: Record<string, string>, colors?: Colors): string {
   if (!hours || Object.keys(hours).length === 0) return '';
   const c = colors!;
   const rows = Object.entries(hours).map(([day, time]) => `
@@ -57,7 +60,7 @@ function hoursTable(hours?: Record<string, string>, colors?: ReturnType<typeof C
   return `<table style="border-collapse:collapse;width:100%;">${rows}</table>`;
 }
 
-function menuSection(items?: PremiumWebsiteConfig['menuItems'], c?: ReturnType<typeof COLOR_SCHEMES[ColorScheme]>, fonts?: ReturnType<typeof FONT_PAIRINGS[FontPairing]>): string {
+function menuSection(items?: PremiumWebsiteConfig['menuItems'], c?: Colors, fonts?: Fonts): string {
   if (!items || items.length === 0) return '';
   const grouped: Record<string, typeof items> = {};
   for (const item of items) {
@@ -89,7 +92,7 @@ function menuSection(items?: PremiumWebsiteConfig['menuItems'], c?: ReturnType<t
   </section>`;
 }
 
-function gallerySection(images?: string[], c?: ReturnType<typeof COLOR_SCHEMES[ColorScheme]>): string {
+function gallerySection(images?: string[], c?: Colors): string {
   if (!images || images.length < 2) return '';
   const imgs = images.slice(0, 6);
   return `
