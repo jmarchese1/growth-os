@@ -59,8 +59,10 @@ async function getLeads(): Promise<{ items: ProspectLead[]; total: number }> {
       allLeads.push(...items);
     }
 
-    allLeads.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-    return { items: allLeads, total: allLeads.length };
+    // Filter out leads that have been converted to businesses
+    const activeLeads = allLeads.filter((l) => !l.convertedToBusinessId);
+    activeLeads.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    return { items: activeLeads, total: activeLeads.length };
   } catch {
     return { items: [], total: 0 };
   }
