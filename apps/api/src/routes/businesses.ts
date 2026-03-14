@@ -32,6 +32,27 @@ export async function businessRoutes(app: FastifyInstance): Promise<void> {
     return business;
   });
 
+  // GET /businesses/:id/contacts
+  app.get('/businesses/:id/contacts', async (request) => {
+    const { id } = request.params as { id: string };
+    const { page = '1', pageSize = '20' } = request.query as Record<string, string>;
+
+    const business = await db.business.findUnique({ where: { id } });
+    if (!business) throw new NotFoundError('Business', id);
+
+    const [items, total] = await Promise.all([
+      db.contact.findMany({
+        where: { businessId: id },
+        skip: (parseInt(page) - 1) * parseInt(pageSize),
+        take: parseInt(pageSize),
+        orderBy: { createdAt: 'desc' },
+      }),
+      db.contact.count({ where: { businessId: id } }),
+    ]);
+
+    return { items, total, page: parseInt(page), pageSize: parseInt(pageSize) };
+  });
+
   // PATCH /businesses/:id
   app.patch('/businesses/:id', async (request) => {
     const { id } = request.params as { id: string };
