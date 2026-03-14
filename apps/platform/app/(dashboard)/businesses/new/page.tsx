@@ -75,10 +75,16 @@ export default function NewBusinessPage() {
       body.address = { street, city, state, zip, country: 'US' };
     }
 
-    // Store selected products and notes in settings
+    // Store selected products in settings with correct boolean format
     const notes = get('notes');
     body.settings = {
-      modules: Array.from(selectedModules),
+      voiceAgent: selectedModules.has('voice-agent'),
+      chatbotAgent: selectedModules.has('chatbot-agent'),
+      websiteGen: selectedModules.has('website-gen'),
+      socialMedia: selectedModules.has('social-media'),
+      leadEngine: selectedModules.has('lead-engine'),
+      surveyEngine: selectedModules.has('survey-engine'),
+      proposalEngine: selectedModules.has('proposal-engine'),
       ...(notes ? { notes } : {}),
     };
 
