@@ -1,147 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '../../lib/supabase/client';
 import EmbedoLogo from '../../components/EmbedoLogo';
-
-/* ── Particle canvas ─────────────────────────────────────────────── */
-interface Particle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  radius: number;
-  opacity: number;
-  violet: boolean;
-}
-
-function OrbitalParticleCanvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mouseRef = useRef({ x: -9999, y: -9999 });
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let animId: number;
-    const particles: Particle[] = [];
-    const COUNT = 120;
-    const CONNECT_DIST = 180;
-    const MOUSE_DIST = 200;
-
-    const resize = () => {
-      canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-      canvas.height = canvas.offsetHeight * window.devicePixelRatio;
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-    };
-    resize();
-
-    const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
-
-    const handleMove = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    };
-    window.addEventListener('mousemove', handleMove);
-
-    const w = () => canvas.offsetWidth;
-    const h = () => canvas.offsetHeight;
-
-    for (let i = 0; i < COUNT; i++) {
-      particles.push({
-        x: Math.random() * w(),
-        y: Math.random() * h(),
-        vx: (Math.random() - 0.5) * 0.3,
-        vy: (Math.random() - 0.5) * 0.3,
-        radius: Math.random() * 1.6 + 0.5,
-        opacity: Math.random() * 0.5 + 0.15,
-        violet: Math.random() < 0.5,
-      });
-    }
-
-    const draw = () => {
-      ctx.clearRect(0, 0, w(), h());
-      const mx = mouseRef.current.x;
-      const my = mouseRef.current.y;
-
-      for (let i = 0; i < particles.length; i++) {
-        const a = particles[i];
-
-        // Mouse repulsion
-        const dmx = a.x - mx;
-        const dmy = a.y - my;
-        const md = Math.sqrt(dmx * dmx + dmy * dmy);
-        if (md < MOUSE_DIST && md > 0) {
-          const force = (1 - md / MOUSE_DIST) * 0.4;
-          a.vx += (dmx / md) * force;
-          a.vy += (dmy / md) * force;
-        }
-
-        // Damping
-        a.vx *= 0.995;
-        a.vy *= 0.995;
-
-        // Lines between nearby particles
-        for (let j = i + 1; j < particles.length; j++) {
-          const b = particles[j];
-          const dx = a.x - b.x;
-          const dy = a.y - b.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < CONNECT_DIST) {
-            const alpha = (1 - dist / CONNECT_DIST) * 0.18;
-            const lineColor = (a.violet && b.violet)
-              ? `rgba(139,92,246,${alpha})`
-              : (!a.violet && !b.violet)
-              ? `rgba(99,102,241,${alpha})`
-              : `rgba(120,87,244,${alpha})`;
-            ctx.beginPath();
-            ctx.strokeStyle = lineColor;
-            ctx.lineWidth = 1;
-            ctx.moveTo(a.x, a.y);
-            ctx.lineTo(b.x, b.y);
-            ctx.stroke();
-          }
-        }
-
-        // Draw particle
-        ctx.beginPath();
-        ctx.arc(a.x, a.y, a.radius, 0, Math.PI * 2);
-        ctx.fillStyle = a.violet
-          ? `rgba(167,139,250,${a.opacity})`
-          : `rgba(99,102,241,${a.opacity})`;
-        ctx.fill();
-
-        // Move
-        a.x += a.vx;
-        a.y += a.vy;
-        if (a.x < 0 || a.x > w()) a.vx *= -1;
-        if (a.y < 0 || a.y > h()) a.vy *= -1;
-      }
-
-      animId = requestAnimationFrame(draw);
-    };
-
-    draw();
-
-    return () => {
-      cancelAnimationFrame(animId);
-      ro.disconnect();
-      window.removeEventListener('mousemove', handleMove);
-    };
-  }, []);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className="absolute inset-0 w-full h-full"
-      style={{ opacity: 0.6 }}
-    />
-  );
-}
 
 /* ── Login page ──────────────────────────────────────────────────── */
 export default function LoginPage() {
@@ -196,15 +58,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-violet-50/30 to-slate-100 relative overflow-hidden">
-      {/* Dynamic particle canvas background */}
-      <OrbitalParticleCanvas />
-
-      {/* Ambient glow orbs */}
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #f8f7fc 0%, #f0ecf9 25%, #ebe6f6 50%, #e8e4f4 75%, #f3f1f9 100%)' }}>
+      {/* Soft ambient glow */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-32 left-1/4 w-[560px] h-[560px] rounded-full bg-violet-300/15 blur-[110px]" />
-        <div className="absolute top-2/3 -right-20 w-[420px] h-[420px] rounded-full bg-indigo-300/10 blur-[100px]" />
-        <div className="absolute bottom-0 left-10 w-[300px] h-[300px] rounded-full bg-violet-200/15 blur-[80px]" />
+        <div className="absolute top-1/4 left-1/3 w-[500px] h-[500px] rounded-full bg-violet-200/25 blur-[150px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-indigo-200/20 blur-[130px]" />
       </div>
 
       {/* Login card */}
