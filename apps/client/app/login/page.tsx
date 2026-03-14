@@ -28,8 +28,8 @@ function OrbitalParticleCanvas() {
 
     let animId: number;
     const particles: Particle[] = [];
-    const COUNT = 70;
-    const CONNECT_DIST = 160;
+    const COUNT = 120;
+    const CONNECT_DIST = 180;
     const MOUSE_DIST = 200;
 
     const resize = () => {
@@ -92,7 +92,7 @@ function OrbitalParticleCanvas() {
           const dy = a.y - b.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < CONNECT_DIST) {
-            const alpha = (1 - dist / CONNECT_DIST) * 0.08;
+            const alpha = (1 - dist / CONNECT_DIST) * 0.18;
             const lineColor = (a.violet && b.violet)
               ? `rgba(139,92,246,${alpha})`
               : (!a.violet && !b.violet)
@@ -100,7 +100,7 @@ function OrbitalParticleCanvas() {
               : `rgba(120,87,244,${alpha})`;
             ctx.beginPath();
             ctx.strokeStyle = lineColor;
-            ctx.lineWidth = 0.8;
+            ctx.lineWidth = 1;
             ctx.moveTo(a.x, a.y);
             ctx.lineTo(b.x, b.y);
             ctx.stroke();
@@ -111,8 +111,8 @@ function OrbitalParticleCanvas() {
         ctx.beginPath();
         ctx.arc(a.x, a.y, a.radius, 0, Math.PI * 2);
         ctx.fillStyle = a.violet
-          ? `rgba(139,92,246,${a.opacity * 0.6})`
-          : `rgba(99,102,241,${a.opacity * 0.6})`;
+          ? `rgba(167,139,250,${a.opacity})`
+          : `rgba(99,102,241,${a.opacity})`;
         ctx.fill();
 
         // Move
@@ -138,7 +138,7 @@ function OrbitalParticleCanvas() {
     <canvas
       ref={canvasRef}
       className="absolute inset-0 w-full h-full"
-      style={{ opacity: 0.5 }}
+      style={{ opacity: 0.6 }}
     />
   );
 }
