@@ -351,21 +351,25 @@ export async function proposalRoutes(app: FastifyInstance): Promise<void> {
 
     const ownerBusinessId = process.env['EMBEDO_BUSINESS_ID'];
     if (ownerBusinessId) {
-      await leadCreatedQueue().add(`proposal:${proposal.id}`, {
-        businessId: ownerBusinessId,
-        source: 'WEBSITE',
-        sourceId: proposal.id,
-        rawData: {
-          name: intakeData.contactName,
-          email: intakeData.contactEmail,
-          phone: intakeData.contactPhone,
-          businessName: intakeData.businessName,
-          industry: intakeData.industry,
-          size: intakeData.size,
-          location: intakeData.location,
-          interest: 'proposal',
-        },
-      });
+      try {
+        await leadCreatedQueue().add(`proposal:${proposal.id}`, {
+          businessId: ownerBusinessId,
+          source: 'WEBSITE',
+          sourceId: proposal.id,
+          rawData: {
+            name: intakeData.contactName,
+            email: intakeData.contactEmail,
+            phone: intakeData.contactPhone,
+            businessName: intakeData.businessName,
+            industry: intakeData.industry,
+            size: intakeData.size,
+            location: intakeData.location,
+            interest: 'proposal',
+          },
+        });
+      } catch (err) {
+        log.warn({ err }, 'Failed to enqueue lead.created event — non-fatal');
+      }
     }
 
     void sendOwnerAlert({
@@ -409,12 +413,16 @@ export async function proposalRoutes(app: FastifyInstance): Promise<void> {
 
     if (!proposal.viewedAt) {
       await db.proposal.update({ where: { id: proposal.id }, data: { viewedAt: new Date(), status: 'VIEWED' } });
-      await proposalViewedQueue().add(`viewed:${proposal.id}`, {
-        proposalId: proposal.id,
-        ...(proposal.businessId && { businessId: proposal.businessId }),
-        ...(proposal.contactId && { contactId: proposal.contactId }),
-        shareToken,
-      });
+      try {
+        await proposalViewedQueue().add(`viewed:${proposal.id}`, {
+          proposalId: proposal.id,
+          ...(proposal.businessId && { businessId: proposal.businessId }),
+          ...(proposal.contactId && { contactId: proposal.contactId }),
+          shareToken,
+        });
+      } catch (err) {
+        log.warn({ err }, 'Failed to enqueue proposal.viewed event — non-fatal');
+      }
     }
 
     const intake = proposal.intakeData as unknown as ProposalIntakeData;
