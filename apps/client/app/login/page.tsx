@@ -67,9 +67,9 @@ export default function LoginPage() {
 
       {/* Login card */}
       <div className="relative z-10 w-full max-w-md px-4">
-        <div className="bg-white/80 backdrop-blur-xl border border-slate-200/80 rounded-2xl shadow-2xl shadow-slate-300/30">
+        <div className="bg-white/80 backdrop-blur-xl border border-slate-200/80 rounded-2xl shadow-2xl shadow-slate-300/30 overflow-visible">
           {/* Header */}
-          <div className="px-8 pt-10 pb-6 text-center">
+          <div className="px-8 pt-10 pb-6 text-center overflow-visible">
             {/* Embedo Logo — isometric cube with orbiting particles */}
             <div className="relative mx-auto mb-6 flex items-center justify-center" style={{ width: 140, height: 140, overflow: 'visible' }}>
               {/* Glow behind logo */}
