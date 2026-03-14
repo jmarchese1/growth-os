@@ -3,7 +3,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { createLogger, validate, NotFoundError } from '@embedo/utils';
 import { db } from '@embedo/db';
-import { prospectDiscoveredQueue, outreachSendQueue } from '@embedo/queue';
+import { prospectDiscoveredQueue, outreachSendQueue, businessOnboardedQueue } from '@embedo/queue';
 import { searchRestaurants, geocodeCity } from './scraper/geoapify.js';
 import { sendColdEmail } from './outreach/email-sender.js';
 import { generatePersonalizedEmail } from './outreach/ai-personalizer.js';
@@ -449,7 +449,7 @@ Output format:
         name: prospect.name,
         slug,
         type: prospect.campaign.targetIndustry,
-        status: 'PENDING',
+        status: 'PROVISIONING',
         phone: prospect.phone ?? null,
         email: prospect.email ?? null,
         website: prospect.website ?? null,
@@ -463,7 +463,24 @@ Output format:
       data: { status: 'CONVERTED', convertedToBusinessId: business.id },
     });
 
-    log.info({ prospectId: id, businessId: business.id }, 'Prospect converted to business');
+    // Fire business.onboarded event to provision services
+    await businessOnboardedQueue().add(
+      `onboard:${business.id}`,
+      {
+        businessId: business.id,
+        businessName: business.name,
+        businessType: business.type,
+        ...(business.email != null ? { email: business.email } : {}),
+        ...(business.phone != null ? { phone: business.phone } : {}),
+      },
+      {
+        jobId: `onboard:${business.id}`,
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 10000 },
+      },
+    );
+
+    log.info({ prospectId: id, businessId: business.id }, 'Prospect converted to business and onboarding started');
     return reply.send({ prospect: updated, business });
   });
 
