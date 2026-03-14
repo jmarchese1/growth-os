@@ -14,6 +14,7 @@ import { sendgridEventRoutes } from './routes/webhooks/sendgrid-events.js';
 import { trackRoutes } from './routes/track.js';
 import { leadCaptureRoutes } from './routes/leads.js';
 import { proposalRoutes } from './routes/proposals.js';
+import { businessRoutes } from './routes/businesses.js';
 
 const log = createLogger('api:gateway');
 
@@ -72,6 +73,7 @@ export async function buildApp() {
   await app.register(trackRoutes);
   await app.register(leadCaptureRoutes);
   await app.register(proposalRoutes);
+  await app.register(businessRoutes);
 
   log.info('API Gateway configured');
   return app;
