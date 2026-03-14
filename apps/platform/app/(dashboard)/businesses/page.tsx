@@ -1,3 +1,7 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3001';
 
 interface Business {
@@ -11,17 +15,6 @@ interface Business {
   createdAt: string;
 }
 
-async function getBusinesses(): Promise<{ items: Business[]; total: number }> {
-  try {
-    const res = await fetch(`${API_URL}/businesses?pageSize=50`, { cache: 'no-store' });
-    if (!res.ok) return { items: [], total: 0 };
-    const data = await res.json();
-    return { items: data.items ?? [], total: data.total ?? 0 };
-  } catch {
-    return { items: [], total: 0 };
-  }
-}
-
 const statusColors: Record<string, string> = {
   ACTIVE:       'bg-emerald-500/15 text-emerald-400 border-emerald-500/25',
   PROVISIONING: 'bg-amber-500/15 text-amber-400 border-amber-500/25',
@@ -29,8 +22,29 @@ const statusColors: Record<string, string> = {
   SUSPENDED:    'bg-red-500/15 text-red-400 border-red-500/25',
 };
 
-export default async function BusinessesPage() {
-  const { items, total } = await getBusinesses();
+export default function BusinessesPage() {
+  const [items, setItems] = useState<Business[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchBusinesses() {
+      try {
+        const res = await fetch(`${API_URL}/businesses?pageSize=50`);
+        if (res.ok) {
+          const data = await res.json();
+          setItems(data.items ?? []);
+          setTotal(data.total ?? 0);
+        }
+      } catch (err) {
+        console.error('Failed to fetch businesses:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchBusinesses();
+  }, []);
 
   return (
     <div className="p-8 space-y-8 animate-fade-up">
@@ -48,7 +62,11 @@ export default async function BusinessesPage() {
       </div>
 
       <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-x-auto">
-        {items.length === 0 ? (
+        {loading ? (
+          <div className="p-16 text-center">
+            <p className="text-slate-500 text-sm">Loading businesses...</p>
+          </div>
+        ) : items.length === 0 ? (
           <div className="p-16 text-center">
             <p className="text-slate-500 text-sm">No businesses onboarded yet.</p>
             <a href="/businesses/new" className="mt-3 inline-block text-sm text-violet-400 hover:text-violet-300 transition-colors">
