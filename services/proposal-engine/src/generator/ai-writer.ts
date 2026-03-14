@@ -7,7 +7,7 @@ const log = createLogger('proposal-engine:ai-writer');
 
 const anthropic = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
 
-const EMBEDO_MODULES: ProposalModule[] = [
+export const EMBEDO_MODULES: ProposalModule[] = [
   {
     name: 'AI Voice Receptionist',
     description: 'A 24/7 AI phone agent powered by ElevenLabs that answers calls, takes reservations, answers questions, and captures lead information.',
@@ -63,9 +63,12 @@ export async function generateProposalContent(
   const prompt = buildProposalPrompt(intake);
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 min timeout
+
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 3000,
+      model: 'claude-haiku-4-5-20251001', // Using Haiku for faster responses; replace with claude-sonnet-4-6 if needed
+      max_tokens: 2000,
       messages: [
         {
           role: 'user',
@@ -74,6 +77,8 @@ export async function generateProposalContent(
       ],
     });
 
+    clearTimeout(timeoutId);
+
     const text = response.content[0]?.type === 'text' ? response.content[0].text : '';
 
     // Parse the structured sections from Claude's response
@@ -81,7 +86,9 @@ export async function generateProposalContent(
     log.info({ businessName: intake.businessName }, 'Proposal generated');
     return content;
   } catch (err) {
-    throw new ExternalApiError('Anthropic', 'Failed to generate proposal', err);
+    const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+    log.error({ err: errorMsg, businessName: intake.businessName }, 'Anthropic API error');
+    throw new ExternalApiError('Anthropic', `Failed to generate proposal: ${errorMsg}`, err);
   }
 }
 

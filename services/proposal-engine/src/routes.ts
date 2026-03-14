@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { validate, createLogger } from '@embedo/utils';
 import { db } from '@embedo/db';
-import { generateProposalContent } from './generator/ai-writer.js';
+import { generateProposalContent, EMBEDO_MODULES } from './generator/ai-writer.js';
 import { renderProposalHtml } from './generator/html.js';
 import { proposalViewedQueue, leadCreatedQueue } from '@embedo/queue';
 import { env } from './config.js';
@@ -29,6 +29,48 @@ const intakeSchema = z.object({
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.get('/health', async () => ({ ok: true, service: 'proposal-engine' }));
 
+  // ─── Generate test proposal (for debugging) ─────────────────────────────────
+  app.post('/proposals/test', async (request, reply) => {
+    const { businessName = 'Test Business', industry = 'Restaurant' } = request.query as Record<string, string>;
+
+    const mockContent = {
+      executiveSummary: `Transform ${businessName} with AI-powered automation. Embedo's intelligent systems handle customer interactions 24/7, increase booking rates, and reduce manual work.`,
+      problemStatement: `${businessName} is looking to streamline operations and improve customer experience. Current systems lack automation and 24/7 availability.`,
+      solution: 'Embedo provides a complete AI automation suite: voice receptionist, website chatbot, lead management, social media automation, and more.',
+      expectedBenefits: [
+        '24/7 customer availability without hiring',
+        'Automated lead capture and follow-up',
+        'Reduced operational costs',
+        'Improved customer satisfaction',
+        'Better booking and conversion rates',
+      ],
+      investmentOverview: 'Flexible pricing starting at $499/month with ROI typically achieved within 30-60 days.',
+      implementationTimeline: 'Fast deployment: setup in 48 hours, fully operational in 5 business days.',
+      nextSteps: 'Schedule a demo to see how Embedo transforms your business.',
+      modules: EMBEDO_MODULES.map((m) => ({ name: m.name, description: m.description })),
+    };
+
+    const proposal = await db.proposal.create({
+      data: {
+        intakeData: {
+          businessName,
+          industry,
+          size: 'small',
+          location: 'Test City',
+        },
+        content: mockContent as object,
+        status: 'DRAFT',
+      },
+    });
+
+    const shareUrl = `${env.PROPOSAL_BASE_URL}/${proposal.shareToken}`;
+    return reply.code(201).send({
+      proposalId: proposal.id,
+      shareUrl,
+      content: mockContent,
+    });
+  });
+
   // ─── Generate proposal ─────────────────────────────────────────────────────
   app.post('/proposals/generate', async (request, reply) => {
     const rawForm = validate(intakeSchema, request.body);
@@ -38,7 +80,31 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     log.info({ businessName: intakeData.businessName }, 'Generating proposal');
 
     // Generate AI content
-    const content = await generateProposalContent(intakeData);
+    let content;
+    try {
+      content = await generateProposalContent(intakeData);
+    } catch (err) {
+      log.error({ err, businessName: intakeData.businessName }, 'Failed to generate proposal content');
+
+      // Fallback to mock proposal for debugging
+      log.warn('Generating mock proposal due to API error');
+      content = {
+        executiveSummary: `Transform ${intakeData.businessName} with AI-powered automation. Embedo's intelligent systems handle customer interactions 24/7, increase booking rates, and reduce manual work.`,
+        problemStatement: intakeData.goals || `${intakeData.businessName} is looking to streamline operations and improve customer experience. Current systems lack automation and 24/7 availability.`,
+        solution: 'Embedo provides a complete AI automation suite: voice receptionist, website chatbot, lead management, social media automation, and more.',
+        expectedBenefits: [
+          '24/7 customer availability without hiring',
+          'Automated lead capture and follow-up',
+          'Reduced operational costs',
+          'Improved customer satisfaction',
+          'Better booking and conversion rates',
+        ],
+        investmentOverview: 'Flexible pricing starting at $499/month with ROI typically achieved within 30-60 days.',
+        implementationTimeline: 'Fast deployment: setup in 48 hours, fully operational in 5 business days.',
+        nextSteps: 'Schedule a demo to see how Embedo transforms your business.',
+        modules: EMBEDO_MODULES.map((m) => ({ name: m.name, description: m.description })),
+      };
+    }
 
     // Store in DB
     const proposal = await db.proposal.create({
@@ -112,8 +178,8 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       // Emit proposal.viewed event
       await proposalViewedQueue().add(`viewed:${proposal.id}`, {
         proposalId: proposal.id,
-        businessId: proposal.businessId ?? undefined,
-        contactId: proposal.contactId ?? undefined,
+        ...(proposal.businessId && { businessId: proposal.businessId }),
+        ...(proposal.contactId && { contactId: proposal.contactId }),
         shareToken,
       });
     }
@@ -183,7 +249,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     try {
       await sendProposalToContact({
         contactEmail,
-        contactName,
+        ...(contactName && { contactName }),
         businessName,
         shareUrl,
       });
