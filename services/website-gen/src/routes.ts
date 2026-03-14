@@ -71,7 +71,7 @@ export async function websiteRoutes(app: FastifyInstance) {
     // Render HTML
     const html = renderRestaurantPremium({
       businessName: body.businessName,
-      tagline: body.tagline ?? (s['tagline'] as string | undefined),
+      ...(body.tagline ?? s['tagline'] ? { tagline: (body.tagline ?? s['tagline']) as string } : {}),
       description: body.description ?? (s['description'] as string | undefined),
       cuisine: body.cuisine ?? (s['cuisine'] as string | undefined),
       phone: body.phone ?? (s['phone'] as string | undefined),
@@ -105,7 +105,6 @@ export async function websiteRoutes(app: FastifyInstance) {
           template: 'restaurant-premium',
           config: body as object,
           status: 'GENERATING',
-          slug,
         },
       });
     } else {
@@ -134,7 +133,7 @@ export async function websiteRoutes(app: FastifyInstance) {
       where: { id: websiteRecord.id },
       data: {
         status: deployedUrl ? 'LIVE' : 'GENERATING',
-        deploymentUrl: deployedUrl || null,
+        deployUrl: deployedUrl || null,
         vercelDeploymentId: deploymentId || null,
         vercelProjectId: vercelProjectId || null,
       },
@@ -164,7 +163,7 @@ export async function websiteRoutes(app: FastifyInstance) {
     if (!website) throw new NotFoundError('GeneratedWebsite', req.params.websiteId);
 
     // Regenerate HTML from stored config
-    const cfg = website.config as Parameters<typeof renderRestaurantPremium>[0];
+    const cfg = website.config as unknown as Parameters<typeof renderRestaurantPremium>[0];
     const html = renderRestaurantPremium(cfg);
     return reply.type('text/html').send(html);
   });

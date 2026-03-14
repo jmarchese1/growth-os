@@ -732,6 +732,9 @@ importers:
       axios:
         specifier: ^1.7.9
         version: 1.13.6
+      bullmq:
+        specifier: ^5.0.0
+        version: 5.70.4
       fastify:
         specifier: ^5.2.0
         version: 5.8.2

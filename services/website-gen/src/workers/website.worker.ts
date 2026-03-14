@@ -105,7 +105,7 @@ export function startWorkers() {
         db.business.findUniqueOrThrow({ where: { id: businessId } }),
       ]);
 
-      const config = website.config as WebsiteConfig;
+      const config = website.config as unknown as WebsiteConfig;
       const html = renderRestaurantMinimal(config);
 
       const deployed = await deployToVercel({
