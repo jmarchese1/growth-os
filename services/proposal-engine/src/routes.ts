@@ -8,6 +8,7 @@ import { proposalViewedQueue, leadCreatedQueue } from '@embedo/queue';
 import { env } from './config.js';
 import type { ProposalIntakeData } from '@embedo/types';
 import { sendOwnerAlert } from './notifications/owner-alert.js';
+import { sendProposalToContact } from './notifications/send-proposal.js';
 
 const log = createLogger('proposal-engine:routes');
 
@@ -160,5 +161,43 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     ]);
 
     return { items, total, page: parseInt(page), pageSize: parseInt(pageSize) };
+  });
+
+  // ─── Send proposal to contact ──────────────────────────────────────────────
+  app.post('/proposals/:id/send', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { contactEmail, contactName, shareUrl } = validate(
+      z.object({
+        contactEmail: z.string().email(),
+        contactName: z.string().optional(),
+        shareUrl: z.string().url(),
+      }),
+      request.body
+    );
+
+    const proposal = await db.proposal.findUnique({ where: { id } });
+    if (!proposal) return reply.code(404).send({ error: 'Proposal not found' });
+
+    const businessName = (proposal.intakeData as Record<string, unknown>)['businessName'] as string;
+
+    try {
+      await sendProposalToContact({
+        contactEmail,
+        contactName,
+        businessName,
+        shareUrl,
+      });
+
+      await db.proposal.update({
+        where: { id },
+        data: { status: 'SENT' },
+      });
+
+      log.info({ proposalId: id, contactEmail }, 'Proposal sent to contact');
+      return reply.code(200).send({ success: true, message: 'Proposal sent' });
+    } catch (err) {
+      log.error({ err, proposalId: id }, 'Failed to send proposal');
+      return reply.code(500).send({ error: 'Failed to send proposal' });
+    }
   });
 }

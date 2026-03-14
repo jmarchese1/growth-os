@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { GenerateProposalModal } from './generate-proposal-modal';
+import { ProposalPreviewModal } from './proposal-preview-modal';
 
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? process.env['API_BASE_URL'] ?? 'https://embedoapi-production.up.railway.app';
 const PROPOSAL_ENGINE_URL = process.env['NEXT_PUBLIC_PROPOSAL_ENGINE_URL'] ?? 'http://localhost:3008';
@@ -41,6 +42,7 @@ export default function ProposalsPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [previewProposal, setPreviewProposal] = useState<Proposal | null>(null);
 
   const viewed = proposals.filter((p) => p.viewedAt).length;
   const accepted = proposals.filter((p) => p.acceptedAt).length;
@@ -143,9 +145,15 @@ export default function ProposalsPage() {
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-500">{new Date(proposal.createdAt).toLocaleDateString()}</td>
                   <td className="px-6 py-4 text-sm">
-                    <a href={`https://embedo.io/proposal/${proposal.shareToken}`} target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:text-violet-300 transition-colors">
-                      View →
-                    </a>
+                    <div className="flex gap-2">
+                      <button onClick={() => setPreviewProposal(proposal)} className="text-violet-400 hover:text-violet-300 transition-colors">
+                        Preview
+                      </button>
+                      <span className="text-slate-600">•</span>
+                      <a href={`https://embedo.io/proposal/${proposal.shareToken}`} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-300 transition-colors">
+                        Public Link
+                      </a>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -155,6 +163,16 @@ export default function ProposalsPage() {
       </div>
 
       {showModal && <GenerateProposalModal onClose={() => setShowModal(false)} onProposalGenerated={handleProposalGenerated} />}
+      {previewProposal && (
+        <ProposalPreviewModal
+          proposal={previewProposal}
+          onClose={() => setPreviewProposal(null)}
+          onSent={(updatedProposal) => {
+            setProposals((prev) => prev.map((p) => (p.id === updatedProposal.id ? updatedProposal : p)));
+            setPreviewProposal(null);
+          }}
+        />
+      )}
     </div>
   );
 }
