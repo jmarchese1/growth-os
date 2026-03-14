@@ -3,7 +3,7 @@ RUN npm install -g pnpm
 
 FROM base AS builder
 WORKDIR /app
-COPY pnpm-workspace.yaml package.json turbo.json ./
+COPY pnpm-workspace.yaml package.json turbo.json pnpm-lock.yaml ./
 COPY packages/ packages/
 COPY services/website-gen/ services/website-gen/
 RUN pnpm install --frozen-lockfile
