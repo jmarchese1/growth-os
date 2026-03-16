@@ -5,8 +5,13 @@ import WebsitePageClient from './website-page-client';
 export default async function WebsitePage() {
   const user = await getCurrentUser();
 
-  const dbUser = await db.user.findUnique({ where: { supabaseId: user.id } });
-  const businessId = dbUser?.businessId ?? user.id; // fallback to supabase ID for dev
+  let businessId = user.id;
+  try {
+    const dbUser = await db.user.findUnique({ where: { supabaseId: user.id } });
+    if (dbUser?.businessId) businessId = dbUser.businessId;
+  } catch {
+    // DB may not have User table yet — fall back to Supabase ID
+  }
 
   return <WebsitePageClient businessId={businessId} />;
 }
