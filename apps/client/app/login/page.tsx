@@ -147,6 +147,8 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [showForgot, setShowForgot] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
+  const [showSignup, setShowSignup] = useState(false);
+  const [signupSent, setSignupSent] = useState(false);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -166,6 +168,36 @@ export default function LoginPage() {
     }
     router.push('/');
     router.refresh();
+  }
+
+  async function handleSignup(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim() || !password.trim()) {
+      setError('Email and password are required');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+    setLoading(true);
+    setError('');
+
+    const supabase = createSupabaseBrowserClient();
+    const { error: signupError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (signupError) {
+      setError(signupError.message);
+    } else {
+      setSignupSent(true);
+    }
+    setLoading(false);
   }
 
   async function handleForgotPassword(e: React.FormEvent) {
@@ -216,12 +248,69 @@ export default function LoginPage() {
             </div>
 
             <h1 className="text-xl font-bold text-white tracking-tight">Welcome to Embedo</h1>
-            <p className="text-sm text-slate-500 mt-1.5">Sign in to your business dashboard</p>
+            <p className="text-sm text-slate-500 mt-1.5">
+              {showSignup ? 'Create your business account' : 'Sign in to your business dashboard'}
+            </p>
           </div>
 
           {/* Form */}
           <div className="px-8 pb-8">
-            {showForgot ? (
+            {showSignup ? (
+              <form onSubmit={handleSignup} className="space-y-4">
+                {signupSent ? (
+                  <div className="px-4 py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                    <p className="text-sm text-emerald-400 font-medium">Check your email</p>
+                    <p className="text-xs text-slate-400 mt-1">We sent a confirmation link to <span className="text-white">{email}</span>. Click it to activate your account.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1.5">Email address</label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@company.com"
+                        autoFocus
+                        required
+                        className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.08] rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/30 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1.5">Password</label>
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Create a password (min 6 characters)"
+                        required
+                        className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.08] rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/30 transition-all"
+                      />
+                    </div>
+                    {error && (
+                      <div className="px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg">
+                        <p className="text-xs text-red-400">{error}</p>
+                      </div>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={loading || !email.trim() || !password.trim()}
+                      className="w-full py-3 bg-violet-600 text-white text-sm font-semibold rounded-xl hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 shadow-lg shadow-violet-600/20"
+                    >
+                      {loading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                      {loading ? 'Creating account...' : 'Create account'}
+                    </button>
+                  </>
+                )}
+                <button
+                  type="button"
+                  onClick={() => { setShowSignup(false); setSignupSent(false); setError(''); }}
+                  className="w-full text-sm text-slate-500 hover:text-violet-400 transition-colors"
+                >
+                  Already have an account? Sign in
+                </button>
+              </form>
+            ) : showForgot ? (
               <form onSubmit={handleForgotPassword} className="space-y-4">
                 {forgotSent ? (
                   <div className="px-4 py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
@@ -315,6 +404,16 @@ export default function LoginPage() {
                   {loading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                   {loading ? 'Signing in...' : 'Sign in'}
                 </button>
+
+                <div className="pt-2 text-center">
+                  <button
+                    type="button"
+                    onClick={() => { setShowSignup(true); setError(''); }}
+                    className="text-sm text-slate-500 hover:text-violet-400 transition-colors"
+                  >
+                    Don&apos;t have an account? <span className="text-violet-400 font-medium">Sign up</span>
+                  </button>
+                </div>
               </form>
             )}
           </div>
