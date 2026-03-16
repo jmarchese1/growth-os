@@ -140,6 +140,13 @@ export const apiGatewayEnvSchema = baseEnvSchema.extend({
   TIKTOK_CLIENT_SECRET: z.string().optional(),
   API_BASE_URL: z.string().url().default('http://localhost:3000'),
   CLIENT_APP_URL: z.string().url().default('http://localhost:3012'),
+  // Stripe — Billing
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_PRICE_SOLO: z.string().optional(),
+  STRIPE_PRICE_SMALL: z.string().optional(),
+  STRIPE_PRICE_MEDIUM: z.string().optional(),
+  STRIPE_PRICE_LARGE: z.string().optional(),
 });
 
 /**

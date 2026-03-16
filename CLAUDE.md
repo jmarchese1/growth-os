@@ -268,9 +268,5 @@ Campaigns                Leads                    Businesses
 
 ## Next Steps — Product Roadmap
 
-### Short-term (Wiring & Polish)
-- [ ] **AI proposal follow-up**: `proposal.viewed` events are emitted but no worker consumes them yet — build the follow-up automation handler
-- [ ] **Stripe billing integration**: Automated invoicing and subscription management for onboarded businesses
-
 ### Long-term (Scale & Expand)
 - [ ] **White-label option**: Allow agencies to resell Embedo under their own brand

@@ -20,6 +20,8 @@ import { voiceAgentRoutes } from './routes/voice-agent.js';
 import { chatbotRoutes } from './routes/chatbot.js';
 import { oauthRoutes } from './routes/oauth.js';
 import { meRoutes } from './routes/me.js';
+import { billingRoutes } from './routes/billing.js';
+import { stripeWebhookRoutes } from './routes/webhooks/stripe.js';
 
 const log = createLogger('api:gateway');
 
@@ -84,6 +86,8 @@ export async function buildApp() {
   await app.register(chatbotRoutes);
   await app.register(oauthRoutes);
   await app.register(meRoutes);
+  await app.register(billingRoutes);
+  await app.register(stripeWebhookRoutes);
 
   log.info('API Gateway configured');
   return app;

@@ -32,6 +32,7 @@ export async function meRoutes(app: FastifyInstance): Promise<void> {
       include: {
         business: {
           include: {
+            subscription: true,
             _count: {
               select: {
                 contacts: true,
@@ -111,6 +112,7 @@ export async function meRoutes(app: FastifyInstance): Promise<void> {
             instagramPageId: user.business.instagramPageId,
             facebookPageId: user.business.facebookPageId,
             settings: user.business.settings,
+            subscription: user.business.subscription,
             counts: user.business._count,
             createdAt: user.business.createdAt,
           }
@@ -303,6 +305,7 @@ export async function meRoutes(app: FastifyInstance): Promise<void> {
       include: {
         business: {
           include: {
+            subscription: true,
             _count: {
               select: {
                 contacts: true,
@@ -363,6 +366,7 @@ export async function meRoutes(app: FastifyInstance): Promise<void> {
             instagramPageId: updatedUser.business.instagramPageId,
             facebookPageId: updatedUser.business.facebookPageId,
             settings: updatedUser.business.settings,
+            subscription: updatedUser.business.subscription,
             counts: updatedUser.business._count,
             createdAt: updatedUser.business.createdAt,
           }

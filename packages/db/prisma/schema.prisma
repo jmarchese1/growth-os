@@ -189,6 +189,9 @@ model Business {
   // Flexible per-business configuration
   settings Json? // { hours, menu, chatbotPersona, socialPostingSchedule, etc. }
 
+  // Billing
+  stripeCustomerId String? @unique
+
   // Relations
   users           User[]
   contacts        Contact[]
@@ -204,6 +207,7 @@ model Business {
   smsSequences    SmsSequence[]
   appointments    Appointment[]
   onboardingLog   OnboardingLog[]
+  subscription    Subscription?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -704,4 +708,42 @@ model OnboardingLog {
   createdAt DateTime @default(now())
 
   @@index([businessId])
+}
+
+// ─── Billing & Subscriptions ──────────────────────────────────────────────
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  PAUSED
+}
+
+enum PricingTier {
+  SOLO
+  SMALL
+  MEDIUM
+  LARGE
+}
+
+model Subscription {
+  id         String   @id @default(cuid())
+  businessId String   @unique
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  stripeSubscriptionId String? @unique
+  pricingTier          PricingTier @default(SOLO)
+  status               SubscriptionStatus @default(TRIALING)
+
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  trialEndsAt        DateTime?
+  canceledAt         DateTime?
+  cancelAtPeriodEnd  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
 }
