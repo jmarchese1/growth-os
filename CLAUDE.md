@@ -268,15 +268,9 @@ Campaigns                Leads                    Businesses
 
 ## Next Steps — Product Roadmap
 
-### Immediate (Infrastructure & Wiring)
-- [ ] **Apollo.io API key**: Set `APOLLO_API_KEY` in production env to enable prospect email enrichment
-
-### Short-term (Platform & Client Features)
-- [ ] **Social OAuth flows**: Build OAuth redirect endpoints in API gateway (`/auth/:provider/authorize`, `/auth/:provider/callback`) for Instagram, Facebook, Google Business Profile, TikTok. Client dashboard integrations page already has the UI buttons wired — just needs the backend endpoints. Requires creating developer apps on each platform and setting Client ID + Client Secret in API env vars.
-- [ ] **Social media automation**: Content scheduling, comment monitoring, and auto-DM delivery for client businesses (content generation service exists, delivery layer incomplete)
+### Short-term (Wiring & Polish)
+- [ ] **AI proposal follow-up**: `proposal.viewed` events are emitted but no worker consumes them yet — build the follow-up automation handler
+- [ ] **Stripe billing integration**: Automated invoicing and subscription management for onboarded businesses
 
 ### Long-term (Scale & Expand)
-- [ ] **Multi-vertical expansion**: Extend beyond restaurants to other local business types (salons, gyms, clinics)
 - [ ] **White-label option**: Allow agencies to resell Embedo under their own brand
-- [ ] **Stripe billing integration**: Automated invoicing and subscription management for onboarded businesses
-- [ ] **AI proposal follow-up**: Auto-detect proposal views and trigger personalized follow-up sequences
