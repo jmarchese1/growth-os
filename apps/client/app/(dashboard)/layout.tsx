@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import EmbedoLogo from '../../components/EmbedoLogo';
 import { useSession } from '../../components/auth/session-provider';
+import { useBusiness } from '../../components/auth/business-provider';
 import { createSupabaseBrowserClient } from '../../lib/supabase/client';
 
 const NAV = [
@@ -75,6 +76,11 @@ const NAV = [
   {
     section: 'ACCOUNT',
     items: [
+      {
+        href: '/billing',
+        label: 'Billing',
+        icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" /><path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" /></svg>,
+      },
       {
         href: '/integrations',
         label: 'Integrations',
@@ -198,6 +204,7 @@ function Sidebar({ width, collapsed, onDragStart, onToggle, userEmail, userIniti
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user } = useSession();
+  const { needsOnboarding, loading: businessLoading } = useBusiness();
   const router = useRouter();
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_WIDTH);
   const isDragging = useRef(false);
@@ -248,6 +255,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       window.removeEventListener('mouseup', onMouseUp);
     };
   }, []);
+
+  // Redirect to /setup if user has no business linked
+  useEffect(() => {
+    if (!businessLoading && needsOnboarding) {
+      router.replace('/setup');
+    }
+  }, [businessLoading, needsOnboarding, router]);
+
+  if (!businessLoading && needsOnboarding) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex bg-slate-50">

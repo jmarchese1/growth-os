@@ -41,10 +41,23 @@ interface EmbedoUser {
   businessId: string | null;
 }
 
+interface MatchedBusiness {
+  id: string;
+  name: string;
+  type: string;
+  phone: string | null;
+  email: string | null;
+  website: string | null;
+  address: Record<string, string> | null;
+  status: string;
+}
+
 interface BusinessContextValue {
   business: BusinessData | null;
   embedoUser: EmbedoUser | null;
   loading: boolean;
+  needsOnboarding: boolean;
+  matchedBusiness: MatchedBusiness | null;
   refresh: () => Promise<void>;
 }
 
@@ -52,6 +65,8 @@ const BusinessContext = createContext<BusinessContextValue>({
   business: null,
   embedoUser: null,
   loading: true,
+  needsOnboarding: false,
+  matchedBusiness: null,
   refresh: async () => {},
 });
 
@@ -61,12 +76,16 @@ export function BusinessProvider({ children }: { children: React.ReactNode }) {
   const { user } = useSession();
   const [business, setBusiness] = useState<BusinessData | null>(null);
   const [embedoUser, setEmbedoUser] = useState<EmbedoUser | null>(null);
+  const [matchedBusiness, setMatchedBusiness] = useState<MatchedBusiness | null>(null);
   const [loading, setLoading] = useState(true);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   const fetchMe = useCallback(async () => {
     if (!user?.id) {
       setBusiness(null);
       setEmbedoUser(null);
+      setNeedsOnboarding(false);
+      setMatchedBusiness(null);
       setLoading(false);
       return;
     }
@@ -86,6 +105,25 @@ export function BusinessProvider({ children }: { children: React.ReactNode }) {
       if (data.success) {
         setEmbedoUser(data.user);
         setBusiness(data.business);
+
+        // If user has no business, check for existing profile match
+        if (!data.business && !data.user?.businessId) {
+          setNeedsOnboarding(true);
+          try {
+            const matchRes = await fetch(`${API_BASE}/me/match-business?supabaseId=${user.id}`);
+            if (matchRes.ok) {
+              const matchData = await matchRes.json();
+              if (matchData.success && matchData.match) {
+                setMatchedBusiness(matchData.match);
+              }
+            }
+          } catch {
+            // Non-critical — continue without match
+          }
+        } else {
+          setNeedsOnboarding(false);
+          setMatchedBusiness(null);
+        }
       }
     } catch (err) {
       console.error('Error fetching /me:', err);
@@ -99,7 +137,7 @@ export function BusinessProvider({ children }: { children: React.ReactNode }) {
   }, [fetchMe]);
 
   return (
-    <BusinessContext.Provider value={{ business, embedoUser, loading, refresh: fetchMe }}>
+    <BusinessContext.Provider value={{ business, embedoUser, loading, needsOnboarding, matchedBusiness, refresh: fetchMe }}>
       {children}
     </BusinessContext.Provider>
   );

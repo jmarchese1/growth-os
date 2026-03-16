@@ -15,7 +15,7 @@ export const apiEnvSchema = baseEnvSchema.extend({
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
   SUPABASE_URL: z.string().url().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
-  CORS_ORIGINS: z.string().default('http://localhost:3010,http://localhost:3011'),
+  CORS_ORIGINS: z.string().default('http://localhost:3010,http://localhost:3011,http://localhost:3012'),
 });
 
 // ─── Voice Agent env ──────────────────────────────────────────────────────────
@@ -125,7 +125,7 @@ export const apiGatewayEnvSchema = baseEnvSchema.extend({
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
   SUPABASE_URL: z.string().url().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
-  CORS_ORIGINS: z.string().default('http://localhost:3010,http://localhost:3011'),
+  CORS_ORIGINS: z.string().default('http://localhost:3010,http://localhost:3011,http://localhost:3012'),
   EMBEDO_BUSINESS_ID: z.string().optional(),
   OWNER_PHONE: z.string().optional(),
   TWILIO_ACCOUNT_SID: z.string().optional(),
@@ -140,6 +140,13 @@ export const apiGatewayEnvSchema = baseEnvSchema.extend({
   TIKTOK_CLIENT_SECRET: z.string().optional(),
   API_BASE_URL: z.string().url().default('http://localhost:3000'),
   CLIENT_APP_URL: z.string().url().default('http://localhost:3012'),
+  // Stripe — Billing
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_PRICE_SOLO: z.string().optional(),
+  STRIPE_PRICE_SMALL: z.string().optional(),
+  STRIPE_PRICE_MEDIUM: z.string().optional(),
+  STRIPE_PRICE_LARGE: z.string().optional(),
 });
 
 /**
