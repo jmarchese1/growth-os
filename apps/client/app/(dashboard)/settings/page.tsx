@@ -171,7 +171,7 @@ export default function SettingsPage() {
         </div>
 
         {!business ? (
-          <p className="text-sm text-slate-400">No business linked to your account yet. Contact your Embedo administrator.</p>
+          <p className="text-sm text-slate-400">No business linked to your account yet. Return to the dashboard to set up your business.</p>
         ) : editing ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[

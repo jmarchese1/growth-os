@@ -5,7 +5,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import EmbedoLogo from '../../components/EmbedoLogo';
 import { useSession } from '../../components/auth/session-provider';
+import { useBusiness } from '../../components/auth/business-provider';
 import { createSupabaseBrowserClient } from '../../lib/supabase/client';
+import SetupBusiness from '../../components/onboarding/setup-business';
 
 const NAV = [
   {
@@ -198,6 +200,7 @@ function Sidebar({ width, collapsed, onDragStart, onToggle, userEmail, userIniti
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user } = useSession();
+  const { needsOnboarding, loading: businessLoading } = useBusiness();
   const router = useRouter();
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_WIDTH);
   const isDragging = useRef(false);
@@ -248,6 +251,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       window.removeEventListener('mouseup', onMouseUp);
     };
   }, []);
+
+  // Show onboarding if user has no business linked
+  if (!businessLoading && needsOnboarding) {
+    return <SetupBusiness />;
+  }
 
   return (
     <div className="min-h-screen flex bg-slate-50">

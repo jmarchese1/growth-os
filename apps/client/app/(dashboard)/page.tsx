@@ -62,7 +62,7 @@ export default function DashboardOverview() {
             <div>
               <h2 className="text-sm font-semibold text-slate-700 mb-4">Getting Started</h2>
               <div className="bg-white border border-slate-200 rounded-xl p-8 text-center">
-                <p className="text-slate-400 text-sm">Your account is not linked to a business yet. Contact your Embedo administrator to get set up.</p>
+                <p className="text-slate-400 text-sm">Your business profile is being set up. Refresh to see your dashboard.</p>
               </div>
             </div>
           )}
