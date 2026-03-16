@@ -258,6 +258,161 @@ function SettingsPanel({ businessId, settings, onSaved }: {
   );
 }
 
+/* ── Test Chat Panel ───────────────────────────────────────────── */
+function TestChatPanel({ businessId }: { businessId: string }) {
+  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
+  const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  async function handleSend() {
+    const text = input.trim();
+    if (!text || sending) return;
+
+    const userMsg = { role: 'user' as const, content: text };
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
+    setInput('');
+    setSending(true);
+
+    try {
+      // Send with test: true and full history so the bot has context
+      const history = updatedMessages.map((m) => ({
+        ...m,
+        timestamp: new Date().toISOString(),
+      }));
+
+      const res = await fetch(`${API_URL}/chatbot/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessId,
+          message: text,
+          channel: 'WEB',
+          test: true,
+          history: history.slice(0, -1), // exclude current message (processMessage adds it)
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setMessages((prev) => [...prev, { role: 'assistant', content: data.reply }]);
+      } else {
+        setMessages((prev) => [...prev, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }]);
+      }
+    } catch {
+      setMessages((prev) => [...prev, { role: 'assistant', content: 'Could not connect to the chatbot service.' }]);
+    } finally {
+      setSending(false);
+    }
+  }
+
+  function handleClear() {
+    setMessages([]);
+    setInput('');
+  }
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+      {/* Header */}
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50/50 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-violet-600">
+              <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="text-left">
+            <h3 className="text-sm font-semibold text-slate-700">Test Your Chatbot</h3>
+            <p className="text-xs text-slate-400">Chat with your bot to test how it responds — conversations here are not logged</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700">TEST MODE</span>
+          <svg viewBox="0 0 20 20" fill="currentColor" className={`w-5 h-5 text-slate-400 transition-transform ${expanded ? 'rotate-180' : ''}`}>
+            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+        </div>
+      </button>
+
+      {expanded && (
+        <div className="border-t border-slate-100">
+          {/* Messages area */}
+          <div className="h-80 overflow-y-auto p-4 bg-slate-50/50 space-y-3">
+            {messages.length === 0 && (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center mx-auto mb-2">
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-violet-500">
+                      <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <p className="text-xs text-slate-400">Type a message to start testing your chatbot</p>
+                  <p className="text-[10px] text-slate-300 mt-1">Try asking about the menu, hours, or give it a name and email</p>
+                </div>
+              </div>
+            )}
+            {messages.map((msg, i) => (
+              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                  msg.role === 'user'
+                    ? 'bg-violet-600 text-white rounded-br-md'
+                    : 'bg-white border border-slate-200 text-slate-700 rounded-bl-md shadow-sm'
+                }`}>
+                  {msg.content}
+                </div>
+              </div>
+            ))}
+            {sending && (
+              <div className="flex justify-start">
+                <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+                  <div className="flex gap-1">
+                    <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Input area */}
+          <div className="px-4 py-3 border-t border-slate-100 flex items-center gap-2">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+              placeholder="Type a test message..."
+              disabled={sending}
+              className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 disabled:opacity-50"
+            />
+            <button
+              onClick={handleSend}
+              disabled={!input.trim() || sending}
+              className="px-4 py-2.5 bg-violet-600 text-white rounded-xl text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition-colors"
+            >
+              Send
+            </button>
+            {messages.length > 0 && (
+              <button
+                onClick={handleClear}
+                className="px-3 py-2.5 text-xs text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
+                title="Clear conversation"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Widget Snippet Panel ──────────────────────────────────────── */
 function WidgetSnippetPanel({ businessId }: { businessId: string }) {
   const [snippet, setSnippet] = useState('');
@@ -499,6 +654,11 @@ export default function ChatbotClient({ businessId }: { businessId: string }) {
       {/* Settings */}
       <div className="mb-8">
         <SettingsPanel businessId={businessId} settings={status.settings} onSaved={fetchAll} />
+      </div>
+
+      {/* Test chat */}
+      <div className="mb-8">
+        <TestChatPanel businessId={businessId} />
       </div>
 
       {/* Widget snippet */}

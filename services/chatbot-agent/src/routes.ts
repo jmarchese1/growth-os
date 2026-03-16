@@ -14,6 +14,7 @@ const chatSchema = z.object({
   channel: z.enum(['WEB', 'INSTAGRAM', 'FACEBOOK']).default('WEB'),
   message: z.string().min(1).max(2000),
   contactId: z.string().optional(),
+  test: z.boolean().optional(),
 });
 
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
@@ -22,9 +23,32 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   // ─── Chat endpoint ─────────────────────────────────────────────────────────
   app.post('/chat', async (request, reply) => {
     const body = validate(chatSchema, request.body);
-    const { businessId, channel, message, contactId } = body;
+    const { businessId, channel, message, contactId, test } = body;
 
-    // Get or create session
+    // ── Test mode: skip DB persistence and lead events ──────────────────────
+    if (test) {
+      // Accept optional history passed inline (no DB lookup)
+      const inlineHistory = ((request.body as Record<string, unknown>)['history'] as ChatMessage[]) ?? [];
+
+      const result = await processMessage({
+        businessId,
+        sessionKey: `test:${businessId}:${Date.now()}`,
+        message,
+        history: inlineHistory,
+        channel,
+        test: true,
+      });
+
+      log.info({ businessId, test: true }, 'Test chat processed');
+
+      return reply.code(200).send({
+        reply: result.reply,
+        sessionKey: null,
+        actions: result.actions,
+      });
+    }
+
+    // ── Normal mode: full DB persistence ────────────────────────────────────
     let sessionKey = body.sessionKey;
     let session = sessionKey
       ? await db.chatSession.findUnique({ where: { sessionKey } })
