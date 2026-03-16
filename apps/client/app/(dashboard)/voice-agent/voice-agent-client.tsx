@@ -1,0 +1,565 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import KpiCard from '../../../components/ui/kpi-card';
+
+const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
+
+interface VoiceStatus {
+  businessId: string;
+  businessName: string;
+  agentId: string | null;
+  twilioNumber: string | null;
+  isProvisioned: boolean;
+  hasAgent: boolean;
+  hasNumber: boolean;
+  settings: {
+    hours: Record<string, { open: string; close: string }> | null;
+    cuisine: string | null;
+    maxPartySize: number | null;
+    chatbotPersona: string | null;
+  };
+}
+
+interface VoiceStats {
+  totalCalls: number;
+  avgDuration: number;
+  leadsCapture: number;
+  positiveRate: number;
+  intentBreakdown: Record<string, number>;
+  sentimentBreakdown: Record<string, number>;
+}
+
+interface CallLog {
+  id: string;
+  twilioCallSid: string;
+  direction: string;
+  duration: number | null;
+  transcript: string | null;
+  summary: string | null;
+  sentiment: string | null;
+  intent: string;
+  leadCaptured: boolean;
+  reservationMade: boolean;
+  extractedData: Record<string, unknown> | null;
+  createdAt: string;
+  contact: { id: string; firstName: string; lastName: string; phone: string } | null;
+}
+
+function formatDuration(secs: number): string {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+  });
+}
+
+const SENTIMENT_COLORS: Record<string, string> = {
+  POSITIVE: 'bg-emerald-100 text-emerald-700',
+  NEUTRAL: 'bg-slate-100 text-slate-600',
+  NEGATIVE: 'bg-rose-100 text-rose-700',
+};
+
+const INTENT_COLORS: Record<string, string> = {
+  RESERVATION: 'bg-violet-100 text-violet-700',
+  INQUIRY: 'bg-sky-100 text-sky-700',
+  COMPLAINT: 'bg-rose-100 text-rose-700',
+  GENERAL: 'bg-slate-100 text-slate-600',
+  UNKNOWN: 'bg-slate-50 text-slate-400',
+};
+
+/* ── Provisioning Hero ──────────────────────────────────────────── */
+function ProvisioningHero({ businessId, onProvisioned }: { businessId: string; onProvisioned: () => void }) {
+  const [provisioning, setProvisioning] = useState(false);
+  const [areaCode, setAreaCode] = useState('');
+  const [error, setError] = useState('');
+  const [step, setStep] = useState('');
+
+  async function handleProvision() {
+    setProvisioning(true);
+    setError('');
+    setStep('Creating AI voice agent...');
+
+    try {
+      const res = await fetch(`${API_URL}/voice-agent/provision`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ businessId, areaCode: areaCode || undefined }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? 'Provisioning failed');
+        setProvisioning(false);
+        return;
+      }
+
+      setStep('Voice agent deployed!');
+      setTimeout(onProvisioned, 1200);
+    } catch {
+      setError('Network error — please try again');
+      setProvisioning(false);
+    }
+  }
+
+  return (
+    <div className="p-8 animate-fade-up">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Phone Agent</h1>
+        <p className="text-sm text-slate-500 mt-1">AI receptionist — handles calls, takes reservations, captures leads</p>
+      </div>
+
+      {/* Hero CTA */}
+      <div className="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-2xl p-10 text-center mb-8 shadow-lg">
+        <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center mx-auto mb-5">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" className="w-8 h-8">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+          </svg>
+        </div>
+        <p className="text-violet-200 text-xs font-semibold uppercase tracking-widest mb-3">AI Phone Agent</p>
+        <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">Never miss a call again</h2>
+        <p className="text-violet-200 text-base max-w-lg mx-auto mb-8 leading-relaxed">
+          Deploy an AI receptionist that answers calls 24/7, takes reservations, answers questions about your business, and captures leads — all with a natural, friendly voice.
+        </p>
+
+        {!provisioning ? (
+          <div className="max-w-sm mx-auto space-y-3">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={areaCode}
+                onChange={(e) => setAreaCode(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                placeholder="Area code (optional)"
+                className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-sm text-white placeholder-violet-300/60 focus:outline-none focus:ring-2 focus:ring-white/30"
+              />
+              <button
+                onClick={handleProvision}
+                className="px-8 py-3 bg-white text-violet-700 font-semibold rounded-xl text-sm hover:bg-violet-50 transition-colors shadow-sm"
+              >
+                Deploy Agent
+              </button>
+            </div>
+            {error && (
+              <p className="text-sm text-rose-200 bg-rose-500/20 rounded-lg px-3 py-2">{error}</p>
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin" />
+            <p className="text-violet-100 text-sm font-medium">{step}</p>
+          </div>
+        )}
+      </div>
+
+      {/* What you get */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        {[
+          { title: 'AI Receptionist', desc: 'Natural-sounding voice agent answers every call with your business persona and knowledge' },
+          { title: 'Reservation Handling', desc: 'Takes reservation details — name, party size, date, time — and confirms with callers' },
+          { title: 'Lead Capture', desc: 'Extracts caller info and sends it to your CRM automatically — never lose a potential customer' },
+        ].map(({ title, desc }) => (
+          <div key={title} className="bg-white border border-slate-200 rounded-xl p-5">
+            <h3 className="text-sm font-semibold text-slate-800 mb-1.5">{title}</h3>
+            <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* How it works */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <h3 className="text-sm font-semibold text-slate-700 mb-4">How it works</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          {[
+            { step: '1', title: 'Deploy', desc: 'Click "Deploy Agent" and we provision your AI voice agent and phone number' },
+            { step: '2', title: 'Configure', desc: 'Set your business hours, cuisine type, and max party size for reservations' },
+            { step: '3', title: 'Calls Route', desc: 'Incoming calls to your AI number are answered by your personalized voice agent' },
+            { step: '4', title: 'Leads Flow', desc: 'Call transcripts, reservations, and captured leads appear in your dashboard' },
+          ].map(({ step, title, desc }) => (
+            <div key={step} className="text-center">
+              <div className="w-8 h-8 rounded-full bg-violet-100 text-violet-700 text-sm font-bold flex items-center justify-center mx-auto mb-2">{step}</div>
+              <h4 className="text-sm font-semibold text-slate-800 mb-1">{title}</h4>
+              <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Settings Panel ─────────────────────────────────────────────── */
+function SettingsPanel({ businessId, settings, onSaved }: {
+  businessId: string;
+  settings: VoiceStatus['settings'];
+  onSaved: () => void;
+}) {
+  const [persona, setPersona] = useState(settings.chatbotPersona ?? '');
+  const [cuisine, setCuisine] = useState(settings.cuisine ?? '');
+  const [maxParty, setMaxParty] = useState(settings.maxPartySize?.toString() ?? '');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      await fetch(`${API_URL}/voice-agent/settings/${businessId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chatbotPersona: persona || undefined,
+          cuisine: cuisine || undefined,
+          maxPartySize: maxParty ? parseInt(maxParty) : undefined,
+        }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+      onSaved();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-6">
+      <h3 className="text-sm font-semibold text-slate-700 mb-4">Agent Settings</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1">Personality / Persona</label>
+          <input
+            type="text"
+            value={persona}
+            onChange={(e) => setPersona(e.target.value)}
+            placeholder="friendly, warm, and professional"
+            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1">Cuisine Type</label>
+          <input
+            type="text"
+            value={cuisine}
+            onChange={(e) => setCuisine(e.target.value)}
+            placeholder="Italian, Mexican, etc."
+            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1">Max Party Size</label>
+          <input
+            type="number"
+            value={maxParty}
+            onChange={(e) => setMaxParty(e.target.value)}
+            placeholder="10"
+            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300"
+          />
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="px-5 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 transition-colors"
+        >
+          {saving ? 'Saving...' : 'Save & Update Agent'}
+        </button>
+        {saved && <span className="text-xs text-emerald-600 font-medium">Settings saved — agent prompt updated</span>}
+      </div>
+    </div>
+  );
+}
+
+/* ── Call Transcript Modal ──────────────────────────────────────── */
+function TranscriptModal({ call, onClose }: { call: CallLog; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-800">Call Transcript</h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {formatDate(call.createdAt)} &middot; {call.duration ? formatDuration(call.duration) : 'N/A'}
+              {call.contact && ` — ${call.contact.firstName} ${call.contact.lastName}`}
+            </p>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+          </button>
+        </div>
+
+        <div className="px-6 py-4 overflow-y-auto max-h-[60vh]">
+          {/* Summary */}
+          {call.summary && (
+            <div className="mb-4 p-3 bg-violet-50 border border-violet-100 rounded-lg">
+              <p className="text-xs font-semibold text-violet-700 mb-1">AI Summary</p>
+              <p className="text-sm text-slate-700">{call.summary}</p>
+            </div>
+          )}
+
+          {/* Extracted data */}
+          {call.extractedData && Object.keys(call.extractedData).length > 0 && (
+            <div className="mb-4 p-3 bg-emerald-50 border border-emerald-100 rounded-lg">
+              <p className="text-xs font-semibold text-emerald-700 mb-1">Extracted Information</p>
+              <div className="grid grid-cols-2 gap-1">
+                {Object.entries(call.extractedData).map(([key, val]) => (
+                  <p key={key} className="text-xs text-slate-600">
+                    <span className="font-medium text-slate-700">{key}:</span> {String(val)}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Transcript */}
+          {call.transcript ? (
+            <div className="space-y-2">
+              {call.transcript.split('\n').map((line, i) => {
+                const isAgent = line.startsWith('agent:') || line.startsWith('assistant:');
+                const text = line.replace(/^(agent|assistant|user|human):?\s*/i, '');
+                return (
+                  <div key={i} className={`flex ${isAgent ? 'justify-start' : 'justify-end'}`}>
+                    <div className={`max-w-[80%] px-3 py-2 rounded-xl text-sm ${
+                      isAgent
+                        ? 'bg-slate-100 text-slate-700'
+                        : 'bg-violet-600 text-white'
+                    }`}>
+                      {text}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-400 text-center py-8">No transcript available for this call</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Main Voice Agent Dashboard ─────────────────────────────────── */
+export default function VoiceAgentClient({ businessId }: { businessId: string }) {
+  const [status, setStatus] = useState<VoiceStatus | null>(null);
+  const [stats, setStats] = useState<VoiceStats | null>(null);
+  const [calls, setCalls] = useState<CallLog[]>([]);
+  const [totalCalls, setTotalCalls] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [selectedCall, setSelectedCall] = useState<CallLog | null>(null);
+
+  const fetchAll = useCallback(async () => {
+    try {
+      const [statusRes, statsRes, callsRes] = await Promise.all([
+        fetch(`${API_URL}/voice-agent/status/${businessId}`),
+        fetch(`${API_URL}/voice-agent/stats/${businessId}`),
+        fetch(`${API_URL}/voice-agent/calls/${businessId}`),
+      ]);
+
+      if (statusRes.ok) setStatus(await statusRes.json());
+      if (statsRes.ok) setStats(await statsRes.json());
+      if (callsRes.ok) {
+        const data = await callsRes.json();
+        setCalls(data.items);
+        setTotalCalls(data.total);
+      }
+    } catch {
+      // API may not be available in dev
+    } finally {
+      setLoading(false);
+    }
+  }, [businessId]);
+
+  useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-[400px]">
+        <div className="w-8 h-8 border-3 border-violet-300 border-t-violet-600 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Show provisioning hero if not set up
+  if (!status?.isProvisioned) {
+    return <ProvisioningHero businessId={businessId} onProvisioned={fetchAll} />;
+  }
+
+  const s = stats ?? { totalCalls: 0, avgDuration: 0, leadsCapture: 0, positiveRate: 0, intentBreakdown: {}, sentimentBreakdown: {} };
+
+  return (
+    <div className="p-8 animate-fade-up">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Phone Agent</h1>
+          <p className="text-sm text-slate-500 mt-1">AI receptionist — call logs, transcripts & analytics</p>
+        </div>
+        <div className="flex items-center gap-3">
+          {/* Status badges */}
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200/60 rounded-full">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-medium text-emerald-700">Active</span>
+          </div>
+          {status.twilioNumber && (
+            <div className="px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-full">
+              <span className="text-xs font-medium text-slate-600">{status.twilioNumber}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <KpiCard label="Total Calls" value={s.totalCalls} color="violet"
+          icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>} />
+        <KpiCard label="Avg Duration" value={formatDuration(s.avgDuration)} color="sky"
+          icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>} />
+        <KpiCard label="Leads Captured" value={s.leadsCapture} color="emerald"
+          icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>} />
+        <KpiCard label="Positive Sentiment" value={`${s.positiveRate}%`} color="teal"
+          icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535a1 1 0 10-1.415-1.414 3 3 0 01-4.242 0 1 1 0 00-1.415 1.414 5 5 0 007.072 0z" clipRule="evenodd" /></svg>} />
+      </div>
+
+      {/* Analytics row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Intent breakdown */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <h3 className="text-sm font-semibold text-slate-700 mb-4">Intent Breakdown</h3>
+          <div className="space-y-3">
+            {['RESERVATION', 'INQUIRY', 'COMPLAINT', 'GENERAL'].map((intent) => {
+              const count = s.intentBreakdown[intent] ?? 0;
+              const pct = s.totalCalls > 0 ? Math.round((count / s.totalCalls) * 100) : 0;
+              return (
+                <div key={intent} className="flex items-center justify-between">
+                  <span className="text-sm text-slate-600 capitalize">{intent.toLowerCase()}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="w-32 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-violet-400 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="text-xs text-slate-400 w-8 text-right">{count}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Sentiment */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <h3 className="text-sm font-semibold text-slate-700 mb-4">Sentiment Analysis</h3>
+          <div className="space-y-3">
+            {[
+              { label: 'Positive', key: 'POSITIVE', color: 'bg-emerald-400' },
+              { label: 'Neutral', key: 'NEUTRAL', color: 'bg-slate-400' },
+              { label: 'Negative', key: 'NEGATIVE', color: 'bg-rose-400' },
+            ].map(({ label, key, color }) => {
+              const count = s.sentimentBreakdown[key] ?? 0;
+              const pct = s.totalCalls > 0 ? Math.round((count / s.totalCalls) * 100) : 0;
+              return (
+                <div key={label} className="flex items-center justify-between">
+                  <span className="text-sm text-slate-600">{label}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="w-32 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className={`h-full ${color} rounded-full transition-all`} style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="text-xs text-slate-400 w-8 text-right">{pct}%</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Settings */}
+      <div className="mb-8">
+        <SettingsPanel businessId={businessId} settings={status.settings} onSaved={fetchAll} />
+      </div>
+
+      {/* Call log table */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-slate-700">Recent Calls</h2>
+          {totalCalls > 0 && <span className="text-xs text-slate-400">{totalCalls} total</span>}
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-slate-100">
+                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Date</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Caller</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Intent</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Duration</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Sentiment</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Lead</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {calls.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-5 py-12 text-center text-sm text-slate-400">
+                    No calls recorded yet. Your voice agent will log calls here once it receives its first call.
+                  </td>
+                </tr>
+              ) : (
+                calls.map((call) => (
+                  <tr key={call.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                    <td className="px-5 py-3 text-sm text-slate-600">{formatDate(call.createdAt)}</td>
+                    <td className="px-5 py-3 text-sm text-slate-800 font-medium">
+                      {call.contact
+                        ? `${call.contact.firstName} ${call.contact.lastName}`
+                        : <span className="text-slate-400">Unknown</span>}
+                    </td>
+                    <td className="px-5 py-3">
+                      <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${INTENT_COLORS[call.intent] ?? INTENT_COLORS['UNKNOWN']}`}>
+                        {call.intent.toLowerCase()}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3 text-sm text-slate-600 tabular-nums">
+                      {call.duration != null ? formatDuration(call.duration) : '—'}
+                    </td>
+                    <td className="px-5 py-3">
+                      {call.sentiment ? (
+                        <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${SENTIMENT_COLORS[call.sentiment] ?? 'bg-slate-100 text-slate-500'}`}>
+                          {call.sentiment.toLowerCase()}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-slate-400">—</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3">
+                      {call.leadCaptured && (
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-100 text-emerald-700">
+                          captured
+                        </span>
+                      )}
+                      {call.reservationMade && (
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-violet-100 text-violet-700 ml-1">
+                          reservation
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3">
+                      <button
+                        onClick={() => setSelectedCall(call)}
+                        className="text-xs text-violet-600 hover:text-violet-800 font-medium transition-colors"
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Transcript modal */}
+      {selectedCall && <TranscriptModal call={selectedCall} onClose={() => setSelectedCall(null)} />}
+    </div>
+  );
+}
