@@ -417,7 +417,7 @@ export default function IntegrationsPage() {
             ? { ...s, status: 'active' as const, statusLabel: 'Active' }
             : s;
         case 'booking-calendar':
-          return (business as Record<string, unknown>)['calendlyUri']
+          return (business as unknown as Record<string, unknown>)['calendlyUri']
             ? { ...s, status: 'active' as const, statusLabel: 'Configured' }
             : s;
         case 'business-website':
