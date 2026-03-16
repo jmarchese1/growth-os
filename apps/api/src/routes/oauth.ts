@@ -232,7 +232,7 @@ export async function oauthRoutes(app: FastifyInstance): Promise<void> {
         await db.business.update({
           where: { id: stateData.businessId },
           data: {
-            settings: { ...currentSettings, oauthTokens },
+            settings: { ...currentSettings, oauthTokens } as object,
           },
         });
 

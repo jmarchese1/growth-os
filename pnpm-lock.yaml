@@ -502,6 +502,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.47.0
         version: 2.98.0
+      bullmq:
+        specifier: ^5.0.0
+        version: 5.70.4
       fastify:
         specifier: ^5.2.0
         version: 5.8.2
@@ -689,6 +692,9 @@ importers:
       '@fastify/helmet':
         specifier: ^13.0.0
         version: 13.0.2
+      bullmq:
+        specifier: ^5.0.0
+        version: 5.70.4
       elevenlabs:
         specifier: ^1.50.0
         version: 1.59.0

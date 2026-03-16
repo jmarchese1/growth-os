@@ -38,7 +38,7 @@ async function start() {
 
       // 2. Provision Twilio phone number
       const webhookUrl = `${env.BASE_URL}/webhooks/twilio/voice`;
-      const phoneNumber = await provisionPhoneNumber({ businessId, areaCode, webhookUrl });
+      const phoneNumber = await provisionPhoneNumber({ businessId, webhookUrl, ...(areaCode ? { areaCode } : {}) });
 
       log.info({ businessId, agentId, phoneNumber }, 'Voice agent provisioning complete');
       return { success: true, agentId, phoneNumber };

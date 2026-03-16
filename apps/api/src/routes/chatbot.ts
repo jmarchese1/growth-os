@@ -209,7 +209,7 @@ export async function chatbotRoutes(app: FastifyInstance): Promise<void> {
    */
   app.patch<{ Params: { businessId: string } }>(
     '/chatbot/settings/:businessId',
-    async (request, reply) => {
+    async (request) => {
       const { businessId } = request.params;
       const updates = request.body as Record<string, unknown>;
 
@@ -221,7 +221,7 @@ export async function chatbotRoutes(app: FastifyInstance): Promise<void> {
 
       await db.business.update({
         where: { id: businessId },
-        data: { settings: newSettings },
+        data: { settings: newSettings as object },
       });
 
       log.info({ businessId }, 'Chatbot settings updated');

@@ -10,7 +10,7 @@ let client: ElevenLabsClient | null = null;
 
 function getClient(): ElevenLabsClient {
   if (!client) {
-    client = new ElevenLabsClient({ apiKey: env.ELEVENLABS_API_KEY });
+    client = new ElevenLabsClient({ ...(env.ELEVENLABS_API_KEY ? { apiKey: env.ELEVENLABS_API_KEY } : {}) });
   }
   return client;
 }
@@ -30,7 +30,7 @@ export async function provisionAgent(businessId: string): Promise<string> {
   const systemPrompt = buildSystemPrompt(business);
 
   try {
-    const agent = await getClient().conversationalAi.agents.create({
+    const agent = await getClient().conversationalAi.createAgent({
       name: `${business.name} — AI Receptionist`,
       conversation_config: {
         agent: {
@@ -85,7 +85,7 @@ export async function updateAgentPrompt(businessId: string): Promise<void> {
   const systemPrompt = buildSystemPrompt(business);
 
   try {
-    await getClient().conversationalAi.agents.update(business.elevenLabsAgentId, {
+    await getClient().conversationalAi.updateAgent(business.elevenLabsAgentId, {
       conversation_config: {
         agent: {
           prompt: { prompt: systemPrompt },

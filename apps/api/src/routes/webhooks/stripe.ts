@@ -9,7 +9,7 @@ const log = createLogger('api:stripe-webhook');
 function getStripe(): Stripe | null {
   const key = (env as Record<string, unknown>)['STRIPE_SECRET_KEY'] as string | undefined;
   if (!key) return null;
-  return new Stripe(key, { apiVersion: '2025-04-30.basil' });
+  return new Stripe(key, { apiVersion: '2026-02-25.clover' });
 }
 
 function tierFromMetadata(metadata: Record<string, string>): 'SOLO' | 'SMALL' | 'MEDIUM' | 'LARGE' {
@@ -92,16 +92,16 @@ export async function stripeWebhookRoutes(app: FastifyInstance): Promise<void> {
             stripeSubscriptionId: stripeSubId,
             pricingTier: tierFromMetadata({ tier }),
             status: mapStatus(sub.status),
-            currentPeriodStart: new Date(sub.current_period_start * 1000),
-            currentPeriodEnd: new Date(sub.current_period_end * 1000),
+            currentPeriodStart: new Date(sub.start_date * 1000),
+            currentPeriodEnd: new Date(sub.billing_cycle_anchor * 1000),
             trialEndsAt: sub.trial_end ? new Date(sub.trial_end * 1000) : null,
           },
           update: {
             stripeSubscriptionId: stripeSubId,
             pricingTier: tierFromMetadata({ tier }),
             status: mapStatus(sub.status),
-            currentPeriodStart: new Date(sub.current_period_start * 1000),
-            currentPeriodEnd: new Date(sub.current_period_end * 1000),
+            currentPeriodStart: new Date(sub.start_date * 1000),
+            currentPeriodEnd: new Date(sub.billing_cycle_anchor * 1000),
             trialEndsAt: sub.trial_end ? new Date(sub.trial_end * 1000) : null,
           },
         });
@@ -128,8 +128,8 @@ export async function stripeWebhookRoutes(app: FastifyInstance): Promise<void> {
             where: { stripeSubscriptionId: sub.id },
             data: {
               status: mapStatus(sub.status),
-              currentPeriodStart: new Date(sub.current_period_start * 1000),
-              currentPeriodEnd: new Date(sub.current_period_end * 1000),
+              currentPeriodStart: new Date(sub.start_date * 1000),
+              currentPeriodEnd: new Date(sub.billing_cycle_anchor * 1000),
               trialEndsAt: sub.trial_end ? new Date(sub.trial_end * 1000) : null,
               cancelAtPeriodEnd: sub.cancel_at_period_end,
               canceledAt: sub.canceled_at ? new Date(sub.canceled_at * 1000) : null,
@@ -143,16 +143,16 @@ export async function stripeWebhookRoutes(app: FastifyInstance): Promise<void> {
               stripeSubscriptionId: sub.id,
               pricingTier: tierFromMetadata(sub.metadata as Record<string, string>),
               status: mapStatus(sub.status),
-              currentPeriodStart: new Date(sub.current_period_start * 1000),
-              currentPeriodEnd: new Date(sub.current_period_end * 1000),
+              currentPeriodStart: new Date(sub.start_date * 1000),
+              currentPeriodEnd: new Date(sub.billing_cycle_anchor * 1000),
               trialEndsAt: sub.trial_end ? new Date(sub.trial_end * 1000) : null,
               cancelAtPeriodEnd: sub.cancel_at_period_end,
               canceledAt: sub.canceled_at ? new Date(sub.canceled_at * 1000) : null,
             },
             update: {
               status: mapStatus(sub.status),
-              currentPeriodStart: new Date(sub.current_period_start * 1000),
-              currentPeriodEnd: new Date(sub.current_period_end * 1000),
+              currentPeriodStart: new Date(sub.start_date * 1000),
+              currentPeriodEnd: new Date(sub.billing_cycle_anchor * 1000),
               trialEndsAt: sub.trial_end ? new Date(sub.trial_end * 1000) : null,
               cancelAtPeriodEnd: sub.cancel_at_period_end,
               canceledAt: sub.canceled_at ? new Date(sub.canceled_at * 1000) : null,
@@ -181,9 +181,10 @@ export async function stripeWebhookRoutes(app: FastifyInstance): Promise<void> {
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
-        const subId = typeof invoice.subscription === 'string'
-          ? invoice.subscription
-          : (invoice.subscription as Stripe.Subscription | null)?.id;
+        const subDetails = invoice.parent?.type === 'subscription_details'
+          ? invoice.parent.subscription_details?.subscription
+          : null;
+        const subId = typeof subDetails === 'string' ? subDetails : (subDetails as Stripe.Subscription | null)?.id;
 
         if (subId) {
           await db.subscription.updateMany({

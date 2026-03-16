@@ -36,7 +36,7 @@ export async function provisionPhoneNumber(params: {
     const available = await getClient()
       .availablePhoneNumbers('US')
       .local.list({
-        areaCode: areaCode ? parseInt(areaCode) : undefined,
+        ...(areaCode ? { areaCode: parseInt(areaCode) } : {}),
         voiceEnabled: true,
         limit: 5,
       });

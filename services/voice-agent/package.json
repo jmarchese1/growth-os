@@ -18,7 +18,8 @@
     "@embedo/types": "workspace:*",
     "@embedo/utils": "workspace:*",
     "@embedo/queue": "workspace:*",
-    "@embedo/config": "workspace:*"
+    "@embedo/config": "workspace:*",
+    "bullmq": "^5.0.0"
   },
   "devDependencies": {
     "typescript": "^5.7.0",

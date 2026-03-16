@@ -168,7 +168,7 @@ export async function voiceAgentRoutes(app: FastifyInstance): Promise<void> {
    */
   app.patch<{ Params: { businessId: string } }>(
     '/voice-agent/settings/:businessId',
-    async (request, reply) => {
+    async (request) => {
       const { businessId } = request.params;
       const updates = request.body as Record<string, unknown>;
 
@@ -180,7 +180,7 @@ export async function voiceAgentRoutes(app: FastifyInstance): Promise<void> {
 
       await db.business.update({
         where: { id: businessId },
-        data: { settings: newSettings },
+        data: { settings: newSettings as object },
       });
 
       // If agent exists, update the prompt via voice-agent service

@@ -59,6 +59,7 @@ export async function meRoutes(app: FastifyInstance): Promise<void> {
         include: {
           business: {
             include: {
+              subscription: true,
               _count: {
                 select: {
                   contacts: true,
@@ -156,7 +157,7 @@ export async function meRoutes(app: FastifyInstance): Promise<void> {
 
     const updated = await db.business.update({
       where: { id: user.businessId },
-      data: updateData,
+      data: updateData as Record<string, unknown>,
     });
 
     log.info({ businessId: user.businessId, fields: Object.keys(updateData) }, 'Business profile updated');
@@ -289,7 +290,7 @@ export async function meRoutes(app: FastifyInstance): Promise<void> {
           phone: body.phone ?? null,
           email: body.email ?? null,
           website: body.website ?? null,
-          address: body.address ?? null,
+          ...(body.address ? { address: body.address as object } : {}),
           timezone: body.timezone ?? 'America/New_York',
         },
       });

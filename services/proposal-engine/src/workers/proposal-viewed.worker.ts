@@ -1,4 +1,4 @@
-import { Worker } from 'bullmq';
+import { Worker, type Job } from 'bullmq';
 import { getRedisConnection, QUEUE_NAMES } from '@embedo/queue';
 import type { ProposalViewedPayload } from '@embedo/types';
 import { createLogger } from '@embedo/utils';
@@ -38,9 +38,9 @@ export function startProposalViewedWorker(): void {
 
       await sendFollowUpEmail({
         contactEmail: intake.contactEmail,
-        contactName: intake.contactName,
         businessName: intake.businessName,
         shareUrl,
+        ...(intake.contactName ? { contactName: intake.contactName } : {}),
       });
 
       log.info({ proposalId, contactEmail: intake.contactEmail }, 'Proposal follow-up completed');
@@ -51,11 +51,11 @@ export function startProposalViewedWorker(): void {
     },
   );
 
-  worker.on('failed', (job, err) => {
+  worker.on('failed', (job: Job<ProposalViewedPayload> | undefined, err: Error) => {
     log.error({ err, jobId: job?.id, proposalId: job?.data?.proposalId }, 'Proposal follow-up job failed');
   });
 
-  worker.on('completed', (job) => {
+  worker.on('completed', (job: Job<ProposalViewedPayload>) => {
     log.info({ jobId: job.id }, 'Proposal follow-up job completed');
   });
 

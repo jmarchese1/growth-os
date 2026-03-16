@@ -20,6 +20,7 @@
     "@embedo/utils": "workspace:*",
     "@embedo/queue": "workspace:*",
     "@embedo/config": "workspace:*",
+    "bullmq": "^5.0.0",
     "zod": "^3.23.0"
   },
   "devDependencies": {

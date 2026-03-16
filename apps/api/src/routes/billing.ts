@@ -6,17 +6,11 @@ import { env } from '../config.js';
 
 const log = createLogger('api:billing');
 
-const TIER_LABELS: Record<string, string> = {
-  SOLO: 'Solo',
-  SMALL: 'Small',
-  MEDIUM: 'Medium',
-  LARGE: 'Large',
-};
 
 function getStripe(): Stripe | null {
   const key = (env as Record<string, unknown>)['STRIPE_SECRET_KEY'] as string | undefined;
   if (!key) return null;
-  return new Stripe(key, { apiVersion: '2025-04-30.basil' });
+  return new Stripe(key, { apiVersion: '2026-02-25.clover' });
 }
 
 function getPriceId(tier: string): string | null {
@@ -80,7 +74,7 @@ export async function billingRoutes(app: FastifyInstance): Promise<void> {
     if (!customerId) {
       const customer = await stripe.customers.create({
         name: business.name,
-        email: business.email ?? undefined,
+        ...(business.email ? { email: business.email } : {}),
         metadata: { businessId: business.id },
       });
       customerId = customer.id;
