@@ -269,33 +269,14 @@ Campaigns                Leads                    Businesses
 ## Next Steps — Product Roadmap
 
 ### Immediate (Infrastructure & Wiring)
-- [ ] **Cal.com webhook setup**: Configure `BOOKING_CREATED` webhook pointing to `https://embedoapi-production.up.railway.app/webhooks/cal` in Cal.com dashboard
-- [ ] **SendGrid Inbound Parse setup**: Configure inbound parse domain to forward replies to `https://embedoapi-production.up.railway.app/webhooks/sendgrid/inbound`
-- [ ] **SendGrid Event Webhook setup**: Point open/click/bounce events to `https://embedoapi-production.up.railway.app/webhooks/sendgrid/events`
-- [x] **Deploy CRM Core to Railway**: Deployed. Business conversion (leads → businesses) is fully working.
-- [x] **Set `EMBEDO_BUSINESS_ID` env var on Railway**: Set on both API gateway and prospector.
-- [ ] **Run Prisma migration**: `OUTBOUND` was added to `LeadSource` enum but migration hasn't been applied yet (`pnpm db:migrate`)
 - [ ] **Apollo.io API key**: Set `APOLLO_API_KEY` in production env to enable prospect email enrichment
 
-### Short-term (Platform Features)
-- [ ] **Business detail page** (`/businesses/[id]`): View/edit an onboarded business, see their active products, contacts, appointments
-- [x] **Lead detail page** (`/leads/[id]`): View lead info, reply history, convert-to-business action — working
-- [x] **Proposal builder in platform**: Generate and send proposals from the Leads pipeline — working (routes live on API gateway)
-- [ ] **Reply-to-prospect from dashboard**: Compose and send follow-up emails directly from the Leads page
-- [ ] **Campaign analytics dashboard**: Open rates, reply rates, conversion funnel per campaign
-- [ ] **Automated follow-up sequence builder UI**: Visual editor for multi-step email sequences
-
-### Medium-term (Product Delivery Layer)
-- [ ] **Voice Agent deployment**: ElevenLabs agent provisioning per onboarded business (Twilio number + IVR)
-- [ ] **Chatbot widget deployment**: Claude-powered chat widget auto-deployed to client websites
-- [ ] **Website generator**: Apple-style restaurant website generation + Vercel auto-deploy
-- [ ] **Social media automation**: Content generation, scheduling, comment monitoring for client businesses
-- [ ] **Survey engine**: Post-call/post-visit surveys with automated follow-up
-- [ ] **Social OAuth flows**: Build OAuth redirect endpoints in API gateway for Instagram, Facebook, Google Business Profile, TikTok — client clicks "Connect with Instagram" → redirects to Meta OAuth → callback stores encrypted token on `Business.settings`. Requires creating developer apps on each platform (Meta App, Google Cloud project, TikTok Developer App) and setting Client ID + Client Secret in API env vars. Client dashboard integrations page already has the UI buttons wired — just needs the backend endpoints (`/auth/:provider/authorize`, `/auth/:provider/callback`).
+### Short-term (Platform & Client Features)
+- [ ] **Social OAuth flows**: Build OAuth redirect endpoints in API gateway (`/auth/:provider/authorize`, `/auth/:provider/callback`) for Instagram, Facebook, Google Business Profile, TikTok. Client dashboard integrations page already has the UI buttons wired — just needs the backend endpoints. Requires creating developer apps on each platform and setting Client ID + Client Secret in API env vars.
+- [ ] **Social media automation**: Content scheduling, comment monitoring, and auto-DM delivery for client businesses (content generation service exists, delivery layer incomplete)
 
 ### Long-term (Scale & Expand)
 - [ ] **Multi-vertical expansion**: Extend beyond restaurants to other local business types (salons, gyms, clinics)
-- [x] **Client-facing dashboard**: `apps/client` (port 3012) — light-themed Next.js app with Supabase auth, 8 module pages, integrations page (managed services + OAuth social accounts), settings
 - [ ] **White-label option**: Allow agencies to resell Embedo under their own brand
 - [ ] **Stripe billing integration**: Automated invoicing and subscription management for onboarded businesses
 - [ ] **AI proposal follow-up**: Auto-detect proposal views and trigger personalized follow-up sequences
