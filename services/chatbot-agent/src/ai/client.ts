@@ -27,8 +27,9 @@ export async function processMessage(params: {
   message: string;
   history: ChatMessage[];
   channel: string;
+  test?: boolean;
 }): Promise<ChatResponse> {
-  const { businessId, sessionKey, message, history, channel } = params;
+  const { businessId, sessionKey, message, history, channel, test } = params;
 
   const systemPrompt = await buildChatbotSystemPrompt(businessId);
 
@@ -66,42 +67,48 @@ export async function processMessage(params: {
 
         if (block.name === 'capture_lead') {
           leadCaptured = true;
-          // Emit lead.created event
-          await leadCreatedQueue().add(`lead:chat:${sessionKey}:${Date.now()}`, {
-            businessId,
-            source: channel === 'WEB' ? 'CHATBOT' : 'SOCIAL',
-            sourceId: sessionKey,
-            rawData: toolInput,
-          });
+          if (!test) {
+            // Emit lead.created event (skipped in test mode)
+            await leadCreatedQueue().add(`lead:chat:${sessionKey}:${Date.now()}`, {
+              businessId,
+              source: channel === 'WEB' ? 'CHATBOT' : 'SOCIAL',
+              sourceId: sessionKey,
+              rawData: toolInput,
+            });
+          }
         }
 
         if (block.name === 'book_appointment') {
           appointmentRequested = true;
-          // Emit lead with appointment intent
-          await leadCreatedQueue().add(`lead:chat:booking:${sessionKey}:${Date.now()}`, {
-            businessId,
-            source: 'CHATBOT',
-            sourceId: sessionKey,
-            rawData: { ...toolInput, intent: 'booking' },
-          });
+          if (!test) {
+            // Emit lead with appointment intent (skipped in test mode)
+            await leadCreatedQueue().add(`lead:chat:booking:${sessionKey}:${Date.now()}`, {
+              businessId,
+              source: 'CHATBOT',
+              sourceId: sessionKey,
+              rawData: { ...toolInput, intent: 'booking' },
+            });
+          }
         }
       }
     }
 
-    // Update session in DB
-    await db.chatSession.update({
-      where: { sessionKey },
-      data: {
-        messages: {
-          push: [
-            { role: 'user', content: message, timestamp: new Date().toISOString() },
-            { role: 'assistant', content: reply, timestamp: new Date().toISOString() },
-          ],
+    // Update session in DB (skipped in test mode)
+    if (!test) {
+      await db.chatSession.update({
+        where: { sessionKey },
+        data: {
+          messages: {
+            push: [
+              { role: 'user', content: message, timestamp: new Date().toISOString() },
+              { role: 'assistant', content: reply, timestamp: new Date().toISOString() },
+            ],
+          },
+          leadCaptured: leadCaptured,
+          appointmentMade: appointmentRequested,
         },
-        leadCaptured: leadCaptured,
-        appointmentMade: appointmentRequested,
-      },
-    });
+      });
+    }
 
     return { reply, leadCaptured, appointmentRequested, actions };
   } catch (err) {
