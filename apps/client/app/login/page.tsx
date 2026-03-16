@@ -405,15 +405,21 @@ export default function LoginPage() {
                   {loading ? 'Signing in...' : 'Sign in'}
                 </button>
 
-                <div className="pt-2 text-center">
-                  <button
-                    type="button"
-                    onClick={() => { setShowSignup(true); setError(''); }}
-                    className="text-sm text-slate-500 hover:text-violet-400 transition-colors"
-                  >
-                    Don&apos;t have an account? <span className="text-violet-400 font-medium">Sign up</span>
-                  </button>
+                {/* Divider */}
+                <div className="flex items-center gap-3 pt-2">
+                  <div className="flex-1 h-px bg-white/[0.08]" />
+                  <span className="text-xs text-slate-500">or</span>
+                  <div className="flex-1 h-px bg-white/[0.08]" />
                 </div>
+
+                {/* Signup button */}
+                <button
+                  type="button"
+                  onClick={() => { setShowSignup(true); setError(''); }}
+                  className="w-full py-3 bg-white/[0.06] border border-white/[0.12] text-white text-sm font-semibold rounded-xl hover:bg-white/[0.1] hover:border-violet-500/30 transition-all flex items-center justify-center gap-2"
+                >
+                  Create an account
+                </button>
               </form>
             )}
           </div>
