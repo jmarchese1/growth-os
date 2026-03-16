@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans, DM_Sans } from 'next/font/google';
 import { createSupabaseServerClient } from '../lib/supabase/server';
 import { SessionProvider } from '../components/auth/session-provider';
+import { BusinessProvider } from '../components/auth/business-provider';
 import './globals.css';
 
 const fontSans = Plus_Jakarta_Sans({
@@ -31,7 +32,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en" className={`${fontSans.variable} ${fontHeading.variable}`}>
       <body className="font-sans antialiased">
         <SessionProvider initialUser={user}>
-          {children}
+          <BusinessProvider>
+            {children}
+          </BusinessProvider>
         </SessionProvider>
       </body>
     </html>

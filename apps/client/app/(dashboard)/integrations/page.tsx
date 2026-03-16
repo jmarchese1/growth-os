@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useBusiness } from '../../../components/auth/business-provider';
 
 /* ──────────────────────────────────────────────
    Types
@@ -371,6 +372,7 @@ function SocialAccountCard({ account, onConnect }: { account: SocialAccount; onC
 
 export default function IntegrationsPage() {
   const searchParams = useSearchParams();
+  const { business } = useBusiness();
   const [_connecting, setConnecting] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -391,15 +393,58 @@ export default function IntegrationsPage() {
   const handleOAuthConnect = (accountId: string) => {
     setConnecting(accountId);
     const apiBase = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
-    // TODO: pass real businessId from session context once available
-    const businessId = '';
+    const businessId = business?.id ?? '';
     window.location.href = `${apiBase}/auth/${accountId}/authorize?businessId=${businessId}`;
   };
 
-  const totalServices = MANAGED_SERVICES.length + SOCIAL_ACCOUNTS.length;
+  // Derive live statuses from business record
+  const oauthTokens = (business?.settings as Record<string, unknown> | null)?.['oauthTokens'] as Record<string, unknown> | undefined;
+
+  const liveServices: ManagedService[] = useMemo(() => {
+    return MANAGED_SERVICES.map((s) => {
+      if (!business) return s;
+      switch (s.id) {
+        case 'voice-agent':
+          return business.elevenLabsAgentId
+            ? { ...s, status: 'active' as const, statusLabel: 'Active' }
+            : s;
+        case 'phone-number':
+          return business.twilioPhoneNumber
+            ? { ...s, status: 'active' as const, statusLabel: business.twilioPhoneNumber, detail: business.twilioPhoneNumber }
+            : s;
+        case 'ai-chatbot':
+          return (business.settings as Record<string, unknown> | null)?.['chatbotEnabled']
+            ? { ...s, status: 'active' as const, statusLabel: 'Active' }
+            : s;
+        case 'booking-calendar':
+          return (business as Record<string, unknown>)['calendlyUri']
+            ? { ...s, status: 'active' as const, statusLabel: 'Configured' }
+            : s;
+        case 'business-website':
+          return business.status === 'ACTIVE'
+            ? { ...s, status: 'active' as const, statusLabel: 'Live' }
+            : s;
+        default:
+          return s;
+      }
+    });
+  }, [business]);
+
+  const liveSocials: SocialAccount[] = useMemo(() => {
+    return SOCIAL_ACCOUNTS.map((a) => {
+      if (!oauthTokens) return a;
+      const token = oauthTokens[a.id] as Record<string, unknown> | undefined;
+      if (token?.accessToken) {
+        return { ...a, status: 'connected' as const };
+      }
+      return a;
+    });
+  }, [oauthTokens]);
+
+  const totalServices = liveServices.length + liveSocials.length;
   const activeCount =
-    MANAGED_SERVICES.filter((s) => s.status === 'active').length +
-    SOCIAL_ACCOUNTS.filter((s) => s.status === 'connected').length;
+    liveServices.filter((s) => s.status === 'active').length +
+    liveSocials.filter((s) => s.status === 'connected').length;
 
   return (
     <div className="p-8 animate-fade-up">
@@ -463,7 +508,7 @@ export default function IntegrationsPage() {
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {MANAGED_SERVICES.map((service) => (
+          {liveServices.map((service) => (
             <ManagedServiceCard key={service.id} service={service} />
           ))}
         </div>
@@ -482,7 +527,7 @@ export default function IntegrationsPage() {
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {SOCIAL_ACCOUNTS.map((account) => (
+          {liveSocials.map((account) => (
             <SocialAccountCard
               key={account.id}
               account={account}
