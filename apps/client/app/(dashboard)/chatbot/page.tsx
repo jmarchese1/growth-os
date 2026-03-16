@@ -1,17 +1,20 @@
-import { getCurrentUser } from '../../../lib/auth';
-import { db } from '@embedo/db';
+'use client';
+
+import { useBusiness } from '../../../components/auth/business-provider';
 import ChatbotClient from './chatbot-client';
 
-export default async function ChatbotPage() {
-  const user = await getCurrentUser();
+export default function ChatbotPage() {
+  const { business, loading } = useBusiness();
 
-  let businessId = user.id;
-  try {
-    const dbUser = await db.user.findUnique({ where: { supabaseId: user.id } });
-    if (dbUser?.businessId) businessId = dbUser.businessId;
-  } catch {
-    // DB may not have User table yet — fall back to Supabase ID
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-[400px]">
+        <div className="w-8 h-8 border-3 border-violet-300 border-t-violet-600 rounded-full animate-spin" />
+      </div>
+    );
   }
 
-  return <ChatbotClient businessId={businessId} />;
+  if (!business) return null;
+
+  return <ChatbotClient businessId={business.id} />;
 }

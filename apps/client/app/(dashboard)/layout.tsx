@@ -7,7 +7,6 @@ import EmbedoLogo from '../../components/EmbedoLogo';
 import { useSession } from '../../components/auth/session-provider';
 import { useBusiness } from '../../components/auth/business-provider';
 import { createSupabaseBrowserClient } from '../../lib/supabase/client';
-import SetupBusiness from '../../components/onboarding/setup-business';
 
 const NAV = [
   {
@@ -252,9 +251,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     };
   }, []);
 
-  // Show onboarding if user has no business linked
+  // Redirect to /setup if user has no business linked
+  useEffect(() => {
+    if (!businessLoading && needsOnboarding) {
+      router.replace('/setup');
+    }
+  }, [businessLoading, needsOnboarding, router]);
+
   if (!businessLoading && needsOnboarding) {
-    return <SetupBusiness />;
+    return null;
   }
 
   return (
