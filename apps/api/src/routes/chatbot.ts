@@ -71,6 +71,7 @@ export async function chatbotRoutes(app: FastifyInstance): Promise<void> {
   /**
    * POST /chatbot/enable
    * Enables the chatbot for a business — sets chatbotEnabled flag in settings.
+   * Creates a minimal Business record if one doesn't exist yet (e.g. client app user).
    */
   app.post('/chatbot/enable', async (request, reply) => {
     const body = request.body as { businessId: string };
@@ -79,8 +80,23 @@ export async function chatbotRoutes(app: FastifyInstance): Promise<void> {
       return reply.code(400).send({ success: false, error: 'businessId is required' });
     }
 
-    const business = await db.business.findUnique({ where: { id: body.businessId } });
-    if (!business) throw new NotFoundError('Business', body.businessId);
+    let business = await db.business.findUnique({ where: { id: body.businessId } });
+
+    if (!business) {
+      // Auto-create a minimal Business record so client-app users can enable features
+      const slug = `biz-${body.businessId.slice(0, 8)}-${Date.now()}`;
+      business = await db.business.create({
+        data: {
+          id: body.businessId,
+          name: 'My Business',
+          slug,
+          type: 'RESTAURANT',
+          settings: { chatbotEnabled: true },
+        },
+      });
+      log.info({ businessId: body.businessId }, 'Auto-created business and enabled chatbot');
+      return { success: true, businessId: business.id };
+    }
 
     const currentSettings = (business.settings as Record<string, unknown>) ?? {};
     const newSettings = { ...currentSettings, chatbotEnabled: true };
