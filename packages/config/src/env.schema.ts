@@ -131,6 +131,15 @@ export const apiGatewayEnvSchema = baseEnvSchema.extend({
   TWILIO_ACCOUNT_SID: z.string().optional(),
   TWILIO_AUTH_TOKEN: z.string().optional(),
   TWILIO_FROM_NUMBER: z.string().optional(),
+  // OAuth — Social platform credentials
+  FACEBOOK_APP_ID: z.string().optional(),
+  FACEBOOK_APP_SECRET: z.string().optional(),
+  GOOGLE_OAUTH_CLIENT_ID: z.string().optional(),
+  GOOGLE_OAUTH_CLIENT_SECRET: z.string().optional(),
+  TIKTOK_CLIENT_KEY: z.string().optional(),
+  TIKTOK_CLIENT_SECRET: z.string().optional(),
+  API_BASE_URL: z.string().url().default('http://localhost:3000'),
+  CLIENT_APP_URL: z.string().url().default('http://localhost:3012'),
 });
 
 /**

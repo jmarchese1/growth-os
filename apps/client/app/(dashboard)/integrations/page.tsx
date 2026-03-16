@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useBusiness } from '../../../components/auth/business-provider';
 
 /* ──────────────────────────────────────────────
    Types
@@ -369,22 +371,102 @@ function SocialAccountCard({ account, onConnect }: { account: SocialAccount; onC
    ────────────────────────────────────────────── */
 
 export default function IntegrationsPage() {
+  const searchParams = useSearchParams();
+  const { business } = useBusiness();
   const [_connecting, setConnecting] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  useEffect(() => {
+    const connected = searchParams.get('connected');
+    const error = searchParams.get('error');
+    if (connected) {
+      setToast({ type: 'success', message: `${connected.charAt(0).toUpperCase() + connected.slice(1)} connected successfully!` });
+    } else if (error) {
+      setToast({ type: 'error', message: error === 'access_denied' ? 'Connection was cancelled.' : `Connection failed: ${error}` });
+    }
+    if (connected || error) {
+      const timer = setTimeout(() => setToast(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
 
   const handleOAuthConnect = (accountId: string) => {
     setConnecting(accountId);
-    // TODO: redirect to OAuth flow
-    // window.location.href = `/api/auth/${accountId}/authorize`;
-    setTimeout(() => setConnecting(null), 1500);
+    const apiBase = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
+    const businessId = business?.id ?? '';
+    window.location.href = `${apiBase}/auth/${accountId}/authorize?businessId=${businessId}`;
   };
 
-  const totalServices = MANAGED_SERVICES.length + SOCIAL_ACCOUNTS.length;
+  // Derive live statuses from business record
+  const oauthTokens = (business?.settings as Record<string, unknown> | null)?.['oauthTokens'] as Record<string, unknown> | undefined;
+
+  const liveServices: ManagedService[] = useMemo(() => {
+    return MANAGED_SERVICES.map((s) => {
+      if (!business) return s;
+      switch (s.id) {
+        case 'voice-agent':
+          return business.elevenLabsAgentId
+            ? { ...s, status: 'active' as const, statusLabel: 'Active' }
+            : s;
+        case 'phone-number':
+          return business.twilioPhoneNumber
+            ? { ...s, status: 'active' as const, statusLabel: business.twilioPhoneNumber, detail: business.twilioPhoneNumber }
+            : s;
+        case 'ai-chatbot':
+          return (business.settings as Record<string, unknown> | null)?.['chatbotEnabled']
+            ? { ...s, status: 'active' as const, statusLabel: 'Active' }
+            : s;
+        case 'booking-calendar':
+          return (business as Record<string, unknown>)['calendlyUri']
+            ? { ...s, status: 'active' as const, statusLabel: 'Configured' }
+            : s;
+        case 'business-website':
+          return business.status === 'ACTIVE'
+            ? { ...s, status: 'active' as const, statusLabel: 'Live' }
+            : s;
+        default:
+          return s;
+      }
+    });
+  }, [business]);
+
+  const liveSocials: SocialAccount[] = useMemo(() => {
+    return SOCIAL_ACCOUNTS.map((a) => {
+      if (!oauthTokens) return a;
+      const token = oauthTokens[a.id] as Record<string, unknown> | undefined;
+      if (token?.accessToken) {
+        return { ...a, status: 'connected' as const };
+      }
+      return a;
+    });
+  }, [oauthTokens]);
+
+  const totalServices = liveServices.length + liveSocials.length;
   const activeCount =
-    MANAGED_SERVICES.filter((s) => s.status === 'active').length +
-    SOCIAL_ACCOUNTS.filter((s) => s.status === 'connected').length;
+    liveServices.filter((s) => s.status === 'active').length +
+    liveSocials.filter((s) => s.status === 'connected').length;
 
   return (
     <div className="p-8 animate-fade-up">
+      {/* Toast notification */}
+      {toast && (
+        <div className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-xl border shadow-lg flex items-center gap-3 text-sm font-medium transition-all ${
+          toast.type === 'success'
+            ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+            : 'bg-red-50 border-red-200 text-red-700'
+        }`}>
+          {toast.type === 'success' ? (
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-emerald-500"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+          ) : (
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-red-500"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
+          )}
+          {toast.message}
+          <button onClick={() => setToast(null)} className="ml-2 text-slate-400 hover:text-slate-600">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+          </button>
+        </div>
+      )}
+
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Integrations</h1>
         <p className="text-sm text-slate-500 mt-1">Your AI services and connected accounts</p>
@@ -426,7 +508,7 @@ export default function IntegrationsPage() {
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {MANAGED_SERVICES.map((service) => (
+          {liveServices.map((service) => (
             <ManagedServiceCard key={service.id} service={service} />
           ))}
         </div>
@@ -445,7 +527,7 @@ export default function IntegrationsPage() {
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {SOCIAL_ACCOUNTS.map((account) => (
+          {liveSocials.map((account) => (
             <SocialAccountCard
               key={account.id}
               account={account}

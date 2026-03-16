@@ -18,6 +18,8 @@ import { businessRoutes } from './routes/businesses.js';
 import { websiteRoutes } from './routes/websites.js';
 import { voiceAgentRoutes } from './routes/voice-agent.js';
 import { chatbotRoutes } from './routes/chatbot.js';
+import { oauthRoutes } from './routes/oauth.js';
+import { meRoutes } from './routes/me.js';
 
 const log = createLogger('api:gateway');
 
@@ -80,6 +82,8 @@ export async function buildApp() {
   await app.register(websiteRoutes);
   await app.register(voiceAgentRoutes);
   await app.register(chatbotRoutes);
+  await app.register(oauthRoutes);
+  await app.register(meRoutes);
 
   log.info('API Gateway configured');
   return app;
