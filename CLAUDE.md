@@ -28,7 +28,7 @@ Four specialist sub-agents live in `.claude/agents/`. Each has deep, file-ground
 - Knows exactly what's deployed where (URLs, Railway service names, Vercel project names)
 - Knows every env var set on every service in production
 - Knows which webhooks are configured (Cal.com ✅, SendGrid inbound ✅, SendGrid events ✅, Stripe ✅)
-- Knows what's NOT yet deployed (voice-agent, chatbot-agent, lead-engine, survey-engine, social-media, proposal-engine)
+- Knows what's NOT yet deployed as separate services (chatbot-agent, lead-engine, social-media) — note: voice-agent provisioning now works inline in API gateway without needing the service
 - Use when: something works locally but fails in prod, adding a new Railway service, checking env vars, diagnosing build failures
 
 ### When to Use Agents
@@ -205,8 +205,8 @@ services/[service-name]/
 
 | API | Service | Notes |
 |---|---|---|
-| ElevenLabs | voice-agent | One agent per business. Agent ID stored on `Business.elevenLabsAgentId`. Rate limits apply. |
-| Twilio Voice | voice-agent | TwiML routes inbound calls to ElevenLabs WebSocket |
+| ElevenLabs | api/voice-agent routes | Provisioning handled inline in `apps/api/src/routes/voice-agent.ts` via `POST /voice-agent/provision` — no separate service needed. One agent per business. Agent ID stored on `Business.elevenLabsAgentId`. |
+| Twilio Voice | api/voice-agent routes | Number provisioned inline alongside ElevenLabs agent. TwiML webhook routes inbound calls to ElevenLabs WebSocket. Number stored on `Business.twilioPhoneNumber`. |
 | Twilio SMS | lead-engine, survey-engine | One provisioned number per business for outbound |
 | Anthropic Claude | chatbot-agent, social-media, proposal-engine | Use `claude-haiku-4-5-20251001` for high-volume (chatbot, social). Use `claude-sonnet-4-6` for proposals. |
 | Instagram Graph API | social-media | Access tokens expire — implement refresh. Store encrypted in `Business.settings`. |

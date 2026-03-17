@@ -17,13 +17,13 @@
 | `apps/web` | Vercel | https://embedo.io | ✅ Live (assumed) |
 | `Supabase DB` | Supabase | postgres.umstbrqhhjptjxzgbflu | ✅ Online |
 
-**NOT yet deployed to Railway:**
-- `voice-agent` (port 3002) — implemented but not on Railway
-- `chatbot-agent` (port 3003) — implemented but not on Railway
-- `lead-engine` (port 3004) — partially implemented, not on Railway
-- `survey-engine` (port 3005) — implemented but not on Railway (survey routes exist directly in API gateway)
-- `social-media` (port 3006) — skeleton only, not on Railway
-- `proposal-engine` (port 3008) — implemented but not on Railway (proposal routes exist directly in API gateway)
+**NOT yet deployed to Railway (services are skeletal — logic lives in API gateway):**
+- `voice-agent` (port 3002) — provisioning now handled inline in API gateway; ElevenLabs + Twilio work without this service
+- `chatbot-agent` (port 3003) — chatbot routes in gateway proxy to this; not deployed
+- `lead-engine` (port 3004) — event workers exist but no HTTP routes; not deployed
+- `survey-engine` (port 3005) — survey routes live directly in API gateway; this service not needed
+- `social-media` (port 3006) — skeleton only; social routes live in API gateway
+- `proposal-engine` (port 3008) — proposal routes live directly in API gateway; this service not needed
 
 ---
 
@@ -38,6 +38,7 @@ REDIS_URL=redis://default:...@redis.railway.internal:6379
 SENDGRID_API_KEY, SENDGRID_FROM_EMAIL=jason@embedo.io, SENDGRID_FROM_NAME=Jason
 ANTHROPIC_API_KEY (claude-haiku for proposals/chatbot, claude-sonnet for heavy lifting)
 TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER=+18039191428
+ELEVENLABS_API_KEY (for voice agent provisioning)
 JWT_SECRET
 EMBEDO_BUSINESS_ID=cmmnr04gf0000wlgw7jtwx2p2   ← Jason's business ID (the demo/main business)
 CORS_ORIGINS (localhost 3010/3011/3012 + embedo.io + platform.embedo.io + app.embedo.io)
@@ -87,29 +88,42 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 ## What's Actually Working End-to-End
 
 ### ✅ Fully Working in Production
+
+**Infrastructure & Auth**
 - **Auth flow**: Supabase email/password signup → email verification → `/setup` → business creation → dashboard
-- **Cold outreach pipeline**: Campaign creation → prospect discovery (Geoapify + Brave) → email enrichment (Brave/scraping) → multi-step email sequences via SendGrid → reply tracking via inbound parse
 - **Cal.com webhook**: `BOOKING_CREATED` fires to `/webhooks/cal` — prospect → lead conversion on meeting booked
 - **SendGrid Inbound Parse**: `replies.embedo.io` forwards to `/webhooks/sendgrid/inbound` — prospect → lead on email reply
 - **SendGrid Event Webhook**: pointing to `/webhooks/sendgrid/events` — open/click/bounce tracking
+
+**Outbound / Prospecting**
+- **Cold outreach pipeline**: Campaign creation → prospect discovery (Geoapify + Brave) → email enrichment (Brave/scraping) → multi-step email sequences via SendGrid → reply tracking
+- **Automated follow-up sequences**: Multi-step sequences fire on schedule; countdown timers in UI; sequence timeline on prospect detail
+
+**Pipeline / Proposals**
 - **Proposal generation**: POST `/proposals/generate` → Claude Haiku → shareable HTML link
-- **Billing/Subscriptions**: Stripe checkout → webhook → Subscription record in DB
-- **Website generation**: POST `/websites/generate` → Claude → Vercel deployment
-- **QR codes**: Full CRUD, all 7 purposes, public `/qr/[token]` page, scan tracking, contact capture, detail page with analytics
-- **Surveys**: Full CRUD, public `/s/[slug]` page, response collection, contact capture
+- **Lead detail page**: View lead info, reply history, convert-to-business action
+
+**Client Dashboard**
+- **QR codes**: Full CRUD, all 7 purposes (survey, discount, spin wheel, signup, menu, review, custom), public `/qr/[token]` page, scan tracking, contact capture, detail page with analytics
+- **Surveys**: Full CRUD, public `/s/[slug]` page, response collection, contact capture, question builder (rating/text/multiple choice/yes-no)
+- **Social media AI generation**: On-demand post generation via Claude Haiku, optional schedule date/time → `SCHEDULED` status, saved as drafts otherwise
+- **Contacts/CRM**: List, view, paginate, manually add contacts, edit contact fields (name/email/phone/notes), send survey via SMS or email directly from contact detail page
 - **Campaigns (client)**: EMAIL/SMS campaigns to contacts — create draft, send via SendGrid/Twilio
-- **Social media AI generation**: On-demand post generation via Claude Haiku, saved as drafts
-- **Contacts/CRM**: List, view, paginate, manually add contacts per business
-- **Billing dashboard**: View subscription, upgrade, cancel, portal
+- **Voice agent provisioning**: `POST /voice-agent/provision` → creates ElevenLabs agent + provisions Twilio number inline (no separate service needed); idempotent
+- **Website generation**: POST `/websites/generate` → Claude → Vercel deployment
+- **Billing/Subscriptions**: Stripe checkout → webhook → Subscription record in DB; billing dashboard (view, upgrade, cancel, portal)
+- **Integrations page**: OAuth param cleanup (strips `?connected=` from URL after callback)
+- **Public routes**: `/qr/` and `/s/` middleware-exempted (no auth required)
 
 ### ⚠️ Built but Not Wired / Untested in Production
-- **Voice agent provisioning**: API routes exist (`/voice-agent/provision`) but proxy to `voice-agent` service which isn't deployed
+
 - **Chatbot**: API routes exist but proxy to `chatbot-agent` service which isn't deployed
-- **OAuth social connections**: Routes exist (`/auth/:provider/authorize` + `/auth/:provider/callback`) but no Meta App / Google Cloud project / TikTok App created with valid client IDs
-- **ElevenLabs webhook**: Route exists but no ElevenLabs agent provisioned for any business
+- **OAuth social connections**: Routes exist (`/auth/:provider/authorize` + `/auth/:provider/callback`) but no Meta App / Google Cloud project / TikTok App created — blocked by Meta device verification
+- **ElevenLabs inbound webhook**: Route exists; now possible to provision agents via dashboard but no business has been provisioned yet in production
 
 ### ❌ Not Implemented / Placeholder
-- **Social media service**: Meta webhook stub only, comment/DM processing marked TODO
+
+- **Social media service**: Meta webhook stub only; comment/DM processing marked TODO
 - **Lead-engine**: Event workers exist but no HTTP routes; not deployed
 - **Email/SMS sequence automation**: Sequences defined in DB but no scheduler deployed
 
@@ -120,9 +134,9 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 | Item | What's needed | Priority |
 |---|---|---|
 | Apollo.io API key | Set `APOLLO_API_KEY` in prospector Railway env to enable email enrichment | Medium |
-| Deploy voice-agent | Add to Railway project | Low |
 | Deploy chatbot-agent | Add to Railway project | Low |
 | Meta/Google/TikTok OAuth apps | Create developer apps, set client IDs/secrets in API env | Low (blocked by Meta device verification) |
+| Provision first voice agent | Use `/voice-agent/provision` in the client dashboard for the demo business | Low |
 
 ---
 
