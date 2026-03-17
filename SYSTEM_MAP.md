@@ -17,14 +17,15 @@ External Traffic
     ┌──────┴──────┐
     │   Services  │
     └─────────────┘
-    crm-core   :3001  ← Business/Contact CRUD, onboarding orchestration
-    voice-agent :3002  ← ElevenLabs + Twilio integration
-    chatbot-agent :3003 ← Claude AI chatbot, web widget, IG/FB DMs
-    lead-engine :3004  ← Lead normalization, dedup, SMS/email sequences
-    survey-engine :3005 ← Survey builder, delivery, response automation
-    social-media :3006  ← Content gen, scheduling, comment monitoring
-    website-gen  :3007  ← Site generation, Vercel deployment
-    proposal-engine :3008 ← AI proposals, PDF, shareable links
+    crm-core        :3001  ← Business/Contact CRUD, onboarding orchestration
+    voice-agent     :3002  ← ElevenLabs + Twilio integration
+    chatbot-agent   :3003  ← Claude AI chatbot, web widget, IG/FB DMs
+    lead-engine     :3004  ← Lead normalization, dedup, SMS/email sequences
+    survey-engine   :3005  ← Survey builder, delivery, response automation
+    social-media    :3006  ← Content gen, scheduling, comment monitoring
+    website-gen     :3007  ← Site generation, Vercel deployment
+    proposal-engine :3008  ← AI proposals, PDF, shareable links (routes merged into API gateway)
+    prospector      :3009  ← Cold outreach campaigns, prospect discovery, email sequences
 ```
 
 ---
@@ -33,20 +34,21 @@ External Traffic
 
 | Service | Port (dev) | Deployed On | Primary Responsibility |
 |---|---|---|---|
-| api (gateway) | 3000 | Railway ✅ | Webhooks, proposals, businesses, lead capture |
+| api (gateway) | 3000 | Railway ✅ | Webhooks, proposals, businesses, surveys, QR codes, campaigns, billing, lead capture |
 | crm-core | 3001 | Railway ✅ | Business + Contact master data; onboarding |
-| prospector | 3009 | Railway ✅ | Cold outreach campaigns, email sequences |
+| prospector | 3009 | Railway ✅ | Cold outreach campaigns, prospect discovery, email sequences |
+| website-gen | 3007 | Railway ✅ | Apple-style site generation + Vercel deploy |
 | voice-agent | 3002 | not deployed | ElevenLabs + Twilio; calls, reservations |
 | chatbot-agent | 3003 | not deployed | Claude chatbot + JS widget delivery |
 | lead-engine | 3004 | not deployed | Lead normalization + SMS/email sequences |
 | survey-engine | 3005 | not deployed | Survey creation, delivery, response triggers |
 | social-media | 3006 | not deployed | Content gen, scheduling, auto-engagement |
-| website-gen | 3007 | not deployed | Apple-style site generation + Vercel deploy |
 | proposal-engine | 3008 | not deployed | Routes merged into api gateway |
-| web (Next.js) | 3010 | Vercel ✅ | Embedo public landing page |
-| platform (Next.js) | 3011 | Vercel ✅ | Admin dashboard |
+| web (Next.js) | 3010 | Vercel ✅ | Embedo public landing page (embedo.io) |
+| platform (Next.js) | 3011 | Vercel ✅ | Internal admin dashboard (platform.embedo.io) |
+| client (Next.js) | 3012 | Vercel ✅ | Client-facing dashboard (app.embedo.io) |
 | Redis | — | Railway ✅ | BullMQ queues (redis.railway.internal:6379) |
-| PostgreSQL | — | Supabase ✅ | Primary database (port 5432) |
+| PostgreSQL | — | Supabase ✅ | Primary database (pooler: aws-0-us-west-2, port 5432) |
 
 ---
 
@@ -75,11 +77,12 @@ survey-engine ──► survey.response.submitted ──► lead-engine (update 
                                              ──► lead-engine (trigger SMS/email sequence)
 ```
 
-### Appointment Events (via Calendly webhook)
+### Appointment Events (via Cal.com webhook)
 ```
-External: Calendly webhook ──► crm-core /webhooks/calendly
-  crm-core ──► appointment.booked ──► lead-engine (update Contact status to PROSPECT)
-                                   ──► survey-engine (schedule post-appointment follow-up)
+External: Cal.com webhook ──► api gateway /webhooks/cal
+  api gateway ──► appointment.booked ──► lead-engine (update Contact status to PROSPECT)
+                                      ──► survey-engine (schedule post-appointment follow-up)
+  Note: if attendee email matches a ProspectBusiness → status set to MEETING_BOOKED, follow-ups stop
 ```
 
 ### Lead → Business Conversion (CRM)
@@ -136,7 +139,7 @@ Instagram/FB comment ──► social-media /webhooks/meta
 | Survey responses | satisfaction score, contact info, preferences | On form submission |
 | Social media | platform user, comment/DM content | On comment/follow event |
 | Website forms | name, email, phone, inquiry type | On form submit |
-| Calendly bookings | name, email, appointment details | On Calendly webhook |
+| Cal.com bookings | name, email, appointment details | On Cal.com webhook (`/webhooks/cal`) |
 
 ---
 
@@ -156,7 +159,7 @@ social-media ──────────► Anthropic Claude API (content gen
 social-media ──────────► Replicate API (image generation)
 proposal-engine ───────► Anthropic Claude API (claude-sonnet-4-6)
 proposal-engine ───────► SendGrid API (proposal delivery)
-crm-core ──────────────► Calendly Webhooks + API
+api gateway ───────────► Cal.com Webhooks (BOOKING_CREATED → /webhooks/cal)
 website-gen ───────────► Vercel API (deployment)
 website-gen ───────────► Anthropic Claude API (content fill)
 apps/web + platform ───► Supabase Auth
@@ -172,19 +175,21 @@ All queue names are exported from `packages/queue/src/queues/index.ts`.
 
 | Queue Name | Producer | Consumer(s) | Purpose |
 |---|---|---|---|
-| `embedo:sms` | lead-engine, survey-engine | lead-engine worker | Send outbound SMS |
-| `embedo:email` | lead-engine, survey-engine, proposal-engine | lead-engine worker | Send outbound email |
-| `embedo:lead.created` | all source services | lead-engine, crm-core | Process new lead |
-| `embedo:call.completed` | voice-agent | lead-engine, crm-core, survey-engine | Post-call processing |
-| `embedo:survey.response` | survey-engine | lead-engine, crm-core | Survey automation |
-| `embedo:survey.delivery` | crm-core, voice-agent | survey-engine | Deliver survey to contact |
-| `embedo:appointment.booked` | crm-core | lead-engine, survey-engine | Post-booking automation |
-| `embedo:business.onboarded` | crm-core | voice-agent, chatbot-agent, website-gen, social-media | Provisioning |
-| `embedo:social.post` | social-media scheduler | social-media worker | Post scheduled content |
-| `embedo:social.autodm` | social-media monitor | social-media worker | Send auto-DM |
-| `embedo:proposal.viewed` | proposal-engine | crm-core, lead-engine | Follow-up on view |
-| `embedo:website.generate` | crm-core (onboarding) | website-gen worker | Generate + deploy site |
-| `embedo:sequence.step` | lead-engine | lead-engine worker | Drip sequence delivery |
+| `embedo-sms` | lead-engine, survey-engine | lead-engine worker | Send outbound SMS |
+| `embedo-email` | lead-engine, survey-engine, proposal-engine | lead-engine worker | Send outbound email |
+| `embedo-lead.created` | api gateway, voice-agent, chatbot-agent, social-media | lead-engine, crm-core | Process new lead |
+| `embedo-call.completed` | api gateway (ElevenLabs webhook) | lead-engine, crm-core, survey-engine | Post-call processing |
+| `embedo-survey.response` | survey-engine | lead-engine, crm-core | Survey automation |
+| `embedo-survey.delivery` | crm-core, voice-agent | survey-engine | Deliver survey to contact |
+| `embedo-appointment.booked` | api gateway (Cal.com webhook) | lead-engine, survey-engine | Post-booking automation |
+| `embedo-business.onboarded` | crm-core | voice-agent, chatbot-agent, website-gen, social-media | Provisioning |
+| `embedo-social.post` | social-media scheduler | social-media worker | Post scheduled content |
+| `embedo-social.autodm` | social-media monitor | social-media worker | Send auto-DM |
+| `embedo-proposal.viewed` | api gateway (proposal view) | crm-core, lead-engine | Follow-up on view |
+| `embedo-website.generate` | crm-core (onboarding) | website-gen worker | Generate + deploy site |
+| `embedo-sequence.step` | lead-engine | lead-engine worker | Drip sequence delivery |
+| `embedo-prospect.discovered` | prospector | prospector worker | New prospect found in campaign |
+| `embedo-outreach.send` | prospector | prospector outreach worker | Send cold outreach email |
 
 ---
 
@@ -204,6 +209,9 @@ Business (1) ──── (many) Appointment
 Business (1) ──── (many) EmailSequence
 Business (1) ──── (many) SmsSequence
 Business (1) ──── (many) OnboardingLog
+Business (1) ──── (many) Campaign
+Business (1) ──── (many) QrCode
+Business (1) ──── (0/1) Subscription
 
 Contact (1) ──── (many) Lead
 Contact (1) ──── (many) ContactActivity
@@ -211,6 +219,9 @@ Contact (1) ──── (many) SurveyResponse
 Contact (1) ──── (many) Appointment
 Contact (1) ──── (many) ChatSession
 Contact (1) ──── (many) VoiceCallLog
+Contact (1) ──── (many) QrCodeScan
+
+QrCode (1) ──── (many) QrCodeScan
 ```
 
 ---
@@ -224,7 +235,7 @@ Contact (1) ──── (many) VoiceCallLog
 4. ElevenLabs Conversational AI handles the conversation
    - System prompt built from Business settings (hours, menu, personality)
    - Handles: inquiries, reservations, general questions
-   - For reservations: queries Calendly API for availability, books slot
+   - For reservations: directs caller to book via Cal.com link
 5. Call ends → ElevenLabs sends webhook: POST /webhooks/elevenlabs
 6. voice-agent processes webhook:
    - Stores VoiceCallLog (transcript, intent, duration, extractedData)
