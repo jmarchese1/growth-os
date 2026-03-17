@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
+import Anthropic from '@anthropic-ai/sdk';
 import { db } from '@embedo/db';
-import type { OnboardingStatus } from '@embedo/db';
+import type { OnboardingStatus, SocialPlatform } from '@embedo/db';
 import { createLogger, NotFoundError } from '@embedo/utils';
 
 const log = createLogger('api:businesses');
@@ -184,6 +185,73 @@ export async function businessRoutes(app: FastifyInstance): Promise<void> {
     ]);
 
     return { items, total, page: parseInt(page), pageSize: parseInt(pageSize) };
+  });
+
+  // POST /businesses/:id/posts/generate — AI content generation on demand
+  app.post('/businesses/:id/posts/generate', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const business = await db.business.findUnique({ where: { id }, select: { id: true, name: true, type: true } });
+    if (!business) throw new NotFoundError('Business', id);
+
+    const { platform = 'INSTAGRAM', topic } = request.body as { platform?: string; topic?: string };
+
+    // Map client-side platform keys to Prisma enum values
+    const platformMap: Record<string, string> = {
+      INSTAGRAM: 'INSTAGRAM',
+      FACEBOOK: 'FACEBOOK',
+      GOOGLE: 'GOOGLE_MY_BUSINESS',
+      TIKTOK: 'TIKTOK',
+    };
+    const prismaplatform = platformMap[platform] ?? 'INSTAGRAM';
+
+    const platformGuidelines: Record<string, string> = {
+      INSTAGRAM: 'Instagram post — engaging, visual storytelling. 150-200 character caption. Include 5-8 relevant hashtags at the end.',
+      FACEBOOK: 'Facebook post — conversational, community-focused. 150-300 characters. Include 2-3 hashtags.',
+      GOOGLE: 'Google Business post — professional, informative. 300-500 characters. Focus on specials or events.',
+      TIKTOK: 'TikTok caption — punchy, energetic, trending. Under 150 characters. Include 3-5 trending hashtags.',
+    };
+
+    const guidelines = platformGuidelines[platform] ?? platformGuidelines['INSTAGRAM']!;
+    const businessType = business.type.toLowerCase();
+
+    const prompt = `Write social media content for ${business.name}, a ${businessType}.
+
+Platform: ${platform}
+Format: ${guidelines}
+Tone: casual and authentic
+${topic ? `Topic/Focus: ${topic}` : 'Create engaging general content about the business'}
+
+Return ONLY a JSON object with:
+- caption: the full post text including hashtags
+- imagePrompt: a brief image description (under 40 words)`;
+
+    try {
+      const anthropic = new Anthropic({ apiKey: process.env['ANTHROPIC_API_KEY'] ?? '' });
+      const response = await anthropic.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 400,
+        messages: [{ role: 'user', content: prompt }],
+      });
+
+      const text = response.content[0]?.type === 'text' ? response.content[0].text : '{}';
+      const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const parsed = JSON.parse(cleaned) as { caption: string; imagePrompt: string };
+
+      const post = await db.contentPost.create({
+        data: {
+          businessId: id,
+          platform: prismaplatform as SocialPlatform,
+          caption: parsed.caption,
+          hashtags: [],
+        },
+      });
+
+      log.info({ businessId: id, platform, postId: post.id }, 'AI content post generated');
+      return { success: true, post };
+    } catch (err) {
+      log.error({ err, businessId: id }, 'Content generation failed');
+      return reply.code(500).send({ success: false, error: 'Content generation failed' });
+    }
   });
 
   // PATCH /businesses/:id

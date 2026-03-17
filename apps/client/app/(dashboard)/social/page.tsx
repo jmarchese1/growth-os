@@ -10,13 +10,13 @@ const API_BASE = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 interface ContentPost {
   id: string;
   platform: string;
-  content: string;
+  caption: string;
   status: string;
   scheduledAt: string | null;
-  publishedAt: string | null;
-  likesCount: number;
-  commentsCount: number;
-  sharesCount: number;
+  postedAt: string | null;
+  likes: number;
+  comments: number;
+  shares: number;
   createdAt: string;
 }
 
@@ -28,7 +28,7 @@ const PLATFORM_COLORS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  PUBLISHED: 'bg-emerald-50 text-emerald-700',
+  POSTED: 'bg-emerald-50 text-emerald-700',
   SCHEDULED: 'bg-amber-50 text-amber-700',
   DRAFT: 'bg-slate-100 text-slate-500',
   FAILED: 'bg-red-50 text-red-600',
@@ -38,10 +38,84 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 }
 
+function GenerateModal({ businessId, onDone, onClose }: { businessId: string; onDone: () => void; onClose: () => void }) {
+  const [platform, setPlatform] = useState('INSTAGRAM');
+  const [topic, setTopic] = useState('');
+  const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleGenerate() {
+    setGenerating(true);
+    setError('');
+    try {
+      const res = await fetch(`${API_BASE}/businesses/${businessId}/posts/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ platform, topic: topic.trim() || undefined }),
+      });
+      if (!res.ok) { setError('Generation failed. Try again.'); return; }
+      onDone();
+      onClose();
+    } catch {
+      setError('Generation failed. Try again.');
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  const platforms = ['INSTAGRAM', 'FACEBOOK', 'GOOGLE', 'TIKTOK'];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-800">Generate AI Post</h3>
+            <p className="text-xs text-slate-400 mt-0.5">Claude will write a platform-optimised post for you</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+          </button>
+        </div>
+        <div className="px-6 py-5 space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-2">Platform</label>
+            <div className="grid grid-cols-4 gap-2">
+              {platforms.map((p) => (
+                <button key={p} onClick={() => setPlatform(p)}
+                  className={`py-2 rounded-lg border text-xs font-medium transition-colors ${platform === p ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+                  {p === 'GOOGLE' ? 'Google' : p.charAt(0) + p.slice(1).toLowerCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1">Topic (optional)</label>
+            <input type="text" value={topic} onChange={(e) => setTopic(e.target.value)}
+              placeholder="e.g. weekend brunch special, new menu item, happy hour..."
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+            <p className="text-[10px] text-slate-400 mt-1">Leave blank to generate general business content</p>
+          </div>
+          {error && <p className="text-xs text-red-500">{error}</p>}
+        </div>
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex gap-2 justify-end">
+          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
+          <button onClick={handleGenerate} disabled={generating}
+            className="px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 transition-colors flex items-center gap-2">
+            {generating && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+            {generating ? 'Generating...' : 'Generate Post'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SocialMediaPage() {
   const { business } = useBusiness();
   const [posts, setPosts] = useState<ContentPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showGenerate, setShowGenerate] = useState(false);
 
   const settings = business?.settings as Record<string, unknown> | null;
 
@@ -114,15 +188,31 @@ export default function SocialMediaPage() {
 
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
 
-  const published = posts.filter((p) => p.status === 'PUBLISHED');
+  const published = posts.filter((p) => p.status === 'POSTED');
   const scheduled = posts.filter((p) => p.status === 'SCHEDULED');
-  const totalEngagement = published.reduce((s, p) => s + p.likesCount + p.commentsCount + p.sharesCount, 0);
+  const totalEngagement = published.reduce((s, p) => s + p.likes + p.comments + p.shares, 0);
 
   return (
     <div className="p-8 animate-fade-up">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Social Media</h1>
-        <p className="text-sm text-slate-500 mt-1">AI content generation, scheduling & engagement</p>
+      {showGenerate && business && (
+        <GenerateModal
+          businessId={business.id}
+          onDone={fetchPosts}
+          onClose={() => setShowGenerate(false)}
+        />
+      )}
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Social Media</h1>
+          <p className="text-sm text-slate-500 mt-1">AI content generation, scheduling & engagement</p>
+        </div>
+        <button onClick={() => setShowGenerate(true)}
+          className="flex items-center gap-2 px-4 py-2.5 bg-violet-600 text-white text-sm font-semibold rounded-xl hover:bg-violet-500 transition-colors shadow-sm shadow-violet-600/20">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+            <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+          </svg>
+          Generate Post
+        </button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -215,23 +305,23 @@ export default function SocialMediaPage() {
                   return (
                     <tr key={post.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
                       <td className="px-5 py-3 max-w-xs">
-                        <p className="text-sm text-slate-700 truncate">{post.content}</p>
+                        <p className="text-sm text-slate-700 truncate">{post.caption}</p>
                       </td>
                       <td className="px-5 py-3">
                         <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-medium bg-${colorKey}-50 text-${colorKey}-600`}>
-                          {post.platform}
+                          {post.platform.replace('_MY_BUSINESS', '')}
                         </span>
                       </td>
                       <td className="px-5 py-3">
                         <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-medium ${STATUS_COLORS[post.status] ?? 'bg-slate-100 text-slate-500'}`}>
-                          {post.status}
+                          {post.status === 'POSTED' ? 'Published' : post.status.charAt(0) + post.status.slice(1).toLowerCase()}
                         </span>
                       </td>
                       <td className="px-5 py-3 text-xs text-slate-400">
-                        {post.publishedAt ? formatDate(post.publishedAt) : post.scheduledAt ? formatDate(post.scheduledAt) : '—'}
+                        {post.postedAt ? formatDate(post.postedAt) : post.scheduledAt ? formatDate(post.scheduledAt) : '—'}
                       </td>
                       <td className="px-5 py-3 text-xs text-slate-500">
-                        {post.status === 'PUBLISHED' ? `${post.likesCount + post.commentsCount + post.sharesCount} total` : '—'}
+                        {post.status === 'POSTED' ? `${post.likes + post.comments + post.shares} total` : '—'}
                       </td>
                     </tr>
                   );
