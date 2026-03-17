@@ -3,10 +3,15 @@ RUN npm install -g pnpm
 
 FROM base AS builder
 WORKDIR /app
-COPY pnpm-workspace.yaml package.json turbo.json ./
+COPY pnpm-workspace.yaml package.json turbo.json tsconfig.base.json ./
 COPY packages/ packages/
 COPY services/chatbot-agent/ services/chatbot-agent/
 RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @embedo/db build
+RUN pnpm --filter @embedo/utils build
+RUN pnpm --filter @embedo/types build
+RUN pnpm --filter @embedo/queue build
+RUN pnpm --filter @embedo/config build
 RUN pnpm --filter @embedo/chatbot-agent build
 
 FROM base AS runner

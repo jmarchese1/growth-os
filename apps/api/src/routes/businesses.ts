@@ -53,6 +53,34 @@ export async function businessRoutes(app: FastifyInstance): Promise<void> {
     return { items, total, page: parseInt(page), pageSize: parseInt(pageSize) };
   });
 
+  // GET /contacts/:contactId — direct contact detail lookup (also accessible as /businesses/:id/contacts/:contactId)
+  app.get<{ Params: { contactId: string } }>('/contacts/:contactId', async (request) => {
+    const { contactId } = request.params;
+
+    const contact = await db.contact.findUnique({
+      where: { id: contactId },
+      include: {
+        activities: { orderBy: { createdAt: 'desc' }, take: 50 },
+        surveyResponses: {
+          include: { survey: { select: { id: true, title: true } } },
+          orderBy: { createdAt: 'desc' },
+          take: 20,
+        },
+        qrScans: {
+          include: { qrCode: { select: { id: true, label: true, purpose: true } } },
+          orderBy: { createdAt: 'desc' },
+          take: 20,
+        },
+        appointments: { orderBy: { startTime: 'desc' }, take: 10 },
+        chatSessions: { orderBy: { createdAt: 'desc' }, take: 5, select: { id: true, channel: true, leadCaptured: true, createdAt: true } },
+        callLogs: { orderBy: { createdAt: 'desc' }, take: 10, select: { id: true, direction: true, duration: true, intent: true, sentiment: true, summary: true, createdAt: true } },
+      },
+    });
+
+    if (!contact) throw new NotFoundError('Contact', contactId);
+    return { success: true, contact };
+  });
+
   // PATCH /businesses/:id
   app.patch('/businesses/:id', async (request) => {
     const { id } = request.params as { id: string };

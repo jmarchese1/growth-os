@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import KpiCard from '../../../components/ui/kpi-card';
 import { useBusiness } from '../../../components/auth/business-provider';
 
@@ -39,6 +40,7 @@ const SOURCE_LABELS: Record<string, string> = {
 
 export default function CustomersPage() {
   const { business } = useBusiness();
+  const router = useRouter();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -196,7 +198,7 @@ export default function CustomersPage() {
                 </tr>
               ) : (
                 contacts.map((contact) => (
-                  <tr key={contact.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                  <tr key={contact.id} onClick={() => router.push(`/customers/${contact.id}`)} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors cursor-pointer">
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2.5">
                         <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center text-violet-600 text-[10px] font-bold flex-shrink-0">

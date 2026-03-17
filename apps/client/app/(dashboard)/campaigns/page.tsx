@@ -101,6 +101,8 @@ export default function CampaignsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sendingId, setSendingId] = useState<string | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   const fetchCampaigns = useCallback(async () => {
     if (!business?.id) return;
@@ -135,6 +137,19 @@ export default function CampaignsPage() {
     setCampaigns(campaigns.filter((c) => c.id !== id));
   }
 
+  async function handleSend(id: string) {
+    setSendingId(id);
+    setSendError(null);
+    const res = await fetch(`${API_URL}/campaigns/${id}/send`, { method: 'POST' });
+    const data = await res.json() as { success: boolean; sentCount?: number; error?: string };
+    if (data.success) {
+      setCampaigns(campaigns.map((c) => c.id === id ? { ...c, status: 'SENT', sentCount: data.sentCount ?? 0 } : c));
+    } else {
+      setSendError(data.error ?? 'Failed to send');
+    }
+    setSendingId(null);
+  }
+
   if (bizLoading) return <div className="p-8 flex items-center justify-center min-h-[400px]"><div className="w-8 h-8 border-3 border-violet-300 border-t-violet-600 rounded-full animate-spin" /></div>;
   if (!business) return null;
 
@@ -160,6 +175,13 @@ export default function CampaignsPage() {
         <KpiCard label="Customers Reached" value={totalSent} color="amber" icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1z" /></svg>} />
       </div>
 
+      {sendError && (
+        <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 flex items-center justify-between">
+          <span>{sendError}</span>
+          <button onClick={() => setSendError(null)} className="text-red-400 hover:text-red-600 ml-4">✕</button>
+        </div>
+      )}
+
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-700">Your Campaigns</h2>
@@ -178,6 +200,7 @@ export default function CampaignsPage() {
                 <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Type</th>
                 <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Status</th>
                 <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Created</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Reach</th>
                 <th className="px-5 py-3" />
               </tr>
             </thead>
@@ -195,8 +218,23 @@ export default function CampaignsPage() {
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${STATUS_BADGES[c.status]}`}>{c.status.toLowerCase()}</span>
                   </td>
                   <td className="px-5 py-3 text-sm text-slate-500">{new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
+                  <td className="px-5 py-3 text-sm text-slate-500">
+                    {c.status === 'SENT' ? `${c.sentCount} sent` : '—'}
+                  </td>
                   <td className="px-5 py-3">
-                    <button onClick={() => handleDelete(c.id)} className="text-xs text-slate-400 hover:text-red-500 font-medium transition-colors">Delete</button>
+                    <div className="flex items-center gap-3 justify-end">
+                      {c.status !== 'SENT' && (
+                        <button
+                          onClick={() => handleSend(c.id)}
+                          disabled={sendingId === c.id}
+                          className="text-xs font-medium text-violet-600 hover:text-violet-800 disabled:opacity-50 transition-colors flex items-center gap-1"
+                        >
+                          {sendingId === c.id && <div className="w-3 h-3 border border-violet-400 border-t-transparent rounded-full animate-spin" />}
+                          {sendingId === c.id ? 'Sending...' : 'Send now'}
+                        </button>
+                      )}
+                      <button onClick={() => handleDelete(c.id)} className="text-xs text-slate-400 hover:text-red-500 font-medium transition-colors">Delete</button>
+                    </div>
                   </td>
                 </tr>
               ))}
