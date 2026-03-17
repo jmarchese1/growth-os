@@ -172,9 +172,11 @@ function PasswordStrengthBar({ password }: { password: string }) {
   const strength = getPasswordStrength(password);
   if (!password) return null;
 
+  const unmetChecks = strength.checks.filter((c) => !c.passed);
+
   return (
     <div className="mt-2 space-y-2">
-      {/* Bar */}
+      {/* Bar — always shown, all 5 segments filled when strong */}
       <div className="flex gap-1">
         {[0, 1, 2, 3, 4].map((i) => (
           <div
@@ -188,17 +190,13 @@ function PasswordStrengthBar({ password }: { password: string }) {
       <p className="text-[11px] text-slate-400">
         Strength: <span className={strength.score >= 4 ? 'text-emerald-400' : strength.score >= 3 ? 'text-yellow-400' : 'text-red-400'}>{strength.label}</span>
       </p>
-      {/* Checklist — only show if not yet strong */}
-      {strength.score < 4 && (
+      {/* Checklist — each requirement disappears once satisfied */}
+      {unmetChecks.length > 0 && (
         <ul className="space-y-0.5">
-          {strength.checks.map((c) => (
+          {unmetChecks.map((c) => (
             <li key={c.label} className="flex items-center gap-1.5">
-              <span className={c.passed ? 'text-emerald-400' : 'text-slate-600'}>
-                {c.passed ? '✓' : '·'}
-              </span>
-              <span className={`text-[11px] ${c.passed ? 'text-slate-400' : 'text-slate-600'}`}>
-                {c.label}
-              </span>
+              <span className="text-slate-600">·</span>
+              <span className="text-[11px] text-slate-500">{c.label}</span>
             </li>
           ))}
         </ul>
