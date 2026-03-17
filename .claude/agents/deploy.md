@@ -96,9 +96,9 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 
 | Webhook | Route | Configured? |
 |---|---|---|
-| Cal.com BOOKING_CREATED | `POST /webhooks/cal` | ❌ Not configured in Cal.com dashboard |
-| SendGrid Inbound Parse | `POST /webhooks/sendgrid/inbound` | ❌ Not configured (domain: replies.embedo.io) |
-| SendGrid Events | `POST /webhooks/sendgrid/events` | ❌ Not configured in SendGrid |
+| Cal.com BOOKING_CREATED | `POST /webhooks/cal` | ✅ Configured (Booking created trigger, enabled) |
+| SendGrid Inbound Parse | `POST /webhooks/sendgrid/inbound` | ✅ Configured (replies.embedo.io) |
+| SendGrid Events | `POST /webhooks/sendgrid/events` | ✅ Configured |
 | ElevenLabs conversation_ended | `POST /webhooks/elevenlabs` | ❌ Not provisioned |
 | Twilio inbound voice | `POST /webhooks/twilio/voice` | ❌ Twilio number exists but no business provisioned |
 | Stripe | `POST /webhooks/stripe` | ✅ Configured (STRIPE_WEBHOOK_SECRET set) |

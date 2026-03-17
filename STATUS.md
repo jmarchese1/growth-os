@@ -99,9 +99,9 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 - **Billing dashboard**: View subscription, upgrade, cancel, portal
 
 ### ⚠️ Built but Not Wired / Untested in Production
-- **Cal.com webhook**: Route exists at `/webhooks/cal` but Cal.com dashboard not configured to point there
-- **SendGrid Inbound Parse**: Route at `/webhooks/sendgrid/inbound` but SendGrid not configured with the domain
-- **SendGrid Event Webhook**: Route at `/webhooks/sendgrid/events` but not configured in SendGrid
+- **Cal.com webhook**: ✅ Configured — `BOOKING_CREATED` fires to `/webhooks/cal`, enabled in Cal.com dashboard
+- **SendGrid Inbound Parse**: ✅ Configured — `replies.embedo.io` forwards to `/webhooks/sendgrid/inbound`
+- **SendGrid Event Webhook**: ✅ Configured — pointing to `/webhooks/sendgrid/events`
 - **Voice agent provisioning**: API routes exist (`/voice-agent/provision`) but proxy to `voice-agent` service which isn't deployed
 - **Chatbot**: API routes exist but proxy to `chatbot-agent` service which isn't deployed
 - **OAuth social connections**: Routes exist (`/auth/:provider/authorize` + `/auth/:provider/callback`) but no Meta App / Google Cloud project / TikTok App created with valid client IDs
@@ -120,9 +120,7 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 
 | Item | What's needed | Priority |
 |---|---|---|
-| Cal.com webhook | Point `BOOKING_CREATED` to `https://embedoapi-production.up.railway.app/webhooks/cal` in Cal.com dashboard | High |
-| SendGrid Inbound Parse | Configure domain `replies.embedo.io` → forward to `/webhooks/sendgrid/inbound` | High |
-| SendGrid Event Webhook | Point to `/webhooks/sendgrid/events` in SendGrid dashboard | Medium |
+| Apollo.io API key | Set `APOLLO_API_KEY` in prospector Railway env to enable email enrichment | Medium |
 | Apollo.io API key | Set `APOLLO_API_KEY` in prospector Railway env | Medium |
 | Deploy voice-agent | Add to Railway project | Low |
 | Deploy chatbot-agent | Add to Railway project | Low |
