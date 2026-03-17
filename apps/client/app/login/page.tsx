@@ -138,36 +138,127 @@ function OrbitalParticleCanvas() {
   );
 }
 
+/* ── Password strength ───────────────────────────────────────────── */
+interface PasswordStrength {
+  score: number; // 0–4
+  label: string;
+  color: string;
+  checks: { label: string; passed: boolean }[];
+}
+
+function getPasswordStrength(password: string): PasswordStrength {
+  const checks = [
+    { label: 'At least 8 characters', passed: password.length >= 8 },
+    { label: 'Uppercase letter', passed: /[A-Z]/.test(password) },
+    { label: 'Lowercase letter', passed: /[a-z]/.test(password) },
+    { label: 'Number', passed: /[0-9]/.test(password) },
+    { label: 'Special character', passed: /[^A-Za-z0-9]/.test(password) },
+  ];
+
+  const score = checks.filter((c) => c.passed).length;
+
+  const levels = [
+    { label: 'Very weak', color: 'bg-red-500' },
+    { label: 'Weak', color: 'bg-orange-500' },
+    { label: 'Fair', color: 'bg-yellow-500' },
+    { label: 'Good', color: 'bg-emerald-500' },
+    { label: 'Strong', color: 'bg-emerald-400' },
+  ];
+
+  return { score, ...levels[score]!, checks };
+}
+
+function PasswordStrengthBar({ password }: { password: string }) {
+  const strength = getPasswordStrength(password);
+  if (!password) return null;
+
+  return (
+    <div className="mt-2 space-y-2">
+      {/* Bar */}
+      <div className="flex gap-1">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+              i < strength.score ? strength.color : 'bg-white/10'
+            }`}
+          />
+        ))}
+      </div>
+      <p className="text-[11px] text-slate-400">
+        Strength: <span className={strength.score >= 4 ? 'text-emerald-400' : strength.score >= 3 ? 'text-yellow-400' : 'text-red-400'}>{strength.label}</span>
+      </p>
+      {/* Checklist — only show if not yet strong */}
+      {strength.score < 4 && (
+        <ul className="space-y-0.5">
+          {strength.checks.map((c) => (
+            <li key={c.label} className="flex items-center gap-1.5">
+              <span className={c.passed ? 'text-emerald-400' : 'text-slate-600'}>
+                {c.passed ? '✓' : '·'}
+              </span>
+              <span className={`text-[11px] ${c.passed ? 'text-slate-400' : 'text-slate-600'}`}>
+                {c.label}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 /* ── Login page ──────────────────────────────────────────────────── */
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showForgot, setShowForgot] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
   const [signupSent, setSignupSent] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState('');
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setUnverifiedEmail('');
 
     const supabase = createSupabaseBrowserClient();
     const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
 
     if (authError) {
-      setError(authError.message === 'Invalid login credentials'
-        ? 'Invalid email or password'
-        : authError.message
-      );
+      if (authError.message.toLowerCase().includes('email not confirmed')) {
+        setUnverifiedEmail(email);
+      } else {
+        setError(authError.message === 'Invalid login credentials'
+          ? 'Invalid email or password'
+          : authError.message
+        );
+      }
       setLoading(false);
       return;
     }
     router.push('/');
     router.refresh();
+  }
+
+  async function handleResendVerification() {
+    if (!unverifiedEmail) return;
+    setLoading(true);
+    const supabase = createSupabaseBrowserClient();
+    await supabase.auth.resend({
+      type: 'signup',
+      email: unverifiedEmail,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    });
+    setLoading(false);
+    setError('');
+    setUnverifiedEmail('');
+    setError('Verification email resent — check your inbox.');
   }
 
   async function handleSignup(e: React.FormEvent) {
@@ -176,10 +267,18 @@ export default function LoginPage() {
       setError('Email and password are required');
       return;
     }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+
+    const strength = getPasswordStrength(password);
+    if (strength.score < 2) {
+      setError('Please choose a stronger password');
       return;
     }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -222,6 +321,8 @@ export default function LoginPage() {
     setLoading(false);
   }
 
+  const inputClass = 'w-full px-4 py-3 bg-white/[0.04] border border-white/[0.08] rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/30 transition-all';
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0c0a18] relative overflow-hidden">
       {/* Dynamic particle canvas background */}
@@ -239,9 +340,7 @@ export default function LoginPage() {
         <div className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-2xl shadow-2xl overflow-visible">
           {/* Header */}
           <div className="px-8 pt-10 pb-6 text-center overflow-visible">
-            {/* Embedo Logo — isometric cube with orbiting particles */}
             <div className="relative mx-auto mb-6 flex items-center justify-center" style={{ width: 140, height: 140, overflow: 'visible' }}>
-              {/* Glow behind logo */}
               <div className="absolute inset-0 rounded-full bg-violet-500/15 blur-2xl" />
               <div className="absolute inset-4 rounded-full bg-violet-600/10 blur-xl" />
               <EmbedoLogo size={72} />
@@ -258,9 +357,12 @@ export default function LoginPage() {
             {showSignup ? (
               <form onSubmit={handleSignup} className="space-y-4">
                 {signupSent ? (
-                  <div className="px-4 py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                  <div className="px-4 py-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
                     <p className="text-sm text-emerald-400 font-medium">Check your email</p>
-                    <p className="text-xs text-slate-400 mt-1">We sent a confirmation link to <span className="text-white">{email}</span>. Click it to activate your account.</p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      We sent a confirmation link to <span className="text-white">{email}</span>.
+                      Click it to activate your account and get started.
+                    </p>
                   </div>
                 ) : (
                   <>
@@ -273,7 +375,7 @@ export default function LoginPage() {
                         placeholder="you@company.com"
                         autoFocus
                         required
-                        className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.08] rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/30 transition-all"
+                        className={inputClass}
                       />
                     </div>
                     <div>
@@ -282,10 +384,34 @@ export default function LoginPage() {
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Create a password (min 6 characters)"
+                        placeholder="Create a strong password"
                         required
-                        className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.08] rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/30 transition-all"
+                        className={inputClass}
                       />
+                      <PasswordStrengthBar password={password} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1.5">Confirm password</label>
+                      <input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Re-enter your password"
+                        required
+                        className={`${inputClass} ${
+                          confirmPassword && confirmPassword !== password
+                            ? 'border-red-500/40 focus:ring-red-500/30'
+                            : confirmPassword && confirmPassword === password
+                            ? 'border-emerald-500/40 focus:ring-emerald-500/30'
+                            : ''
+                        }`}
+                      />
+                      {confirmPassword && confirmPassword !== password && (
+                        <p className="text-[11px] text-red-400 mt-1">Passwords do not match</p>
+                      )}
+                      {confirmPassword && confirmPassword === password && (
+                        <p className="text-[11px] text-emerald-400 mt-1">Passwords match</p>
+                      )}
                     </div>
                     {error && (
                       <div className="px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg">
@@ -294,7 +420,7 @@ export default function LoginPage() {
                     )}
                     <button
                       type="submit"
-                      disabled={loading || !email.trim() || !password.trim()}
+                      disabled={loading || !email.trim() || !password.trim() || !confirmPassword.trim()}
                       className="w-full py-3 bg-violet-600 text-white text-sm font-semibold rounded-xl hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 shadow-lg shadow-violet-600/20"
                     >
                       {loading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
@@ -304,7 +430,7 @@ export default function LoginPage() {
                 )}
                 <button
                   type="button"
-                  onClick={() => { setShowSignup(false); setSignupSent(false); setError(''); }}
+                  onClick={() => { setShowSignup(false); setSignupSent(false); setError(''); setConfirmPassword(''); setPassword(''); }}
                   className="w-full text-sm text-slate-500 hover:text-violet-400 transition-colors"
                 >
                   Already have an account? Sign in
@@ -328,7 +454,7 @@ export default function LoginPage() {
                         placeholder="you@company.com"
                         autoFocus
                         required
-                        className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.08] rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/30 transition-all"
+                        className={inputClass}
                       />
                     </div>
                     {error && (
@@ -365,7 +491,7 @@ export default function LoginPage() {
                     placeholder="you@company.com"
                     autoFocus
                     required
-                    className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.08] rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/30 transition-all"
+                    className={inputClass}
                   />
                 </div>
 
@@ -374,7 +500,7 @@ export default function LoginPage() {
                     <label className="text-xs font-medium text-slate-400">Password</label>
                     <button
                       type="button"
-                      onClick={() => { setShowForgot(true); setError(''); }}
+                      onClick={() => { setShowForgot(true); setError(''); setUnverifiedEmail(''); }}
                       className="text-[11px] text-violet-400/70 hover:text-violet-400 transition-colors"
                     >
                       Forgot password?
@@ -386,11 +512,29 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
                     required
-                    className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.08] rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/30 transition-all"
+                    className={inputClass}
                   />
                 </div>
 
-                {error && (
+                {/* Email not verified notice */}
+                {unverifiedEmail && (
+                  <div className="px-4 py-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                    <p className="text-sm text-amber-400 font-medium">Email not verified</p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Check your inbox for the confirmation link we sent to <span className="text-white">{unverifiedEmail}</span>.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleResendVerification}
+                      disabled={loading}
+                      className="text-xs text-violet-400 hover:text-violet-300 mt-2 transition-colors disabled:opacity-50"
+                    >
+                      {loading ? 'Sending...' : 'Resend verification email'}
+                    </button>
+                  </div>
+                )}
+
+                {error && !unverifiedEmail && (
                   <div className="px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg">
                     <p className="text-xs text-red-400">{error}</p>
                   </div>
@@ -415,7 +559,7 @@ export default function LoginPage() {
                 {/* Signup button */}
                 <button
                   type="button"
-                  onClick={() => { setShowSignup(true); setError(''); }}
+                  onClick={() => { setShowSignup(true); setError(''); setUnverifiedEmail(''); }}
                   className="w-full py-3 bg-white/[0.06] border border-white/[0.12] text-white text-sm font-semibold rounded-xl hover:bg-white/[0.1] hover:border-violet-500/30 transition-all flex items-center justify-center gap-2"
                 >
                   Create an account
