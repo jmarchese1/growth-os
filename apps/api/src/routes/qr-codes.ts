@@ -35,6 +35,60 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
   });
 
   /**
+   * GET /qr-codes/:id
+   * Get a single QR code with scan history and collected contacts.
+   */
+  app.get<{ Params: { id: string } }>('/qr-codes/:id', async (request) => {
+    const { id } = request.params;
+
+    const qrCode = await db.qrCode.findUnique({
+      where: { id },
+      include: {
+        survey: { select: { id: true, title: true, slug: true } },
+        scans: {
+          orderBy: { createdAt: 'desc' },
+          take: 100,
+          include: {
+            contact: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
+          },
+        },
+      },
+    });
+
+    if (!qrCode) throw new NotFoundError('QrCode', id);
+
+    return { success: true, qrCode };
+  });
+
+  /**
+   * PATCH /qr-codes/:id
+   * Update a QR code (toggle active, update fields).
+   */
+  app.patch<{ Params: { id: string } }>('/qr-codes/:id', async (request) => {
+    const { id } = request.params;
+    const body = request.body as { active?: boolean; label?: string; expiresAt?: string | null };
+
+    const qrCode = await db.qrCode.findUnique({ where: { id } });
+    if (!qrCode) throw new NotFoundError('QrCode', id);
+
+    const updated = await db.qrCode.update({
+      where: { id },
+      data: {
+        ...(body.active !== undefined ? { active: body.active } : {}),
+        ...(body.label ? { label: body.label.trim() } : {}),
+        ...(body.expiresAt !== undefined ? { expiresAt: body.expiresAt ? new Date(body.expiresAt) : null } : {}),
+      },
+      include: {
+        survey: { select: { id: true, title: true, slug: true } },
+        _count: { select: { scans: true } },
+      },
+    });
+
+    log.info({ qrCodeId: id }, 'QR code updated');
+    return { success: true, qrCode: { ...updated, scanCount: updated._count.scans } };
+  });
+
+  /**
    * POST /qr-codes
    * Create a QR code.
    */

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import KpiCard from '../../../components/ui/kpi-card';
 import { useBusiness } from '../../../components/auth/business-provider';
 
@@ -303,6 +304,7 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
 
 /* ── QR Code Card ───────────────────────────────────────────────── */
 function QrCodeCard({ qr, onDelete }: { qr: QrCode; onDelete: () => void }) {
+  const router = useRouter();
   const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
   const cfg = PURPOSE_CONFIG[qr.purpose];
@@ -331,7 +333,10 @@ function QrCodeCard({ qr, onDelete }: { qr: QrCode; onDelete: () => void }) {
   }
 
   return (
-    <div className={`bg-white border rounded-xl p-4 flex gap-4 items-start ${isExpired ? 'border-red-200 opacity-60' : 'border-slate-200'}`}>
+    <div
+      className={`bg-white border rounded-xl p-4 flex gap-4 items-start cursor-pointer hover:border-violet-300 hover:shadow-sm transition-all ${isExpired ? 'border-red-200 opacity-60' : 'border-slate-200'}`}
+      onClick={() => router.push(`/qr-codes/${qr.id}`)}
+    >
       <div className="bg-slate-50 rounded-lg p-2 flex-shrink-0">
         <img src={qrImageUrl(url, 80)} alt={qr.label} width={80} height={80} className="rounded" />
       </div>
@@ -353,7 +358,7 @@ function QrCodeCard({ qr, onDelete }: { qr: QrCode; onDelete: () => void }) {
           </button>
         </div>
       </div>
-      <div className="flex flex-col gap-1 flex-shrink-0">
+      <div className="flex flex-col gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
         <button onClick={handleDownload} disabled={downloading} className="px-3 py-1.5 text-xs font-medium text-violet-600 hover:bg-violet-50 rounded-lg transition-colors disabled:opacity-50">
           {downloading ? '...' : 'Download'}
         </button>
