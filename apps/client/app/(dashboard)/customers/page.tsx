@@ -38,6 +38,94 @@ const SOURCE_LABELS: Record<string, string> = {
   OUTBOUND: 'Outbound',
 };
 
+function AddContactModal({ businessId, onDone, onClose }: { businessId: string; onDone: () => void; onClose: () => void }) {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [notes, setNotes] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const inputClass = 'w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300';
+
+  async function handleSave() {
+    if (!email.trim() && !phone.trim()) { setError('Enter at least an email or phone number'); return; }
+    setSaving(true);
+    setError('');
+    try {
+      const res = await fetch(`${API_BASE}/businesses/${businessId}/contacts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: firstName.trim() || undefined,
+          lastName: lastName.trim() || undefined,
+          email: email.trim() || undefined,
+          phone: phone.trim() || undefined,
+          notes: notes.trim() || undefined,
+        }),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        setError(d.error ?? 'Failed to save contact');
+        return;
+      }
+      onDone();
+      onClose();
+    } catch {
+      setError('Network error');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-slate-800">Add Contact</h3>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+          </button>
+        </div>
+        <div className="px-6 py-5 space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1">First Name</label>
+              <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Jane" className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1">Last Name</label>
+              <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Smith" className={inputClass} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1">Email</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="jane@example.com" className={inputClass} />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1">Phone</label>
+            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 555 000 0000" className={inputClass} />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1">Notes (optional)</label>
+            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder="VIP customer, weekly regular..." className={`${inputClass} resize-none`} />
+          </div>
+          {error && <p className="text-xs text-red-500">{error}</p>}
+        </div>
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex gap-2 justify-end">
+          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
+          <button onClick={handleSave} disabled={saving}
+            className="px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 transition-colors flex items-center gap-2">
+            {saving && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+            {saving ? 'Saving...' : 'Add Contact'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CustomersPage() {
   const { business } = useBusiness();
   const router = useRouter();
@@ -45,6 +133,7 @@ export default function CustomersPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
   const pageSize = 20;
 
   const fetchContacts = useCallback(async () => {
@@ -103,9 +192,23 @@ export default function CustomersPage() {
 
   return (
     <div className="p-8 animate-fade-up">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Customers</h1>
-        <p className="text-sm text-slate-500 mt-1">Everyone who has interacted with your business — walk-ins, callers, chatters, and more</p>
+      {showAdd && business && (
+        <AddContactModal
+          businessId={business.id}
+          onDone={fetchContacts}
+          onClose={() => setShowAdd(false)}
+        />
+      )}
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Customers</h1>
+          <p className="text-sm text-slate-500 mt-1">Everyone who has interacted with your business — walk-ins, callers, chatters, and more</p>
+        </div>
+        <button onClick={() => setShowAdd(true)}
+          className="flex items-center gap-2 px-4 py-2.5 bg-violet-600 text-white text-sm font-semibold rounded-xl hover:bg-violet-500 transition-colors shadow-sm shadow-violet-600/20">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" /></svg>
+          Add Contact
+        </button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

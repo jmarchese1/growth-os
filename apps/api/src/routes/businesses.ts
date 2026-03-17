@@ -187,6 +187,49 @@ export async function businessRoutes(app: FastifyInstance): Promise<void> {
     return { items, total, page: parseInt(page), pageSize: parseInt(pageSize) };
   });
 
+  // POST /businesses/:id/contacts — manually create a contact
+  app.post('/businesses/:id/contacts', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const business = await db.business.findUnique({ where: { id }, select: { id: true } });
+    if (!business) throw new NotFoundError('Business', id);
+
+    const body = request.body as {
+      firstName?: string;
+      lastName?: string;
+      email?: string;
+      phone?: string;
+      notes?: string;
+    };
+
+    if (!body.email && !body.phone) {
+      return reply.code(400).send({ success: false, error: 'At least one of email or phone is required' });
+    }
+
+    // Upsert to avoid duplicates
+    const contact = await db.contact.upsert({
+      where: body.email
+        ? { businessId_email: { businessId: id, email: body.email } }
+        : { businessId_phone: { businessId: id, phone: body.phone! } },
+      create: {
+        businessId: id,
+        source: 'MANUAL',
+        ...(body.firstName ? { firstName: body.firstName.trim() } : {}),
+        ...(body.lastName ? { lastName: body.lastName.trim() } : {}),
+        ...(body.email ? { email: body.email.trim() } : {}),
+        ...(body.phone ? { phone: body.phone.trim() } : {}),
+        ...(body.notes ? { notes: body.notes.trim() } : {}),
+      },
+      update: {
+        ...(body.firstName ? { firstName: body.firstName.trim() } : {}),
+        ...(body.lastName ? { lastName: body.lastName.trim() } : {}),
+        ...(body.notes ? { notes: body.notes.trim() } : {}),
+      },
+    });
+
+    log.info({ businessId: id, contactId: contact.id }, 'Contact manually created');
+    return { success: true, contact };
+  });
+
   // POST /businesses/:id/posts/generate — AI content generation on demand
   app.post('/businesses/:id/posts/generate', async (request, reply) => {
     const { id } = request.params as { id: string };
