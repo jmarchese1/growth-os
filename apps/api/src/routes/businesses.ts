@@ -140,7 +140,7 @@ export async function businessRoutes(app: FastifyInstance): Promise<void> {
         take: 5,
         include: {
           survey: { select: { title: true } },
-          contact: { select: { id: true, firstName: true, lastName: true } },
+          contact: { select: { id: true, firstName: true, lastName: true, email: true } },
         },
       }),
       db.qrCodeScan.findMany({

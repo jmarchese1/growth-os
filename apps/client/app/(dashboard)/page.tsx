@@ -29,7 +29,7 @@ interface SurveyResponse {
   id: string;
   createdAt: string;
   survey: { title: string };
-  contact: { id: string; firstName: string | null; lastName: string | null } | null;
+  contact: { id: string; firstName: string | null; lastName: string | null; email: string | null } | null;
 }
 
 interface QrScan {
