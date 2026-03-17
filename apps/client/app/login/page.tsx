@@ -152,11 +152,12 @@ function getPasswordStrength(password: string): PasswordStrength {
     { label: 'Uppercase letter', passed: /[A-Z]/.test(password) },
     { label: 'Lowercase letter', passed: /[a-z]/.test(password) },
     { label: 'Number', passed: /[0-9]/.test(password) },
-    { label: 'Special character', passed: /[^A-Za-z0-9]/.test(password) },
+    { label: 'Special character (!@#$%^&*)', passed: /[!@#$%^&*()\-_=+\[\]{}|;:,.<>?/~`'"]/.test(password) },
   ];
 
   const score = checks.filter((c) => c.passed).length;
 
+  // levels indexed 0–4; cap score so index never exceeds array bounds
   const levels = [
     { label: 'Very weak', color: 'bg-red-500' },
     { label: 'Weak', color: 'bg-orange-500' },
@@ -165,7 +166,7 @@ function getPasswordStrength(password: string): PasswordStrength {
     { label: 'Strong', color: 'bg-emerald-400' },
   ];
 
-  return { score, ...levels[score]!, checks };
+  return { score, ...levels[Math.min(score, 4)]!, checks };
 }
 
 function PasswordStrengthBar({ password }: { password: string }) {
@@ -188,7 +189,7 @@ function PasswordStrengthBar({ password }: { password: string }) {
         ))}
       </div>
       <p className="text-[11px] text-slate-400">
-        Strength: <span className={strength.score >= 4 ? 'text-emerald-400' : strength.score >= 3 ? 'text-yellow-400' : 'text-red-400'}>{strength.label}</span>
+        Strength: <span className={strength.score >= 4 ? 'text-emerald-400' : strength.score === 3 ? 'text-yellow-400' : 'text-red-400'}>{strength.label}</span>
       </p>
       {/* Checklist — each requirement disappears once satisfied */}
       {unmetChecks.length > 0 && (
