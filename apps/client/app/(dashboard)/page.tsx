@@ -36,7 +36,7 @@ interface QrScan {
   id: string;
   createdAt: string;
   qrCode: { label: string | null; purpose: string };
-  contact: { id: string; firstName: string | null; lastName: string | null } | null;
+  contact: { id: string; firstName: string | null; lastName: string | null; email: string | null } | null;
 }
 
 interface DashboardData {

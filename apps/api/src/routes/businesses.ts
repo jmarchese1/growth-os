@@ -149,7 +149,7 @@ export async function businessRoutes(app: FastifyInstance): Promise<void> {
         take: 5,
         include: {
           qrCode: { select: { label: true, purpose: true } },
-          contact: { select: { id: true, firstName: true, lastName: true } },
+          contact: { select: { id: true, firstName: true, lastName: true, email: true } },
         },
       }),
     ]);
