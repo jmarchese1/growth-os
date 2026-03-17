@@ -1,5 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import Anthropic from '@anthropic-ai/sdk';
+import sgMail from '@sendgrid/mail';
+import twilio from 'twilio';
 import { db } from '@embedo/db';
 import type { OnboardingStatus, SocialPlatform } from '@embedo/db';
 import { createLogger, NotFoundError } from '@embedo/utils';
@@ -236,7 +238,7 @@ export async function businessRoutes(app: FastifyInstance): Promise<void> {
     const business = await db.business.findUnique({ where: { id }, select: { id: true, name: true, type: true } });
     if (!business) throw new NotFoundError('Business', id);
 
-    const { platform = 'INSTAGRAM', topic } = request.body as { platform?: string; topic?: string };
+    const { platform = 'INSTAGRAM', topic, scheduledAt } = request.body as { platform?: string; topic?: string; scheduledAt?: string };
 
     // Map client-side platform keys to Prisma enum values
     const platformMap: Record<string, string> = {
@@ -280,12 +282,14 @@ Return ONLY a JSON object with:
       const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       const parsed = JSON.parse(cleaned) as { caption: string; imagePrompt: string };
 
+      const scheduledDate = scheduledAt ? new Date(scheduledAt) : undefined;
       const post = await db.contentPost.create({
         data: {
           businessId: id,
           platform: prismaplatform as SocialPlatform,
           caption: parsed.caption,
           hashtags: [],
+          ...(scheduledDate ? { scheduledAt: scheduledDate, status: 'SCHEDULED' } : {}),
         },
       });
 
@@ -295,6 +299,83 @@ Return ONLY a JSON object with:
       log.error({ err, businessId: id }, 'Content generation failed');
       return reply.code(500).send({ success: false, error: 'Content generation failed' });
     }
+  });
+
+  // PATCH /contacts/:id — edit contact fields
+  app.patch('/contacts/:id', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const contact = await db.contact.findUnique({ where: { id }, select: { id: true } });
+    if (!contact) return reply.code(404).send({ success: false, error: 'Contact not found' });
+
+    const body = request.body as { firstName?: string; lastName?: string; email?: string; phone?: string; notes?: string };
+    const updated = await db.contact.update({
+      where: { id },
+      data: {
+        ...(body.firstName !== undefined ? { firstName: body.firstName.trim() || null } : {}),
+        ...(body.lastName !== undefined ? { lastName: body.lastName.trim() || null } : {}),
+        ...(body.email !== undefined ? { email: body.email.trim() || null } : {}),
+        ...(body.phone !== undefined ? { phone: body.phone.trim() || null } : {}),
+        ...(body.notes !== undefined ? { notes: body.notes.trim() || null } : {}),
+      },
+    });
+    log.info({ contactId: id }, 'Contact updated');
+    return { success: true, contact: updated };
+  });
+
+  // POST /contacts/:id/send-survey — send a survey link via SMS or email
+  app.post('/contacts/:id/send-survey', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const body = request.body as { surveyId: string; channel: 'email' | 'sms'; surveyUrl: string };
+
+    if (!body.surveyId || !body.channel || !body.surveyUrl) {
+      return reply.code(400).send({ success: false, error: 'surveyId, channel, and surveyUrl are required' });
+    }
+
+    const contact = await db.contact.findUnique({
+      where: { id },
+      include: { business: { select: { name: true, twilioPhoneNumber: true } } },
+    });
+    if (!contact) return reply.code(404).send({ success: false, error: 'Contact not found' });
+
+    const survey = await db.survey.findUnique({ where: { id: body.surveyId }, select: { title: true } });
+    if (!survey) return reply.code(404).send({ success: false, error: 'Survey not found' });
+
+    if (body.channel === 'email') {
+      if (!contact.email) return reply.code(400).send({ success: false, error: 'Contact has no email address' });
+      const sgKey = process.env['SENDGRID_API_KEY'];
+      if (!sgKey) return reply.code(500).send({ success: false, error: 'Email not configured' });
+      sgMail.setApiKey(sgKey);
+      await sgMail.send({
+        to: contact.email,
+        from: { email: process.env['SENDGRID_FROM_EMAIL'] ?? 'jason@embedo.io', name: contact.business.name },
+        subject: `We'd love your feedback — ${survey.title}`,
+        html: `<p>Hi${contact.firstName ? ` ${contact.firstName}` : ''},</p><p>We'd love to hear your thoughts. Please take a moment to complete our short survey:</p><p><a href="${body.surveyUrl}" style="background:#7c3aed;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Take Survey</a></p><p style="margin-top:16px;font-size:12px;color:#888;">Or copy this link: ${body.surveyUrl}</p>`,
+      });
+    } else {
+      if (!contact.phone) return reply.code(400).send({ success: false, error: 'Contact has no phone number' });
+      const from = contact.business.twilioPhoneNumber ?? process.env['TWILIO_FROM_NUMBER'];
+      if (!from) return reply.code(500).send({ success: false, error: 'No SMS number configured' });
+      const tc = twilio(process.env['TWILIO_ACCOUNT_SID']!, process.env['TWILIO_AUTH_TOKEN']!);
+      await tc.messages.create({
+        to: contact.phone,
+        from,
+        body: `Hi${contact.firstName ? ` ${contact.firstName}` : ''}! ${contact.business.name} would love your feedback. Please take our short survey: ${body.surveyUrl}`,
+      });
+    }
+
+    // Log activity
+    await db.contactActivity.create({
+      data: {
+        businessId: contact.businessId,
+        contactId: id,
+        type: 'EMAIL',
+        title: `Survey sent: ${survey.title}`,
+        description: `Sent via ${body.channel.toUpperCase()}`,
+      },
+    });
+
+    log.info({ contactId: id, surveyId: body.surveyId, channel: body.channel }, 'Survey sent to contact');
+    return { success: true };
   });
 
   // PATCH /businesses/:id

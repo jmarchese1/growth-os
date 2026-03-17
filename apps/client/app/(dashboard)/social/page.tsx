@@ -41,17 +41,28 @@ function formatDate(iso: string) {
 function GenerateModal({ businessId, onDone, onClose }: { businessId: string; onDone: () => void; onClose: () => void }) {
   const [platform, setPlatform] = useState('INSTAGRAM');
   const [topic, setTopic] = useState('');
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleTime, setScheduleTime] = useState('');
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
+
+  // Default schedule time to tomorrow at 9am
+  const tomorrow = new Date(Date.now() + 86400000);
+  const defaultDate = tomorrow.toISOString().slice(0, 10);
 
   async function handleGenerate() {
     setGenerating(true);
     setError('');
     try {
+      let scheduledAt: string | undefined;
+      if (scheduleDate) {
+        const dt = new Date(`${scheduleDate}T${scheduleTime || '09:00'}:00`);
+        if (!isNaN(dt.getTime())) scheduledAt = dt.toISOString();
+      }
       const res = await fetch(`${API_BASE}/businesses/${businessId}/posts/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ platform, topic: topic.trim() || undefined }),
+        body: JSON.stringify({ platform, topic: topic.trim() || undefined, scheduledAt }),
       });
       if (!res.ok) { setError('Generation failed. Try again.'); return; }
       onDone();
@@ -63,6 +74,7 @@ function GenerateModal({ businessId, onDone, onClose }: { businessId: string; on
     }
   }
 
+  const inputClass = 'w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300';
   const platforms = ['INSTAGRAM', 'FACEBOOK', 'GOOGLE', 'TIKTOK'];
 
   return (
@@ -93,8 +105,16 @@ function GenerateModal({ businessId, onDone, onClose }: { businessId: string; on
             <label className="block text-xs font-medium text-slate-500 mb-1">Topic (optional)</label>
             <input type="text" value={topic} onChange={(e) => setTopic(e.target.value)}
               placeholder="e.g. weekend brunch special, new menu item, happy hour..."
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+              className={inputClass} />
             <p className="text-[10px] text-slate-400 mt-1">Leave blank to generate general business content</p>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-2">Schedule (optional)</label>
+            <div className="grid grid-cols-2 gap-2">
+              <input type="date" value={scheduleDate} min={defaultDate} onChange={(e) => setScheduleDate(e.target.value)} className={inputClass} />
+              <input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} className={inputClass} placeholder="09:00" />
+            </div>
+            <p className="text-[10px] text-slate-400 mt-1">Leave blank to save as a draft</p>
           </div>
           {error && <p className="text-xs text-red-500">{error}</p>}
         </div>
@@ -103,7 +123,7 @@ function GenerateModal({ businessId, onDone, onClose }: { businessId: string; on
           <button onClick={handleGenerate} disabled={generating}
             className="px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 transition-colors flex items-center gap-2">
             {generating && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-            {generating ? 'Generating...' : 'Generate Post'}
+            {generating ? 'Generating...' : scheduleDate ? 'Generate & Schedule' : 'Generate Draft'}
           </button>
         </div>
       </div>

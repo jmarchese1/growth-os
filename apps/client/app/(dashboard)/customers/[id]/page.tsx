@@ -4,6 +4,7 @@ import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
+const CLIENT_URL = typeof window !== 'undefined' ? window.location.origin : 'https://app.embedo.io';
 
 type LeadSource = 'VOICE' | 'CHATBOT' | 'SURVEY' | 'SOCIAL' | 'WEBSITE' | 'MANUAL' | 'CALENDLY' | 'OUTBOUND' | 'QR_CODE';
 type ContactStatus = 'LEAD' | 'PROSPECT' | 'CUSTOMER' | 'CHURNED';
@@ -57,8 +58,15 @@ interface CallLog {
   createdAt: string;
 }
 
+interface SurveyOption {
+  id: string;
+  title: string;
+  slug: string;
+}
+
 interface ContactDetail {
   id: string;
+  businessId: string;
   firstName: string | null;
   lastName: string | null;
   email: string | null;
@@ -124,22 +132,103 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // We need businessId in the URL — extract from the contact itself after load
-  // Route: GET /businesses/:businessId/contacts/:contactId
-  // We don't have businessId here, so use a lightweight proxy approach:
-  // The API fetches by contactId directly, businessId in path is just for namespacing
-  // We'll pass a placeholder and let the server find by contactId
+  // Edit contact modal
+  const [showEdit, setShowEdit] = useState(false);
+  const [editForm, setEditForm] = useState({ firstName: '', lastName: '', email: '', phone: '', notes: '' });
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState('');
+
+  // Send survey modal
+  const [showSurvey, setShowSurvey] = useState(false);
+  const [surveys, setSurveys] = useState<SurveyOption[]>([]);
+  const [selectedSurveyId, setSelectedSurveyId] = useState('');
+  const [surveyChannel, setSurveyChannel] = useState<'email' | 'sms'>('email');
+  const [surveySending, setSurveySending] = useState(false);
+  const [surveyError, setSurveyError] = useState('');
+  const [surveySuccess, setSurveySuccess] = useState(false);
+
   useEffect(() => {
-    // Fetch contact via a direct lookup — businessId placeholder '_' works since route finds by contactId
     fetch(`${API_URL}/contacts/${id}`)
       .then((r) => r.json())
       .then((data: { success: boolean; contact?: ContactDetail; error?: string }) => {
         if (!data.success || !data.contact) setError(data.error ?? 'Contact not found');
-        else setContact(data.contact);
+        else {
+          setContact(data.contact);
+          setEditForm({
+            firstName: data.contact.firstName ?? '',
+            lastName: data.contact.lastName ?? '',
+            email: data.contact.email ?? '',
+            phone: data.contact.phone ?? '',
+            notes: data.contact.notes ?? '',
+          });
+        }
       })
       .catch(() => setError('Failed to load contact'))
       .finally(() => setLoading(false));
   }, [id]);
+
+  function openSurveyModal() {
+    if (!contact) return;
+    setShowSurvey(true);
+    setSurveyError('');
+    setSurveySuccess(false);
+    if (surveys.length === 0) {
+      fetch(`${API_URL}/surveys?businessId=${contact.businessId}`)
+        .then((r) => r.json())
+        .then((data: { success: boolean; surveys?: SurveyOption[] }) => {
+          if (data.success && data.surveys) {
+            setSurveys(data.surveys);
+            if (data.surveys[0]) setSelectedSurveyId(data.surveys[0].id);
+          }
+        })
+        .catch(() => {});
+    }
+  }
+
+  async function handleEditSave() {
+    if (!contact) return;
+    setEditSaving(true);
+    setEditError('');
+    try {
+      const res = await fetch(`${API_URL}/contacts/${contact.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editForm),
+      });
+      const data = await res.json() as { success: boolean; contact?: ContactDetail; error?: string };
+      if (!data.success) { setEditError(data.error ?? 'Failed to save'); return; }
+      setContact((prev) => prev ? { ...prev, ...data.contact } : prev);
+      setShowEdit(false);
+    } catch {
+      setEditError('Failed to save');
+    } finally {
+      setEditSaving(false);
+    }
+  }
+
+  async function handleSendSurvey() {
+    if (!contact || !selectedSurveyId) return;
+    const survey = surveys.find((s) => s.id === selectedSurveyId);
+    if (!survey) return;
+    setSurveySending(true);
+    setSurveyError('');
+    const surveyUrl = `${CLIENT_URL}/s/${survey.slug}`;
+    try {
+      const res = await fetch(`${API_URL}/contacts/${contact.id}/send-survey`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ surveyId: selectedSurveyId, channel: surveyChannel, surveyUrl }),
+      });
+      const data = await res.json() as { success: boolean; error?: string };
+      if (!data.success) { setSurveyError(data.error ?? 'Failed to send'); return; }
+      setSurveySuccess(true);
+      setTimeout(() => setShowSurvey(false), 1500);
+    } catch {
+      setSurveyError('Failed to send');
+    } finally {
+      setSurveySending(false);
+    }
+  }
 
   if (loading) return (
     <div className="p-8 flex justify-center items-center min-h-[400px]">
@@ -155,6 +244,118 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
+      {/* Edit Contact Modal */}
+      {showEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-slate-900">Edit Contact</h2>
+            <div className="grid grid-cols-2 gap-3">
+              {(['firstName', 'lastName'] as const).map((f) => (
+                <div key={f}>
+                  <label className="text-xs text-slate-500 font-medium">{f === 'firstName' ? 'First name' : 'Last name'}</label>
+                  <input
+                    value={editForm[f]}
+                    onChange={(e) => setEditForm((p) => ({ ...p, [f]: e.target.value }))}
+                    className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+                  />
+                </div>
+              ))}
+            </div>
+            <div>
+              <label className="text-xs text-slate-500 font-medium">Email</label>
+              <input
+                value={editForm.email}
+                onChange={(e) => setEditForm((p) => ({ ...p, email: e.target.value }))}
+                className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-slate-500 font-medium">Phone</label>
+              <input
+                value={editForm.phone}
+                onChange={(e) => setEditForm((p) => ({ ...p, phone: e.target.value }))}
+                className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-slate-500 font-medium">Notes</label>
+              <textarea
+                value={editForm.notes}
+                onChange={(e) => setEditForm((p) => ({ ...p, notes: e.target.value }))}
+                rows={3}
+                className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none"
+              />
+            </div>
+            {editError && <p className="text-sm text-red-500">{editError}</p>}
+            <div className="flex gap-3 pt-1">
+              <button onClick={() => setShowEdit(false)} className="flex-1 px-4 py-2 rounded-xl border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 transition-colors">Cancel</button>
+              <button onClick={() => void handleEditSave()} disabled={editSaving} className="flex-1 px-4 py-2 rounded-xl bg-violet-600 text-white text-sm font-medium hover:bg-violet-700 disabled:opacity-60 transition-colors">
+                {editSaving ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Send Survey Modal */}
+      {showSurvey && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-slate-900">Send Survey</h2>
+            {surveySuccess ? (
+              <div className="text-center py-6">
+                <div className="text-4xl mb-2">✓</div>
+                <p className="text-slate-700 font-medium">Survey sent successfully</p>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label className="text-xs text-slate-500 font-medium">Survey</label>
+                  {surveys.length === 0 ? (
+                    <p className="mt-2 text-sm text-slate-400">Loading surveys...</p>
+                  ) : (
+                    <select
+                      value={selectedSurveyId}
+                      onChange={(e) => setSelectedSurveyId(e.target.value)}
+                      className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+                    >
+                      {surveys.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}
+                    </select>
+                  )}
+                </div>
+                <div>
+                  <label className="text-xs text-slate-500 font-medium">Send via</label>
+                  <div className="mt-1 flex gap-2">
+                    {(['email', 'sms'] as const).map((ch) => (
+                      <button
+                        key={ch}
+                        onClick={() => setSurveyChannel(ch)}
+                        className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${surveyChannel === ch ? 'border-violet-500 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                      >
+                        {ch === 'email' ? 'Email' : 'SMS'}
+                      </button>
+                    ))}
+                  </div>
+                  {surveyChannel === 'email' && !contact?.email && <p className="text-xs text-amber-600 mt-1">Contact has no email address</p>}
+                  {surveyChannel === 'sms' && !contact?.phone && <p className="text-xs text-amber-600 mt-1">Contact has no phone number</p>}
+                </div>
+                {surveyError && <p className="text-sm text-red-500">{surveyError}</p>}
+                <div className="flex gap-3 pt-1">
+                  <button onClick={() => setShowSurvey(false)} className="flex-1 px-4 py-2 rounded-xl border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 transition-colors">Cancel</button>
+                  <button
+                    onClick={() => void handleSendSurvey()}
+                    disabled={surveySending || surveys.length === 0 || (surveyChannel === 'email' && !contact?.email) || (surveyChannel === 'sms' && !contact?.phone)}
+                    className="flex-1 px-4 py-2 rounded-xl bg-violet-600 text-white text-sm font-medium hover:bg-violet-700 disabled:opacity-60 transition-colors"
+                  >
+                    {surveySending ? 'Sending...' : 'Send Survey'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Back */}
       <button onClick={() => router.push('/customers')} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors">
         <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" /></svg>
@@ -178,7 +379,11 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 )}
               </div>
             </div>
-            <span className="text-xs text-slate-400">Added {formatDate(contact.createdAt)}</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-slate-400">Added {formatDate(contact.createdAt)}</span>
+              <button onClick={openSurveyModal} className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">Send Survey</button>
+              <button onClick={() => setShowEdit(true)} className="px-3 py-1.5 rounded-lg bg-violet-600 text-white text-xs font-medium hover:bg-violet-700 transition-colors">Edit</button>
+            </div>
           </div>
           <div className="mt-3 grid grid-cols-2 gap-x-8 gap-y-1.5 text-sm">
             {contact.email && <div className="text-slate-500">Email <span className="text-slate-800 font-medium">{contact.email}</span></div>}

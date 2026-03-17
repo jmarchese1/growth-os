@@ -88,28 +88,27 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 
 ### ✅ Fully Working in Production
 - **Auth flow**: Supabase email/password signup → email verification → `/setup` → business creation → dashboard
-- **Cold outreach pipeline**: Campaign creation → prospect discovery (Geoapify + Brave) → email enrichment (Brave/scraping) → multi-step email sequences via SendGrid → reply tracking via inbound parse (if configured)
+- **Cold outreach pipeline**: Campaign creation → prospect discovery (Geoapify + Brave) → email enrichment (Brave/scraping) → multi-step email sequences via SendGrid → reply tracking via inbound parse
+- **Cal.com webhook**: `BOOKING_CREATED` fires to `/webhooks/cal` — prospect → lead conversion on meeting booked
+- **SendGrid Inbound Parse**: `replies.embedo.io` forwards to `/webhooks/sendgrid/inbound` — prospect → lead on email reply
+- **SendGrid Event Webhook**: pointing to `/webhooks/sendgrid/events` — open/click/bounce tracking
 - **Proposal generation**: POST `/proposals/generate` → Claude Haiku → shareable HTML link
 - **Billing/Subscriptions**: Stripe checkout → webhook → Subscription record in DB
 - **Website generation**: POST `/websites/generate` → Claude → Vercel deployment
 - **QR codes**: Full CRUD, all 7 purposes, public `/qr/[token]` page, scan tracking, contact capture, detail page with analytics
 - **Surveys**: Full CRUD, public `/s/[slug]` page, response collection, contact capture
-- **Campaigns**: Basic CRUD (EMAIL/SMS drafts) — sending not yet implemented
-- **Contacts/CRM**: List, view, paginated contacts per business
+- **Campaigns (client)**: EMAIL/SMS campaigns to contacts — create draft, send via SendGrid/Twilio
+- **Social media AI generation**: On-demand post generation via Claude Haiku, saved as drafts
+- **Contacts/CRM**: List, view, paginate, manually add contacts per business
 - **Billing dashboard**: View subscription, upgrade, cancel, portal
 
 ### ⚠️ Built but Not Wired / Untested in Production
-- **Cal.com webhook**: ✅ Configured — `BOOKING_CREATED` fires to `/webhooks/cal`, enabled in Cal.com dashboard
-- **SendGrid Inbound Parse**: ✅ Configured — `replies.embedo.io` forwards to `/webhooks/sendgrid/inbound`
-- **SendGrid Event Webhook**: ✅ Configured — pointing to `/webhooks/sendgrid/events`
 - **Voice agent provisioning**: API routes exist (`/voice-agent/provision`) but proxy to `voice-agent` service which isn't deployed
 - **Chatbot**: API routes exist but proxy to `chatbot-agent` service which isn't deployed
 - **OAuth social connections**: Routes exist (`/auth/:provider/authorize` + `/auth/:provider/callback`) but no Meta App / Google Cloud project / TikTok App created with valid client IDs
-- **Campaign sending**: Draft creation works; actual sending (SendGrid dispatch) not implemented
 - **ElevenLabs webhook**: Route exists but no ElevenLabs agent provisioned for any business
 
 ### ❌ Not Implemented / Placeholder
-- **Social media page** (`/social`): Shows empty state, no content generation UI
 - **Social media service**: Meta webhook stub only, comment/DM processing marked TODO
 - **Lead-engine**: Event workers exist but no HTTP routes; not deployed
 - **Email/SMS sequence automation**: Sequences defined in DB but no scheduler deployed
@@ -121,10 +120,9 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 | Item | What's needed | Priority |
 |---|---|---|
 | Apollo.io API key | Set `APOLLO_API_KEY` in prospector Railway env to enable email enrichment | Medium |
-| Apollo.io API key | Set `APOLLO_API_KEY` in prospector Railway env | Medium |
 | Deploy voice-agent | Add to Railway project | Low |
 | Deploy chatbot-agent | Add to Railway project | Low |
-| Meta/Google/TikTok OAuth apps | Create developer apps, set client IDs/secrets in API env | Low |
+| Meta/Google/TikTok OAuth apps | Create developer apps, set client IDs/secrets in API env | Low (blocked by Meta device verification) |
 
 ---
 

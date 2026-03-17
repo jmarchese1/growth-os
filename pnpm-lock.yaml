@@ -89,6 +89,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.47.0
         version: 2.98.0
+      elevenlabs:
+        specifier: ^1.50.0
+        version: 1.59.0
       fastify:
         specifier: ^5.2.0
         version: 5.8.2

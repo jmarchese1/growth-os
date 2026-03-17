@@ -1,10 +1,41 @@
 import type { FastifyInstance } from 'fastify';
+import { ElevenLabsClient } from 'elevenlabs';
+import twilio from 'twilio';
 import { db } from '@embedo/db';
-import { createLogger, NotFoundError } from '@embedo/utils';
+import { createLogger, NotFoundError, ExternalApiError } from '@embedo/utils';
 
 const log = createLogger('api:voice-agent');
 
-const VOICE_AGENT_URL = process.env['VOICE_AGENT_URL'] ?? 'http://localhost:3002';
+
+function buildSystemPrompt(business: { name: string; phone: string | null; address: unknown; settings: unknown }): string {
+  const settings = (business.settings as Record<string, unknown>) ?? {};
+  const hours = settings['hours'] as Record<string, { open: string; close: string }> | undefined;
+  const cuisine = settings['cuisine'] as string | undefined;
+  const maxPartySize = settings['maxPartySize'] as number | undefined;
+  const persona = settings['chatbotPersona'] as string | undefined;
+  const hoursText = hours
+    ? Object.entries(hours).map(([day, h]) => `${day.charAt(0).toUpperCase() + day.slice(1)}: ${h.open} – ${h.close}`).join(', ')
+    : 'Please ask the owner for current hours';
+  const addr = business.address && typeof business.address === 'object'
+    ? Object.values(business.address as Record<string, string>).filter(Boolean).join(', ')
+    : 'See our website for address';
+  return `You are the AI receptionist for ${business.name}${cuisine ? `, a ${cuisine} restaurant` : ''}.
+Your personality is ${persona ?? 'friendly, warm, and professional'}.
+BUSINESS INFORMATION:
+- Name: ${business.name}
+- Phone: ${business.phone ?? 'Not available'}
+- Address: ${addr}
+- Hours: ${hoursText}
+${cuisine ? `- Cuisine: ${cuisine}` : ''}
+${maxPartySize ? `- Maximum party size: ${maxPartySize}` : ''}
+YOUR CAPABILITIES:
+1. Answer questions about the restaurant (hours, location, menu, specials)
+2. Take reservation requests — collect: name, party size, date/time, phone number
+3. Handle inquiries warmly and professionally
+4. Transfer to a human if requested or unable to help
+IMPORTANT: Keep responses concise — this is a phone call. Never make up information you don't know.
+When you collect reservation details output: RESERVATION_DATA: {"name":"...","partySize":...,"date":"...","time":"...","phone":"..."}`;
+}
 
 export async function voiceAgentRoutes(app: FastifyInstance): Promise<void> {
   /**
@@ -51,32 +82,74 @@ export async function voiceAgentRoutes(app: FastifyInstance): Promise<void> {
 
   /**
    * POST /voice-agent/provision
-   * Triggers ElevenLabs agent creation + Twilio number provisioning.
-   * Proxies to the voice-agent service.
+   * Creates ElevenLabs agent + provisions Twilio phone number directly.
    */
   app.post('/voice-agent/provision', async (request, reply) => {
     const body = request.body as { businessId: string; areaCode?: string };
-
-    if (!body.businessId) {
-      return reply.code(400).send({ success: false, error: 'businessId is required' });
-    }
+    if (!body.businessId) return reply.code(400).send({ success: false, error: 'businessId is required' });
 
     const business = await db.business.findUnique({ where: { id: body.businessId } });
     if (!business) throw new NotFoundError('Business', body.businessId);
 
-    log.info({ businessId: body.businessId }, 'Provisioning voice agent');
+    const elevenLabsKey = process.env['ELEVENLABS_API_KEY'];
+    const twilioSid = process.env['TWILIO_ACCOUNT_SID'];
+    const twilioToken = process.env['TWILIO_AUTH_TOKEN'];
+
+    if (!elevenLabsKey) return reply.code(500).send({ success: false, error: 'ELEVENLABS_API_KEY not configured' });
+    if (!twilioSid || !twilioToken) return reply.code(500).send({ success: false, error: 'Twilio credentials not configured' });
+
+    log.info({ businessId: body.businessId }, 'Starting voice agent provisioning');
 
     try {
-      const res = await fetch(`${VOICE_AGENT_URL}/provision`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-      return reply.code(res.status).send(data);
+      // Step 1: Create ElevenLabs agent (idempotent)
+      let agentId = business.elevenLabsAgentId;
+      if (!agentId) {
+        const el = new ElevenLabsClient({ apiKey: elevenLabsKey });
+        const agent = await el.conversationalAi.createAgent({
+          name: `${business.name} — AI Receptionist`,
+          conversation_config: {
+            agent: {
+              prompt: { prompt: buildSystemPrompt(business) },
+              first_message: `Thank you for calling ${business.name}! I'm your AI assistant. How can I help you today?`,
+              language: 'en',
+            },
+            tts: { voice_id: 'EXAVITQu4vr4xnSDxMaL' }, // Sarah
+          },
+        });
+        agentId = agent.agent_id;
+        await db.business.update({ where: { id: business.id }, data: { elevenLabsAgentId: agentId } });
+        await db.onboardingLog.create({ data: { businessId: business.id, step: 'elevenlabs_agent_created', status: 'success', message: `Agent: ${agentId}`, data: { agentId } as object } });
+        log.info({ businessId: business.id, agentId }, 'ElevenLabs agent created');
+      }
+
+      // Step 2: Provision Twilio number (idempotent)
+      let phoneNumber = business.twilioPhoneNumber;
+      if (!phoneNumber) {
+        const tc = twilio(twilioSid, twilioToken);
+        const webhookUrl = `${process.env['API_BASE_URL'] ?? 'https://embedoapi-production.up.railway.app'}/webhooks/twilio/voice`;
+        const available = await tc.availablePhoneNumbers('US').local.list({
+          ...(body.areaCode ? { areaCode: parseInt(body.areaCode) } : {}),
+          voiceEnabled: true,
+          limit: 5,
+        });
+        if (available.length === 0) throw new ExternalApiError('Twilio', 'No available phone numbers', null);
+        const purchased = await tc.incomingPhoneNumbers.create({
+          phoneNumber: available[0]!.phoneNumber,
+          voiceUrl: webhookUrl,
+          voiceMethod: 'POST',
+          friendlyName: `${business.name} — AI Receptionist`,
+        });
+        phoneNumber = purchased.phoneNumber;
+        await db.business.update({ where: { id: business.id }, data: { twilioPhoneNumber: phoneNumber } });
+        await db.onboardingLog.create({ data: { businessId: business.id, step: 'twilio_number_provisioned', status: 'success', message: `Number: ${phoneNumber}`, data: { phoneNumber } as object } });
+        log.info({ businessId: business.id, phoneNumber }, 'Twilio number provisioned');
+      }
+
+      return { success: true, agentId, phoneNumber };
     } catch (err) {
-      log.error({ err }, 'Failed to reach voice-agent service');
-      return reply.code(502).send({ success: false, error: 'Voice agent service unavailable' });
+      log.error({ err, businessId: body.businessId }, 'Provisioning failed');
+      await db.onboardingLog.create({ data: { businessId: body.businessId, step: 'provision_failed', status: 'error', message: String(err) } }).catch(() => {});
+      return reply.code(500).send({ success: false, error: String(err) });
     }
   });
 
@@ -183,16 +256,19 @@ export async function voiceAgentRoutes(app: FastifyInstance): Promise<void> {
         data: { settings: newSettings as object },
       });
 
-      // If agent exists, update the prompt via voice-agent service
+      // If agent exists, update the ElevenLabs prompt directly
       if (business.elevenLabsAgentId) {
-        try {
-          await fetch(`${VOICE_AGENT_URL}/update-prompt`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ businessId }),
-          });
-        } catch (err) {
-          log.warn({ err, businessId }, 'Failed to update agent prompt — voice-agent service may be down');
+        const elevenLabsKey = process.env['ELEVENLABS_API_KEY'];
+        if (elevenLabsKey) {
+          try {
+            const updatedBusiness = { ...business, settings: newSettings as object };
+            const el = new ElevenLabsClient({ apiKey: elevenLabsKey });
+            await el.conversationalAi.updateAgent(business.elevenLabsAgentId, {
+              conversation_config: { agent: { prompt: { prompt: buildSystemPrompt(updatedBusiness) } } },
+            });
+          } catch (err) {
+            log.warn({ err, businessId }, 'Failed to update ElevenLabs agent prompt');
+          }
         }
       }
 
