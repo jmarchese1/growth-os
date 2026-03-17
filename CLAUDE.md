@@ -1,5 +1,20 @@
 # CLAUDE.md — Embedo Platform
 
+## Agent Delegation
+
+Before working on any task, check if it falls clearly into one of these specialist domains and delegate or consult the relevant agent. Agents have deep, file-grounded knowledge of their area.
+
+| Task type | Agent to use |
+|---|---|
+| Adding/modifying API routes, debugging API errors, understanding request/response shapes | **api-routes** |
+| Adding/modifying client pages, UI components, auth flow, frontend bugs | **client-pages** |
+| DB schema questions, Prisma queries, adding models/fields, enum values | **schema** |
+| Deployment issues, Railway/Vercel setup, env vars, webhooks, "works locally but not in prod" | **deploy** |
+
+**Current state of the platform** (what's built, what's deployed, known gaps) → see **STATUS.md**
+
+---
+
 ## What This Is
 
 Embedo is an AI automation platform for small businesses (initial vertical: restaurants).
@@ -245,15 +260,15 @@ Campaigns                Leads                    Businesses
 
 ## Deployment
 
-| App/Service | Platform | Domain |
-|---|---|---|
-| `apps/web` | Vercel | embedo.io |
-| `apps/platform` | Vercel | platform.embedo.io |
-| `apps/api` | Railway | embedoapi-production.up.railway.app |
-| `services/prospector` | Railway | prospector-production-bc03.up.railway.app |
-| `services/crm-core` | Railway | internal (no public domain) |
-| Database | Supabase | Cloud-hosted PostgreSQL (port 5432) |
-| Redis | Railway | redis.railway.internal:6379 (local Docker in dev) |
+See **STATUS.md** for the current deployment state, env vars per service, what's live vs not deployed, and known gaps.
+
+Quick reference:
+- `apps/api` → Railway: https://embedoapi-production.up.railway.app
+- `apps/client` → Vercel: https://app.embedo.io
+- `crm-core`, `prospector`, `website-gen` → Railway (Online)
+- `voice-agent`, `chatbot-agent`, `lead-engine`, `survey-engine`, `social-media`, `proposal-engine` → NOT yet on Railway
+- DB → Supabase PostgreSQL
+- Redis → Railway internal (`redis.railway.internal:6379`)
 
 ---
 
@@ -266,7 +281,6 @@ Campaigns                Leads                    Businesses
 
 ---
 
-## Next Steps — Product Roadmap
+## Roadmap & What's Next
 
-### Long-term (Scale & Expand)
-- [ ] **White-label option**: Allow agencies to resell Embedo under their own brand
+See **STATUS.md** for the current list of working features, known gaps, and missing wiring.
