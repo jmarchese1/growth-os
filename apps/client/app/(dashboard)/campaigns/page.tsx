@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import KpiCard from '../../../components/ui/kpi-card';
 import { useBusiness } from '../../../components/auth/business-provider';
 
@@ -98,6 +99,7 @@ function CreateCampaignModal({ onClose, onCreate }: {
 /* ── Main Page ──────────────────────────────────────────────────── */
 export default function CampaignsPage() {
   const { business, loading: bizLoading } = useBusiness();
+  const router = useRouter();
   const [showCreate, setShowCreate] = useState(false);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
@@ -206,7 +208,7 @@ export default function CampaignsPage() {
             </thead>
             <tbody>
               {campaigns.map((c) => (
-                <tr key={c.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                <tr key={c.id} onClick={() => router.push(`/campaigns/${c.id}`)} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors cursor-pointer">
                   <td className="px-5 py-3">
                     <p className="text-sm font-medium text-slate-800">{c.name}</p>
                     {c.subject && <p className="text-xs text-slate-400 truncate max-w-xs">{c.subject}</p>}
@@ -225,7 +227,7 @@ export default function CampaignsPage() {
                     <div className="flex items-center gap-3 justify-end">
                       {c.status !== 'SENT' && (
                         <button
-                          onClick={() => handleSend(c.id)}
+                          onClick={(e) => { e.stopPropagation(); handleSend(c.id); }}
                           disabled={sendingId === c.id}
                           className="text-xs font-medium text-violet-600 hover:text-violet-800 disabled:opacity-50 transition-colors flex items-center gap-1"
                         >
@@ -233,7 +235,7 @@ export default function CampaignsPage() {
                           {sendingId === c.id ? 'Sending...' : 'Send now'}
                         </button>
                       )}
-                      <button onClick={() => handleDelete(c.id)} className="text-xs text-slate-400 hover:text-red-500 font-medium transition-colors">Delete</button>
+                      <button onClick={(e) => { e.stopPropagation(); handleDelete(c.id); }} className="text-xs text-slate-400 hover:text-red-500 font-medium transition-colors">Delete</button>
                     </div>
                   </td>
                 </tr>

@@ -81,6 +81,111 @@ export async function businessRoutes(app: FastifyInstance): Promise<void> {
     return { success: true, contact };
   });
 
+  // GET /businesses/:id/posts — content posts for social media page
+  app.get('/businesses/:id/posts', async (request) => {
+    const { id } = request.params as { id: string };
+    const { page = '1', pageSize = '50' } = request.query as Record<string, string>;
+
+    const business = await db.business.findUnique({ where: { id } });
+    if (!business) throw new NotFoundError('Business', id);
+
+    const [items, total] = await Promise.all([
+      db.contentPost.findMany({
+        where: { businessId: id },
+        orderBy: { createdAt: 'desc' },
+        skip: (parseInt(page) - 1) * parseInt(pageSize),
+        take: parseInt(pageSize),
+      }),
+      db.contentPost.count({ where: { businessId: id } }),
+    ]);
+
+    return { items, total, page: parseInt(page), pageSize: parseInt(pageSize) };
+  });
+
+  // GET /businesses/:id/dashboard — summary stats + recent activity
+  app.get('/businesses/:id/dashboard', async (request) => {
+    const { id } = request.params as { id: string };
+    const business = await db.business.findUnique({ where: { id } });
+    if (!business) throw new NotFoundError('Business', id);
+
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [
+      newContactsThisWeek,
+      newContactsThisMonth,
+      upcomingAppointments,
+      recentActivities,
+      recentSurveyResponses,
+      recentQrScans,
+    ] = await Promise.all([
+      db.contact.count({ where: { businessId: id, createdAt: { gte: weekAgo } } }),
+      db.contact.count({ where: { businessId: id, createdAt: { gte: monthStart } } }),
+      db.appointment.findMany({
+        where: { businessId: id, startTime: { gte: now }, status: { notIn: ['CANCELLED'] } },
+        orderBy: { startTime: 'asc' },
+        take: 5,
+        select: { id: true, title: true, startTime: true, status: true, contactId: true },
+      }),
+      db.contactActivity.findMany({
+        where: { businessId: id },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+        include: { contact: { select: { id: true, firstName: true, lastName: true, email: true } } },
+      }),
+      db.surveyResponse.findMany({
+        where: { survey: { businessId: id } },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: {
+          survey: { select: { title: true } },
+          contact: { select: { id: true, firstName: true, lastName: true } },
+        },
+      }),
+      db.qrCodeScan.findMany({
+        where: { qrCode: { businessId: id } },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: {
+          qrCode: { select: { label: true, purpose: true } },
+          contact: { select: { id: true, firstName: true, lastName: true } },
+        },
+      }),
+    ]);
+
+    return {
+      newContactsThisWeek,
+      newContactsThisMonth,
+      upcomingAppointments,
+      recentActivities,
+      recentSurveyResponses,
+      recentQrScans,
+    };
+  });
+
+  // GET /businesses/:id/activities — paginated activity feed
+  app.get('/businesses/:id/activities', async (request) => {
+    const { id } = request.params as { id: string };
+    const { page = '1', pageSize = '30' } = request.query as Record<string, string>;
+
+    const business = await db.business.findUnique({ where: { id } });
+    if (!business) throw new NotFoundError('Business', id);
+
+    const [items, total] = await Promise.all([
+      db.contactActivity.findMany({
+        where: { businessId: id },
+        orderBy: { createdAt: 'desc' },
+        skip: (parseInt(page) - 1) * parseInt(pageSize),
+        take: parseInt(pageSize),
+        include: { contact: { select: { id: true, firstName: true, lastName: true, email: true } } },
+      }),
+      db.contactActivity.count({ where: { businessId: id } }),
+    ]);
+
+    return { items, total, page: parseInt(page), pageSize: parseInt(pageSize) };
+  });
+
   // PATCH /businesses/:id
   app.patch('/businesses/:id', async (request) => {
     const { id } = request.params as { id: string };

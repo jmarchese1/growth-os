@@ -25,6 +25,20 @@ export async function campaignRoutes(app: FastifyInstance): Promise<void> {
   });
 
   /**
+   * GET /campaigns/:id
+   * Get a single campaign by ID.
+   */
+  app.get<{ Params: { id: string } }>('/campaigns/:id', async (request) => {
+    const { id } = request.params;
+    const campaign = await db.campaign.findUnique({
+      where: { id },
+      include: { business: { select: { name: true } } },
+    });
+    if (!campaign) throw new NotFoundError('Campaign', id);
+    return { success: true, campaign };
+  });
+
+  /**
    * POST /campaigns
    * Create a new campaign draft.
    */
