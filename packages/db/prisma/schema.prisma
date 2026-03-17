@@ -45,6 +45,28 @@ enum LeadSource {
   MANUAL
   CALENDLY
   OUTBOUND
+  QR_CODE
+}
+
+enum CampaignType {
+  EMAIL
+  SMS
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENT
+}
+
+enum QrPurpose {
+  SURVEY
+  DISCOUNT
+  SPIN_WHEEL
+  SIGNUP
+  MENU
+  REVIEW
+  CUSTOM
 }
 
 enum LeadStatus {
@@ -197,6 +219,8 @@ model Business {
   contacts        Contact[]
   leads           Lead[]
   surveys         Survey[]
+  campaigns       Campaign[]
+  qrCodes         QrCode[]
   socialAccounts  SocialAccount[]
   websites        GeneratedWebsite[]
   proposals       Proposal[]
@@ -242,6 +266,7 @@ model Contact {
   appointments    Appointment[]
   chatSessions    ChatSession[]
   callLogs        VoiceCallLog[]
+  qrScans         QrCodeScan[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -362,6 +387,7 @@ model Survey {
 
   active    Boolean @default(true)
   responses SurveyResponse[]
+  qrCodes   QrCode[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -691,6 +717,89 @@ model OutreachSuppression {
   updatedAt DateTime @updatedAt
 
   @@index([email])
+}
+
+// ─── Campaigns (client-facing marketing, distinct from cold outbound) ─────────
+
+model Campaign {
+  id         String         @id @default(cuid())
+  businessId String
+  business   Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  name        String
+  type        CampaignType
+  subject     String?       // email only
+  body        String
+  status      CampaignStatus @default(DRAFT)
+  scheduledAt DateTime?
+  sentAt      DateTime?
+
+  sentCount  Int @default(0)
+  openCount  Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([status])
+}
+
+// ─── QR Codes ─────────────────────────────────────────────────────────────────
+
+model QrCode {
+  id         String     @id @default(cuid())
+  businessId String
+  business   Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  label   String
+  token   String     @unique @default(cuid())
+  purpose QrPurpose
+
+  // Survey link (purpose = SURVEY)
+  surveyId String?
+  survey   Survey?   @relation(fields: [surveyId], references: [id])
+
+  // Discount (purpose = DISCOUNT or reward after SPIN_WHEEL / SURVEY)
+  discountValue String?  // "10%", "$5 off"
+  discountCode  String?  // "SCAN10"
+
+  // Spin wheel prize pool: [{ label: "10% Off", probability: 30 }]
+  spinPrizes Json?
+
+  // Survey reward (shown after completing survey linked to this QR)
+  surveyReward String?  // e.g. "10% off your next visit"
+
+  // For MENU / REVIEW / CUSTOM
+  destinationUrl String?
+
+  expiresAt DateTime?
+  active    Boolean   @default(true)
+  scanCount Int       @default(0)
+
+  scans QrCodeScan[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([token])
+}
+
+model QrCodeScan {
+  id       String @id @default(cuid())
+  qrCodeId String
+  qrCode   QrCode @relation(fields: [qrCodeId], references: [id], onDelete: Cascade)
+
+  contactId String?
+  contact   Contact? @relation(fields: [contactId], references: [id])
+
+  outcome   String?  // "completed_survey" | "claimed_discount" | "won_prize" | "signup" | "redirect"
+  ipAddress String?
+
+  createdAt DateTime @default(now())
+
+  @@index([qrCodeId])
+  @@index([contactId])
 }
 
 // ─── Onboarding Audit Log ─────────────────────────────────────────────────────

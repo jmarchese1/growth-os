@@ -22,6 +22,9 @@ import { oauthRoutes } from './routes/oauth.js';
 import { meRoutes } from './routes/me.js';
 import { billingRoutes } from './routes/billing.js';
 import { stripeWebhookRoutes } from './routes/webhooks/stripe.js';
+import { surveyRoutes } from './routes/surveys.js';
+import { campaignRoutes } from './routes/campaigns.js';
+import { qrCodeRoutes } from './routes/qr-codes.js';
 
 const log = createLogger('api:gateway');
 
@@ -88,6 +91,9 @@ export async function buildApp() {
   await app.register(meRoutes);
   await app.register(billingRoutes);
   await app.register(stripeWebhookRoutes);
+  await app.register(surveyRoutes);
+  await app.register(campaignRoutes);
+  await app.register(qrCodeRoutes);
 
   log.info('API Gateway configured');
   return app;

@@ -38,4 +38,13 @@ export type {
   ProspectStatus,
   OutreachChannel,
   OutreachStatus,
+  CampaignType,
+  CampaignStatus,
+  QrPurpose,
+  Campaign,
+  QrCode,
+  QrCodeScan,
+  Subscription,
+  SubscriptionStatus,
+  PricingTier,
 } from '@prisma/client';
