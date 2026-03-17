@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useBusiness } from '../../../components/auth/business-provider';
 
 /* ──────────────────────────────────────────────
@@ -372,6 +372,7 @@ function SocialAccountCard({ account, onConnect }: { account: SocialAccount; onC
 
 export default function IntegrationsPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { business } = useBusiness();
   const [_connecting, setConnecting] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -381,14 +382,16 @@ export default function IntegrationsPage() {
     const error = searchParams.get('error');
     if (connected) {
       setToast({ type: 'success', message: `${connected.charAt(0).toUpperCase() + connected.slice(1)} connected successfully!` });
+      router.replace('/integrations');
     } else if (error) {
       setToast({ type: 'error', message: error === 'access_denied' ? 'Connection was cancelled.' : `Connection failed: ${error}` });
+      router.replace('/integrations');
     }
     if (connected || error) {
       const timer = setTimeout(() => setToast(null), 5000);
       return () => clearTimeout(timer);
     }
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   const handleOAuthConnect = (accountId: string) => {
     setConnecting(accountId);

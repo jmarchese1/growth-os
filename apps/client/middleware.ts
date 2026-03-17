@@ -28,8 +28,10 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isLoginPage = pathname.startsWith('/login');
   const isAuthCallback = pathname.startsWith('/auth/callback');
+  const isPublicSurvey = pathname.startsWith('/s/');
+  const isPublicQr = pathname.startsWith('/qr/');
 
-  if (isAuthCallback) return response;
+  if (isAuthCallback || isPublicSurvey || isPublicQr) return response;
 
   if (!user && !isLoginPage) {
     return NextResponse.redirect(new URL('/login', request.url));
