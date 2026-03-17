@@ -2,16 +2,41 @@
 
 ## Agent Delegation
 
-Before working on any task, check if it falls clearly into one of these specialist domains and delegate or consult the relevant agent. Agents have deep, file-grounded knowledge of their area.
+Four specialist sub-agents live in `.claude/agents/`. Each has deep, file-grounded knowledge of its domain. **Before writing code in any of these areas, consult or delegate to the relevant agent.** This prevents mistakes from working on stale assumptions.
 
-| Task type | Agent to use |
-|---|---|
-| Adding/modifying API routes, debugging API errors, understanding request/response shapes | **api-routes** |
-| Adding/modifying client pages, UI components, auth flow, frontend bugs | **client-pages** |
-| DB schema questions, Prisma queries, adding models/fields, enum values | **schema** |
-| Deployment issues, Railway/Vercel setup, env vars, webhooks, "works locally but not in prod" | **deploy** |
+### Available Agents
 
-**Current state of the platform** (what's built, what's deployed, known gaps) → see **STATUS.md**
+**`api-routes`** — Expert on `apps/api/src/`
+- Knows every one of the 86 HTTP endpoints (method, path, params, response shape)
+- Knows which routes are public vs authenticated
+- Knows how to add a new route correctly (registration in app.ts, import patterns, unused `reply` param gotcha)
+- Use when: adding API routes, debugging API errors, checking if an endpoint already exists, understanding what the API returns
+
+**`client-pages`** — Expert on `apps/client/`
+- Knows every dashboard page, its route, what data it fetches, and which API calls it makes
+- Knows the auth flow (Supabase → /setup → dashboard), the `useBusiness()` hook, and the `BusinessProvider` context
+- Knows the exact Tailwind design conventions (card styles, button variants, color palette)
+- Use when: adding a new page, modifying UI, debugging frontend issues, wiring a page to an API endpoint
+
+**`schema`** — Expert on `packages/db/prisma/schema.prisma`
+- Knows every model, every field, nullability, relations, and all enum values
+- Knows common Prisma query patterns used in this codebase
+- Knows the steps to safely modify the schema (db push → db generate → update index.ts exports)
+- Use when: adding a model or field, writing a Prisma query, checking if a field exists or is nullable, understanding multi-tenant patterns
+
+**`deploy`** — Expert on Railway, Vercel, Supabase, and env vars
+- Knows exactly what's deployed where (URLs, Railway service names, Vercel project names)
+- Knows every env var set on every service in production
+- Knows which webhooks are configured (Cal.com ✅, SendGrid inbound ✅, SendGrid events ✅, Stripe ✅)
+- Knows what's NOT yet deployed (voice-agent, chatbot-agent, lead-engine, survey-engine, social-media, proposal-engine)
+- Use when: something works locally but fails in prod, adding a new Railway service, checking env vars, diagnosing build failures
+
+### When to Use Agents
+- **Multi-domain tasks** (e.g. "add a new feature" that touches API + client + schema): consult all relevant agents before writing any code
+- **Uncertainty** about whether something already exists: ask the relevant agent first rather than scanning files manually
+- **Current platform state**: check STATUS.md — it has the ground-truth on what's deployed, what's working, and what's missing
+
+**Current state of the platform** → see **STATUS.md**
 
 ---
 
