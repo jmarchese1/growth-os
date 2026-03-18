@@ -85,7 +85,7 @@ function getIndustryMeta(industryType?: string): IndustryMeta {
 }
 
 export async function generateWebsiteCopy(
-  business: ScrapedBusinessInfo & { businessName: string; industryType?: string },
+  business: ScrapedBusinessInfo & { businessName: string; industryType?: string; inspirationStyleNotes?: string },
   anthropicKey: string,
 ): Promise<GeneratedCopy> {
   logger.info({ businessName: business.businessName, industry: business.industryType }, 'Generating AI copy');
@@ -102,6 +102,7 @@ export async function generateWebsiteCopy(
     business.description ? `Description: ${business.description}` : '',
     business.tagline ? `Tagline: ${business.tagline}` : '',
     business.address ? `Address: ${business.address}` : '',
+    business.inspirationStyleNotes ? `\nStyle inspiration from reference sites:\n${business.inspirationStyleNotes}` : '',
   ].filter(Boolean).join('\n');
 
   const message = await client.messages.create({

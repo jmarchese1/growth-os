@@ -260,3 +260,33 @@ Extract as many menu/service items as you can find (up to 20). Be precise with h
   logger.info({ businessName: extracted.businessName, fields: Object.keys(extracted) }, 'Scrape complete');
   return extracted;
 }
+
+// Scrape an inspiration site and return a style description for use in copy generation
+export async function scrapeForInspiration(url: string, anthropicKey: string): Promise<string> {
+  logger.info({ url }, 'Scraping inspiration site');
+  try {
+    const fetched = await fetchWithFallbacks(url);
+    if (!fetched) return '';
+
+    const { html } = fetched;
+    const meta = extractMeta(html);
+    const ogTitle = meta['og:title'] ?? '';
+    const cleanedText = cleanHtml(html).slice(0, 5000);
+
+    const client = new Anthropic({ apiKey: anthropicKey });
+    const message = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 350,
+      messages: [{
+        role: 'user',
+        content: `Analyze this website and write 3-5 sentences describing its visual design style as inspiration for building a similar site. Be specific about: color palette (dark/light/warm/cool tones), typography feel (serif/sans-serif, elegant/bold/minimal), layout style (spacious/dense, centered/asymmetric), imagery style (moody/bright/minimalist), and overall brand mood.${ogTitle ? `\n\nSite title: ${ogTitle}` : ''}\n\nPage content:\n${cleanedText}\n\nStyle description only, no preamble:`,
+      }],
+    });
+
+    const block = message.content[0];
+    return block && block.type === 'text' ? block.text.trim() : '';
+  } catch {
+    logger.warn({ url }, 'Failed to scrape inspiration site');
+    return '';
+  }
+}

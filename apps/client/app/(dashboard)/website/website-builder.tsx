@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, type ChangeEvent } from 'react';
 
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 
@@ -213,6 +213,11 @@ export default function WebsiteBuilder({
   // If industry is detected, start at step 2 (Import); otherwise step 1 (Industry picker)
   const [step, setStep] = useState(industryKnown ? 2 : 1);
 
+  const [inspirationUrls, setInspirationUrls] = useState<string[]>([]);
+  const [menuInputMode, setMenuInputMode] = useState<'text' | 'image' | 'pdf' | null>(null);
+  const [menuText, setMenuText] = useState('');
+  const [extractingMenu, setExtractingMenu] = useState(false);
+
   const [scraping, setScraping] = useState(false);
   const [scraped, setScraped] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -268,6 +273,62 @@ export default function WebsiteBuilder({
     setSections((prev) => prev.map((s, i) => i === idx ? { ...s, enabled: !s.enabled } : s));
   }
 
+  function addInspirationUrl() {
+    if (inspirationUrls.length < 3) setInspirationUrls((prev) => [...prev, '']);
+  }
+
+  function removeInspirationUrl(idx: number) {
+    setInspirationUrls((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  function updateInspirationUrl(idx: number, value: string) {
+    setInspirationUrls((prev) => prev.map((u, i) => i === idx ? value : u));
+  }
+
+  async function handleMenuTextExtract() {
+    if (!menuText.trim()) return;
+    setExtractingMenu(true);
+    try {
+      const res = await fetch(`${API_URL}/websites/extract-menu`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: menuText, mimeType: 'text/plain' }),
+      });
+      const json = await res.json() as { success: boolean; menuItems?: FormData['menuItems'] };
+      if (json.success && json.menuItems) {
+        setForm_('menuItems', json.menuItems);
+        setMenuInputMode(null);
+        setMenuText('');
+      }
+    } catch { /* silent */ }
+    setExtractingMenu(false);
+  }
+
+  async function handleMenuFileUpload(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setExtractingMenu(true);
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(((reader.result as string).split(',')[1]) ?? '');
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const res = await fetch(`${API_URL}/websites/extract-menu`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: base64, mimeType: file.type }),
+      });
+      const json = await res.json() as { success: boolean; menuItems?: FormData['menuItems'] };
+      if (json.success && json.menuItems) {
+        setForm_('menuItems', json.menuItems);
+        setMenuInputMode(null);
+      }
+    } catch { /* silent */ }
+    setExtractingMenu(false);
+  }
+
   async function handleScrape() {
     if (!form.existingWebsiteUrl) { setStep(3); return; }
     setScraping(true);
@@ -310,7 +371,12 @@ export default function WebsiteBuilder({
       const res = await fetch(`${API_URL}/websites/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, businessId, sections: sectionsPayload }),
+        body: JSON.stringify({
+          ...form,
+          businessId,
+          sections: sectionsPayload,
+          inspirationUrls: inspirationUrls.filter(Boolean),
+        }),
       });
       const json = await res.json() as { success: boolean; url?: string; html?: string; websiteId?: string; error?: string };
       if (!json.success) throw new Error(json.error ?? 'Generation failed');
@@ -430,6 +496,41 @@ export default function WebsiteBuilder({
               />
               <p className="text-xs text-slate-400 mt-2">We visit multiple pages (home, menu, contact) to extract as much as possible. You can edit everything after.</p>
             </div>
+
+            {/* Inspiration websites */}
+            <div className="border-t border-slate-100 pt-6 mb-6">
+              <p className="text-sm font-bold text-slate-800 mb-1">Got style inspiration?</p>
+              <p className="text-xs text-slate-400 mb-4">Paste URLs of websites whose look and feel you love. Our AI will study them and borrow the vibe — colors, typography mood, layout style.</p>
+              <div className="space-y-2">
+                {inspirationUrls.map((url, i) => (
+                  <div key={i} className="flex gap-2">
+                    <input
+                      type="url"
+                      value={url}
+                      onChange={(e) => updateInspirationUrl(i, e.target.value)}
+                      placeholder="https://example.com"
+                      className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400"
+                    />
+                    <button
+                      onClick={() => removeInspirationUrl(i)}
+                      className="px-3 py-2 text-slate-300 hover:text-red-400 transition-colors"
+                    >
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0013.25 4.193V3.75A2.75 2.75 0 0010.5 1h-1.75zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-1.5c-.69 0-1.25.56-1.25 1.25v.325C9.327 4.025 10.157 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd"/></svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+              {inspirationUrls.length < 3 && (
+                <button
+                  onClick={addInspirationUrl}
+                  className="mt-3 flex items-center gap-1.5 text-xs text-violet-600 font-semibold hover:text-violet-800 transition-colors"
+                >
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z"/></svg>
+                  Add inspiration site{inspirationUrls.length > 0 ? ` (${inspirationUrls.length}/3)` : ''}
+                </button>
+              )}
+            </div>
+
             <div className="flex gap-3">
               {!industryKnown && <button onClick={() => setStep(1)} className="px-5 py-3 border border-slate-200 text-slate-600 font-medium rounded-xl text-sm hover:bg-slate-50">Back</button>}
               <button
@@ -494,6 +595,72 @@ export default function WebsiteBuilder({
                 ))}
               </div>
             </div>
+            {/* Menu / Services upload */}
+            <div className="mb-6 border-t border-slate-100 pt-6">
+              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                {industry.defaultSections.find((s) => s.id === 'menu')?.label ?? 'Menu / Services'}{' '}
+                <span className="font-normal text-slate-400">(optional — upload to auto-populate)</span>
+              </label>
+              <div className="flex items-center gap-2 mt-3 mb-3">
+                {(['text', 'image', 'pdf'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setMenuInputMode(menuInputMode === mode ? null : mode)}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${menuInputMode === mode ? 'border-violet-500 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}
+                  >
+                    {mode === 'text' ? 'Paste Text' : mode === 'image' ? 'Upload Photo' : 'Upload PDF'}
+                  </button>
+                ))}
+                {form.menuItems.length > 0 && (
+                  <span className="ml-auto px-2.5 py-1 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-full">
+                    {form.menuItems.length} items loaded
+                  </span>
+                )}
+              </div>
+
+              {menuInputMode === 'text' && (
+                <div>
+                  <textarea
+                    value={menuText}
+                    onChange={(e) => setMenuText(e.target.value)}
+                    placeholder={"Paste your menu here in any format — items, prices, descriptions, categories..."}
+                    rows={6}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none font-mono"
+                  />
+                  <button
+                    onClick={() => void handleMenuTextExtract()}
+                    disabled={!menuText.trim() || extractingMenu}
+                    className="mt-2 w-full py-2.5 bg-violet-600 text-white text-sm font-semibold rounded-xl disabled:opacity-50 hover:bg-violet-700 transition-colors"
+                  >
+                    {extractingMenu ? 'Extracting items...' : 'Extract Menu Items →'}
+                  </button>
+                </div>
+              )}
+
+              {(menuInputMode === 'image' || menuInputMode === 'pdf') && (
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-violet-400 hover:bg-violet-50/30 transition-colors">
+                  <input
+                    type="file"
+                    accept={menuInputMode === 'image' ? 'image/*' : '.pdf,application/pdf'}
+                    onChange={(e) => void handleMenuFileUpload(e)}
+                    className="hidden"
+                  />
+                  {extractingMenu ? (
+                    <span className="flex items-center gap-2 text-sm text-slate-500">
+                      <span className="w-4 h-4 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" />
+                      Reading your {menuInputMode}...
+                    </span>
+                  ) : (
+                    <>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6 text-slate-400 mb-2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+                      <span className="text-sm text-slate-500">Click to upload {menuInputMode === 'image' ? 'a photo of your menu' : 'a PDF menu'}</span>
+                      <span className="text-xs text-slate-400 mt-1">{menuInputMode === 'image' ? 'JPG, PNG, HEIC, WEBP' : 'PDF'} · up to 10MB</span>
+                    </>
+                  )}
+                </label>
+              )}
+            </div>
+
             <div className="flex gap-3">
               <button onClick={() => setStep(2)} className="px-5 py-3 border border-slate-200 text-slate-600 font-medium rounded-xl text-sm hover:bg-slate-50">Back</button>
               <button onClick={() => setStep(4)} className="flex-1 py-3 bg-violet-600 text-white font-semibold rounded-xl text-sm hover:bg-violet-700">Continue to Structure</button>

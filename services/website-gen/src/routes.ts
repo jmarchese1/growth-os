@@ -1,7 +1,8 @@
 import type { FastifyInstance } from 'fastify';
+import Anthropic from '@anthropic-ai/sdk';
 import { db } from '@embedo/db';
 import { NotFoundError, ValidationError } from '@embedo/utils';
-import { scrapeWebsite } from './scraper/scrape.js';
+import { scrapeWebsite, scrapeForInspiration } from './scraper/scrape.js';
 import { generateWebsiteCopy } from './generator/content.js';
 import { renderRestaurantPremium } from './templates/restaurant/premium.js';
 import { deployToVercel } from './deploy/vercel.js';
@@ -40,6 +41,7 @@ export async function websiteRoutes(app: FastifyInstance) {
       chatbotEnabled?: boolean;
       industryType?: string;
       sections?: Array<{ id: string; enabled: boolean }>;
+      inspirationUrls?: string[];
     };
   }>('/generate', async (req, reply) => {
     const body = req.body;
@@ -56,6 +58,16 @@ export async function websiteRoutes(app: FastifyInstance) {
     // Merge scraped data with user-provided data (user inputs take precedence)
     const merged = { ...scraped, ...body };
 
+    // Scrape inspiration sites in parallel (fire-and-forget style, no error if they fail)
+    let inspirationStyleNotes: string | undefined;
+    if (body.inspirationUrls?.length && env.ANTHROPIC_API_KEY) {
+      const notes = await Promise.all(
+        body.inspirationUrls.filter(Boolean).slice(0, 3).map((u) => scrapeForInspiration(u, env.ANTHROPIC_API_KEY!))
+      );
+      const joined = notes.filter(Boolean).join('\n\n');
+      if (joined) inspirationStyleNotes = joined;
+    }
+
     // Generate AI copy
     let copy = {
       heroHeading: `Welcome to ${body.businessName}`,
@@ -70,7 +82,12 @@ export async function websiteRoutes(app: FastifyInstance) {
       testimonials: [] as Array<{ quote: string; author: string; detail: string }>,
     };
     if (env.ANTHROPIC_API_KEY) {
-      copy = await generateWebsiteCopy({ ...merged, businessName: body.businessName, ...(body.industryType ? { industryType: body.industryType } : {}) }, env.ANTHROPIC_API_KEY);
+      copy = await generateWebsiteCopy({
+        ...merged,
+        businessName: body.businessName,
+        ...(body.industryType ? { industryType: body.industryType } : {}),
+        ...(inspirationStyleNotes ? { inspirationStyleNotes } : {}),
+      }, env.ANTHROPIC_API_KEY);
     }
 
     const s = scraped as Record<string, unknown>;
@@ -153,6 +170,45 @@ export async function websiteRoutes(app: FastifyInstance) {
     });
   });
 
+  // POST /extract-menu — extract structured menu items from text, image, or PDF
+  app.post<{ Body: { content: string; mimeType: string } }>('/extract-menu', async (req, reply) => {
+    const { content, mimeType } = req.body;
+    if (!content) return reply.code(400).send({ success: false, error: 'content is required' });
+    if (!env.ANTHROPIC_API_KEY) return reply.code(400).send({ success: false, error: 'ANTHROPIC_API_KEY required' });
+
+    const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+    const extractPrompt = 'Extract all menu items from this content. Return ONLY a valid JSON array with this structure — no markdown, no explanation:\n[\n  { "name": "Item Name", "description": "1-2 sentence description", "price": "$XX", "category": "Category" }\n]\nInclude as many items as you find. If no price is visible, use an empty string. Infer reasonable categories (Starters, Mains, Desserts, Drinks, etc.).';
+
+    type MediaType = 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp';
+
+    const messageContent = mimeType.startsWith('image/')
+      ? [
+          { type: 'image' as const, source: { type: 'base64' as const, media_type: mimeType as MediaType, data: content } },
+          { type: 'text' as const, text: extractPrompt },
+        ]
+      : mimeType === 'application/pdf'
+      ? [
+          { type: 'document' as const, source: { type: 'base64' as const, media_type: 'application/pdf' as const, data: content } },
+          { type: 'text' as const, text: extractPrompt },
+        ]
+      : `${extractPrompt}\n\nContent:\n${content}`;
+
+    const response = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 2000,
+      messages: [{ role: 'user', content: messageContent as Parameters<typeof client.messages.create>[0]['messages'][0]['content'] }],
+    });
+
+    try {
+      const raw = (response.content[0] as { type: string; text: string }).text.trim();
+      const jsonText = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+      const menuItems = JSON.parse(jsonText) as Array<{ name: string; description: string; price: string; category: string }>;
+      return reply.send({ success: true, menuItems });
+    } catch {
+      return reply.code(422).send({ success: false, error: 'Could not parse menu items from content' });
+    }
+  });
+
   // POST /websites/:websiteId/edit — AI chat to modify an existing website
   app.post<{ Params: { websiteId: string }; Body: { message: string } }>('/websites/:websiteId/edit', async (req, reply) => {
     const { websiteId } = req.params;
@@ -171,7 +227,6 @@ export async function websiteRoutes(app: FastifyInstance) {
 
     const currentConfig = website.config as Record<string, unknown>;
 
-    const Anthropic = (await import('@anthropic-ai/sdk')).default;
     const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
 
     const response = await client.messages.create({
