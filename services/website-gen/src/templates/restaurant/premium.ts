@@ -3,6 +3,13 @@ export type SectionKey = 'about' | 'features' | 'menu' | 'gallery' | 'testimonia
 export interface SectionConfig {
   id: SectionKey;
   enabled: boolean;
+  isPage?: boolean; // renders as full-height own-page section in nav
+}
+
+export interface ExtraPageConfig {
+  id: string;
+  label: string;
+  slug: string;
 }
 
 export interface PremiumWebsiteConfig {
@@ -29,6 +36,7 @@ export interface PremiumWebsiteConfig {
   features?: Array<{ title: string; description: string }>;
   testimonials?: Array<{ quote: string; author: string; detail: string }>;
   sections?: SectionConfig[];
+  extraPages?: ExtraPageConfig[];
   chatbotEnabled: boolean;
   chatbotBusinessId?: string;
   chatbotApiUrl?: string;
@@ -268,7 +276,63 @@ function navLinks(activeSections: SectionKey[], config: PremiumWebsiteConfig, _c
   if (activeSections.includes('menu'))    links.push(`<a href="#menu" class="nav-link">Menu</a>`);
   if (activeSections.includes('hours'))   links.push(`<a href="#hours" class="nav-link">Hours</a>`);
   if (activeSections.includes('reserve') && config.bookingUrl) links.push(`<a href="#reserve" class="nav-link">Reserve</a>`);
+  config.extraPages?.forEach((p) => {
+    links.push(`<a href="#${p.slug}" class="nav-link">${p.label}</a>`);
+  });
   return links.join('');
+}
+
+function renderExtraPages(config: PremiumWebsiteConfig, c: Colors, f: Fonts): string {
+  if (!config.extraPages?.length) return '';
+  return config.extraPages.map((page) => {
+    const business = config.businessName;
+    let heading = page.label;
+    let body = '';
+    let extra = '';
+
+    switch (page.id) {
+      case 'contact':
+        heading = 'Get in Touch';
+        body = `We\u2019d love to hear from you. Whether you have a question, a reservation inquiry, or just want to say hello \u2014 reach out anytime.`;
+        extra = config.phone ? `<p style="margin-top:24px;font-size:17px;color:${c.text};"><a href="tel:${config.phone}" style="color:${c.accent};">${config.phone}</a></p>` : '';
+        if (config.address) extra += `<p style="margin-top:12px;font-size:15px;color:${c.muted};">${config.address}</p>`;
+        break;
+      case 'careers':
+        heading = `Join ${business}`;
+        body = `We\u2019re always looking for passionate, talented people who care deeply about their craft. If you love what we do and want to be part of it, we\u2019d love to meet you.`;
+        extra = `<p style="margin-top:24px;font-size:15px;color:${c.muted};">Send your resume and a note about why you\u2019d be a great fit \u2014 we read every one.</p>`;
+        break;
+      case 'team':
+        heading = 'Meet Our Team';
+        body = `Behind every great experience is a team of dedicated people who care deeply about their craft. We\u2019re proud of the people who make ${business} what it is.`;
+        break;
+      case 'faq':
+        heading = 'Frequently Asked Questions';
+        body = `Everything you need to know before your visit. Can\u2019t find what you\u2019re looking for? Reach out and we\u2019ll get back to you.`;
+        break;
+      case 'locations':
+        heading = 'Find Us';
+        body = config.address ? config.address : `We can\u2019t wait to welcome you.`;
+        break;
+      case 'press':
+        heading = 'Press & Media';
+        body = `For press inquiries, media kit requests, or to arrange a visit, please get in touch with our team directly.`;
+        break;
+      default:
+        heading = page.label;
+        body = '';
+    }
+
+    return `
+<section id="${page.slug}" style="min-height:100vh;padding:140px 40px 80px;display:flex;flex-direction:column;justify-content:center;background:${c.bg};border-top:1px solid ${c.border}40;">
+  <div style="max-width:760px;margin:0 auto;width:100%;">
+    <p style="font-size:11px;letter-spacing:0.25em;text-transform:uppercase;color:${c.accent};font-weight:600;margin-bottom:20px;">${page.label}</p>
+    <h2 style="font-family:${f.heading};font-size:clamp(36px,5vw,60px);font-weight:700;color:${c.text};margin-bottom:24px;line-height:1.08;letter-spacing:-0.03em;">${heading}</h2>
+    <p style="font-size:18px;color:${c.muted};line-height:1.7;max-width:580px;">${body}</p>
+    ${extra}
+  </div>
+</section>`;
+  }).join('\n');
 }
 
 // ── Main render function ─────────────────────────────────────────────────────
@@ -294,8 +358,17 @@ export function renderRestaurantPremium(config: PremiumWebsiteConfig): string {
   <style>@keyframes orb1{from{transform:translate(0,0) scale(1);}to{transform:translate(60px,40px) scale(1.15);}}@keyframes orb2{from{transform:translate(0,0);}to{transform:translate(-40px,60px) scale(1.1);}}</style>` : '';
 
   const sectionHtml = orderedSections
-    .map((id) => SECTION_RENDERERS[id]?.(config, c, f) ?? '')
+    .map((id) => {
+      const html = SECTION_RENDERERS[id]?.(config, c, f) ?? '';
+      if (!html) return '';
+      const secCfg = config.sections?.find((s) => s.id === id);
+      return secCfg?.isPage
+        ? `<div style="min-height:100vh;display:flex;flex-direction:column;justify-content:center;">${html}</div>`
+        : html;
+    })
     .join('');
+
+  const extraPagesHtml = renderExtraPages(config, c, f);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -359,6 +432,9 @@ export function renderRestaurantPremium(config: PremiumWebsiteConfig): string {
 
 <!-- DYNAMIC SECTIONS -->
 ${sectionHtml}
+
+<!-- EXTRA PAGES -->
+${extraPagesHtml}
 
 <!-- FOOTER -->
 <footer style="padding:56px 40px;background:${c.surface};border-top:1px solid ${c.border};">

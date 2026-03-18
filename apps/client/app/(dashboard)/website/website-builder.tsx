@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, type ChangeEvent } from 'react';
+import React, { useState, useCallback, useEffect, type ChangeEvent } from 'react';
 
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 
@@ -147,27 +147,43 @@ const COLOR_SCHEMES: { id: ColorScheme; label: string; bg: string; accent: strin
   { id: 'sage',     label: 'Sage',      bg: '#f4f5f0', accent: '#6b7c5e', preview: 'Natural & calm' },
 ];
 
-const FONT_PAIRINGS: { id: FontPairing; label: string; sample: string; desc: string; fontFamily?: string }[] = [
-  { id: 'modern',    label: 'Modern',    sample: 'Aa', desc: 'Inter — clean, contemporary' },
-  { id: 'classic',   label: 'Classic',   sample: 'Aa', desc: 'Georgia — timeless serif' },
-  { id: 'minimal',   label: 'Minimal',   sample: 'Aa', desc: 'System UI — pure' },
-  { id: 'elegant',   label: 'Elegant',   sample: 'Aa', desc: 'Playfair Display — refined' },
-  { id: 'luxury',    label: 'Luxury',    sample: 'Aa', desc: 'Cormorant — ultra-refined' },
-  { id: 'editorial', label: 'Editorial', sample: 'Aa', desc: 'DM Serif — magazine-editorial' },
-  { id: 'tech',      label: 'Tech',      sample: 'Aa', desc: 'Space Grotesk — geometric' },
-  { id: 'literary',  label: 'Literary',  sample: 'Aa', desc: 'Libre Baskerville — classic' },
+const FONT_PAIRINGS: { id: FontPairing; label: string; desc: string; headingFamily: string; bodyFamily: string }[] = [
+  { id: 'modern',    label: 'Modern',    desc: 'Inter — clean & contemporary',      headingFamily: 'Inter, sans-serif',                       bodyFamily: 'Inter, sans-serif' },
+  { id: 'classic',   label: 'Classic',   desc: 'Georgia — timeless serif',          headingFamily: 'Georgia, serif',                           bodyFamily: 'Georgia, serif' },
+  { id: 'minimal',   label: 'Minimal',   desc: 'System UI — pure & fast',           headingFamily: 'system-ui, -apple-system, sans-serif',     bodyFamily: 'system-ui, -apple-system, sans-serif' },
+  { id: 'elegant',   label: 'Elegant',   desc: 'Playfair Display + Lato',           headingFamily: "'Playfair Display', serif",                bodyFamily: "'Lato', sans-serif" },
+  { id: 'luxury',    label: 'Luxury',    desc: 'Cormorant Garamond — ultra-refined', headingFamily: "'Cormorant Garamond', serif",              bodyFamily: "'Cormorant Garamond', serif" },
+  { id: 'editorial', label: 'Editorial', desc: 'DM Serif Display + DM Sans',        headingFamily: "'DM Serif Display', serif",                bodyFamily: "'DM Sans', sans-serif" },
+  { id: 'tech',      label: 'Tech',      desc: 'Space Grotesk — geometric',         headingFamily: "'Space Grotesk', sans-serif",              bodyFamily: "'Space Grotesk', sans-serif" },
+  { id: 'literary',  label: 'Literary',  desc: 'Libre Baskerville — classic',       headingFamily: "'Libre Baskerville', serif",               bodyFamily: "'Libre Baskerville', serif" },
+
 ];
+
+const GOOGLE_FONTS_URL = 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400&family=Space+Grotesk:wght@300;400;500;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-// ── Section state ─────────────────────────────────────────────────────────────
+// ── Section + Extra Page state ────────────────────────────────────────────────
 interface SectionState {
   id: SectionKey;
   label: string;
   hint?: string;
   locked?: boolean;
   enabled: boolean;
+  isPage: boolean; // true = full-height own-page in nav, false = inline section
 }
+
+type ExtraPageKey = 'contact' | 'careers' | 'team' | 'faq' | 'locations' | 'press';
+interface ExtraPage { id: ExtraPageKey; label: string; slug: string; enabled: boolean; }
+
+const AVAILABLE_EXTRA_PAGES: ExtraPage[] = [
+  { id: 'contact',   label: 'Contact',   slug: 'contact',   enabled: false },
+  { id: 'careers',   label: 'Careers',   slug: 'careers',   enabled: false },
+  { id: 'team',      label: 'Our Team',  slug: 'team',      enabled: false },
+  { id: 'faq',       label: 'FAQ',       slug: 'faq',       enabled: false },
+  { id: 'locations', label: 'Locations', slug: 'locations', enabled: false },
+  { id: 'press',     label: 'Press',     slug: 'press',     enabled: false },
+];
 
 function buildSectionState(industry: IndustryConfig): SectionState[] {
   return industry.defaultSections.map((s) => ({
@@ -176,6 +192,7 @@ function buildSectionState(industry: IndustryConfig): SectionState[] {
     hint: s.hint,
     locked: s.locked,
     enabled: s.defaultEnabled,
+    isPage: false,
   }));
 }
 
@@ -242,8 +259,18 @@ export default function WebsiteBuilder({
   });
 
   const [sections, setSections] = useState<SectionState[]>(buildSectionState(firstIndustry));
+  const [extraPages, setExtraPages] = useState<ExtraPage[]>(AVAILABLE_EXTRA_PAGES.map((p) => ({ ...p })));
 
   const industry = INDUSTRIES.find((i) => i.id === form.industryType) ?? INDUSTRIES[0]!;
+
+  // Load Google Fonts for font preview cards
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = GOOGLE_FONTS_URL;
+    document.head.appendChild(link);
+    return () => { document.head.removeChild(link); };
+  }, []);
 
   const setForm_ = useCallback(<K extends keyof FormData>(key: K, value: FormData[K]) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -271,6 +298,14 @@ export default function WebsiteBuilder({
 
   function toggleSection(idx: number) {
     setSections((prev) => prev.map((s, i) => i === idx ? { ...s, enabled: !s.enabled } : s));
+  }
+
+  function togglePageMode(idx: number) {
+    setSections((prev) => prev.map((s, i) => i === idx ? { ...s, isPage: !s.isPage } : s));
+  }
+
+  function toggleExtraPage(id: ExtraPageKey) {
+    setExtraPages((prev) => prev.map((p) => p.id === id ? { ...p, enabled: !p.enabled } : p));
   }
 
   function addInspirationUrl() {
@@ -367,7 +402,8 @@ export default function WebsiteBuilder({
     setGenerating(true);
     setError('');
     try {
-      const sectionsPayload = sections.map((s) => ({ id: s.id, enabled: s.enabled }));
+      const sectionsPayload = sections.map((s) => ({ id: s.id, enabled: s.enabled, isPage: s.isPage }));
+      const extraPagesPayload = extraPages.filter((p) => p.enabled).map(({ id, label, slug }) => ({ id, label, slug }));
       const res = await fetch(`${API_URL}/websites/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -376,6 +412,7 @@ export default function WebsiteBuilder({
           businessId,
           sections: sectionsPayload,
           inspirationUrls: inspirationUrls.filter(Boolean),
+          extraPages: extraPagesPayload,
         }),
       });
       const json = await res.json() as { success: boolean; url?: string; html?: string; websiteId?: string; error?: string };
@@ -719,12 +756,14 @@ export default function WebsiteBuilder({
                   <div
                     key={section.id}
                     className={`flex items-center gap-3 px-4 py-3.5 rounded-xl border-2 transition-all ${
-                      section.enabled
+                      section.isPage
+                        ? 'bg-indigo-50/60 border-indigo-200'
+                        : section.enabled
                         ? 'bg-white border-slate-200 hover:border-violet-200'
                         : 'bg-slate-50 border-slate-100 opacity-50'
                     }`}
                   >
-                    {/* Toggle */}
+                    {/* Enable toggle */}
                     <button
                       onClick={() => toggleSection(idx)}
                       className={`w-10 h-6 rounded-full flex-shrink-0 transition-colors relative ${section.enabled ? 'bg-violet-600' : 'bg-slate-300'}`}
@@ -732,20 +771,12 @@ export default function WebsiteBuilder({
                       <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${section.enabled ? 'left-5' : 'left-1'}`} />
                     </button>
 
-                    {/* Drag handle / order arrows */}
+                    {/* Order arrows */}
                     <div className="flex flex-col gap-0.5 flex-shrink-0">
-                      <button
-                        onClick={() => moveSection(idx, -1)}
-                        disabled={idx === 0}
-                        className="p-0.5 text-slate-400 hover:text-slate-700 disabled:opacity-20"
-                      >
+                      <button onClick={() => moveSection(idx, -1)} disabled={idx === 0} className="p-0.5 text-slate-400 hover:text-slate-700 disabled:opacity-20">
                         <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z" clipRule="evenodd"/></svg>
                       </button>
-                      <button
-                        onClick={() => moveSection(idx, 1)}
-                        disabled={idx === sections.length - 1}
-                        className="p-0.5 text-slate-400 hover:text-slate-700 disabled:opacity-20"
-                      >
+                      <button onClick={() => moveSection(idx, 1)} disabled={idx === sections.length - 1} className="p-0.5 text-slate-400 hover:text-slate-700 disabled:opacity-20">
                         <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd"/></svg>
                       </button>
                     </div>
@@ -755,11 +786,63 @@ export default function WebsiteBuilder({
                       {section.hint && <p className="text-[11px] text-slate-400 mt-0.5">{section.hint}</p>}
                     </div>
 
-                    <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${section.enabled ? 'bg-violet-100 text-violet-700' : 'bg-slate-100 text-slate-400'}`}>
-                      {section.enabled ? 'On' : 'Off'}
-                    </span>
+                    {/* Page mode toggle */}
+                    <button
+                      onClick={() => togglePageMode(idx)}
+                      title={section.isPage ? 'Full-page section (click to make inline)' : 'Inline section (click to make a full page)'}
+                      className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg border transition-colors ${
+                        section.isPage
+                          ? 'bg-indigo-100 border-indigo-300 text-indigo-700'
+                          : 'bg-slate-50 border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600'
+                      }`}
+                    >
+                      {section.isPage ? (
+                        <>
+                          <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3"><path d="M8.5 4.75a.75.75 0 00-1.5 0v5.19L5.03 7.97a.75.75 0 00-1.06 1.06l3.5 3.5a.75.75 0 001.06 0l3.5-3.5a.75.75 0 00-1.06-1.06L8.5 9.94V4.75z"/><path d="M3.75 2a.75.75 0 000 1.5h8.5a.75.75 0 000-1.5h-8.5z"/></svg>
+                          Page
+                        </>
+                      ) : 'Section'}
+                    </button>
                   </div>
                 ))}
+              </div>
+
+              {/* Additional Pages */}
+              <div className="mt-6 border-t border-slate-100 pt-6">
+                <h3 className="text-sm font-bold text-slate-800 mb-1">Additional Pages</h3>
+                <p className="text-xs text-slate-400 mb-4">Standalone pages with their own nav links and AI-generated content — perfect for Contact, Careers, Team pages.</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {extraPages.map((page) => (
+                    <button
+                      key={page.id}
+                      onClick={() => toggleExtraPage(page.id)}
+                      className={`px-3 py-2.5 rounded-xl border-2 text-left transition-all ${
+                        page.enabled ? 'border-violet-500 bg-violet-50' : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      <p className={`text-xs font-semibold ${page.enabled ? 'text-violet-700' : 'text-slate-700'}`}>{page.label}</p>
+                      <p className={`text-[10px] mt-0.5 font-mono ${page.enabled ? 'text-violet-400' : 'text-slate-400'}`}>/{page.slug}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Nav Preview */}
+              <div className="mt-6 px-4 py-3.5 rounded-xl" style={{ background: '#0c0c10' }}>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mb-2.5">Nav Preview</p>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="text-sm font-bold text-white mr-2">Logo</span>
+                  {sections.filter((s) => s.enabled && !s.isPage).slice(0, 4).map((s) => (
+                    <span key={s.id} className="text-[11px] text-slate-400">{s.label}</span>
+                  ))}
+                  {sections.filter((s) => s.isPage).map((s) => (
+                    <span key={s.id} className="text-[11px] text-indigo-400 font-semibold">{s.label} ↗</span>
+                  ))}
+                  {extraPages.filter((p) => p.enabled).map((p) => (
+                    <span key={p.id} className="text-[11px] text-violet-400 font-semibold">{p.label} ↗</span>
+                  ))}
+                  <span className="ml-auto text-[10px] bg-violet-600 text-white px-3 py-1 rounded-full">Reserve</span>
+                </div>
               </div>
             </div>
 
@@ -809,24 +892,41 @@ export default function WebsiteBuilder({
                 </div>
               </div>
 
-              {/* Font pairings — 8 total in 4-col grid */}
+              {/* Font pairings — 8 total in 2x4 grid with real font previews */}
               <div>
                 <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-4">Font Pairing</label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {FONT_PAIRINGS.map((fp) => (
-                    <button
-                      key={fp.id}
-                      onClick={() => setForm_('fontPairing', fp.id)}
-                      className={`relative p-3.5 rounded-xl border-2 text-left transition-all ${form.fontPairing === fp.id ? 'border-violet-500 bg-violet-50' : 'border-slate-200 hover:border-slate-300 bg-white'}`}
-                    >
-                      <p className={`text-xl font-bold mb-1 ${fp.id === 'classic' || fp.id === 'literary' ? 'font-serif' : fp.id === 'elegant' || fp.id === 'luxury' || fp.id === 'editorial' ? 'italic' : ''}`}>{fp.sample}</p>
-                      <p className="text-xs font-semibold text-slate-700">{fp.label}</p>
-                      <p className="text-[10px] text-slate-400 mt-0.5 leading-snug">{fp.desc}</p>
-                      {fp.id === industry.defaultFontPairing && form.fontPairing !== fp.id && (
-                        <div className="absolute top-2 right-2 text-[8px] font-bold uppercase bg-slate-100 text-slate-500 px-1 py-0.5 rounded">Rec</div>
-                      )}
-                    </button>
-                  ))}
+                  {FONT_PAIRINGS.map((fp) => {
+                    const selected = form.fontPairing === fp.id;
+                    const recommended = fp.id === industry.defaultFontPairing && !selected;
+                    return (
+                      <button
+                        key={fp.id}
+                        onClick={() => setForm_('fontPairing', fp.id)}
+                        className={`relative p-4 rounded-xl border-2 text-left transition-all ${selected ? 'border-violet-500 bg-violet-50 shadow-md shadow-violet-100' : 'border-slate-200 hover:border-slate-300 bg-white'}`}
+                      >
+                        {/* Live font preview */}
+                        <div className="mb-3 pb-3 border-b border-slate-100">
+                          <p style={{ fontFamily: fp.headingFamily, fontSize: '15px', fontWeight: 700, lineHeight: 1.2, color: '#0f172a', marginBottom: '4px' }}>
+                            The Art of Dining
+                          </p>
+                          <p style={{ fontFamily: fp.bodyFamily, fontSize: '11px', lineHeight: 1.5, color: '#64748b' }}>
+                            Every evening becomes a memory.
+                          </p>
+                        </div>
+                        <p className={`text-[11px] font-bold ${selected ? 'text-violet-700' : 'text-slate-700'}`}>{fp.label}</p>
+                        <p className="text-[9px] text-slate-400 mt-0.5 leading-snug">{fp.desc}</p>
+                        {selected && (
+                          <div className="absolute top-2 right-2 w-4 h-4 bg-violet-500 rounded-full flex items-center justify-center">
+                            <svg viewBox="0 0 12 12" fill="none" className="w-2.5 h-2.5"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </div>
+                        )}
+                        {recommended && (
+                          <div className="absolute top-2 right-2 text-[8px] font-bold uppercase bg-slate-100 text-slate-500 px-1 py-0.5 rounded">Rec</div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>

@@ -43,6 +43,7 @@ export async function websiteRoutes(app: FastifyInstance) {
       industryType?: string;
       sections?: Array<{ id: string; enabled: boolean }>;
       inspirationUrls?: string[];
+      extraPages?: Array<{ id: string; label: string; slug: string }>;
     };
   }>('/generate', async (req, reply) => {
     const body = req.body;
@@ -130,6 +131,7 @@ export async function websiteRoutes(app: FastifyInstance) {
       chatbotEnabled: body.chatbotEnabled ?? false,
       chatbotBusinessId: body.businessId,
       ...(body.sections ? { sections: body.sections } : {}),
+      ...(body.extraPages?.length ? { extraPages: body.extraPages } : {}),
     };
     const html = renderRestaurantPremium(premiumConfig as unknown as import('./templates/restaurant/premium.js').PremiumWebsiteConfig);
 
