@@ -434,7 +434,21 @@ function WebsiteEditor({
 }
 
 // ── Root component ───────────────────────────────────────────────────────────
-export default function WebsitePageClient({ businessId }: { businessId: string }) {
+// Map Prisma BusinessType enum values to IndustryId used by the builder
+function mapBusinessType(type?: string): string | null {
+  const map: Record<string, string> = {
+    RESTAURANT: 'restaurant',
+    SALON: 'salon',
+    RETAIL: 'retail',
+    FITNESS: 'gym',
+    MEDICAL: 'spa',
+    OTHER: '',
+  };
+  return map[type ?? ''] ?? null;
+}
+
+export default function WebsitePageClient({ businessId, businessType }: { businessId: string; businessType?: string }) {
+  const detectedIndustry = mapBusinessType(businessType) || null;
   const [view, setView] = useState<View>({ mode: 'loading' });
 
   const loadList = useCallback(async () => {
@@ -491,7 +505,7 @@ export default function WebsitePageClient({ businessId }: { businessId: string }
   }
 
   if (view.mode === 'builder') {
-    return <WebsiteBuilder businessId={businessId} onGenerated={handleGenerated} />;
+    return <WebsiteBuilder businessId={businessId} detectedIndustry={detectedIndustry} onGenerated={handleGenerated} />;
   }
 
   if (view.mode === 'editor') {

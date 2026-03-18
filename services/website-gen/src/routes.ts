@@ -39,6 +39,7 @@ export async function websiteRoutes(app: FastifyInstance) {
       existingWebsiteUrl?: string;
       chatbotEnabled?: boolean;
       industryType?: string;
+      sections?: Array<{ id: string; enabled: boolean }>;
     };
   }>('/generate', async (req, reply) => {
     const body = req.body;
@@ -103,6 +104,7 @@ export async function websiteRoutes(app: FastifyInstance) {
       testimonials: copy.testimonials,
       chatbotEnabled: body.chatbotEnabled ?? false,
       chatbotBusinessId: body.businessId,
+      ...(body.sections ? { sections: body.sections } : {}),
     };
     const html = renderRestaurantPremium(premiumConfig as unknown as import('./templates/restaurant/premium.js').PremiumWebsiteConfig);
 
@@ -181,8 +183,8 @@ Editable fields:
 - businessName, tagline, description, cuisine, phone, address, city
 - hours: Record<string, string> e.g. {"Monday":"11am–10pm","Tuesday":"Closed"}
 - heroImage (URL string), bookingUrl (URL string)
-- colorScheme: "midnight" | "warm" | "forest" | "ocean" | "ivory" | "rose"
-- fontPairing: "modern" | "classic" | "minimal" | "elegant"
+- colorScheme: "midnight" | "warm" | "forest" | "ocean" | "ivory" | "rose" | "slate" | "emerald" | "amber" | "crimson" | "navy" | "sage"
+- fontPairing: "modern" | "classic" | "minimal" | "elegant" | "luxury" | "editorial" | "tech" | "literary"
 - heroHeading, heroSubheading, aboutHeading, aboutBody, ctaText
 - menuItems: Array<{name,description?,price?,category?}>`,
       messages: [{

@@ -16,5 +16,5 @@ export default function WebsitePage() {
 
   if (!business) return null;
 
-  return <WebsitePageClient businessId={business.id} />;
+  return <WebsitePageClient businessId={business.id} businessType={business.type as string | undefined} />;
 }

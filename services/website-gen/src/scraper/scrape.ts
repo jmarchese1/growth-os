@@ -18,60 +18,227 @@ export interface ScrapedBusinessInfo {
   bookingUrl?: string;
 }
 
+// Full browser headers to avoid blocks
+const BROWSER_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+  'Accept-Language': 'en-US,en;q=0.9',
+  'Accept-Encoding': 'gzip, deflate, br',
+  'Cache-Control': 'no-cache',
+  'Pragma': 'no-cache',
+  'Sec-Fetch-Dest': 'document',
+  'Sec-Fetch-Mode': 'navigate',
+  'Sec-Fetch-Site': 'none',
+  'Upgrade-Insecure-Requests': '1',
+};
+
+async function fetchPage(url: string): Promise<string> {
+  const res = await fetch(url, {
+    headers: BROWSER_HEADERS,
+    signal: AbortSignal.timeout(12000),
+    redirect: 'follow',
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.text();
+}
+
+// Try multiple URL forms to maximize success rate
+async function fetchWithFallbacks(rawUrl: string): Promise<{ html: string; base: string } | null> {
+  const url = rawUrl.startsWith('http') ? rawUrl : `https://${rawUrl}`;
+  const parsed = new URL(url);
+
+  const candidates = [
+    url,
+    // try www if not already
+    !parsed.hostname.startsWith('www.') ? `${parsed.protocol}//www.${parsed.hostname}${parsed.pathname}` : null,
+    // try http if https fails
+    url.startsWith('https://') ? url.replace('https://', 'http://') : null,
+  ].filter((u): u is string => u !== null);
+
+  for (const candidate of candidates) {
+    try {
+      const html = await fetchPage(candidate);
+      return { html, base: new URL(candidate).origin };
+    } catch {
+      // try next
+    }
+  }
+  return null;
+}
+
+// Fetch additional subpages that often have the richest data
+async function fetchSubpages(base: string, homeHtml: string): Promise<string[]> {
+  // Find internal links likely to have menu/hours/contact info
+  const linkPattern = /href=["']([^"'#?]+?)["']/gi;
+  const links = new Set<string>();
+  let m: RegExpExecArray | null;
+  while ((m = linkPattern.exec(homeHtml)) !== null) {
+    const href = m[1];
+    if (!href) continue;
+    const lower = href.toLowerCase();
+    if (/\b(menu|food|drinks|hours|contact|about|location|reserv|order|services|classes|pricing|treatments)\b/.test(lower)) {
+      try {
+        const full = href.startsWith('http') ? href : `${base}${href.startsWith('/') ? '' : '/'}${href}`;
+        links.add(full);
+      } catch { /* ignore invalid URLs */ }
+    }
+  }
+
+  const results: string[] = [];
+  for (const link of Array.from(links).slice(0, 3)) {
+    try {
+      const html = await fetchPage(link);
+      results.push(html);
+    } catch { /* skip failed subpages */ }
+  }
+  return results;
+}
+
+// Extract JSON-LD structured data (restaurants often have rich schema)
+function extractJsonLd(html: string): Record<string, unknown> {
+  const matches = Array.from(html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi));
+  for (const match of matches) {
+    try {
+      const data = JSON.parse(match[1] ?? '{}') as Record<string, unknown>;
+      if (data['@type'] && typeof data['@type'] === 'string') return data;
+    } catch { /* ignore */ }
+  }
+  return {};
+}
+
+// Extract meta tags (og:, twitter:, standard)
+function extractMeta(html: string): Record<string, string> {
+  const meta: Record<string, string> = {};
+  const metaPattern = /<meta[^>]+(?:name|property)=["']([^"']+)["'][^>]+content=["']([^"']+)["'][^>]*>/gi;
+  const metaPattern2 = /<meta[^>]+content=["']([^"']+)["'][^>]+(?:name|property)=["']([^"']+)["'][^>]*>/gi;
+
+  let m: RegExpExecArray | null;
+  while ((m = metaPattern.exec(html)) !== null) { meta[m[1] ?? ''] = m[2] ?? ''; }
+  while ((m = metaPattern2.exec(html)) !== null) { meta[m[2] ?? ''] = m[1] ?? ''; }
+  return meta;
+}
+
+// Extract all image URLs with priority on og/twitter images
+function extractImages(html: string): string[] {
+  const seen = new Set<string>();
+  const images: string[] = [];
+
+  // Priority: og:image and twitter:image first
+  const ogImages = Array.from(html.matchAll(/(?:og:image|twitter:image)[^>]*content=["']([^"']+)["']/gi))
+    .concat(Array.from(html.matchAll(/content=["']([^"']+)["'][^>]*(?:og:image|twitter:image)/gi)));
+  for (const m of ogImages) {
+    const src = m[1];
+    if (src && src.startsWith('http') && !seen.has(src)) { seen.add(src); images.push(src); }
+  }
+
+  // Then src attrs of img tags
+  const srcImages = Array.from(html.matchAll(/\bsrc=["']([^"']+(?:jpg|jpeg|png|webp)[^"']*)/gi));
+  for (const m of srcImages) {
+    const src = m[1];
+    if (src && src.startsWith('http') && !seen.has(src) && !src.includes('icon') && !src.includes('logo')) {
+      seen.add(src); images.push(src);
+    }
+  }
+
+  return images.slice(0, 8);
+}
+
+// Clean HTML to plain text for Claude
+function cleanHtml(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<nav[\s\S]*?<\/nav>/gi, ' ')
+    .replace(/<footer[\s\S]*?<\/footer>/gi, ' ')
+    .replace(/<header[\s\S]*?<\/header>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#\d+;/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 export async function scrapeWebsite(url: string, anthropicKey: string): Promise<ScrapedBusinessInfo> {
   logger.info({ url }, 'Scraping website');
 
-  // Fetch the page HTML
-  let html = '';
-  try {
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Embedo/1.0; +https://embedo.io)' },
-      signal: AbortSignal.timeout(10000),
-    });
-    html = await res.text();
-  } catch (err) {
-    logger.warn({ url, err }, 'Failed to fetch website — proceeding without scrape data');
+  const fetched = await fetchWithFallbacks(url);
+  if (!fetched) {
+    logger.warn({ url }, 'Failed to fetch website — proceeding without scrape data');
     return {};
   }
 
-  // Strip scripts/styles, keep visible text + image srcs
-  const cleaned = html
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[\s\S]*?<\/style>/gi, '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s{2,}/g, ' ')
-    .trim()
-    .slice(0, 8000); // keep under Claude's token budget
+  const { html: homeHtml, base } = fetched;
 
-  // Pull image URLs from og:image and src attrs
-  const imageMatches = Array.from(html.matchAll(/(?:og:image[^>]+content|src)=["']([^"']+(?:jpg|jpeg|png|webp)[^"']*)/gi));
-  const rawImages = imageMatches.map((m) => m[1]).filter((u): u is string => !!u && u.startsWith('http')).slice(0, 6);
+  // Fetch additional subpages in parallel
+  const subpageHtmls = await fetchSubpages(base, homeHtml);
+
+  // Extract structured data
+  const jsonLd = extractJsonLd(homeHtml);
+  const meta = extractMeta(homeHtml);
+  const imageUrls = extractImages([homeHtml, ...subpageHtmls].join('\n'));
+
+  // Combine and clean text from all pages
+  const allHtml = [homeHtml, ...subpageHtmls].join('\n\n--- PAGE BREAK ---\n\n');
+  const cleanedText = cleanHtml(allHtml).slice(0, 12000);
+
+  // Build structured context from JSON-LD and meta to help Claude
+  const structuredContext = [
+    jsonLd['name'] ? `Schema.org name: ${String(jsonLd['name'])}` : '',
+    jsonLd['description'] ? `Schema.org description: ${String(jsonLd['description'])}` : '',
+    jsonLd['telephone'] ? `Schema.org phone: ${String(jsonLd['telephone'])}` : '',
+    jsonLd['address'] ? `Schema.org address: ${JSON.stringify(jsonLd['address'])}` : '',
+    jsonLd['openingHoursSpecification'] ? `Schema.org hours: ${JSON.stringify(jsonLd['openingHoursSpecification'])}` : '',
+    jsonLd['servesCuisine'] ? `Schema.org cuisine: ${String(jsonLd['servesCuisine'])}` : '',
+    meta['og:title'] ? `OG title: ${meta['og:title']}` : '',
+    meta['og:description'] ? `OG description: ${meta['og:description']}` : '',
+    meta['description'] ? `Meta description: ${meta['description']}` : '',
+  ].filter(Boolean).join('\n');
 
   const client = new Anthropic({ apiKey: anthropicKey });
   const message = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 1024,
+    model: 'claude-sonnet-4-6',
+    max_tokens: 2000,
     messages: [
       {
         role: 'user',
-        content: `Extract business information from this restaurant website text. Return ONLY valid JSON matching this structure (omit fields you cannot find):
+        content: `You are extracting business information from a website to help build a new website for them. Extract every piece of useful information you can find.
+
+${structuredContext ? `## Structured Data (high confidence)\n${structuredContext}\n\n` : ''}## Page Text (may span multiple pages)\n${cleanedText}
+
+Return ONLY valid JSON. Include all fields you can find, omit ones you cannot find:
 
 {
   "businessName": "string",
   "tagline": "string",
-  "description": "1-2 sentence about the restaurant",
-  "cuisine": "string (e.g. Italian, American, Japanese)",
-  "phone": "string",
-  "address": "string",
-  "city": "string",
-  "hours": { "Monday": "11am-10pm", ... },
-  "menuItems": [{ "name": "string", "description": "string", "price": "string", "category": "string" }],
-  "bookingUrl": "string (if reservation link found)",
-  "socialLinks": { "instagram": "url", "facebook": "url", "yelp": "url" }
+  "description": "2-3 sentence description of the business",
+  "cuisine": "string (food type for restaurants, service type for others)",
+  "phone": "string (formatted)",
+  "address": "full street address string",
+  "city": "city, state",
+  "hours": {
+    "Monday": "11am–10pm or Closed",
+    "Tuesday": "...",
+    "Wednesday": "...",
+    "Thursday": "...",
+    "Friday": "...",
+    "Saturday": "...",
+    "Sunday": "..."
+  },
+  "menuItems": [
+    { "name": "item name", "description": "brief description", "price": "$XX", "category": "category" }
+  ],
+  "bookingUrl": "full URL if found",
+  "socialLinks": {
+    "instagram": "full URL",
+    "facebook": "full URL",
+    "yelp": "full URL"
+  }
 }
 
-Website text:
-${cleaned}`,
+Extract as many menu/service items as you can find (up to 20). Be precise with hours format. If you see a phone number anywhere, include it.`,
       },
     ],
   });
@@ -86,10 +253,10 @@ ${cleaned}`,
     logger.warn('Failed to parse Claude extraction response');
   }
 
-  if (rawImages.length > 0) {
-    extracted.imageUrls = rawImages;
+  if (imageUrls.length > 0) {
+    extracted.imageUrls = imageUrls;
   }
 
-  logger.info({ businessName: extracted.businessName }, 'Scrape complete');
+  logger.info({ businessName: extracted.businessName, fields: Object.keys(extracted) }, 'Scrape complete');
   return extracted;
 }
