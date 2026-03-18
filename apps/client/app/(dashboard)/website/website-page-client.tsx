@@ -352,9 +352,11 @@ export default function WebsitePageClient({ businessId }: { businessId: string }
   const loadList = useCallback(async () => {
     try {
       const res = await fetch(`${API_URL}/businesses/${businessId}/websites`);
+      if (!res.ok) throw new Error(`API ${res.status}`);
       const d = await res.json() as { success: boolean; websites?: WebsiteRecord[] };
       setView({ mode: 'list', sites: d.websites ?? [] });
-    } catch {
+    } catch (err) {
+      console.error('[Website] Failed to load websites:', err);
       setView({ mode: 'list', sites: [] });
     }
   }, [businessId]);
