@@ -6,7 +6,153 @@ const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 
 type ColorScheme = 'midnight' | 'warm' | 'forest' | 'ocean' | 'ivory' | 'rose';
 type FontPairing = 'modern' | 'classic' | 'minimal' | 'elegant';
+type IndustryId = 'restaurant' | 'gym' | 'salon' | 'spa' | 'cafe' | 'retail';
 
+// ── Industry config ───────────────────────────────────────────────────────────
+interface IndustryConfig {
+  id: IndustryId;
+  label: string;
+  tagline: string;
+  iconBg: string;
+  iconColor: string;
+  icon: string; // SVG path d=""
+  defaultColorScheme: ColorScheme;
+  defaultFontPairing: FontPairing;
+  typeLabel: string;
+  typePlaceholder: string;
+  bookingLabel: string;
+  bookingPlaceholder: string;
+  descriptionPlaceholder: string;
+  itemsLabel: string;
+  itemCategoryDefault: string;
+  ctaTextDefault: string;
+  status: 'ready' | 'beta';
+}
+
+const INDUSTRIES: IndustryConfig[] = [
+  {
+    id: 'restaurant',
+    label: 'Restaurant',
+    tagline: 'Full-service dining, bistros & bars',
+    iconBg: '#fff1e6',
+    iconColor: '#f97316',
+    // Plate with utensils
+    icon: 'M12 3a9 9 0 100 18A9 9 0 0012 3zm0 2a7 7 0 110 14A7 7 0 0112 5zm-1.5 3v4.5l3 1.8',
+    defaultColorScheme: 'warm',
+    defaultFontPairing: 'elegant',
+    typeLabel: 'Cuisine Type',
+    typePlaceholder: 'Italian, Sushi, American, Mexican...',
+    bookingLabel: 'Reservation URL',
+    bookingPlaceholder: 'https://resy.com/...',
+    descriptionPlaceholder: 'A few sentences about your restaurant — the vibe, the food, what makes you special...',
+    itemsLabel: 'Menu Items',
+    itemCategoryDefault: 'Mains',
+    ctaTextDefault: 'Reserve a Table',
+    status: 'ready',
+  },
+  {
+    id: 'gym',
+    label: 'Gym & Fitness',
+    tagline: 'Gyms, yoga studios, CrossFit & sports clubs',
+    iconBg: '#eff6ff',
+    iconColor: '#3b82f6',
+    // Lightning bolt
+    icon: 'M13 2L4.09 12.96A.5.5 0 004.5 13.5H11l-2 8.5L19.91 11.04A.5.5 0 0019.5 10.5H13l2-8.5z',
+    defaultColorScheme: 'ocean',
+    defaultFontPairing: 'modern',
+    typeLabel: 'Fitness Type',
+    typePlaceholder: 'CrossFit, Yoga, Boxing, HIIT, Pilates...',
+    bookingLabel: 'Membership / Trial URL',
+    bookingPlaceholder: 'https://mindbodyonline.com/...',
+    descriptionPlaceholder: 'What makes your gym different? Training philosophy, equipment, community feel, coaches...',
+    itemsLabel: 'Classes & Services',
+    itemCategoryDefault: 'Classes',
+    ctaTextDefault: 'Start Your Free Trial',
+    status: 'ready',
+  },
+  {
+    id: 'salon',
+    label: 'Hair Salon',
+    tagline: 'Hair salons, barbershops & blow-dry bars',
+    iconBg: '#fff1f4',
+    iconColor: '#e11d48',
+    // Scissors
+    icon: 'M6 2v3m0 0a2 2 0 100 4 2 2 0 000-4zm0 0l10 10m0-10a2 2 0 100 4 2 2 0 000-4zm0 4L6 16m0 0a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4z',
+    defaultColorScheme: 'rose',
+    defaultFontPairing: 'elegant',
+    typeLabel: 'Specialty',
+    typePlaceholder: "Women's cuts, Color & highlights, Men's grooming...",
+    bookingLabel: 'Booking URL',
+    bookingPlaceholder: 'https://booksy.com/...',
+    descriptionPlaceholder: "What's your salon known for? Techniques, team, the experience you create for clients...",
+    itemsLabel: 'Services & Pricing',
+    itemCategoryDefault: 'Hair Services',
+    ctaTextDefault: 'Book Your Appointment',
+    status: 'ready',
+  },
+  {
+    id: 'spa',
+    label: 'Spa & Wellness',
+    tagline: 'Day spas, massage therapy & wellness centers',
+    iconBg: '#f0fdf4',
+    iconColor: '#22c55e',
+    // Leaf
+    icon: 'M12 2C6.48 2 3 7 3 12c0 4.5 3 9 9 9s9-4.5 9-9c0-5-3.48-10-9-10zm0 2c3.5 0 6.5 3.5 7 7.5C17.5 15 15 19 12 19S6.5 15 5 11.5C5.5 7.5 8.5 4 12 4z',
+    defaultColorScheme: 'forest',
+    defaultFontPairing: 'elegant',
+    typeLabel: 'Specialty',
+    typePlaceholder: 'Massage, Facials, Full-body treatments, Float therapy...',
+    bookingLabel: 'Booking URL',
+    bookingPlaceholder: 'https://vagaro.com/...',
+    descriptionPlaceholder: 'Describe the experience your spa provides — the treatments, ambiance, wellness philosophy...',
+    itemsLabel: 'Treatments & Packages',
+    itemCategoryDefault: 'Signature Treatments',
+    ctaTextDefault: 'Book Your Treatment',
+    status: 'ready',
+  },
+  {
+    id: 'cafe',
+    label: 'Coffee Shop',
+    tagline: 'Cafes, coffee shops & brunch spots',
+    iconBg: '#fffbeb',
+    iconColor: '#d97706',
+    // Coffee cup
+    icon: 'M18 8h1a4 4 0 010 8h-1m-2 0H5a2 2 0 01-2-2v-6a2 2 0 012-2h11m0 0V6a2 2 0 00-2-2H7a2 2 0 00-2 2v2m9 8v2a2 2 0 01-2 2H9a2 2 0 01-2-2v-2',
+    defaultColorScheme: 'ivory',
+    defaultFontPairing: 'classic',
+    typeLabel: 'Concept',
+    typePlaceholder: 'Specialty coffee, Brunch, Tea room, Bakery cafe...',
+    bookingLabel: 'Order / Catering URL',
+    bookingPlaceholder: 'https://...',
+    descriptionPlaceholder: "Tell us about your coffee shop — the beans you source, the vibe, the community you've built...",
+    itemsLabel: 'Menu Highlights',
+    itemCategoryDefault: 'Drinks',
+    ctaTextDefault: 'Visit Us Today',
+    status: 'ready',
+  },
+  {
+    id: 'retail',
+    label: 'Retail Boutique',
+    tagline: 'Fashion boutiques, gift shops & specialty retail',
+    iconBg: '#faf5ff',
+    iconColor: '#a855f7',
+    // Shopping bag
+    icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z',
+    defaultColorScheme: 'midnight',
+    defaultFontPairing: 'minimal',
+    typeLabel: 'Category',
+    typePlaceholder: "Women's fashion, Vintage, Jewelry, Home goods...",
+    bookingLabel: 'Online Store URL',
+    bookingPlaceholder: 'https://...',
+    descriptionPlaceholder: 'What does your boutique offer? Curation philosophy, brands, what makes your selection special...',
+    itemsLabel: 'Featured Products',
+    itemCategoryDefault: 'Featured',
+    ctaTextDefault: 'Shop the Collection',
+    status: 'ready',
+  },
+];
+
+// ── Color / font options ──────────────────────────────────────────────────────
 const COLOR_SCHEMES: { id: ColorScheme; label: string; bg: string; accent: string; preview: string }[] = [
   { id: 'midnight', label: 'Midnight', bg: '#0a0a0a', accent: '#a855f7', preview: 'Dark & moody' },
   { id: 'warm',     label: 'Warm',     bg: '#120800', accent: '#f97316', preview: 'Rich & inviting' },
@@ -25,10 +171,12 @@ const FONT_PAIRINGS: { id: FontPairing; label: string; sample: string; desc: str
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
+// ── Form state ────────────────────────────────────────────────────────────────
 interface FormData {
+  industryType: IndustryId;
   existingWebsiteUrl: string;
   businessName: string;
-  cuisine: string;
+  cuisine: string; // holds the type/specialty for any industry
   phone: string;
   address: string;
   city: string;
@@ -41,11 +189,12 @@ interface FormData {
   menuItems: Array<{ name: string; description: string; price: string; category: string }>;
 }
 
+// ── Main component ────────────────────────────────────────────────────────────
 export default function WebsiteBuilder({ businessId, onGenerated }: {
   businessId: string;
   onGenerated?: (result: { websiteId: string; html: string; url: string }) => void;
 }) {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(1); // 1=Industry 2=Import 3=Details 4=Style 5=Done
   const [scraping, setScraping] = useState(false);
   const [scraped, setScraped] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -53,6 +202,7 @@ export default function WebsiteBuilder({ businessId, onGenerated }: {
   const [error, setError] = useState('');
 
   const [form, setForm] = useState<FormData>({
+    industryType: 'restaurant',
     existingWebsiteUrl: '',
     businessName: '',
     cuisine: '',
@@ -62,18 +212,29 @@ export default function WebsiteBuilder({ businessId, onGenerated }: {
     description: '',
     heroImage: '',
     bookingUrl: '',
-    colorScheme: 'midnight',
+    colorScheme: 'warm',
     fontPairing: 'elegant',
     hours: {},
     menuItems: [],
   });
 
+  const industry = INDUSTRIES.find((i) => i.id === form.industryType) ?? INDUSTRIES[0]!;
+
   function set<K extends keyof FormData>(key: K, value: FormData[K]) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
+  function selectIndustry(ind: IndustryConfig) {
+    setForm((f) => ({
+      ...f,
+      industryType: ind.id,
+      colorScheme: ind.defaultColorScheme,
+      fontPairing: ind.defaultFontPairing,
+    }));
+  }
+
   async function handleScrape() {
-    if (!form.existingWebsiteUrl) { setStep(2); return; }
+    if (!form.existingWebsiteUrl) { setStep(3); return; }
     setScraping(true);
     setError('');
     try {
@@ -102,7 +263,7 @@ export default function WebsiteBuilder({ businessId, onGenerated }: {
       // Silently continue — scrape is optional
     }
     setScraping(false);
-    setStep(2);
+    setStep(3);
   }
 
   async function handleGenerate() {
@@ -119,7 +280,7 @@ export default function WebsiteBuilder({ businessId, onGenerated }: {
       if (!json.success) throw new Error(json.error ?? 'Generation failed');
       const r = { url: json.url ?? '', html: json.html ?? '', websiteId: json.websiteId ?? '' };
       setResult(r);
-      setStep(4);
+      setStep(5);
       onGenerated?.(r);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong');
@@ -127,12 +288,14 @@ export default function WebsiteBuilder({ businessId, onGenerated }: {
     setGenerating(false);
   }
 
+  const STEP_LABELS = ['Industry', 'Import', 'Details', 'Style', 'Done'];
+
   return (
     <div className="min-h-screen p-8 animate-fade-up">
       {/* Steps header */}
       <div className="max-w-3xl mx-auto mb-10">
         <div className="flex items-center gap-0">
-          {['Import', 'Details', 'Style', 'Done'].map((label, i) => {
+          {STEP_LABELS.map((label, i) => {
             const n = i + 1;
             const active = step === n;
             const done = step > n;
@@ -146,7 +309,7 @@ export default function WebsiteBuilder({ businessId, onGenerated }: {
                   </div>
                   <span className={`text-sm font-medium ${active ? 'text-slate-900' : done ? 'text-violet-600' : 'text-slate-400'}`}>{label}</span>
                 </div>
-                {i < 3 && <div className={`flex-1 h-px mx-3 ${done ? 'bg-violet-300' : 'bg-slate-200'}`} />}
+                {i < 4 && <div className={`flex-1 h-px mx-3 ${done ? 'bg-violet-300' : 'bg-slate-200'}`} />}
               </div>
             );
           })}
@@ -155,16 +318,114 @@ export default function WebsiteBuilder({ businessId, onGenerated }: {
 
       <div className="max-w-3xl mx-auto">
 
-        {/* STEP 1 — Import */}
+        {/* ── STEP 1 — Industry ─────────────────────────────────────────── */}
         {step === 1 && (
+          <div className="space-y-6">
+            <div className="bg-white border border-slate-200 rounded-2xl p-8">
+              <h2 className="text-2xl font-bold text-slate-900 mb-1">What type of business are you?</h2>
+              <p className="text-sm text-slate-500 mb-8">
+                We&apos;ll tailor the design, copy, and AI defaults to match your industry.
+              </p>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                {INDUSTRIES.map((ind) => {
+                  const selected = form.industryType === ind.id;
+                  return (
+                    <button
+                      key={ind.id}
+                      onClick={() => selectIndustry(ind)}
+                      className={`relative text-left rounded-2xl border-2 p-5 transition-all duration-150 ${
+                        selected
+                          ? 'border-violet-500 bg-violet-50 shadow-md shadow-violet-100'
+                          : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
+                      }`}
+                    >
+                      {/* Icon */}
+                      <div
+                        className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
+                        style={{ background: ind.iconBg }}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke={ind.iconColor}
+                          strokeWidth="1.75"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="w-5 h-5"
+                        >
+                          <path d={ind.icon} />
+                        </svg>
+                      </div>
+
+                      <p className={`text-sm font-bold mb-1 ${selected ? 'text-violet-900' : 'text-slate-800'}`}>
+                        {ind.label}
+                      </p>
+                      <p className="text-[11px] text-slate-500 leading-snug">{ind.tagline}</p>
+
+                      {ind.status === 'beta' && (
+                        <span className="absolute top-3 right-3 text-[9px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">Beta</span>
+                      )}
+
+                      {selected && (
+                        <div className="absolute top-3 right-3 w-5 h-5 bg-violet-500 rounded-full flex items-center justify-center">
+                          <svg viewBox="0 0 12 12" fill="none" className="w-3 h-3">
+                            <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Industry-specific preview */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl px-6 py-4 flex items-center gap-4">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: industry.iconBg }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke={industry.iconColor} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                  <path d={industry.icon} />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-slate-700">{industry.label} selected</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Default style: {COLOR_SCHEMES.find(c => c.id === industry.defaultColorScheme)?.label} · {FONT_PAIRINGS.find(f => f.id === industry.defaultFontPairing)?.label} · CTA: &ldquo;{industry.ctaTextDefault}&rdquo;
+                </p>
+              </div>
+              <button
+                onClick={() => setStep(2)}
+                className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 text-white text-sm font-semibold rounded-xl hover:bg-violet-700 transition-colors flex-shrink-0"
+              >
+                Continue
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                  <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── STEP 2 — Import ───────────────────────────────────────────── */}
+        {step === 2 && (
           <div className="bg-white border border-slate-200 rounded-2xl p-8">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: industry.iconBg }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke={industry.iconColor} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                  <path d={industry.icon} />
+                </svg>
+              </div>
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{industry.label}</span>
+            </div>
             <h2 className="text-xl font-bold text-slate-900 mb-1">Do you have an existing website?</h2>
-            <p className="text-sm text-slate-500 mb-8">Paste your URL and we&apos;ll automatically import your hours, menu, photos, and contact info. Or skip to start fresh.</p>
+            <p className="text-sm text-slate-500 mb-8">
+              Paste your URL and we&apos;ll automatically import your details. Or skip to start fresh.
+            </p>
             <div className="mb-6">
               <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Your current website URL</label>
               <input
                 type="url"
-                placeholder="https://yourrestaurant.com"
+                placeholder={`https://your${industry.id}.com`}
                 value={form.existingWebsiteUrl}
                 onChange={(e) => set('existingWebsiteUrl', e.target.value)}
                 className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
@@ -172,8 +433,9 @@ export default function WebsiteBuilder({ businessId, onGenerated }: {
               <p className="text-xs text-slate-400 mt-2">We&apos;ll use AI to extract your business details — you can edit everything after.</p>
             </div>
             <div className="flex gap-3">
+              <button onClick={() => setStep(1)} className="px-5 py-3 border border-slate-200 text-slate-600 font-medium rounded-xl text-sm hover:bg-slate-50">Back</button>
               <button
-                onClick={handleScrape}
+                onClick={() => void handleScrape()}
                 disabled={scraping}
                 className="flex-1 py-3 bg-violet-600 text-white font-semibold rounded-xl text-sm hover:bg-violet-700 disabled:opacity-60 transition-colors"
               >
@@ -183,16 +445,17 @@ export default function WebsiteBuilder({ businessId, onGenerated }: {
           </div>
         )}
 
-        {/* STEP 2 — Details */}
-        {step === 2 && (
+        {/* ── STEP 3 — Details ─────────────────────────────────────────── */}
+        {step === 3 && (
           <div className="bg-white border border-slate-200 rounded-2xl p-8">
             <div className="flex items-center gap-3 mb-6">
-              <h2 className="text-xl font-bold text-slate-900">Your Business Details</h2>
+              <h2 className="text-xl font-bold text-slate-900">Your {industry.label} Details</h2>
               {scraped && <span className="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-full">Auto-filled from your site</span>}
             </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
-              <Field label="Business Name *" value={form.businessName} onChange={(v) => set('businessName', v)} placeholder="Joe's Italian Kitchen" />
-              <Field label="Cuisine / Type" value={form.cuisine} onChange={(v) => set('cuisine', v)} placeholder="Italian, American, Sushi..." />
+              <Field label="Business Name *" value={form.businessName} onChange={(v) => set('businessName', v)} placeholder={`Your ${industry.label} name`} />
+              <Field label={industry.typeLabel} value={form.cuisine} onChange={(v) => set('cuisine', v)} placeholder={industry.typePlaceholder} />
               <Field label="Phone" value={form.phone} onChange={(v) => set('phone', v)} placeholder="(555) 123-4567" />
               <Field label="City" value={form.city} onChange={(v) => set('city', v)} placeholder="New York, NY" />
               <div className="sm:col-span-2">
@@ -203,19 +466,19 @@ export default function WebsiteBuilder({ businessId, onGenerated }: {
                 <textarea
                   value={form.description}
                   onChange={(e) => set('description', e.target.value)}
-                  placeholder="A few sentences about your restaurant — the vibe, the food, what makes you special..."
+                  placeholder={industry.descriptionPlaceholder}
                   rows={3}
                   className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none"
                 />
               </div>
               <Field label="Hero Image URL" value={form.heroImage} onChange={(v) => set('heroImage', v)} placeholder="https://..." />
-              <Field label="Booking / Reservation URL" value={form.bookingUrl} onChange={(v) => set('bookingUrl', v)} placeholder="https://resy.com/..." />
+              <Field label={industry.bookingLabel} value={form.bookingUrl} onChange={(v) => set('bookingUrl', v)} placeholder={industry.bookingPlaceholder} />
             </div>
 
             {/* Hours */}
             <div className="mb-6">
-              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">Hours (optional)</label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Hours <span className="font-normal text-slate-400">(optional — AI will suggest realistic hours if left blank)</span></label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
                 {DAYS.map((day) => (
                   <div key={day} className="flex items-center gap-3">
                     <span className="text-xs text-slate-500 w-24 flex-shrink-0">{day}</span>
@@ -231,20 +494,22 @@ export default function WebsiteBuilder({ businessId, onGenerated }: {
             </div>
 
             <div className="flex gap-3">
-              <button onClick={() => setStep(1)} className="px-5 py-3 border border-slate-200 text-slate-600 font-medium rounded-xl text-sm hover:bg-slate-50">Back</button>
-              <button onClick={() => setStep(3)} className="flex-1 py-3 bg-violet-600 text-white font-semibold rounded-xl text-sm hover:bg-violet-700 transition-colors">
+              <button onClick={() => setStep(2)} className="px-5 py-3 border border-slate-200 text-slate-600 font-medium rounded-xl text-sm hover:bg-slate-50">Back</button>
+              <button onClick={() => setStep(4)} className="flex-1 py-3 bg-violet-600 text-white font-semibold rounded-xl text-sm hover:bg-violet-700 transition-colors">
                 Continue to Style
               </button>
             </div>
           </div>
         )}
 
-        {/* STEP 3 — Style */}
-        {step === 3 && (
+        {/* ── STEP 4 — Style ───────────────────────────────────────────── */}
+        {step === 4 && (
           <div className="space-y-6">
             <div className="bg-white border border-slate-200 rounded-2xl p-8">
               <h2 className="text-xl font-bold text-slate-900 mb-1">Choose Your Style</h2>
-              <p className="text-sm text-slate-500 mb-8">Pick a color scheme and font pairing that matches your restaurant&apos;s personality.</p>
+              <p className="text-sm text-slate-500 mb-8">
+                Pick a color scheme and font pairing. We&apos;ve pre-selected the best defaults for a {industry.label.toLowerCase()}.
+              </p>
 
               {/* Color schemes */}
               <div className="mb-8">
@@ -268,6 +533,11 @@ export default function WebsiteBuilder({ businessId, onGenerated }: {
                           <svg viewBox="0 0 12 12" fill="none" className="w-3 h-3"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                         </div>
                       )}
+                      {cs.id === industry.defaultColorScheme && form.colorScheme !== cs.id && (
+                        <div className="absolute top-2 left-2 text-[9px] font-bold uppercase tracking-wider bg-slate-800/70 text-white px-1.5 py-0.5 rounded-full">
+                          Recommended
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -281,11 +551,14 @@ export default function WebsiteBuilder({ businessId, onGenerated }: {
                     <button
                       key={fp.id}
                       onClick={() => set('fontPairing', fp.id)}
-                      className={`p-4 rounded-xl border-2 text-left transition-all ${form.fontPairing === fp.id ? 'border-violet-500 bg-violet-50' : 'border-slate-200 hover:border-slate-300 bg-white'}`}
+                      className={`relative p-4 rounded-xl border-2 text-left transition-all ${form.fontPairing === fp.id ? 'border-violet-500 bg-violet-50' : 'border-slate-200 hover:border-slate-300 bg-white'}`}
                     >
                       <p className={`text-2xl font-bold mb-1 ${fp.id === 'classic' ? 'font-serif' : fp.id === 'elegant' ? 'italic' : ''}`}>{fp.sample}</p>
                       <p className="text-xs font-semibold text-slate-700">{fp.label}</p>
                       <p className="text-[11px] text-slate-400 mt-0.5">{fp.desc}</p>
+                      {fp.id === industry.defaultFontPairing && form.fontPairing !== fp.id && (
+                        <div className="absolute top-2 right-2 text-[9px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full">Rec</div>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -295,9 +568,9 @@ export default function WebsiteBuilder({ businessId, onGenerated }: {
             {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
             <div className="flex gap-3">
-              <button onClick={() => setStep(2)} className="px-5 py-3 border border-slate-200 text-slate-600 font-medium rounded-xl text-sm hover:bg-slate-50">Back</button>
+              <button onClick={() => setStep(3)} className="px-5 py-3 border border-slate-200 text-slate-600 font-medium rounded-xl text-sm hover:bg-slate-50">Back</button>
               <button
-                onClick={handleGenerate}
+                onClick={() => void handleGenerate()}
                 disabled={generating}
                 className="flex-1 py-3.5 bg-violet-600 text-white font-bold rounded-xl text-sm hover:bg-violet-700 disabled:opacity-60 transition-colors"
               >
@@ -306,14 +579,14 @@ export default function WebsiteBuilder({ businessId, onGenerated }: {
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Generating your website...
                   </span>
-                ) : 'Generate My Website'}
+                ) : `Generate My ${industry.label} Website`}
               </button>
             </div>
           </div>
         )}
 
-        {/* STEP 4 — Result */}
-        {step === 4 && result && (
+        {/* ── STEP 5 — Done ────────────────────────────────────────────── */}
+        {step === 5 && result && (
           <div className="space-y-6">
             {/* First draft notice */}
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 flex gap-4">
@@ -323,8 +596,7 @@ export default function WebsiteBuilder({ businessId, onGenerated }: {
               <div>
                 <p className="text-sm font-semibold text-amber-800 mb-1">This is your first draft</p>
                 <p className="text-sm text-amber-700 leading-relaxed">
-                  Your website has been generated and deployed. It should look great, but nothing is ever perfect on the first try.
-                  If you&apos;d like changes — copy, layout, colors, sections — just let us know and we&apos;ll update it personally.
+                  Your website has been generated and deployed. Use the AI editor to refine copy, change colors, add sections — anything you need.
                 </p>
               </div>
             </div>
@@ -341,7 +613,7 @@ export default function WebsiteBuilder({ businessId, onGenerated }: {
                     Visit Site
                   </a>
                   <button
-                    onClick={() => navigator.clipboard.writeText(result.url)}
+                    onClick={() => void navigator.clipboard.writeText(result.url)}
                     className="px-4 py-2 border border-slate-200 text-slate-600 text-xs font-medium rounded-lg hover:bg-slate-50 transition-colors"
                   >
                     Copy Link
@@ -373,11 +645,8 @@ export default function WebsiteBuilder({ businessId, onGenerated }: {
               </div>
             )}
 
-            {/* Request changes */}
-            <RequestChanges />
-
             <button
-              onClick={() => { setStep(2); setResult(null); }}
+              onClick={() => { setStep(3); setResult(null); }}
               className="w-full py-3 border border-slate-200 text-slate-600 font-medium rounded-xl text-sm hover:bg-slate-50 transition-colors"
             >
               Regenerate with different settings
@@ -402,55 +671,6 @@ function Field({ label, value, onChange, placeholder, type = 'text' }: {
         placeholder={placeholder}
         className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
       />
-    </div>
-  );
-}
-
-function RequestChanges() {
-  const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState('');
-  const [sent, setSent] = useState(false);
-
-  if (sent) {
-    return (
-      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 text-center">
-        <p className="text-sm font-semibold text-emerald-700">Request received!</p>
-        <p className="text-xs text-emerald-600 mt-1">We&apos;ll update your site and let you know when it&apos;s ready.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-white border border-slate-200 rounded-xl p-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-semibold text-slate-800">Want changes?</p>
-          <p className="text-xs text-slate-500 mt-0.5">Tell us what to fix — we&apos;ll update it personally.</p>
-        </div>
-        <button
-          onClick={() => setOpen(!open)}
-          className="px-4 py-2 border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-50 transition-colors"
-        >
-          {open ? 'Cancel' : 'Request Changes'}
-        </button>
-      </div>
-      {open && (
-        <div className="mt-4">
-          <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="e.g. Change the font to something more rustic, add our Instagram link, update the hero text to say 'Authentic Neapolitan Pizza since 1987'..."
-            rows={4}
-            className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none"
-          />
-          <button
-            onClick={() => { if (message.trim()) setSent(true); }}
-            className="mt-3 w-full py-2.5 bg-violet-600 text-white font-semibold rounded-xl text-sm hover:bg-violet-700 transition-colors"
-          >
-            Send Request
-          </button>
-        </div>
-      )}
     </div>
   );
 }

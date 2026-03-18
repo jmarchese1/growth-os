@@ -38,6 +38,7 @@ export async function websiteRoutes(app: FastifyInstance) {
       fontPairing: FontPairing;
       existingWebsiteUrl?: string;
       chatbotEnabled?: boolean;
+      industryType?: string;
     };
   }>('/generate', async (req, reply) => {
     const body = req.body;
@@ -68,7 +69,7 @@ export async function websiteRoutes(app: FastifyInstance) {
       testimonials: [] as Array<{ quote: string; author: string; detail: string }>,
     };
     if (env.ANTHROPIC_API_KEY) {
-      copy = await generateWebsiteCopy({ ...merged, businessName: body.businessName }, env.ANTHROPIC_API_KEY);
+      copy = await generateWebsiteCopy({ ...merged, businessName: body.businessName, ...(body.industryType ? { industryType: body.industryType } : {}) }, env.ANTHROPIC_API_KEY);
     }
 
     const s = scraped as Record<string, unknown>;
