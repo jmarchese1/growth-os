@@ -4,6 +4,7 @@ import { createLogger, isEmbedoError } from '@embedo/utils';
 import { env } from './config.js';
 import { startWorkers } from './workers/website.worker.js';
 import { websiteRoutes } from './routes.js';
+import { initKnowledgeBase } from './training/knowledge-base.js';
 
 const log = createLogger('website-gen');
 
@@ -26,6 +27,12 @@ async function start() {
 
   await app.listen({ port: env.PORT, host: '0.0.0.0' });
   log.info({ port: env.PORT }, 'Website gen service started');
+
+  // Non-blocking: scrapes curated training sites in background, caches style insights in memory.
+  // Static insights are always available; dynamic insights enrich responses as they arrive.
+  if (env.ANTHROPIC_API_KEY) {
+    initKnowledgeBase(env.ANTHROPIC_API_KEY);
+  }
 }
 
 start().catch((err) => {

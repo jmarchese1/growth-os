@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, type ChangeEvent } from 'react';
+import React, { useState, useCallback, type ChangeEvent } from 'react';
 
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 
@@ -400,6 +400,30 @@ export default function WebsiteBuilder({
 
   return (
     <div className="min-h-screen p-8 animate-fade-up">
+
+      {/* ── Generating overlay ── */}
+      {generating && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6"
+          style={{ background: 'rgba(10,8,20,0.88)', backdropFilter: 'blur(10px)' }}
+        >
+          <EmbedoCube size={64} />
+          <div className="text-center">
+            <p className="text-white text-xl font-semibold mb-2">Building your website...</p>
+            <p className="text-violet-300/70 text-sm">AI is crafting copy, sections, and style. About 30 seconds.</p>
+          </div>
+          <div className="flex gap-1.5 mt-2">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="w-1.5 h-1.5 rounded-full bg-violet-400"
+                style={{ animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite` }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Steps header */}
       <div className="max-w-3xl mx-auto mb-10">
         <div className="flex items-center gap-0">
@@ -874,6 +898,30 @@ export default function WebsiteBuilder({
         )}
       </div>
     </div>
+  );
+}
+
+// ── Embedo Cube Loading Animation ─────────────────────────────────────────────
+function EmbedoCube({ size = 48 }: { size?: number }) {
+  const h = size / 2;
+  const face = (transform: string, bg: string): React.CSSProperties => ({
+    position: 'absolute', width: size, height: size,
+    background: bg, border: '1px solid rgba(196,181,253,0.15)', transform,
+  });
+  return (
+    <>
+      <style>{`@keyframes embedo-cube-spin{from{transform:rotateX(-22deg) rotateY(0deg)}to{transform:rotateX(-22deg) rotateY(360deg)}}`}</style>
+      <div style={{ width: size, height: size, perspective: size * 4, display: 'inline-block' }}>
+        <div style={{ width: size, height: size, position: 'relative', transformStyle: 'preserve-3d', animation: 'embedo-cube-spin 1.8s linear infinite' }}>
+          <div style={face(`translateZ(${h}px)`,          'rgba(124,58,237,0.95)')} />
+          <div style={face(`rotateY(180deg) translateZ(${h}px)`, 'rgba(91,33,182,0.95)')} />
+          <div style={face(`rotateY(90deg) translateZ(${h}px)`,  'rgba(109,40,217,0.9)')} />
+          <div style={face(`rotateY(-90deg) translateZ(${h}px)`, 'rgba(109,40,217,0.9)')} />
+          <div style={face(`rotateX(90deg) translateZ(${h}px)`,  'rgba(167,139,250,0.95)')} />
+          <div style={face(`rotateX(-90deg) translateZ(${h}px)`, 'rgba(76,29,149,0.95)')} />
+        </div>
+      </div>
+    </>
   );
 }
 

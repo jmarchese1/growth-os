@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { db } from '@embedo/db';
 import { NotFoundError, ValidationError } from '@embedo/utils';
 import { scrapeWebsite, scrapeForInspiration } from './scraper/scrape.js';
+import { getInsightsForIndustry } from './training/knowledge-base.js';
 import { generateWebsiteCopy } from './generator/content.js';
 import { renderRestaurantPremium } from './templates/restaurant/premium.js';
 import { deployToVercel } from './deploy/vercel.js';
@@ -58,14 +59,20 @@ export async function websiteRoutes(app: FastifyInstance) {
     // Merge scraped data with user-provided data (user inputs take precedence)
     const merged = { ...scraped, ...body };
 
-    // Scrape inspiration sites in parallel (fire-and-forget style, no error if they fail)
-    let inspirationStyleNotes: string | undefined;
+    // Build inspiration context: training KB (always present) + user inspiration sites
+    const trainingInsights = getInsightsForIndustry(body.industryType);
+    let inspirationStyleNotes: string = trainingInsights;
+
     if (body.inspirationUrls?.length && env.ANTHROPIC_API_KEY) {
-      const notes = await Promise.all(
+      const userNotes = await Promise.all(
         body.inspirationUrls.filter(Boolean).slice(0, 3).map((u) => scrapeForInspiration(u, env.ANTHROPIC_API_KEY!))
       );
-      const joined = notes.filter(Boolean).join('\n\n');
-      if (joined) inspirationStyleNotes = joined;
+      const joined = userNotes.filter(Boolean).join('\n\n');
+      if (joined) {
+        inspirationStyleNotes = trainingInsights
+          ? `${trainingInsights}\n\n---\n\n## User-Provided Reference Sites\n${joined}`
+          : joined;
+      }
     }
 
     // Generate AI copy
@@ -88,6 +95,7 @@ export async function websiteRoutes(app: FastifyInstance) {
         ...(body.industryType ? { industryType: body.industryType } : {}),
         ...(inspirationStyleNotes ? { inspirationStyleNotes } : {}),
       }, env.ANTHROPIC_API_KEY);
+
     }
 
     const s = scraped as Record<string, unknown>;
