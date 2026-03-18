@@ -41,7 +41,10 @@ interface FormData {
   menuItems: Array<{ name: string; description: string; price: string; category: string }>;
 }
 
-export default function WebsiteBuilder({ businessId }: { businessId: string }) {
+export default function WebsiteBuilder({ businessId, onGenerated }: {
+  businessId: string;
+  onGenerated?: (result: { websiteId: string; html: string; url: string }) => void;
+}) {
   const [step, setStep] = useState(1);
   const [scraping, setScraping] = useState(false);
   const [scraped, setScraped] = useState(false);
@@ -114,8 +117,10 @@ export default function WebsiteBuilder({ businessId }: { businessId: string }) {
       });
       const json = await res.json() as { success: boolean; url?: string; html?: string; websiteId?: string; error?: string };
       if (!json.success) throw new Error(json.error ?? 'Generation failed');
-      setResult({ url: json.url ?? '', html: json.html ?? '', websiteId: json.websiteId ?? '' });
+      const r = { url: json.url ?? '', html: json.html ?? '', websiteId: json.websiteId ?? '' };
+      setResult(r);
       setStep(4);
+      onGenerated?.(r);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong');
     }

@@ -94,7 +94,7 @@ export async function websiteRoutes(app: FastifyInstance) {
     };
     const html = renderRestaurantPremium(premiumConfig as unknown as import('./templates/restaurant/premium.js').PremiumWebsiteConfig);
 
-    // Create or update GeneratedWebsite record
+    // Create or update GeneratedWebsite record — save full premiumConfig so AI copy is persisted
     const existing = await db.generatedWebsite.findFirst({ where: { businessId: body.businessId } });
     const slug = `embedo-${body.businessName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 30)}-${body.businessId.slice(-6)}`;
 
@@ -104,14 +104,14 @@ export async function websiteRoutes(app: FastifyInstance) {
         data: {
           businessId: body.businessId,
           template: 'restaurant-premium',
-          config: body as object,
+          config: premiumConfig as unknown as object,
           status: 'GENERATING',
         },
       });
     } else {
       websiteRecord = await db.generatedWebsite.update({
         where: { id: existing!.id },
-        data: { status: 'GENERATING', config: body as object },
+        data: { status: 'GENERATING', config: premiumConfig as unknown as object },
       });
     }
 
@@ -146,6 +146,81 @@ export async function websiteRoutes(app: FastifyInstance) {
       url: deployedUrl,
       html, // Always return HTML for preview iframe
     });
+  });
+
+  // POST /websites/:websiteId/edit — AI chat to modify an existing website
+  app.post<{ Params: { websiteId: string }; Body: { message: string } }>('/websites/:websiteId/edit', async (req, reply) => {
+    const { websiteId } = req.params;
+    const { message } = req.body;
+
+    if (!message?.trim()) {
+      return reply.code(400).send({ success: false, error: 'message is required' });
+    }
+
+    const website = await db.generatedWebsite.findUnique({ where: { id: websiteId } });
+    if (!website) throw new NotFoundError('GeneratedWebsite', websiteId);
+
+    if (!env.ANTHROPIC_API_KEY) {
+      return reply.code(400).send({ success: false, error: 'AI editing requires ANTHROPIC_API_KEY' });
+    }
+
+    const currentConfig = website.config as Record<string, unknown>;
+
+    const Anthropic = (await import('@anthropic-ai/sdk')).default;
+    const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+
+    const response = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 2048,
+      system: `You are a website configuration editor. Given the current website config JSON and a user request, return ONLY a valid JSON object containing ONLY the fields that need to change. Do not include unchanged fields. No explanation, no markdown — pure JSON only.
+
+Editable fields:
+- businessName, tagline, description, cuisine, phone, address, city
+- hours: Record<string, string> e.g. {"Monday":"11am–10pm","Tuesday":"Closed"}
+- heroImage (URL string), bookingUrl (URL string)
+- colorScheme: "midnight" | "warm" | "forest" | "ocean" | "ivory" | "rose"
+- fontPairing: "modern" | "classic" | "minimal" | "elegant"
+- heroHeading, heroSubheading, aboutHeading, aboutBody, ctaText
+- menuItems: Array<{name,description?,price?,category?}>`,
+      messages: [{
+        role: 'user',
+        content: `Current config:\n${JSON.stringify(currentConfig, null, 2)}\n\nUser request: "${message}"\n\nReturn ONLY the changed fields as JSON.`,
+      }],
+    });
+
+    let patch: Record<string, unknown> = {};
+    try {
+      const raw = (response.content[0] as { type: string; text: string }).text.trim();
+      const jsonText = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+      patch = JSON.parse(jsonText) as Record<string, unknown>;
+    } catch {
+      return reply.code(422).send({ success: false, error: 'Could not parse AI response. Try rephrasing your request.' });
+    }
+
+    const updatedConfig = { ...currentConfig, ...patch };
+    const html = renderRestaurantPremium(updatedConfig as unknown as import('./templates/restaurant/premium.js').PremiumWebsiteConfig);
+
+    let deployedUrl = website.deployUrl ?? '';
+    let deploymentId = website.vercelDeploymentId ?? '';
+
+    if (env.VERCEL_API_TOKEN) {
+      const bName = String(updatedConfig.businessName ?? 'site');
+      const slug = `embedo-${bName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 30)}-${website.businessId.slice(-6)}`;
+      const deployed = await deployToVercel({ projectName: slug, html, businessId: website.businessId });
+      deployedUrl = deployed.url;
+      deploymentId = deployed.deploymentId;
+    }
+
+    await db.generatedWebsite.update({
+      where: { id: websiteId },
+      data: {
+        config: updatedConfig as object,
+        deployUrl: deployedUrl || null,
+        vercelDeploymentId: deploymentId || null,
+      },
+    });
+
+    return reply.send({ success: true, html, url: deployedUrl });
   });
 
   // GET /websites/:businessId — get current website for a business

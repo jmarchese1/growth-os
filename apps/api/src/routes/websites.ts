@@ -25,6 +25,17 @@ export async function websiteRoutes(app: FastifyInstance) {
     return reply.code(res.status).send(data);
   });
 
+  // Proxy AI edit
+  app.post<{ Params: { websiteId: string } }>('/websites/:websiteId/edit', async (req, reply) => {
+    const res = await fetch(`${WEBSITE_GEN_URL}/websites/${req.params.websiteId}/edit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body),
+    });
+    const data = await res.json();
+    return reply.code(res.status).send(data);
+  });
+
   // Proxy get current website for a business
   app.get<{ Params: { businessId: string } }>('/websites/:businessId', async (req, reply) => {
     const res = await fetch(`${WEBSITE_GEN_URL}/websites/${req.params.businessId}`);
