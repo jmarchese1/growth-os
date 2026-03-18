@@ -94,26 +94,17 @@ export async function websiteRoutes(app: FastifyInstance) {
     };
     const html = renderRestaurantPremium(premiumConfig as unknown as import('./templates/restaurant/premium.js').PremiumWebsiteConfig);
 
-    // Create or update GeneratedWebsite record — save full premiumConfig so AI copy is persisted
-    const existing = await db.generatedWebsite.findFirst({ where: { businessId: body.businessId } });
+    // Always create a new GeneratedWebsite record — users manage multiple sites from the list view
     const slug = `embedo-${body.businessName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 30)}-${body.businessId.slice(-6)}`;
 
-    let websiteRecord = existing;
-    if (!websiteRecord) {
-      websiteRecord = await db.generatedWebsite.create({
-        data: {
-          businessId: body.businessId,
-          template: 'restaurant-premium',
-          config: premiumConfig as unknown as object,
-          status: 'GENERATING',
-        },
-      });
-    } else {
-      websiteRecord = await db.generatedWebsite.update({
-        where: { id: existing!.id },
-        data: { status: 'GENERATING', config: premiumConfig as unknown as object },
-      });
-    }
+    let websiteRecord = await db.generatedWebsite.create({
+      data: {
+        businessId: body.businessId,
+        template: 'restaurant-premium',
+        config: premiumConfig as unknown as object,
+        status: 'GENERATING',
+      },
+    });
 
     // Deploy to Vercel
     let deployedUrl = '';

@@ -119,7 +119,7 @@ export async function businessRoutes(app: FastifyInstance): Promise<void> {
     return { items, total, page: parseInt(page), pageSize: parseInt(pageSize) };
   });
 
-  // GET /businesses/:id/website — latest generated website
+  // GET /businesses/:id/website — latest generated website (kept for backward compat)
   app.get('/businesses/:id/website', async (request) => {
     const { id } = request.params as { id: string };
     const website = await db.generatedWebsite.findFirst({
@@ -128,6 +128,17 @@ export async function businessRoutes(app: FastifyInstance): Promise<void> {
       select: { id: true, deployUrl: true, vercelProjectId: true, status: true, updatedAt: true, config: true },
     });
     return { success: true, website };
+  });
+
+  // GET /businesses/:id/websites — all generated websites for this business
+  app.get('/businesses/:id/websites', async (request) => {
+    const { id } = request.params as { id: string };
+    const websites = await db.generatedWebsite.findMany({
+      where: { businessId: id },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, deployUrl: true, status: true, createdAt: true, updatedAt: true, config: true },
+    });
+    return { success: true, websites };
   });
 
   // GET /businesses/:id/dashboard — summary stats + recent activity
