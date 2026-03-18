@@ -141,6 +141,16 @@ export async function businessRoutes(app: FastifyInstance): Promise<void> {
     return { success: true, websites };
   });
 
+  // DELETE /businesses/:id/websites/:websiteId — delete a generated website
+  app.delete('/businesses/:id/websites/:websiteId', async (request) => {
+    const { id, websiteId } = request.params as { id: string; websiteId: string };
+    const website = await db.generatedWebsite.findUnique({ where: { id: websiteId } });
+    if (!website) throw new NotFoundError('GeneratedWebsite', websiteId);
+    if (website.businessId !== id) throw new NotFoundError('GeneratedWebsite', websiteId);
+    await db.generatedWebsite.delete({ where: { id: websiteId } });
+    return { success: true };
+  });
+
   // GET /businesses/:id/dashboard — summary stats + recent activity
   app.get('/businesses/:id/dashboard', async (request) => {
     const { id } = request.params as { id: string };

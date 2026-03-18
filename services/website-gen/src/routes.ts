@@ -62,6 +62,10 @@ export async function websiteRoutes(app: FastifyInstance) {
       aboutBody: body.description ?? '',
       ctaText: 'Reserve a Table',
       tagline: body.tagline ?? '',
+      suggestedHours: {} as Record<string, string>,
+      suggestedMenuItems: [] as Array<{ name: string; description: string; price: string; category: string }>,
+      features: [] as Array<{ title: string; description: string }>,
+      testimonials: [] as Array<{ quote: string; author: string; detail: string }>,
     };
     if (env.ANTHROPIC_API_KEY) {
       copy = await generateWebsiteCopy({ ...merged, businessName: body.businessName }, env.ANTHROPIC_API_KEY);
@@ -69,16 +73,21 @@ export async function websiteRoutes(app: FastifyInstance) {
 
     const s = scraped as Record<string, unknown>;
     // Render HTML — cast via unknown to satisfy exactOptionalPropertyTypes
+    // Use user-provided data first, then scraped data, then AI-generated fallbacks
     const premiumConfig = {
       businessName: body.businessName,
-      tagline: body.tagline ?? s['tagline'],
+      tagline: body.tagline ?? s['tagline'] ?? copy.tagline,
       description: body.description ?? s['description'],
       cuisine: body.cuisine ?? s['cuisine'],
       phone: body.phone ?? s['phone'],
       address: body.address ?? s['address'],
       city: body.city ?? s['city'],
-      hours: body.hours ?? s['hours'],
-      menuItems: body.menuItems ?? s['menuItems'],
+      hours: (body.hours && Object.keys(body.hours).length > 0)
+        ? body.hours
+        : (s['hours'] as Record<string, string> | undefined) ?? copy.suggestedHours,
+      menuItems: (body.menuItems && body.menuItems.length > 0)
+        ? body.menuItems
+        : (s['menuItems'] as typeof body.menuItems | undefined) ?? copy.suggestedMenuItems,
       galleryImages: body.galleryImages ?? s['imageUrls'],
       heroImage: body.heroImage,
       bookingUrl: body.bookingUrl ?? s['bookingUrl'],
@@ -89,6 +98,8 @@ export async function websiteRoutes(app: FastifyInstance) {
       aboutHeading: copy.aboutHeading,
       aboutBody: copy.aboutBody,
       ctaText: copy.ctaText,
+      features: copy.features,
+      testimonials: copy.testimonials,
       chatbotEnabled: body.chatbotEnabled ?? false,
       chatbotBusinessId: body.businessId,
     };

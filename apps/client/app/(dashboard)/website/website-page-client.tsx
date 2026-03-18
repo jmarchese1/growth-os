@@ -38,11 +38,15 @@ function WebsiteList({
   sites,
   onSelect,
   onBuildNew,
+  onDelete,
 }: {
   sites: WebsiteRecord[];
   onSelect: (site: WebsiteRecord) => void;
   onBuildNew: () => void;
+  onDelete: (site: WebsiteRecord) => void;
 }) {
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+
   return (
     <div className="p-8 animate-fade-up">
       <div className="flex items-start justify-between mb-8">
@@ -133,7 +137,41 @@ function WebsiteList({
                   <td className="px-4 py-4 text-xs text-slate-500">{formatDate(site.createdAt)}</td>
                   <td className="px-4 py-4 text-xs text-slate-500">{formatDate(site.updatedAt)}</td>
                   <td className="px-4 py-4">
-                    <span className="text-xs text-violet-600 font-medium">Edit →</span>
+                    <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => onSelect(site)}
+                        className="text-xs text-violet-600 font-medium hover:text-violet-800 transition-colors"
+                      >
+                        Edit →
+                      </button>
+                      {confirmId === site.id ? (
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => { onDelete(site); setConfirmId(null); }}
+                            className="text-[11px] font-semibold text-rose-600 hover:text-rose-800 transition-colors"
+                          >
+                            Confirm
+                          </button>
+                          <span className="text-slate-300">·</span>
+                          <button
+                            onClick={() => setConfirmId(null)}
+                            className="text-[11px] text-slate-500 hover:text-slate-700 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmId(site.id)}
+                          className="text-[11px] text-slate-400 hover:text-rose-500 transition-colors"
+                          title="Delete website"
+                        >
+                          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -150,16 +188,19 @@ function WebsiteEditor({
   site,
   initialHtml,
   onBack,
+  businessId,
 }: {
   site: WebsiteRecord;
   initialHtml: string;
   onBack: () => void;
+  businessId: string;
 }) {
   const [html, setHtml] = useState(initialHtml);
   const [deployUrl, setDeployUrl] = useState(site.deployUrl ?? '');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [editing, setEditing] = useState(false);
+  const [mobilePreview, setMobilePreview] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -197,6 +238,16 @@ function WebsiteEditor({
     }
   }
 
+  async function handleDelete() {
+    if (!confirm(`Delete "${siteName(site)}"? This cannot be undone.`)) return;
+    try {
+      await fetch(`${API_URL}/businesses/${businessId}/websites/${site.id}`, { method: 'DELETE' });
+    } catch {
+      // best effort
+    }
+    onBack();
+  }
+
   return (
     <div className="flex flex-col" style={{ height: 'calc(100vh - 64px)' }}>
       {/* Top bar */}
@@ -213,7 +264,29 @@ function WebsiteEditor({
         <span className="text-slate-300">/</span>
         <span className="text-sm font-medium text-slate-800">{siteName(site)}</span>
 
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex items-center gap-3 ml-auto">
+          {/* Mobile / Desktop toggle */}
+          <div className="flex items-center gap-0.5 bg-slate-100 rounded-lg p-0.5">
+            <button
+              onClick={() => setMobilePreview(false)}
+              title="Desktop preview"
+              className={`p-1.5 rounded-md transition-colors ${!mobilePreview ? 'bg-white shadow-sm text-slate-700' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 011 1v7a1 1 0 01-1 1H4a1 1 0 01-1-1V5zm14 9H3a1 1 0 000 2h14a1 1 0 000-2z" clipRule="evenodd" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setMobilePreview(true)}
+              title="Mobile preview"
+              className={`p-1.5 rounded-md transition-colors ${mobilePreview ? 'bg-white shadow-sm text-slate-700' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                <path fillRule="evenodd" d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7zm3 14a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+
           {site.status === 'LIVE' && (
             <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-200 rounded-full">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -227,20 +300,29 @@ function WebsiteEditor({
               rel="noopener noreferrer"
               className="flex items-center gap-1 text-xs text-violet-600 hover:text-violet-800 transition-colors"
             >
-              <span className="truncate max-w-[220px]">{deployUrl.replace(/^https?:\/\//, '')}</span>
+              <span className="truncate max-w-[200px]">{deployUrl.replace(/^https?:\/\//, '')}</span>
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 flex-shrink-0">
                 <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
                 <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
               </svg>
             </a>
           )}
+          <button
+            onClick={() => void handleDelete()}
+            title="Delete website"
+            className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+          </button>
         </div>
       </div>
 
       {/* Split panel */}
       <div className="flex flex-1 overflow-hidden">
         {/* Preview */}
-        <div className="flex-1 flex flex-col overflow-hidden border-r border-slate-200">
+        <div className="flex-1 flex flex-col overflow-hidden border-r border-slate-200 bg-slate-100">
           <div className="bg-slate-100 border-b border-slate-200 px-4 py-2 flex items-center gap-3 flex-shrink-0">
             <div className="flex gap-1.5">
               <div className="w-2.5 h-2.5 rounded-full bg-rose-400" />
@@ -251,12 +333,18 @@ function WebsiteEditor({
               {deployUrl ? deployUrl.replace(/^https?:\/\//, '') : 'local preview'}
             </div>
           </div>
-          <iframe
-            srcDoc={html}
-            title="Website Preview"
-            className="flex-1 w-full border-0"
-            sandbox="allow-same-origin allow-scripts"
-          />
+          <div className={`flex-1 overflow-auto flex ${mobilePreview ? 'items-start justify-center py-6' : ''}`}>
+            <iframe
+              srcDoc={html}
+              title="Website Preview"
+              className="border-0 bg-white"
+              style={mobilePreview
+                ? { width: '375px', height: '812px', flexShrink: 0, borderRadius: '20px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }
+                : { width: '100%', height: '100%' }
+              }
+              sandbox="allow-same-origin allow-scripts"
+            />
+          </div>
         </div>
 
         {/* Chat */}
@@ -364,7 +452,6 @@ export default function WebsitePageClient({ businessId }: { businessId: string }
   useEffect(() => { void loadList(); }, [loadList]);
 
   async function handleSelectSite(site: WebsiteRecord) {
-    // Fetch preview HTML then open editor
     try {
       const res = await fetch(`${API_URL}/websites/preview/${site.id}`);
       const html = res.ok ? await res.text() : '';
@@ -374,8 +461,16 @@ export default function WebsitePageClient({ businessId }: { businessId: string }
     }
   }
 
+  async function handleDelete(site: WebsiteRecord) {
+    try {
+      await fetch(`${API_URL}/businesses/${businessId}/websites/${site.id}`, { method: 'DELETE' });
+    } catch {
+      // best effort
+    }
+    void loadList();
+  }
+
   function handleGenerated(result: { websiteId: string; html: string; url: string }) {
-    // After wizard completes, go directly into the editor for the new site
     const newSite: WebsiteRecord = {
       id: result.websiteId,
       deployUrl: result.url || null,
@@ -404,6 +499,7 @@ export default function WebsitePageClient({ businessId }: { businessId: string }
       <WebsiteEditor
         site={view.site}
         initialHtml={view.html}
+        businessId={businessId}
         onBack={() => { void loadList(); }}
       />
     );
@@ -415,6 +511,7 @@ export default function WebsitePageClient({ businessId }: { businessId: string }
       sites={view.sites}
       onSelect={(site) => { void handleSelectSite(site); }}
       onBuildNew={() => setView({ mode: 'builder' })}
+      onDelete={(site) => { void handleDelete(site); }}
     />
   );
 }
