@@ -42,6 +42,7 @@ interface QrScan {
 interface DashboardData {
   newContactsThisWeek: number;
   newContactsThisMonth: number;
+  contactsByStatus: { leads: number; prospects: number; customers: number };
   upcomingAppointments: Appointment[];
   recentActivities: Activity[];
   recentSurveyResponses: SurveyResponse[];
@@ -197,6 +198,80 @@ export default function DashboardOverview() {
               icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>} />
             <KpiCard label="Chat Conversations" value={counts.chatSessions} color="sky"
               icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7z" clipRule="evenodd" /></svg>} />
+          </div>
+
+          {/* Conversion Funnel + Quick Actions */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+            {/* Funnel */}
+            <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-5">
+              <h2 className="text-sm font-semibold text-slate-700 mb-4">Contact Pipeline</h2>
+              {(() => {
+                const leads = dashboard?.contactsByStatus.leads ?? 0;
+                const prospects = dashboard?.contactsByStatus.prospects ?? 0;
+                const customers = dashboard?.contactsByStatus.customers ?? 0;
+                const total = leads + prospects + customers || 1;
+                const stages = [
+                  { label: 'Leads', value: leads, color: 'bg-amber-400', text: 'text-amber-700', bg: 'bg-amber-50' },
+                  { label: 'Prospects', value: prospects, color: 'bg-violet-400', text: 'text-violet-700', bg: 'bg-violet-50' },
+                  { label: 'Customers', value: customers, color: 'bg-emerald-400', text: 'text-emerald-700', bg: 'bg-emerald-50' },
+                ];
+                return (
+                  <div className="space-y-3">
+                    {stages.map((s) => (
+                      <div key={s.label}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs text-slate-500">{s.label}</span>
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${s.bg} ${s.text}`}>{s.value}</span>
+                        </div>
+                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${s.color} rounded-full transition-all duration-500`}
+                            style={{ width: `${Math.round((s.value / total) * 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                    <div className="flex items-center gap-1.5 pt-1">
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-slate-400">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-[11px] text-slate-400">{leads + prospects + customers} total contacts across all stages</span>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Quick Actions */}
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <h2 className="text-sm font-semibold text-slate-700 mb-4">Quick Actions</h2>
+              <div className="space-y-2">
+                <Link href="/campaigns" className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm text-slate-700 hover:bg-violet-50 hover:border-violet-200 hover:text-violet-700 transition-colors group">
+                  <span className="w-7 h-7 rounded-lg bg-violet-100 text-violet-600 flex items-center justify-center flex-shrink-0 group-hover:bg-violet-200 transition-colors">
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg>
+                  </span>
+                  <span>New Campaign</span>
+                </Link>
+                <Link href="/customers" className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm text-slate-700 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 transition-colors group">
+                  <span className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-200 transition-colors">
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" /></svg>
+                  </span>
+                  <span>View Contacts</span>
+                </Link>
+                <Link href="/surveys" className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm text-slate-700 hover:bg-sky-50 hover:border-sky-200 hover:text-sky-700 transition-colors group">
+                  <span className="w-7 h-7 rounded-lg bg-sky-100 text-sky-600 flex items-center justify-center flex-shrink-0 group-hover:bg-sky-200 transition-colors">
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" /><path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5z" clipRule="evenodd" /></svg>
+                  </span>
+                  <span>Send Survey</span>
+                </Link>
+                <Link href="/website" className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm text-slate-700 hover:bg-amber-50 hover:border-amber-200 hover:text-amber-700 transition-colors group">
+                  <span className="w-7 h-7 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0 group-hover:bg-amber-200 transition-colors">
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.498-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C4.772 13.97 4.478 12.546 4.39 11H2.443a6.004 6.004 0 002.783 4.118z" clipRule="evenodd" /></svg>
+                  </span>
+                  <span>View Website</span>
+                </Link>
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">

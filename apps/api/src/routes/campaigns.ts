@@ -76,11 +76,56 @@ export async function campaignRoutes(app: FastifyInstance): Promise<void> {
   });
 
   /**
+   * PATCH /campaigns/:id
+   * Update a draft campaign's name, subject, or body.
+   */
+  app.patch<{ Params: { id: string } }>('/campaigns/:id', async (request, reply) => {
+    const { id } = request.params;
+    const campaign = await db.campaign.findUnique({ where: { id } });
+    if (!campaign) throw new NotFoundError('Campaign', id);
+    if (campaign.status === 'SENT') return reply.code(400).send({ success: false, error: 'Cannot edit a sent campaign' });
+
+    const body = request.body as { name?: string; subject?: string; body?: string };
+    const updated = await db.campaign.update({
+      where: { id },
+      data: {
+        ...(body.name?.trim() ? { name: body.name.trim() } : {}),
+        ...(body.subject !== undefined ? { subject: body.subject.trim() || null } : {}),
+        ...(body.body?.trim() ? { body: body.body.trim() } : {}),
+      },
+    });
+    log.info({ campaignId: id }, 'Campaign updated');
+    return { success: true, campaign: updated };
+  });
+
+  /**
+   * GET /campaigns/:id/recipients
+   * Preview how many contacts would receive this campaign with optional filters.
+   */
+  app.get<{ Params: { id: string } }>('/campaigns/:id/recipients', async (request) => {
+    const { id } = request.params;
+    const { statusFilter, sourceFilter } = request.query as { statusFilter?: string; sourceFilter?: string };
+    const campaign = await db.campaign.findUnique({ where: { id }, select: { businessId: true, type: true } });
+    if (!campaign) throw new NotFoundError('Campaign', id);
+
+    const where = {
+      businessId: campaign.businessId,
+      ...(campaign.type === 'EMAIL' ? { email: { not: null } } : { phone: { not: null } }),
+      ...(statusFilter ? { status: statusFilter as 'LEAD' | 'PROSPECT' | 'CUSTOMER' | 'CHURNED' } : {}),
+      ...(sourceFilter ? { source: sourceFilter as 'VOICE' | 'CHATBOT' | 'SURVEY' | 'SOCIAL' | 'WEBSITE' | 'MANUAL' | 'CALENDLY' | 'OUTBOUND' | 'QR_CODE' } : {}),
+    };
+    const count = await db.contact.count({ where });
+    return { success: true, count };
+  });
+
+  /**
    * POST /campaigns/:id/send
-   * Send a campaign to all eligible contacts (EMAIL → SendGrid, SMS → Twilio).
+   * Send a campaign to eligible contacts (EMAIL → SendGrid, SMS → Twilio).
+   * Optional filters: statusFilter, sourceFilter
    */
   app.post<{ Params: { id: string } }>('/campaigns/:id/send', async (request, reply) => {
     const { id } = request.params;
+    const { statusFilter, sourceFilter } = request.body as { statusFilter?: string; sourceFilter?: string } ?? {};
 
     const campaign = await db.campaign.findUnique({
       where: { id },
@@ -91,13 +136,19 @@ export async function campaignRoutes(app: FastifyInstance): Promise<void> {
       return reply.code(400).send({ success: false, error: 'Campaign has already been sent' });
     }
 
+    const baseWhere = {
+      businessId: campaign.businessId,
+      ...(statusFilter ? { status: statusFilter as 'LEAD' | 'PROSPECT' | 'CUSTOMER' | 'CHURNED' } : {}),
+      ...(sourceFilter ? { source: sourceFilter as 'VOICE' | 'CHATBOT' | 'SURVEY' | 'SOCIAL' | 'WEBSITE' | 'MANUAL' | 'CALENDLY' | 'OUTBOUND' | 'QR_CODE' } : {}),
+    };
+
     if (campaign.type === 'EMAIL') {
       const sgKey = process.env['SENDGRID_API_KEY'];
       const fromEmail = process.env['SENDGRID_FROM_EMAIL'] ?? 'jason@embedo.io';
       if (!sgKey) return reply.code(500).send({ success: false, error: 'Email sending not configured' });
 
       const contacts = await db.contact.findMany({
-        where: { businessId: campaign.businessId, email: { not: null } },
+        where: { ...baseWhere, email: { not: null } },
         select: { email: true, firstName: true },
       });
       if (contacts.length === 0) {
@@ -134,7 +185,7 @@ export async function campaignRoutes(app: FastifyInstance): Promise<void> {
       }
 
       const contacts = await db.contact.findMany({
-        where: { businessId: campaign.businessId, phone: { not: null } },
+        where: { ...baseWhere, phone: { not: null } },
         select: { phone: true },
       });
       if (contacts.length === 0) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import KpiCard from '../../../components/ui/kpi-card';
 import { useBusiness } from '../../../components/auth/business-provider';
@@ -126,6 +126,26 @@ function AddContactModal({ businessId, onDone, onClose }: { businessId: string; 
   );
 }
 
+const STATUS_FILTER_OPTIONS = [
+  { value: '', label: 'All statuses' },
+  { value: 'LEAD', label: 'Lead' },
+  { value: 'PROSPECT', label: 'Prospect' },
+  { value: 'CUSTOMER', label: 'Customer' },
+  { value: 'CHURNED', label: 'Churned' },
+];
+
+const SOURCE_FILTER_OPTIONS = [
+  { value: '', label: 'All sources' },
+  { value: 'VOICE', label: 'Phone Call' },
+  { value: 'CHATBOT', label: 'Chat Widget' },
+  { value: 'SURVEY', label: 'Survey' },
+  { value: 'SOCIAL', label: 'Social Media' },
+  { value: 'WEBSITE', label: 'Website Form' },
+  { value: 'MANUAL', label: 'Manual' },
+  { value: 'CALENDLY', label: 'Booking' },
+  { value: 'QR_CODE', label: 'QR Code' },
+];
+
 export default function CustomersPage() {
   const { business } = useBusiness();
   const router = useRouter();
@@ -134,9 +154,13 @@ export default function CustomersPage() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [sourceFilter, setSourceFilter] = useState('');
+  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pageSize = 20;
 
-  const fetchContacts = useCallback(async () => {
+  const fetchContacts = useCallback(async (searchVal: string, statusVal: string, sourceVal: string, pageVal: number) => {
     if (!business?.id) {
       setContacts([]);
       setTotal(0);
@@ -146,7 +170,10 @@ export default function CustomersPage() {
 
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+      const params = new URLSearchParams({ page: String(pageVal), pageSize: String(pageSize) });
+      if (searchVal) params.set('search', searchVal);
+      if (statusVal) params.set('status', statusVal);
+      if (sourceVal) params.set('source', sourceVal);
       const res = await fetch(`${API_BASE}/businesses/${business.id}/contacts?${params}`);
       if (res.ok) {
         const data: ContactsResponse = await res.json();
@@ -158,11 +185,26 @@ export default function CustomersPage() {
     } finally {
       setLoading(false);
     }
-  }, [business?.id, page]);
+  }, [business?.id]);
 
   useEffect(() => {
-    fetchContacts();
-  }, [fetchContacts]);
+    fetchContacts(search, statusFilter, sourceFilter, page);
+  }, [fetchContacts, statusFilter, sourceFilter, page]);
+
+  function handleSearchChange(val: string) {
+    setSearch(val);
+    setPage(1);
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(() => {
+      fetchContacts(val, statusFilter, sourceFilter, 1);
+    }, 350);
+  }
+
+  function handleFilterChange(type: 'status' | 'source', val: string) {
+    setPage(1);
+    if (type === 'status') { setStatusFilter(val); }
+    else { setSourceFilter(val); }
+  }
 
   // Compute source breakdown
   const sourceCounts: Record<string, number> = {};
@@ -195,7 +237,7 @@ export default function CustomersPage() {
       {showAdd && business && (
         <AddContactModal
           businessId={business.id}
-          onDone={fetchContacts}
+          onDone={() => { void fetchContacts(search, statusFilter, sourceFilter, page); }}
           onClose={() => setShowAdd(false)}
         />
       )}
@@ -266,11 +308,34 @@ export default function CustomersPage() {
       </div>
 
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-slate-700">All Customers</h2>
-          {total > 0 && (
-            <span className="text-xs text-slate-400">{total} total</span>
-          )}
+        <div className="flex items-center gap-3 mb-4 flex-wrap">
+          <div className="relative flex-1 min-w-[200px]">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+              <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
+            </svg>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              placeholder="Search name, email, or phone..."
+              className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300"
+            />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => handleFilterChange('status', e.target.value)}
+            className="px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 bg-white"
+          >
+            {STATUS_FILTER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+          <select
+            value={sourceFilter}
+            onChange={(e) => handleFilterChange('source', e.target.value)}
+            className="px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 bg-white"
+          >
+            {SOURCE_FILTER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+          <span className="text-xs text-slate-400 ml-auto">{total} result{total !== 1 ? 's' : ''}</span>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
           <table className="w-full">
@@ -338,7 +403,7 @@ export default function CustomersPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100">
               <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                onClick={() => setPage((p) => { const next = Math.max(1, p - 1); return next; })}
                 disabled={page <= 1}
                 className="px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >

@@ -191,6 +191,20 @@ function ProvisioningHero({ businessId, onProvisioned }: { businessId: string; o
   );
 }
 
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const DEFAULT_OPEN = '11:00';
+const DEFAULT_CLOSE = '22:00';
+
+type HoursMap = Record<string, { open: string; close: string } | null>;
+
+function buildInitialHours(saved: Record<string, { open: string; close: string }> | null): HoursMap {
+  const result: HoursMap = {};
+  for (const day of DAYS) {
+    result[day] = saved?.[day] ?? { open: DEFAULT_OPEN, close: DEFAULT_CLOSE };
+  }
+  return result;
+}
+
 /* ── Settings Panel ─────────────────────────────────────────────── */
 function SettingsPanel({ businessId, settings, onSaved }: {
   businessId: string;
@@ -200,12 +214,26 @@ function SettingsPanel({ businessId, settings, onSaved }: {
   const [persona, setPersona] = useState(settings.chatbotPersona ?? '');
   const [cuisine, setCuisine] = useState(settings.cuisine ?? '');
   const [maxParty, setMaxParty] = useState(settings.maxPartySize?.toString() ?? '');
+  const [hours, setHours] = useState<HoursMap>(() => buildInitialHours(settings.hours));
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  function setDayHours(day: string, field: 'open' | 'close', value: string) {
+    setHours((prev) => ({ ...prev, [day]: { ...(prev[day] ?? { open: DEFAULT_OPEN, close: DEFAULT_CLOSE }), [field]: value } }));
+  }
+
+  function toggleClosed(day: string) {
+    setHours((prev) => ({ ...prev, [day]: prev[day] === null ? { open: DEFAULT_OPEN, close: DEFAULT_CLOSE } : null }));
+  }
 
   async function handleSave() {
     setSaving(true);
     try {
+      // Serialize hours — omit closed days (null entries)
+      const hoursPayload: Record<string, { open: string; close: string }> = {};
+      for (const [day, val] of Object.entries(hours)) {
+        if (val !== null) hoursPayload[day] = val;
+      }
       await fetch(`${API_URL}/voice-agent/settings/${businessId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -213,6 +241,7 @@ function SettingsPanel({ businessId, settings, onSaved }: {
           chatbotPersona: persona || undefined,
           cuisine: cuisine || undefined,
           maxPartySize: maxParty ? parseInt(maxParty) : undefined,
+          hours: hoursPayload,
         }),
       });
       setSaved(true);
@@ -223,10 +252,14 @@ function SettingsPanel({ businessId, settings, onSaved }: {
     }
   }
 
+  const inputClass = 'w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300';
+
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-6">
-      <h3 className="text-sm font-semibold text-slate-700 mb-4">Agent Settings</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+    <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-6">
+      <h3 className="text-sm font-semibold text-slate-700">Agent Settings</h3>
+
+      {/* Basic settings */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className="block text-xs font-medium text-slate-500 mb-1">Personality / Persona</label>
           <input
@@ -234,7 +267,7 @@ function SettingsPanel({ businessId, settings, onSaved }: {
             value={persona}
             onChange={(e) => setPersona(e.target.value)}
             placeholder="friendly, warm, and professional"
-            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300"
+            className={inputClass}
           />
         </div>
         <div>
@@ -244,7 +277,7 @@ function SettingsPanel({ businessId, settings, onSaved }: {
             value={cuisine}
             onChange={(e) => setCuisine(e.target.value)}
             placeholder="Italian, Mexican, etc."
-            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300"
+            className={inputClass}
           />
         </div>
         <div>
@@ -254,10 +287,53 @@ function SettingsPanel({ businessId, settings, onSaved }: {
             value={maxParty}
             onChange={(e) => setMaxParty(e.target.value)}
             placeholder="10"
-            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300"
+            className={inputClass}
           />
         </div>
       </div>
+
+      {/* Hours editor */}
+      <div>
+        <label className="block text-xs font-medium text-slate-500 mb-3">Business Hours</label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+          {DAYS.map((day) => {
+            const isClosed = hours[day] === null;
+            return (
+              <div key={day} className={`rounded-lg border p-3 transition-colors ${isClosed ? 'bg-slate-50 border-slate-200' : 'bg-white border-slate-200'}`}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold text-slate-600">{day}</span>
+                  <button
+                    type="button"
+                    onClick={() => toggleClosed(day)}
+                    className={`text-[10px] font-medium px-2 py-0.5 rounded-full transition-colors ${isClosed ? 'bg-slate-200 text-slate-500 hover:bg-slate-300' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}`}
+                  >
+                    {isClosed ? 'Closed' : 'Open'}
+                  </button>
+                </div>
+                {!isClosed && (
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="time"
+                      value={hours[day]?.open ?? DEFAULT_OPEN}
+                      onChange={(e) => setDayHours(day, 'open', e.target.value)}
+                      className="flex-1 px-2 py-1 border border-slate-200 rounded text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-violet-400"
+                    />
+                    <span className="text-[10px] text-slate-400">—</span>
+                    <input
+                      type="time"
+                      value={hours[day]?.close ?? DEFAULT_CLOSE}
+                      onChange={(e) => setDayHours(day, 'close', e.target.value)}
+                      className="flex-1 px-2 py-1 border border-slate-200 rounded text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-violet-400"
+                    />
+                  </div>
+                )}
+                {isClosed && <p className="text-[10px] text-slate-400">Closed all day</p>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="flex items-center gap-3">
         <button
           onClick={handleSave}

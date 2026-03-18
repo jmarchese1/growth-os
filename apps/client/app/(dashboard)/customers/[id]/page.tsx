@@ -138,6 +138,17 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState('');
 
+  // Status change
+  const [statusSaving, setStatusSaving] = useState(false);
+
+  // Tags editing
+  const [tagInput, setTagInput] = useState('');
+  const [tagSaving, setTagSaving] = useState(false);
+
+  // Notes
+  const [noteText, setNoteText] = useState('');
+  const [noteSaving, setNoteSaving] = useState(false);
+
   // Send survey modal
   const [showSurvey, setShowSurvey] = useState(false);
   const [surveys, setSurveys] = useState<SurveyOption[]>([]);
@@ -227,6 +238,71 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       setSurveyError('Failed to send');
     } finally {
       setSurveySending(false);
+    }
+  }
+
+  async function handleStatusChange(newStatus: string) {
+    if (!contact || newStatus === contact.status) return;
+    setStatusSaving(true);
+    try {
+      const res = await fetch(`${API_URL}/contacts/${contact.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      const data = await res.json() as { success: boolean; contact?: ContactDetail };
+      if (data.success && data.contact) setContact((prev) => prev ? { ...prev, status: data.contact!.status } : prev);
+    } finally {
+      setStatusSaving(false);
+    }
+  }
+
+  async function handleAddTag() {
+    if (!contact || !tagInput.trim()) return;
+    const newTag = tagInput.trim();
+    if (contact.tags.includes(newTag)) { setTagInput(''); return; }
+    const newTags = [...contact.tags, newTag];
+    setTagSaving(true);
+    try {
+      const res = await fetch(`${API_URL}/contacts/${contact.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tags: newTags }),
+      });
+      const data = await res.json() as { success: boolean; contact?: ContactDetail };
+      if (data.success && data.contact) { setContact((prev) => prev ? { ...prev, tags: data.contact!.tags } : prev); setTagInput(''); }
+    } finally {
+      setTagSaving(false);
+    }
+  }
+
+  async function handleRemoveTag(tag: string) {
+    if (!contact) return;
+    const newTags = contact.tags.filter((t) => t !== tag);
+    await fetch(`${API_URL}/contacts/${contact.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tags: newTags }),
+    });
+    setContact((prev) => prev ? { ...prev, tags: newTags } : prev);
+  }
+
+  async function handleAddNote() {
+    if (!contact || !noteText.trim()) return;
+    setNoteSaving(true);
+    try {
+      const res = await fetch(`${API_URL}/contacts/${contact.id}/notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: noteText.trim() }),
+      });
+      const data = await res.json() as { success: boolean; activity?: Activity };
+      if (data.success && data.activity) {
+        setContact((prev) => prev ? { ...prev, activities: [data.activity!, ...prev.activities] } : prev);
+        setNoteText('');
+      }
+    } finally {
+      setNoteSaving(false);
     }
   }
 
@@ -372,7 +448,17 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             <div>
               <h1 className="text-xl font-bold text-slate-900">{fullName(contact)}</h1>
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${statusCfg.color}`}>{statusCfg.label}</span>
+                <select
+                  value={contact.status}
+                  onChange={(e) => void handleStatusChange(e.target.value)}
+                  disabled={statusSaving}
+                  className={`text-xs font-medium px-2.5 py-1 rounded-full border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-violet-400 disabled:opacity-60 ${statusCfg.color}`}
+                >
+                  <option value="LEAD">Lead</option>
+                  <option value="PROSPECT">Prospect</option>
+                  <option value="CUSTOMER">Customer</option>
+                  <option value="CHURNED">Churned</option>
+                </select>
                 <span className="text-xs text-slate-400">{SOURCE_LABELS[contact.source]}</span>
                 {contact.leadScore !== null && (
                   <span className="text-xs text-slate-400">Score: <span className="font-medium text-slate-700">{contact.leadScore}</span></span>
@@ -386,16 +472,33 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             </div>
           </div>
           <div className="mt-3 grid grid-cols-2 gap-x-8 gap-y-1.5 text-sm">
-            {contact.email && <div className="text-slate-500">Email <span className="text-slate-800 font-medium">{contact.email}</span></div>}
-            {contact.phone && <div className="text-slate-500">Phone <span className="text-slate-800 font-medium">{contact.phone}</span></div>}
-            {contact.tags.length > 0 && (
-              <div className="col-span-2 flex gap-1.5 flex-wrap mt-1">
+            {contact.email && <div className="text-slate-500">Email <a href={`mailto:${contact.email}`} className="text-slate-800 font-medium hover:text-violet-600">{contact.email}</a></div>}
+            {contact.phone && <div className="text-slate-500">Phone <a href={`tel:${contact.phone}`} className="text-slate-800 font-medium hover:text-violet-600">{contact.phone}</a></div>}
+            {/* Tags editor */}
+            <div className="col-span-2 mt-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 {contact.tags.map((t) => (
-                  <span key={t} className="text-[11px] px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full">{t}</span>
+                  <span key={t} className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 bg-violet-100 text-violet-700 rounded-full">
+                    {t}
+                    <button onClick={() => void handleRemoveTag(t)} className="hover:text-red-500 transition-colors leading-none">×</button>
+                  </span>
                 ))}
+                <form onSubmit={(e) => { e.preventDefault(); void handleAddTag(); }} className="flex items-center gap-1">
+                  <input
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    placeholder="Add tag..."
+                    className="text-[11px] px-2 py-0.5 border border-dashed border-slate-300 rounded-full focus:outline-none focus:border-violet-400 w-20 placeholder-slate-400"
+                  />
+                  {tagInput.trim() && (
+                    <button type="submit" disabled={tagSaving} className="text-[11px] px-2 py-0.5 bg-violet-600 text-white rounded-full hover:bg-violet-700 disabled:opacity-50">
+                      {tagSaving ? '...' : '+'}
+                    </button>
+                  )}
+                </form>
               </div>
-            )}
-            {contact.notes && <div className="col-span-2 text-slate-500 text-xs mt-1">{contact.notes}</div>}
+            </div>
+            {contact.notes && <div className="col-span-2 text-slate-500 text-xs mt-1 italic">{contact.notes}</div>}
           </div>
         </div>
       </div>
@@ -418,7 +521,24 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Activity timeline */}
         <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <h2 className="text-sm font-semibold text-slate-700 mb-4">Activity Timeline</h2>
+          <h2 className="text-sm font-semibold text-slate-700 mb-3">Activity Timeline</h2>
+          {/* Add note */}
+          <div className="flex gap-2 mb-4">
+            <input
+              value={noteText}
+              onChange={(e) => setNoteText(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void handleAddNote(); } }}
+              placeholder="Add a note..."
+              className="flex-1 px-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-400"
+            />
+            <button
+              onClick={() => void handleAddNote()}
+              disabled={noteSaving || !noteText.trim()}
+              className="px-3 py-1.5 bg-violet-600 text-white text-xs font-medium rounded-lg hover:bg-violet-700 disabled:opacity-50 transition-colors"
+            >
+              {noteSaving ? '...' : 'Add'}
+            </button>
+          </div>
           {contact.activities.length === 0 ? (
             <p className="text-sm text-slate-400 text-center py-6">No activity recorded yet</p>
           ) : (
@@ -427,8 +547,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 <div key={a.id} className="flex gap-3">
                   <div className="text-base shrink-0 mt-0.5">{ACTIVITY_ICONS[a.type] ?? '•'}</div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-800">{a.title}</p>
-                    {a.description && <p className="text-xs text-slate-400 mt-0.5 truncate">{a.description}</p>}
+                    <p className="text-sm font-medium text-slate-800">{a.type === 'NOTE' ? a.description : a.title}</p>
+                    {a.type !== 'NOTE' && a.description && <p className="text-xs text-slate-400 mt-0.5 truncate">{a.description}</p>}
                     <p className="text-[10px] text-slate-300 mt-0.5">{formatDateTime(a.createdAt)}</p>
                   </div>
                 </div>

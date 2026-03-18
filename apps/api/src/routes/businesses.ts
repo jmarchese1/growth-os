@@ -38,19 +38,33 @@ export async function businessRoutes(app: FastifyInstance): Promise<void> {
   // GET /businesses/:id/contacts
   app.get('/businesses/:id/contacts', async (request) => {
     const { id } = request.params as { id: string };
-    const { page = '1', pageSize = '20' } = request.query as Record<string, string>;
+    const { page = '1', pageSize = '20', search, status, source } = request.query as Record<string, string>;
 
     const business = await db.business.findUnique({ where: { id } });
     if (!business) throw new NotFoundError('Business', id);
 
+    const where = {
+      businessId: id,
+      ...(status ? { status: status as 'LEAD' | 'PROSPECT' | 'CUSTOMER' | 'CHURNED' } : {}),
+      ...(source ? { source: source as 'VOICE' | 'CHATBOT' | 'SURVEY' | 'SOCIAL' | 'WEBSITE' | 'MANUAL' | 'CALENDLY' | 'OUTBOUND' | 'QR_CODE' } : {}),
+      ...(search ? {
+        OR: [
+          { firstName: { contains: search, mode: 'insensitive' as const } },
+          { lastName: { contains: search, mode: 'insensitive' as const } },
+          { email: { contains: search, mode: 'insensitive' as const } },
+          { phone: { contains: search, mode: 'insensitive' as const } },
+        ],
+      } : {}),
+    };
+
     const [items, total] = await Promise.all([
       db.contact.findMany({
-        where: { businessId: id },
+        where,
         skip: (parseInt(page) - 1) * parseInt(pageSize),
         take: parseInt(pageSize),
         orderBy: { createdAt: 'desc' },
       }),
-      db.contact.count({ where: { businessId: id } }),
+      db.contact.count({ where }),
     ]);
 
     return { items, total, page: parseInt(page), pageSize: parseInt(pageSize) };
@@ -105,6 +119,17 @@ export async function businessRoutes(app: FastifyInstance): Promise<void> {
     return { items, total, page: parseInt(page), pageSize: parseInt(pageSize) };
   });
 
+  // GET /businesses/:id/website — latest generated website
+  app.get('/businesses/:id/website', async (request) => {
+    const { id } = request.params as { id: string };
+    const website = await db.generatedWebsite.findFirst({
+      where: { businessId: id },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, deployUrl: true, vercelProjectId: true, status: true, updatedAt: true, config: true },
+    });
+    return { success: true, website };
+  });
+
   // GET /businesses/:id/dashboard — summary stats + recent activity
   app.get('/businesses/:id/dashboard', async (request) => {
     const { id } = request.params as { id: string };
@@ -118,6 +143,9 @@ export async function businessRoutes(app: FastifyInstance): Promise<void> {
     const [
       newContactsThisWeek,
       newContactsThisMonth,
+      leadsCount,
+      prospectsCount,
+      customersCount,
       upcomingAppointments,
       recentActivities,
       recentSurveyResponses,
@@ -125,6 +153,9 @@ export async function businessRoutes(app: FastifyInstance): Promise<void> {
     ] = await Promise.all([
       db.contact.count({ where: { businessId: id, createdAt: { gte: weekAgo } } }),
       db.contact.count({ where: { businessId: id, createdAt: { gte: monthStart } } }),
+      db.contact.count({ where: { businessId: id, status: 'LEAD' } }),
+      db.contact.count({ where: { businessId: id, status: 'PROSPECT' } }),
+      db.contact.count({ where: { businessId: id, status: 'CUSTOMER' } }),
       db.appointment.findMany({
         where: { businessId: id, startTime: { gte: now }, status: { notIn: ['CANCELLED'] } },
         orderBy: { startTime: 'asc' },
@@ -160,6 +191,7 @@ export async function businessRoutes(app: FastifyInstance): Promise<void> {
     return {
       newContactsThisWeek,
       newContactsThisMonth,
+      contactsByStatus: { leads: leadsCount, prospects: prospectsCount, customers: customersCount },
       upcomingAppointments,
       recentActivities,
       recentSurveyResponses,
@@ -307,7 +339,8 @@ Return ONLY a JSON object with:
     const contact = await db.contact.findUnique({ where: { id }, select: { id: true } });
     if (!contact) return reply.code(404).send({ success: false, error: 'Contact not found' });
 
-    const body = request.body as { firstName?: string; lastName?: string; email?: string; phone?: string; notes?: string };
+    const body = request.body as { firstName?: string; lastName?: string; email?: string; phone?: string; notes?: string; status?: string; tags?: string[] };
+    const validStatuses = ['LEAD', 'PROSPECT', 'CUSTOMER', 'CHURNED'];
     const updated = await db.contact.update({
       where: { id },
       data: {
@@ -316,10 +349,34 @@ Return ONLY a JSON object with:
         ...(body.email !== undefined ? { email: body.email.trim() || null } : {}),
         ...(body.phone !== undefined ? { phone: body.phone.trim() || null } : {}),
         ...(body.notes !== undefined ? { notes: body.notes.trim() || null } : {}),
+        ...(body.status && validStatuses.includes(body.status) ? { status: body.status as 'LEAD' | 'PROSPECT' | 'CUSTOMER' | 'CHURNED' } : {}),
+        ...(body.tags !== undefined ? { tags: body.tags } : {}),
       },
     });
     log.info({ contactId: id }, 'Contact updated');
     return { success: true, contact: updated };
+  });
+
+  // POST /contacts/:id/notes — add a timestamped note to a contact
+  app.post('/contacts/:id/notes', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const body = request.body as { text: string };
+    if (!body.text?.trim()) return reply.code(400).send({ success: false, error: 'text is required' });
+
+    const contact = await db.contact.findUnique({ where: { id }, select: { id: true, businessId: true } });
+    if (!contact) return reply.code(404).send({ success: false, error: 'Contact not found' });
+
+    const activity = await db.contactActivity.create({
+      data: {
+        businessId: contact.businessId,
+        contactId: id,
+        type: 'NOTE',
+        title: 'Note',
+        description: body.text.trim(),
+      },
+    });
+    log.info({ contactId: id }, 'Note added to contact');
+    return { success: true, activity };
   });
 
   // POST /contacts/:id/send-survey — send a survey link via SMS or email
