@@ -16,6 +16,7 @@ import type { ColorScheme, FontPairing, AnimationPreset } from './templates/rest
 import type { PremiumWebsiteConfig } from './templates/restaurant/premium.js';
 
 const logger = createLogger('website-gen:routes');
+logger.info('website-gen routes loaded — version: 2026-03-19-v3-ai-full');
 
 // ── AI Self-Review Loop ─────────────────────────────────────────────────────
 // Screenshot disabled — Playwright doesn't work in Railway containers
