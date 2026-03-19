@@ -190,11 +190,15 @@ export async function websiteRoutes(app: FastifyInstance) {
     // Merge scraped data with user-provided data (user inputs take precedence)
     const merged = { ...scraped, ...body };
 
-    // Build inspiration context: training KB (always present) + user inspiration sites
+    // Check if we're doing full AI generation — determines what to skip
+    const willUseFullAI = !!(body.inspirationUrls?.some(Boolean)) && !!env.ANTHROPIC_API_KEY;
+
+    // Build inspiration context: training KB + user inspiration sites
+    // For full AI path: SKIP the slow scrapeForInspiration AI calls — we fetch raw HTML source later
     const trainingInsights = getInsightsForIndustry(body.industryType);
     let inspirationStyleNotes: string = trainingInsights;
 
-    if (body.inspirationUrls?.length && env.ANTHROPIC_API_KEY) {
+    if (body.inspirationUrls?.length && env.ANTHROPIC_API_KEY && !willUseFullAI) {
       const userNotes = await Promise.all(
         body.inspirationUrls.filter(Boolean).slice(0, 3).map((u) => scrapeForInspiration(u, env.ANTHROPIC_API_KEY!))
       );
@@ -205,9 +209,6 @@ export async function websiteRoutes(app: FastifyInstance) {
           : joined;
       }
     }
-
-    // Check if we're doing full AI generation (skip unnecessary intermediate AI calls)
-    const willUseFullAI = !!(body.inspirationUrls?.some(Boolean)) && !!env.ANTHROPIC_API_KEY;
 
     // Generate AI copy — SKIP if full AI path will handle everything
     let copy = {
