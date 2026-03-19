@@ -1,3 +1,4 @@
+// Website routes — proxies to website-gen service
 import type { FastifyInstance } from 'fastify';
 
 const WEBSITE_GEN_URL = process.env['WEBSITE_GEN_URL'] ?? 'http://localhost:3007';
