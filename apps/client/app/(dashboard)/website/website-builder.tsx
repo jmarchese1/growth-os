@@ -460,10 +460,13 @@ export default function WebsiteBuilder({
 
   const [showPreview, setShowPreview] = useState(false);
 
-  // Steps: 1=Industry(conditional) 2=Import 3=Details 4=Structure 5=Style 6=Done
+  // When inspiration URLs are provided, AI handles all styling — skip the Style step
+  const hasInspirationUrls = inspirationUrls.some(Boolean);
+
+  // Steps: 1=Industry(conditional) 2=Import 3=Details 4=Structure 5=Style(optional) 6=Done
   const allStepLabels = industryKnown
-    ? ['Import', 'Details', 'Structure', 'Style', 'Done']
-    : ['Industry', 'Import', 'Details', 'Structure', 'Style', 'Done'];
+    ? (hasInspirationUrls ? ['Import', 'Details', 'Structure', 'Done'] : ['Import', 'Details', 'Structure', 'Style', 'Done'])
+    : (hasInspirationUrls ? ['Industry', 'Import', 'Details', 'Structure', 'Done'] : ['Industry', 'Import', 'Details', 'Structure', 'Style', 'Done']);
 
   // Build live preview HTML from current form state
   const previewHtml = React.useMemo(() => {
@@ -1004,9 +1007,38 @@ export default function WebsiteBuilder({
               </div>
             </div>
 
+            {hasInspirationUrls && (
+              <div className="bg-violet-50 border border-violet-100 rounded-xl p-4 flex gap-3 items-start">
+                <div className="w-7 h-7 bg-violet-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-violet-600"><path d="M10 1a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 1zM5.05 3.05a.75.75 0 011.06 0l1.062 1.06A.75.75 0 016.11 5.173L5.05 4.11a.75.75 0 010-1.06zm9.9 0a.75.75 0 010 1.06l-1.06 1.062a.75.75 0 01-1.062-1.061l1.061-1.06a.75.75 0 011.06 0zM3 8a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5H3.75A.75.75 0 013 8zm11 0a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 0114 8z" clipRule="evenodd"/></svg>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-violet-800">AI will design your site from scratch</p>
+                  <p className="text-[11px] text-violet-600 mt-0.5">Since you provided inspiration URLs, the AI will generate a completely custom layout, colors, typography, and CSS — no templates. You can fine-tune everything after with the AI editor.</p>
+                </div>
+              </div>
+            )}
+
+            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
             <div className="flex gap-3">
               <button onClick={() => setStep(3)} className="px-5 py-3 border border-slate-200 text-slate-600 font-medium rounded-xl text-sm hover:bg-slate-50">Back</button>
-              <button onClick={() => setStep(5)} className="flex-1 py-3 bg-violet-600 text-white font-semibold rounded-xl text-sm hover:bg-violet-700">Continue to Style</button>
+              {hasInspirationUrls ? (
+                <button
+                  onClick={() => void handleGenerate()}
+                  disabled={generating}
+                  className="flex-1 py-3.5 bg-violet-600 text-white font-bold rounded-xl text-sm hover:bg-violet-700 disabled:opacity-60 transition-colors"
+                >
+                  {generating ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Generating...
+                    </span>
+                  ) : `Generate My ${industry.label} Website`}
+                </button>
+              ) : (
+                <button onClick={() => setStep(5)} className="flex-1 py-3 bg-violet-600 text-white font-semibold rounded-xl text-sm hover:bg-violet-700">Continue to Style</button>
+              )}
             </div>
           </div>
         )}

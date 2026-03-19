@@ -6,6 +6,7 @@ import { scrapeWebsite, scrapeForInspiration } from './scraper/scrape.js';
 import { getInsightsForIndustry } from './training/knowledge-base.js';
 import { generateWebsiteCopy } from './generator/content.js';
 import { generateStyleOverrides } from './generator/style-generator.js';
+import { generateFullWebsite } from './generator/full-site-generator.js';
 import { renderRestaurantPremium } from './templates/restaurant/premium.js';
 import { renderBoldTemplate } from './templates/restaurant/bold.js';
 import { renderEditorialTemplate } from './templates/restaurant/editorial.js';
@@ -305,12 +306,83 @@ export async function websiteRoutes(app: FastifyInstance) {
       // AI-generated style overrides (unique per site)
       styleOverrides,
     };
-    // Select template renderer
-    const cfgCast = premiumConfig as unknown as PremiumWebsiteConfig;
-    const templateId = body.template ?? 'premium';
-    const html = templateId === 'bold' ? renderBoldTemplate(cfgCast)
-      : templateId === 'editorial' ? renderEditorialTemplate(cfgCast)
-      : renderRestaurantPremium(cfgCast);
+
+    // ── Choose generation path ──
+    // Path A: Full AI generation (when inspiration URLs exist) — AI writes the entire HTML
+    // Path B: Template-based (no inspiration) — uses rigid templates with style overrides
+    let html: string;
+    const hasInspiration = !!(inspirationStyleNotes && body.inspirationUrls?.some(Boolean));
+
+    if (hasInspiration && env.ANTHROPIC_API_KEY) {
+      try {
+        // Collect inspiration screenshots for vision input
+        let inspirationScreenshots: string[] | undefined;
+        try {
+          const pw = await import('playwright');
+          const browser = await pw.chromium.launch({ headless: true });
+          const screenshots: string[] = [];
+          for (const url of (body.inspirationUrls ?? []).filter(Boolean).slice(0, 2)) {
+            try {
+              const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+              await page.goto(url, { waitUntil: 'networkidle', timeout: 15000 });
+              await page.waitForTimeout(1500);
+              const buf = await page.screenshot({ fullPage: true, type: 'jpeg', quality: 55 });
+              screenshots.push(buf.toString('base64'));
+              await page.close();
+            } catch { /* skip failed screenshot */ }
+          }
+          await browser.close();
+          if (screenshots.length > 0) inspirationScreenshots = screenshots;
+        } catch { /* Playwright not available — proceed without screenshots */ }
+
+        html = await generateFullWebsite({
+          siteData: {
+            businessName: body.businessName,
+            tagline: String(premiumConfig.tagline ?? ''),
+            description: String(premiumConfig.description ?? ''),
+            cuisine: String(premiumConfig.cuisine ?? ''),
+            phone: String(premiumConfig.phone ?? ''),
+            address: String(premiumConfig.address ?? ''),
+            city: String(premiumConfig.city ?? ''),
+            ...(premiumConfig.hours ? { hours: premiumConfig.hours as Record<string, string> } : {}),
+            ...(premiumConfig.menuItems ? { menuItems: premiumConfig.menuItems as Array<{ name: string; description?: string; price?: string; category?: string }> } : {}),
+            ...(premiumConfig.galleryImages ? { galleryImages: premiumConfig.galleryImages as string[] } : {}),
+            ...(premiumConfig.heroImage ? { heroImage: premiumConfig.heroImage as string } : {}),
+            ...(premiumConfig.bookingUrl ? { bookingUrl: premiumConfig.bookingUrl as string } : {}),
+            features: copy.features,
+            testimonials: copy.testimonials,
+            heroHeading: copy.heroHeading,
+            heroSubheading: copy.heroSubheading,
+            aboutHeading: copy.aboutHeading,
+            aboutBody: copy.aboutBody,
+            ctaText: copy.ctaText,
+            ...(body.sections ? { sections: body.sections } : {}),
+            ...(body.extraPages ? { extraPages: body.extraPages } : {}),
+            ...(body.googleAnalyticsId ? { googleAnalyticsId: body.googleAnalyticsId } : {}),
+            ...(body.metaPixelId ? { metaPixelId: body.metaPixelId } : {}),
+            contactFormEndpoint: premiumConfig.contactFormEndpoint,
+            ...(premiumConfig.chatbotEnabled ? { chatbotEnabled: true } : {}),
+            ...(premiumConfig.chatbotBusinessId ? { chatbotBusinessId: premiumConfig.chatbotBusinessId } : {}),
+          },
+          inspirationStyleNotes,
+          industryType: body.industryType ?? 'restaurant',
+          ...(inspirationScreenshots ? { inspirationScreenshots } : {}),
+        }, env.ANTHROPIC_API_KEY);
+        logger.info('Full AI website generation succeeded');
+      } catch (err) {
+        logger.warn({ error: String(err) }, 'Full AI generation failed — falling back to template');
+        // Fallback to template
+        const cfgCast = premiumConfig as unknown as PremiumWebsiteConfig;
+        html = renderRestaurantPremium(cfgCast);
+      }
+    } else {
+      // Template-based path (no inspiration — use rigid templates)
+      const cfgCast = premiumConfig as unknown as PremiumWebsiteConfig;
+      const tmplId = body.template ?? 'premium';
+      html = tmplId === 'bold' ? renderBoldTemplate(cfgCast)
+        : tmplId === 'editorial' ? renderEditorialTemplate(cfgCast)
+        : renderRestaurantPremium(cfgCast);
+    }
 
     // Always create a new GeneratedWebsite record — users manage multiple sites from the list view
     const slug = `embedo-${body.businessName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 30)}-${body.businessId.slice(-6)}`;
@@ -318,7 +390,7 @@ export async function websiteRoutes(app: FastifyInstance) {
     let websiteRecord = await db.generatedWebsite.create({
       data: {
         businessId: body.businessId,
-        template: `restaurant-${templateId}`,
+        template: hasInspiration ? 'ai-generated' : `restaurant-${body.template ?? 'premium'}`,
         config: premiumConfig as unknown as object,
         status: 'GENERATING',
       },
