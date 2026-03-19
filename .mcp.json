@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "puppeteer": {
+    "playwright": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-puppeteer"],
+      "args": ["-y", "@executeautomation/playwright-mcp-server"],
       "env": {}
     }
   }
