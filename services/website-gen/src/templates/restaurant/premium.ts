@@ -198,7 +198,7 @@ function h2Style(f: Fonts, c: Colors, s: StyleOverrides): string {
 
 function renderAbout(config: PremiumWebsiteConfig, c: Colors, f: Fonts, s: StyleOverrides): string {
   return `
-  <section id="about" style="padding:${s.sectionPadding};background:${c.surface};${sectionDivider(c, s)}">
+  <section id="about" class="section section-about" style="padding:${s.sectionPadding};background:${c.surface};${sectionDivider(c, s)}">
     <div style="max-width:${s.maxWidth};margin:0 auto;padding:${s.contentPadding};display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;">
       <div>
         ${sectionLabel('OUR STORY', c, s)}
@@ -254,7 +254,7 @@ function renderFeatures(config: PremiumWebsiteConfig, c: Colors, f: Fonts, s: St
       <p style="font-size:15px;color:${c.muted};line-height:${s.bodyLineHeight};">${feature.description}</p>
     </div>`).join('');
   return `
-  <section style="padding:${s.sectionPadding};background:${c.surface};${sectionDivider(c, s)}">
+  <section class="section section-features" style="padding:${s.sectionPadding};background:${c.surface};${sectionDivider(c, s)}">
     <div style="max-width:${s.maxWidth};margin:0 auto;padding:${s.contentPadding};">
       ${sectionLabel('WHY CHOOSE US', c, s)}
       <h2 style="${h2Style(f, c, s)}text-align:center;margin:0 0 60px;">The Difference</h2>
@@ -287,7 +287,7 @@ function renderMenu(config: PremiumWebsiteConfig, c: Colors, f: Fonts, s: StyleO
       </div>
     </div>`).join('');
   return `
-  <section id="menu" style="padding:${s.sectionPadding};background:${c.bg};">
+  <section id="menu" class="section section-menu" style="padding:${s.sectionPadding};background:${c.bg};">
     <div style="max-width:${s.maxWidth};margin:0 auto;padding:${s.contentPadding};">
       ${sectionLabel('WHAT WE OFFER', c, s)}
       <h2 style="${h2Style(f, c, s)}text-align:center;margin:0 0 60px;">Our Selection</h2>
@@ -303,7 +303,7 @@ function renderGallery(config: PremiumWebsiteConfig, c: Colors, _f: Fonts, s: St
   const gap = s.imageStyle === 'full-bleed' ? '0px' : s.imageStyle === 'floating' ? '16px' : '4px';
   const hoverAttr = s.useHoverEffects ? `onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"` : '';
   return `
-  <section style="padding:${s.imageStyle === 'full-bleed' ? '0' : s.sectionPadding};background:${c.bg};">
+  <section class="section section-gallery" style="padding:${s.imageStyle === 'full-bleed' ? '0' : s.sectionPadding};background:${c.bg};">
     <div style="${s.imageStyle !== 'full-bleed' ? `max-width:${s.maxWidth};margin:0 auto;padding:${s.contentPadding};` : ''}display:grid;grid-template-columns:repeat(${Math.min(imgs.length, 3)},1fr);gap:${gap};">
       ${imgs.map((src) => `<div style="aspect-ratio:1;overflow:hidden;${imgRadius}"><img src="${src}" alt="Gallery" loading="lazy" style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s ease;" ${hoverAttr} /></div>`).join('')}
     </div>
@@ -325,7 +325,7 @@ function renderTestimonials(config: PremiumWebsiteConfig, c: Colors, f: Fonts, s
       </div>
     </div>`).join('');
   return `
-  <section style="padding:${s.sectionPadding};background:${c.bg};">
+  <section class="section section-testimonials" style="padding:${s.sectionPadding};background:${c.bg};">
     <div style="max-width:${s.maxWidth};margin:0 auto;padding:${s.contentPadding};">
       ${sectionLabel('REVIEWS', c, s)}
       <h2 style="${h2Style(f, c, s)}text-align:center;margin:0 0 60px;">What Our Guests Say</h2>
@@ -336,7 +336,7 @@ function renderTestimonials(config: PremiumWebsiteConfig, c: Colors, f: Fonts, s
 
 function renderHours(config: PremiumWebsiteConfig, c: Colors, f: Fonts, s: StyleOverrides): string {
   return `
-  <section id="hours" style="padding:${s.sectionPadding};background:${c.surface};${sectionDivider(c, s)}">
+  <section id="hours" class="section section-hours" style="padding:${s.sectionPadding};background:${c.surface};${sectionDivider(c, s)}">
     <div style="max-width:${s.maxWidth};margin:0 auto;padding:${s.contentPadding};">
       ${sectionLabel('VISIT US', c, s)}
       <h2 style="${h2Style(f, c, s)}text-align:center;margin-bottom:60px;">Hours & Location</h2>
@@ -362,7 +362,7 @@ function renderHours(config: PremiumWebsiteConfig, c: Colors, f: Fonts, s: Style
 function renderReserve(config: PremiumWebsiteConfig, c: Colors, f: Fonts, s: StyleOverrides): string {
   if (!config.bookingUrl) return '';
   return `
-  <section id="reserve" style="padding:${s.sectionPadding};background:${c.bg};${sectionDivider(c, s)}">
+  <section id="reserve" class="section section-reserve" style="padding:${s.sectionPadding};background:${c.bg};${sectionDivider(c, s)}">
     <div style="max-width:640px;margin:0 auto;padding:${s.contentPadding};text-align:center;">
       ${sectionLabel('BOOK NOW', c, s)}
       <h2 style="font-family:${f.heading};font-size:clamp(32px,4vw,56px);font-weight:700;color:${c.text};margin-bottom:20px;letter-spacing:-0.025em;">${config.ctaText}</h2>
@@ -607,48 +607,84 @@ export function renderRestaurantPremium(config: PremiumWebsiteConfig): string {
     body{font-family:${f.body};background:${c.bg};color:${c.text};-webkit-font-smoothing:antialiased;}
     a{color:inherit;text-decoration:none;}
     img{max-width:100%;display:block;}
+
+    /* ── Nav ── */
+    .site-nav{position:${s.navStyle};top:0;left:0;right:0;z-index:100;padding:0 ${s.contentPadding.split(' ')[1] ?? '40px'};height:${s.navHeight};display:flex;align-items:center;justify-content:space-between;background:${s.navBackground || `${c.bg}e0`};backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid ${c.border}60;}
+    .site-logo{font-family:${f.heading};font-size:18px;font-weight:700;color:${c.text};letter-spacing:-0.02em;}
+    .nav-links{display:flex;align-items:center;gap:32px;}
     .nav-link{font-size:14px;font-weight:500;color:${c.muted};transition:color 0.2s;letter-spacing:0.02em;}
     .nav-link:hover{color:${c.text};}
+    .nav-cta{padding:10px 22px;font-size:14px;}
+
+    /* ── Buttons ── */
     .btn-primary{display:inline-flex;align-items:center;justify-content:center;padding:${s.buttonPadding};background:${s.buttonStyle === 'outline' || s.buttonStyle === 'ghost' ? 'transparent' : c.accent};color:${s.buttonStyle === 'outline' || s.buttonStyle === 'ghost' ? c.accent : c.accentText};font-family:${f.heading};font-size:15px;font-weight:600;border-radius:${s.buttonRadius};transition:opacity 0.2s,transform 0.15s;cursor:pointer;border:${s.buttonStyle === 'outline' ? `2px solid ${c.accent}` : 'none'};letter-spacing:${s.buttonLetterSpacing};text-transform:${s.buttonTextTransform};${s.buttonStyle === 'underline' ? `border-radius:0;border-bottom:2px solid ${c.accent};padding:8px 0;background:transparent;color:${c.accent};` : ''}}
     .btn-primary:hover{opacity:0.88;transform:translateY(-2px);}
     .btn-outline{display:inline-flex;align-items:center;justify-content:center;padding:${s.buttonPadding};background:transparent;color:${c.text};font-family:${f.heading};font-size:15px;font-weight:500;border-radius:${s.buttonRadius};border:1.5px solid ${c.border};transition:border-color 0.2s,background 0.2s;cursor:pointer;letter-spacing:${s.buttonLetterSpacing};text-transform:${s.buttonTextTransform};}
     .btn-outline:hover{border-color:${c.text};background:${c.surface};}
+
+    /* ── Hero ── */
+    .hero-section{min-height:${s.heroMinHeight};display:flex;align-items:${s.heroLayout === 'bottom-aligned' ? 'flex-end' : 'center'};justify-content:${s.heroLayout === 'left-aligned' || s.heroLayout === 'bottom-aligned' ? 'flex-start' : 'center'};text-align:${s.heroLayout === 'left-aligned' || s.heroLayout === 'bottom-aligned' ? 'left' : 'center'};padding:${s.heroLayout === 'bottom-aligned' ? `0 ${s.contentPadding.split(' ')[1] ?? '40px'} 80px` : `120px ${s.contentPadding.split(' ')[1] ?? '40px'} 80px`};position:relative;overflow:hidden;background-color:${c.bg};background-size:cover;background-position:center;}
+    .hero-overlay{position:absolute;inset:0;background:linear-gradient(${s.heroLayout === 'bottom-aligned' ? 'to top' : 'to bottom'},${c.bg}88,${c.bg}bb,${c.bg}ee);}
+    .hero-content{position:relative;z-index:1;max-width:${s.heroLayout === 'left-aligned' || s.heroLayout === 'bottom-aligned' ? '720px' : '860px'};}
+    .hero-tag{font-size:11px;letter-spacing:0.25em;text-transform:uppercase;color:${c.accent};font-weight:600;margin-bottom:24px;}
+    .hero-heading{font-family:${f.heading};font-size:${s.heroHeadingSize};font-weight:${s.heroHeadingWeight};line-height:1.03;letter-spacing:${s.heroHeadingLetterSpacing};color:${c.text};margin-bottom:28px;}
+    .hero-subtitle{font-size:${s.heroSubtitleSize};color:${c.muted};line-height:1.65;max-width:580px;${s.heroLayout === 'centered' ? 'margin:0 auto 44px;' : 'margin:0 0 44px;'}}
+    .hero-btns{display:flex;align-items:center;justify-content:${s.heroLayout === 'left-aligned' || s.heroLayout === 'bottom-aligned' ? 'flex-start' : 'center'};gap:16px;flex-wrap:wrap;}
+    .hero-tagline{margin-top:40px;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:${c.muted}80;}
+    .scroll-indicator{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);}
+    .scroll-line{width:1px;height:40px;background:linear-gradient(to bottom,${c.muted}80,transparent);animation:scrollPulse 2s ease-in-out infinite;}
+
+    /* ── Footer ── */
+    .site-footer{padding:56px ${s.contentPadding.split(' ')[1] ?? '40px'};background:${c.surface};border-top:1px solid ${c.border};}
+    .footer-inner{max-width:${s.maxWidth};margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;}
+    .footer-brand{font-family:${f.heading};font-size:18px;font-weight:700;color:${c.text};margin-bottom:4px;}
+    .footer-tagline{font-size:13px;color:${c.muted};}
+    .footer-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+    .footer-copy{font-size:13px;color:${c.muted};}
+    .footer-credit{font-size:11px;color:${c.muted}60;}
+    .footer-credit a{color:${c.accent}80;}
+
+    /* ── Section defaults ── */
+    .section-container{max-width:${s.maxWidth};margin:0 auto;padding:${s.contentPadding};}
+
     @media(max-width:768px){
       .nav-links{display:none!important;}
       .hero-btns{flex-direction:column!important;gap:12px!important;}
-      [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important;}
+      .hero-heading{font-size:clamp(32px,8vw,64px)!important;}
     }
     @keyframes scrollPulse{0%,100%{opacity:0.4;}50%{opacity:1;}}
     ${scrollAnimationCSS(anim)}
+
+    /* ── AI Custom CSS (overrides everything above) ── */
     ${s.customCSS}
   </style>
 </head>
 <body>
 
 <!-- NAV -->
-<nav style="position:${s.navStyle};top:0;left:0;right:0;z-index:100;padding:0 ${s.contentPadding.split(' ')[1] ?? '40px'};height:${s.navHeight};display:flex;align-items:center;justify-content:space-between;background:${s.navBackground || `${c.bg}e0`};backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid ${c.border}60;">
-  <a href="/" style="font-family:${f.heading};font-size:18px;font-weight:700;color:${c.text};letter-spacing:-0.02em;">${config.businessName}</a>
-  <div class="nav-links" style="display:flex;align-items:center;gap:32px;">
+<nav class="site-nav">
+  <a href="/" class="site-logo">${config.businessName}</a>
+  <div class="nav-links">
     ${navLinks(orderedSections, config, c)}
   </div>
-  ${config.phone ? `<a href="tel:${config.phone}" class="btn-primary" style="padding:10px 22px;font-size:14px;">${config.phone}</a>` : config.bookingUrl ? `<a href="${config.bookingUrl}" target="_blank" class="btn-primary" style="padding:10px 22px;font-size:14px;">${config.ctaText}</a>` : ''}
+  ${config.phone ? `<a href="tel:${config.phone}" class="btn-primary nav-cta">${config.phone}</a>` : config.bookingUrl ? `<a href="${config.bookingUrl}" target="_blank" class="btn-primary nav-cta">${config.ctaText}</a>` : ''}
 </nav>
 
 <!-- HERO -->
-<section style="min-height:${s.heroMinHeight};display:flex;align-items:${s.heroLayout === 'bottom-aligned' ? 'flex-end' : s.heroLayout === 'split' ? 'stretch' : 'center'};justify-content:${s.heroLayout === 'left-aligned' || s.heroLayout === 'bottom-aligned' ? 'flex-start' : 'center'};text-align:${s.heroLayout === 'left-aligned' || s.heroLayout === 'bottom-aligned' ? 'left' : 'center'};padding:${s.heroLayout === 'bottom-aligned' ? `0 ${s.contentPadding.split(' ')[1] ?? '40px'} 80px` : `120px ${s.contentPadding.split(' ')[1] ?? '40px'} 80px`};position:relative;overflow:hidden;${hasHeroImage ? `background:url('${config.heroImage}') center/cover no-repeat;` : `background:${c.bg};`}">
-  ${hasHeroImage ? `<div style="position:absolute;inset:0;background:linear-gradient(${s.heroLayout === 'bottom-aligned' ? 'to top' : 'to bottom'},${c.bg}88,${c.bg}bb,${c.bg}ee);"></div>` : (s.useHeroOrbs ? heroNoImageOrbs : '')}
-  <div style="position:relative;z-index:1;max-width:${s.heroLayout === 'left-aligned' || s.heroLayout === 'bottom-aligned' ? '720px' : '860px'};">
-    ${config.cuisine ? `<p style="font-size:11px;letter-spacing:0.25em;text-transform:uppercase;color:${c.accent};font-weight:600;margin-bottom:24px;">${config.cuisine}</p>` : ''}
-    <h1 style="font-family:${f.heading};font-size:${s.heroHeadingSize};font-weight:${s.heroHeadingWeight};line-height:1.03;letter-spacing:${s.heroHeadingLetterSpacing};color:${c.text};margin-bottom:28px;">${config.heroHeading}</h1>
-    <p style="font-size:${s.heroSubtitleSize};color:${c.muted};line-height:1.65;max-width:580px;${s.heroLayout === 'centered' ? 'margin:0 auto 44px;' : 'margin:0 0 44px;'}">${config.heroSubheading}</p>
-    <div class="hero-btns" style="display:flex;align-items:center;justify-content:${s.heroLayout === 'left-aligned' || s.heroLayout === 'bottom-aligned' ? 'flex-start' : 'center'};gap:16px;flex-wrap:wrap;">
-      ${config.bookingUrl ? `<a href="${config.bookingUrl}" target="_blank" class="btn-primary" style="font-size:16px;">${config.ctaText}</a>` : config.phone ? `<a href="tel:${config.phone}" class="btn-primary" style="font-size:16px;">${config.ctaText}</a>` : `<a href="#about" class="btn-primary" style="font-size:16px;">${config.ctaText}</a>`}
-      <a href="#about" class="btn-outline" style="font-size:16px;">Learn More</a>
+<section class="hero-section" ${hasHeroImage ? `style="background-image:url('${config.heroImage}');"` : ''}>
+  ${hasHeroImage ? `<div class="hero-overlay"></div>` : (s.useHeroOrbs ? heroNoImageOrbs : '')}
+  <div class="hero-content">
+    ${config.cuisine ? `<p class="hero-tag">${config.cuisine}</p>` : ''}
+    <h1 class="hero-heading">${config.heroHeading}</h1>
+    <p class="hero-subtitle">${config.heroSubheading}</p>
+    <div class="hero-btns">
+      ${config.bookingUrl ? `<a href="${config.bookingUrl}" target="_blank" class="btn-primary">${config.ctaText}</a>` : config.phone ? `<a href="tel:${config.phone}" class="btn-primary">${config.ctaText}</a>` : `<a href="#about" class="btn-primary">${config.ctaText}</a>`}
+      <a href="#about" class="btn-outline">Learn More</a>
     </div>
-    ${config.tagline ? `<p style="margin-top:40px;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:${c.muted}80;">${config.tagline}</p>` : ''}
+    ${config.tagline ? `<p class="hero-tagline">${config.tagline}</p>` : ''}
   </div>
-  <div style="position:absolute;bottom:32px;left:50%;transform:translateX(-50%);">
-    <div style="width:1px;height:40px;background:linear-gradient(to bottom,${c.muted}80,transparent);animation:scrollPulse 2s ease-in-out infinite;"></div>
+  <div class="scroll-indicator">
+    <div class="scroll-line"></div>
   </div>
 </section>
 
@@ -659,15 +695,15 @@ ${sectionHtml}
 ${extraPagesHtml}
 
 <!-- FOOTER -->
-<footer style="padding:56px 40px;background:${c.surface};border-top:1px solid ${c.border};">
-  <div style="max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;">
+<footer class="site-footer">
+  <div class="footer-inner">
     <div>
-      <p style="font-family:${f.heading};font-size:18px;font-weight:700;color:${c.text};margin-bottom:4px;">${config.businessName}</p>
-      ${config.tagline ? `<p style="font-size:13px;color:${c.muted};">${config.tagline}</p>` : ''}
+      <p class="footer-brand">${config.businessName}</p>
+      ${config.tagline ? `<p class="footer-tagline">${config.tagline}</p>` : ''}
     </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-      <p style="font-size:13px;color:${c.muted};">&copy; ${new Date().getFullYear()} ${config.businessName}. All rights reserved.</p>
-      <p style="font-size:11px;color:${c.muted}60;">Powered by <a href="https://embedo.io" style="color:${c.accent}80;">Embedo</a></p>
+    <div class="footer-right">
+      <p class="footer-copy">&copy; ${new Date().getFullYear()} ${config.businessName}. All rights reserved.</p>
+      <p class="footer-credit">Powered by <a href="https://embedo.io">Embedo</a></p>
     </div>
   </div>
 </footer>

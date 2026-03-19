@@ -5,12 +5,9 @@ import type { StyleOverrides } from '../templates/restaurant/premium.js';
 const logger = createLogger('website-gen:style-generator');
 
 /**
- * Uses AI to generate dynamic StyleOverrides based on:
- * - Inspiration site analysis (screenshots + CSS tokens)
- * - Industry type
- * - Color scheme + font pairing selections
- *
- * This is what makes every generated site UNIQUE instead of cookie-cutter.
+ * Uses AI to generate dynamic StyleOverrides based on inspiration site analysis.
+ * The `customCSS` field is the PRIMARY output — it's a complete stylesheet that
+ * overrides the base template to make every site visually unique.
  */
 export async function generateStyleOverrides(params: {
   inspirationStyleNotes: string;
@@ -22,73 +19,113 @@ export async function generateStyleOverrides(params: {
   hasManyMenuItems: boolean;
   hasGallery: boolean;
 }, anthropicKey: string): Promise<Partial<StyleOverrides>> {
-  if (!params.inspirationStyleNotes && !params.industryType) {
-    return {}; // No inspiration = use defaults
-  }
-
   const client = new Anthropic({ apiKey: anthropicKey });
 
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 1500,
+    max_tokens: 4000,
     messages: [{
       role: 'user',
-      content: `You are an expert web designer. Generate specific CSS design tokens for a website based on the inspiration and context below.
+      content: `You are a world-class web designer. Your job is to generate a COMPLETE custom CSS stylesheet that transforms a base website template into something that looks inspired by the reference sites below.
 
-## Inspiration & Style Notes
-${params.inspirationStyleNotes || 'No specific inspiration provided — create a unique, high-quality design appropriate for the industry.'}
+## Inspiration Analysis
+${params.inspirationStyleNotes || 'No specific inspiration — create a distinctive, high-end design for a ' + params.industryType + '.'}
 
 ## Context
 - Industry: ${params.industryType}
 - Business: ${params.businessName}
-- Selected color scheme: ${params.colorScheme}
-- Selected font: ${params.fontPairing}
+- Base color scheme: ${params.colorScheme} (can be overridden in CSS)
+- Base font: ${params.fontPairing}
 - Has hero image: ${params.hasHeroImage}
-- Menu items: ${params.hasManyMenuItems ? 'many (8+)' : 'few or none'}
+- Has many menu items: ${params.hasManyMenuItems}
 - Has gallery: ${params.hasGallery}
 
+## Available CSS Classes You Can Target
+The website HTML has these semantic classes. Your CSS will be injected AFTER the base styles, so you can override anything:
+
+**Layout:**
+- \`.site-nav\` — the navigation bar
+- \`.site-logo\` — the business name in nav
+- \`.nav-links\` — container for nav links
+- \`.nav-link\` — individual nav links
+- \`.nav-cta\` — the CTA button in nav
+
+**Hero:**
+- \`.hero-section\` — the full hero area (has background-image if hero image exists)
+- \`.hero-overlay\` — gradient overlay on hero image
+- \`.hero-content\` — the text container inside hero
+- \`.hero-tag\` — small cuisine/type label above heading
+- \`.hero-heading\` — the main h1
+- \`.hero-subtitle\` — the subtitle paragraph
+- \`.hero-btns\` — button container
+- \`.hero-tagline\` — small tagline at bottom
+
+**Buttons:**
+- \`.btn-primary\` — primary CTA buttons
+- \`.btn-outline\` — secondary outline buttons
+
+**Sections** (each section has its own id like #about, #menu, #hours, #reserve):
+- \`section\` — all content sections
+- \`.section-container\` — inner container (not yet used in all sections but available)
+
+**Footer:**
+- \`.site-footer\` — footer wrapper
+- \`.footer-inner\` — inner container
+- \`.footer-brand\` — business name in footer
+
 ## Your Task
-Generate a JSON object of style tokens that make this site visually UNIQUE. Don't use the same values every time — vary them based on the inspiration sites and industry mood.
+Return a JSON object with TWO key fields:
 
-For example:
-- A fine dining restaurant inspired by a moody Alinea-style site should get: large hero, bottom-aligned layout, sharp buttons (0px radius), no card borders, thick accent dividers, large heading scale, wide letter spacing
-- A bright brunch cafe inspired by Blue Bottle should get: centered compact hero, pill buttons, rounded cards with shadows, minimal dividers, standard heading scale
-- A luxury spa inspired by Aman resorts should get: full-height hero, light touch (ghost buttons), large spacing, no borders, floating images, serif section labels
+1. **Design tokens** (the structural JSON fields) — these control layout, spacing, and hero treatment
+2. **customCSS** — THIS IS THE MAIN OUTPUT. Write a comprehensive CSS stylesheet (as a string) that completely reskins the site. This is where the magic happens.
 
-Return ONLY valid JSON with these fields (include ALL fields):
+Your customCSS should be AGGRESSIVE and SPECIFIC. Don't write timid CSS. Write CSS that makes this site look like it was custom-designed by an agency, inspired by the reference sites. Override colors, backgrounds, spacing, typography, borders, shadows, animations — everything.
+
+Examples of what good customCSS looks like:
+
+For a warm, photo-heavy Italian restaurant (inspired by fornoshortnorth.com):
+\`\`\`css
+.site-nav { background: rgba(30,15,5,0.95); border-bottom: 2px solid #e8732a; }
+.hero-section { min-height: 85vh; }
+.hero-overlay { background: linear-gradient(to bottom, transparent 20%, rgba(20,10,0,0.85) 100%) !important; }
+.hero-heading { font-size: clamp(48px,8vw,110px) !important; text-shadow: 0 4px 40px rgba(0,0,0,0.5); }
+.btn-primary { background: #e8732a !important; border-radius: 4px !important; text-transform: uppercase; letter-spacing: 0.08em; }
+section { border-top: none !important; }
+/* Add a warm glow effect */
+.hero-section::after { content:''; position:absolute; bottom:0; left:0; right:0; height:200px; background:linear-gradient(to top, #1a0a00, transparent); pointer-events:none; }
+\`\`\`
+
+For a minimal, airy brunch spot:
+\`\`\`css
+body { background: #faf8f5 !important; color: #2a2420 !important; }
+.site-nav { background: transparent !important; border-bottom: none !important; }
+.hero-section { min-height: 70vh; background-color: #faf8f5 !important; }
+.hero-heading { font-weight: 400 !important; letter-spacing: 0.02em !important; }
+.btn-primary { background: transparent !important; color: #2a2420 !important; border: 1.5px solid #2a2420 !important; border-radius: 0 !important; }
+section { padding: 80px 0 !important; }
+\`\`\`
+
+Return ONLY valid JSON:
 {
-  "navHeight": "64px to 80px",
-  "navStyle": "fixed" | "sticky" | "static",
-  "navBackground": "transparent" | "rgba(x,x,x,0.9)" | use theme bg with alpha,
-  "sectionPadding": "vertical padding for sections, e.g. 100px 0, 140px 0, 80px 0",
-  "maxWidth": "content max-width: 900px for editorial, 1100px normal, 1400px for wide",
-  "contentPadding": "horizontal padding: 0 40px, 0 60px, 0 80px",
   "heroLayout": "centered" | "left-aligned" | "bottom-aligned" | "overlay-full",
-  "heroMinHeight": "100vh, 90vh, 85vh, 70vh",
-  "heroHeadingSize": "clamp(min, preferred, max) — vary a lot! e.g. clamp(48px,8vw,120px) for bold",
-  "heroHeadingWeight": "400 for elegant, 700 normal, 800-900 for bold/impact",
-  "heroHeadingLetterSpacing": "-0.06em for tight/impact, -0.02em normal, 0.02em for spaced",
-  "heroSubtitleSize": "clamp(14px,1.5vw,18px) to clamp(18px,2.5vw,24px)",
-  "buttonRadius": "0px sharp, 8px rounded, 12px more rounded, 100px pill",
-  "buttonPadding": "e.g. 14px 32px, 18px 48px, 12px 24px",
-  "buttonStyle": "filled" | "outline" | "underline" | "ghost",
+  "heroMinHeight": "e.g. 100vh, 85vh, 70vh",
+  "heroHeadingSize": "e.g. clamp(48px,8vw,110px)",
+  "heroHeadingWeight": "e.g. 800, 400, 900",
+  "heroHeadingLetterSpacing": "e.g. -0.04em",
+  "buttonRadius": "e.g. 100px, 4px, 0px",
+  "buttonStyle": "filled" | "outline" | "underline",
   "buttonTextTransform": "none" | "uppercase",
-  "buttonLetterSpacing": "0.01em normal, 0.08em for uppercase spaced",
-  "cardRadius": "0px sharp, 8px, 12px, 20px rounded",
+  "cardRadius": "e.g. 20px, 8px, 0px",
   "cardBorder": true | false,
-  "cardShadow": "none" | "0 4px 20px rgba(0,0,0,0.08)" | "0 1px 3px rgba(0,0,0,0.04)",
-  "sectionLabelStyle": "uppercase-small" | "accent-line" | "none" | "large-serif",
-  "headingSizeScale": 0.8 to 1.5 — multiplier for all section headings,
-  "bodyLineHeight": "1.5 compact, 1.7 normal, 1.9 spacious, 2.0 very airy",
-  "gridGap": "16px tight, 24px normal, 40px spacious",
-  "useHeroOrbs": true | false — decorative gradient orbs (false for clean/minimal),
-  "useHoverEffects": true | false,
-  "imageStyle": "full-bleed" | "rounded" | "bordered" | "floating",
-  "dividerStyle": "line" | "none" | "gradient" | "thick",
-  "customCSS": "any additional CSS rules as a string — for truly unique touches like custom animations, special gradients, unique nav effects, etc. This is your creative freedom — use it."
+  "sectionLabelStyle": "uppercase-small" | "accent-line" | "none",
+  "headingSizeScale": 1.0,
+  "useHeroOrbs": false,
+  "imageStyle": "full-bleed" | "rounded" | "bordered",
+  "dividerStyle": "line" | "none" | "thick",
+  "customCSS": "YOUR FULL CUSTOM STYLESHEET HERE — make it 30-80 lines of CSS. Override .site-nav, .hero-section, .hero-heading, .btn-primary, section backgrounds, card styles, footer, colors, shadows, borders, typography — EVERYTHING needed to match the inspiration. Use !important where needed to override inline styles on section renderers."
 }
 
-Be CREATIVE and SPECIFIC. The goal is that two different inspiration URLs produce visibly different websites. Don't default to the same safe choices every time.`,
+CRITICAL: The customCSS field should be SUBSTANTIAL (30-80 lines). A 2-line customCSS means you're not trying hard enough. Study the inspiration description and translate every visual detail into CSS.`,
     }],
   });
 
@@ -97,10 +134,11 @@ Be CREATIVE and SPECIFIC. The goal is that two different inspiration URLs produc
     const text = block && block.type === 'text' ? block.text.trim() : '{}';
     const jsonText = text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
     const parsed = JSON.parse(jsonText) as Partial<StyleOverrides>;
-    logger.info({ keys: Object.keys(parsed).length }, 'Generated style overrides from inspiration');
+    const cssLen = (parsed.customCSS ?? '').length;
+    logger.info({ keys: Object.keys(parsed).length, customCSSLength: cssLen }, 'Generated style overrides');
     return parsed;
-  } catch {
-    logger.warn('Failed to parse style overrides — using defaults');
+  } catch (err) {
+    logger.warn({ error: String(err) }, 'Failed to parse style overrides — using defaults');
     return {};
   }
 }
