@@ -3,6 +3,186 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import WebsiteBuilder from './website-builder';
 
+// ── Color Wheel Popup ────────────────────────────────────────────────────────
+function ColorWheelPopup({ onClose }: { onClose: () => void }) {
+  const [hue, setHue] = useState(270);
+  const [saturation, setSaturation] = useState(80);
+  const [lightness, setLightness] = useState(55);
+  const [hexInput, setHexInput] = useState('');
+  const [copied, setCopied] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  function hslToHex(h: number, s: number, l: number): string {
+    const a = s / 100;
+    const b = l / 100;
+    const f = (n: number) => {
+      const k = (n + h / 30) % 12;
+      const color = b - a * Math.min(b, 1 - b) * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+      return Math.round(255 * Math.max(0, Math.min(1, color))).toString(16).padStart(2, '0');
+    };
+    return `#${f(0)}${f(8)}${f(4)}`;
+  }
+
+  const hex = hexInput || hslToHex(hue, saturation, lightness);
+
+  function copyHex() {
+    void navigator.clipboard.writeText(hex);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
+  // Draw the color wheel canvas
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const size = 180;
+    const center = size / 2;
+    const radius = center - 6;
+    canvas.width = size;
+    canvas.height = size;
+
+    // Draw hue wheel
+    for (let angle = 0; angle < 360; angle++) {
+      const startAngle = (angle - 1) * Math.PI / 180;
+      const endAngle = (angle + 1) * Math.PI / 180;
+      ctx.beginPath();
+      ctx.moveTo(center, center);
+      ctx.arc(center, center, radius, startAngle, endAngle);
+      ctx.closePath();
+      ctx.fillStyle = `hsl(${angle}, ${saturation}%, ${lightness}%)`;
+      ctx.fill();
+    }
+
+    // Draw white center circle
+    ctx.beginPath();
+    ctx.arc(center, center, radius * 0.55, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+
+    // Draw current color in center
+    ctx.beginPath();
+    ctx.arc(center, center, radius * 0.42, 0, Math.PI * 2);
+    ctx.fillStyle = hex;
+    ctx.fill();
+
+    // Draw selector dot on wheel
+    const selectorAngle = (hue - 90) * Math.PI / 180;
+    const selectorRadius = radius * 0.78;
+    const sx = center + selectorRadius * Math.cos(selectorAngle);
+    const sy = center + selectorRadius * Math.sin(selectorAngle);
+    ctx.beginPath();
+    ctx.arc(sx, sy, 7, 0, Math.PI * 2);
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    ctx.fillStyle = hslToHex(hue, saturation, lightness);
+    ctx.fill();
+  }, [hue, saturation, lightness, hex]);
+
+  function handleWheelClick(e: React.MouseEvent<HTMLCanvasElement>) {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left - 90;
+    const y = e.clientY - rect.top - 90;
+    const angle = Math.atan2(y, x) * 180 / Math.PI + 90;
+    setHue(((angle % 360) + 360) % 360);
+    setHexInput('');
+  }
+
+  function handleHexChange(val: string) {
+    setHexInput(val);
+    // Try to parse hex into HSL
+    const match = val.match(/^#?([0-9a-f]{6})$/i);
+    if (match) {
+      const r = parseInt(match[1]!.slice(0, 2), 16) / 255;
+      const g = parseInt(match[1]!.slice(2, 4), 16) / 255;
+      const b = parseInt(match[1]!.slice(4, 6), 16) / 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      const l = (max + min) / 2;
+      let h = 0, s = 0;
+      if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) * 60;
+        else if (max === g) h = ((b - r) / d + 2) * 60;
+        else h = ((r - g) / d + 4) * 60;
+      }
+      setHue(Math.round(h));
+      setSaturation(Math.round(s * 100));
+      setLightness(Math.round(l * 100));
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50" onClick={onClose}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="absolute top-14 right-48 bg-white border border-slate-200 rounded-2xl shadow-2xl shadow-slate-200/80 p-5 w-[280px] animate-fade-up"
+      >
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs font-bold text-slate-700">Color Picker</p>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/></svg>
+          </button>
+        </div>
+
+        {/* Color wheel */}
+        <div className="flex justify-center mb-4">
+          <canvas
+            ref={canvasRef}
+            width={180}
+            height={180}
+            className="cursor-crosshair rounded-full"
+            onClick={handleWheelClick}
+          />
+        </div>
+
+        {/* Sliders */}
+        <div className="space-y-2.5 mb-4">
+          <div>
+            <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Saturation</label>
+            <input type="range" min="0" max="100" value={saturation} onChange={(e) => { setSaturation(Number(e.target.value)); setHexInput(''); }} className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-violet-600 bg-slate-200" />
+          </div>
+          <div>
+            <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Lightness</label>
+            <input type="range" min="0" max="100" value={lightness} onChange={(e) => { setLightness(Number(e.target.value)); setHexInput(''); }} className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-violet-600 bg-slate-200" />
+          </div>
+        </div>
+
+        {/* Hex input + copy */}
+        <div className="flex gap-2 mb-3">
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              value={hexInput || hex}
+              onChange={(e) => handleHexChange(e.target.value)}
+              placeholder="#a855f7"
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-400"
+            />
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-md border border-slate-200" style={{ background: hex }} />
+          </div>
+          <button
+            onClick={copyHex}
+            className="px-3 py-2 bg-violet-600 text-white text-xs font-semibold rounded-lg hover:bg-violet-700 transition-colors flex-shrink-0"
+          >
+            {copied ? 'Copied!' : 'Copy'}
+          </button>
+        </div>
+
+        {/* Usage hint */}
+        <div className="bg-violet-50 border border-violet-100 rounded-lg p-3">
+          <p className="text-[10px] text-violet-700 leading-relaxed">
+            <span className="font-bold">How to use:</span> Find a color you like, copy the hex code, then tell the AI editor something like: <span className="italic">&quot;Change the hero background to {hex}&quot;</span> or <span className="italic">&quot;Use {hex} as the accent color&quot;</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 
 interface WebsiteRecord {
@@ -31,6 +211,164 @@ function siteName(site: WebsiteRecord): string {
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// ── Image Generator Popup ─────────────────────────────────────────────────────
+function ImageGeneratorPopup({
+  onClose,
+  onInsert,
+}: {
+  onClose: () => void;
+  onInsert: (imageUrl: string) => void;
+}) {
+  const [prompt, setPrompt] = useState('');
+  const [size, setSize] = useState<'1024x1024' | '1792x1024' | '1024x1792'>('1024x1024');
+  const [quality, setQuality] = useState<'standard' | 'hd'>('standard');
+  const [generating, setGenerating] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
+  const [revisedPrompt, setRevisedPrompt] = useState('');
+  const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  async function handleGenerate() {
+    if (!prompt.trim()) return;
+    setGenerating(true);
+    setError('');
+    setImageUrl('');
+    try {
+      const res = await fetch(`${API_URL}/websites/generate-image`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, size, quality }),
+      });
+      const data = await res.json() as { success: boolean; imageUrl?: string; revisedPrompt?: string; error?: string };
+      if (!data.success) throw new Error(data.error ?? 'Generation failed');
+      setImageUrl(data.imageUrl ?? '');
+      setRevisedPrompt(data.revisedPrompt ?? '');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Something went wrong');
+    }
+    setGenerating(false);
+  }
+
+  function copyUrl() {
+    if (!imageUrl) return;
+    void navigator.clipboard.writeText(imageUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)' }} onClick={onClose}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white rounded-2xl shadow-2xl w-[520px] max-h-[90vh] overflow-y-auto animate-fade-up"
+      >
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <div>
+            <p className="text-sm font-bold text-slate-800">AI Image Generator</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">Create images with DALL-E 3, then tell the AI editor to use them</p>
+          </div>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/></svg>
+          </button>
+        </div>
+
+        <div className="px-6 py-5 space-y-4">
+          {/* Prompt */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Describe your image</label>
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="A beautifully plated pasta dish on a dark marble table, overhead shot, warm lighting, restaurant ambiance..."
+              rows={3}
+              className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none"
+            />
+          </div>
+
+          {/* Options */}
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Size</label>
+              <div className="flex gap-1.5">
+                {([['1024x1024', 'Square'], ['1792x1024', 'Wide'], ['1024x1792', 'Tall']] as const).map(([val, label]) => (
+                  <button
+                    key={val}
+                    onClick={() => setSize(val)}
+                    className={`flex-1 px-2 py-1.5 text-[10px] font-semibold rounded-lg border transition-colors ${size === val ? 'border-violet-500 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex-1">
+              <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Quality</label>
+              <div className="flex gap-1.5">
+                {([['standard', 'Standard'], ['hd', 'HD']] as const).map(([val, label]) => (
+                  <button
+                    key={val}
+                    onClick={() => setQuality(val)}
+                    className={`flex-1 px-2 py-1.5 text-[10px] font-semibold rounded-lg border transition-colors ${quality === val ? 'border-violet-500 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Generate button */}
+          <button
+            onClick={() => void handleGenerate()}
+            disabled={!prompt.trim() || generating}
+            className="w-full py-3 bg-violet-600 text-white font-semibold rounded-xl text-sm hover:bg-violet-700 disabled:opacity-50 transition-colors"
+          >
+            {generating ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Generating image...
+              </span>
+            ) : 'Generate with DALL-E 3'}
+          </button>
+
+          {error && <p className="text-red-500 text-xs text-center">{error}</p>}
+
+          {/* Result */}
+          {imageUrl && (
+            <div className="space-y-3">
+              <div className="bg-slate-50 rounded-xl overflow-hidden border border-slate-200">
+                <img src={imageUrl} alt="Generated" className="w-full" />
+              </div>
+              {revisedPrompt && (
+                <p className="text-[10px] text-slate-400 italic leading-relaxed">DALL-E interpreted: &quot;{revisedPrompt}&quot;</p>
+              )}
+              <div className="flex gap-2">
+                <button
+                  onClick={copyUrl}
+                  className="flex-1 py-2.5 border border-slate-200 text-slate-600 font-medium rounded-xl text-xs hover:bg-slate-50 transition-colors"
+                >
+                  {copied ? 'Copied URL!' : 'Copy Image URL'}
+                </button>
+                <button
+                  onClick={() => onInsert(imageUrl)}
+                  className="flex-1 py-2.5 bg-violet-600 text-white font-semibold rounded-xl text-xs hover:bg-violet-700 transition-colors"
+                >
+                  Use as Hero Image
+                </button>
+              </div>
+              <div className="bg-violet-50 border border-violet-100 rounded-lg p-3">
+                <p className="text-[10px] text-violet-700 leading-relaxed">
+                  <span className="font-bold">Tip:</span> Copy the URL and tell the AI editor: <span className="italic">&quot;Use this image as the hero background: {imageUrl.slice(0, 50)}...&quot;</span> or <span className="italic">&quot;Add this to the gallery section&quot;</span>
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ── List view ────────────────────────────────────────────────────────────────
@@ -201,6 +539,8 @@ function WebsiteEditor({
   const [input, setInput] = useState('');
   const [editing, setEditing] = useState(false);
   const [mobilePreview, setMobilePreview] = useState(false);
+  const [showColorWheel, setShowColorWheel] = useState(false);
+  const [showImageGen, setShowImageGen] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -293,6 +633,28 @@ function WebsiteEditor({
               <span className="text-[11px] font-medium text-emerald-700">Live</span>
             </div>
           )}
+          {/* Color wheel button */}
+          <button
+            onClick={() => setShowColorWheel(!showColorWheel)}
+            title="Color picker — find hex codes for precise AI edits"
+            className={`p-1.5 rounded-lg transition-colors ${showColorWheel ? 'bg-violet-100 text-violet-700' : 'text-slate-400 hover:text-violet-600 hover:bg-violet-50'}`}
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 110-12 6 6 0 010 12zm0-2a4 4 0 100-8 4 4 0 000 8zm0-2a2 2 0 110-4 2 2 0 010 4z" clipRule="evenodd" />
+            </svg>
+          </button>
+
+          {/* Image generator button */}
+          <button
+            onClick={() => setShowImageGen(true)}
+            title="AI Image Generator — create images with DALL-E 3"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors"
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+              <path fillRule="evenodd" d="M1 8a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 018.07 3h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0016.07 6H17a2 2 0 012 2v7a2 2 0 01-2 2H3a2 2 0 01-2-2V8zm13.5 3a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM10 14a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+            </svg>
+          </button>
+
           {deployUrl && (
             <a
               href={deployUrl}
@@ -318,6 +680,20 @@ function WebsiteEditor({
           </button>
         </div>
       </div>
+
+      {/* Color wheel popup */}
+      {showColorWheel && <ColorWheelPopup onClose={() => setShowColorWheel(false)} />}
+
+      {/* Image generator popup */}
+      {showImageGen && (
+        <ImageGeneratorPopup
+          onClose={() => setShowImageGen(false)}
+          onInsert={(imageUrl) => {
+            setShowImageGen(false);
+            setInput(`Use this image as the hero background: ${imageUrl}`);
+          }}
+        />
+      )}
 
       {/* Split panel */}
       <div className="flex flex-1 overflow-hidden">

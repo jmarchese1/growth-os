@@ -49,4 +49,26 @@ export async function websiteRoutes(app: FastifyInstance) {
     const html = await res.text();
     return reply.type('text/html').code(res.status).send(html);
   });
+
+  // Proxy extract-menu
+  app.post('/websites/extract-menu', async (req, reply) => {
+    const res = await fetch(`${WEBSITE_GEN_URL}/extract-menu`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body),
+    });
+    const data = await res.json();
+    return reply.code(res.status).send(data);
+  });
+
+  // Proxy DALL-E 3 image generation
+  app.post('/websites/generate-image', async (req, reply) => {
+    const res = await fetch(`${WEBSITE_GEN_URL}/generate-image`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body),
+    });
+    const data = await res.json();
+    return reply.code(res.status).send(data);
+  });
 }

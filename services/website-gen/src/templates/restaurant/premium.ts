@@ -12,6 +12,8 @@ export interface ExtraPageConfig {
   slug: string;
 }
 
+export type AnimationPreset = 'none' | 'fade-up' | 'slide-in' | 'scale-reveal' | 'blur-in' | 'stagger-cascade' | 'parallax-drift';
+
 export interface PremiumWebsiteConfig {
   businessName: string;
   tagline?: string;
@@ -28,6 +30,7 @@ export interface PremiumWebsiteConfig {
   bookingUrl?: string;
   colorScheme: ColorScheme;
   fontPairing: FontPairing;
+  animationPreset?: AnimationPreset;
   heroHeading: string;
   heroSubheading: string;
   aboutHeading: string;
@@ -335,10 +338,90 @@ function renderExtraPages(config: PremiumWebsiteConfig, c: Colors, f: Fonts): st
   }).join('\n');
 }
 
+// ── Scroll animation CSS + JS ─────────────────────────────────────────────────
+function scrollAnimationCSS(preset: AnimationPreset): string {
+  if (preset === 'none') return '';
+
+  // Base: IntersectionObserver-driven animations (excellent browser support)
+  const baseCSS = `
+    .scroll-animate {
+      opacity: 0;
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), filter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: opacity, transform;
+    }
+    .scroll-animate.is-visible {
+      opacity: 1 !important;
+      transform: none !important;
+      filter: none !important;
+    }
+    .stagger-child {
+      opacity: 0;
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: opacity, transform;
+    }
+    .stagger-child.is-visible {
+      opacity: 1 !important;
+      transform: none !important;
+      filter: none !important;
+    }
+  `;
+
+  const presetStyles: Record<Exclude<AnimationPreset, 'none'>, string> = {
+    'fade-up': `
+      .scroll-animate { transform: translateY(50px); }
+    `,
+    'slide-in': `
+      .scroll-animate:nth-child(odd) { transform: translateX(-60px); }
+      .scroll-animate:nth-child(even) { transform: translateX(60px); }
+    `,
+    'scale-reveal': `
+      .scroll-animate { transform: scale(0.88); }
+    `,
+    'blur-in': `
+      .scroll-animate { filter: blur(12px); transform: translateY(20px); }
+    `,
+    'stagger-cascade': `
+      .scroll-animate { transform: translateY(40px); }
+      .stagger-child { transform: translateY(30px); }
+    `,
+    'parallax-drift': `
+      .scroll-animate { transform: translateY(80px); }
+      .scroll-animate.is-visible { transition-duration: 1.2s; }
+    `,
+  };
+
+  return baseCSS + (presetStyles[preset] ?? '');
+}
+
+function scrollAnimationJS(preset: AnimationPreset): string {
+  if (preset === 'none') return '';
+
+  return `
+<script>
+(function(){
+  var io = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        ${preset === 'stagger-cascade' ? `
+        var children = entry.target.querySelectorAll('.stagger-child');
+        children.forEach(function(child, i) {
+          setTimeout(function() { child.classList.add('is-visible'); }, i * 120);
+        });` : ''}
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.scroll-animate').forEach(function(el) { io.observe(el); });
+})();
+</script>`;
+}
+
 // ── Main render function ─────────────────────────────────────────────────────
 export function renderRestaurantPremium(config: PremiumWebsiteConfig): string {
   const c = COLOR_SCHEMES[config.colorScheme] ?? COLOR_SCHEMES['midnight'];
   const f = FONT_PAIRINGS[config.fontPairing] ?? FONT_PAIRINGS['modern'];
+  const anim = config.animationPreset ?? 'none';
   const googleFontUrl = f.googleFont
     ? `<link href="https://fonts.googleapis.com/css2?family=${f.googleFont}&display=swap" rel="stylesheet">`
     : '';
@@ -357,13 +440,22 @@ export function renderRestaurantPremium(config: PremiumWebsiteConfig): string {
   </div>
   <style>@keyframes orb1{from{transform:translate(0,0) scale(1);}to{transform:translate(60px,40px) scale(1.15);}}@keyframes orb2{from{transform:translate(0,0);}to{transform:translate(-40px,60px) scale(1.1);}}</style>` : '';
 
+  const animClass = anim !== 'none' ? ' class="scroll-animate"' : '';
   const sectionHtml = orderedSections
     .map((id) => {
-      const html = SECTION_RENDERERS[id]?.(config, c, f) ?? '';
+      let html = SECTION_RENDERERS[id]?.(config, c, f) ?? '';
       if (!html) return '';
+      // Inject scroll-animate class into the top-level <section> tag
+      if (anim !== 'none') {
+        html = html.replace(/^(\s*<section)/, '$1 class="scroll-animate"');
+        // For stagger-cascade, add stagger-child to grid children (cards, menu items)
+        if (anim === 'stagger-cascade') {
+          html = html.replace(/onmouseover="this\.style/g, 'class="stagger-child" onmouseover="this.style');
+        }
+      }
       const secCfg = config.sections?.find((s) => s.id === id);
       return secCfg?.isPage
-        ? `<div style="min-height:100vh;display:flex;flex-direction:column;justify-content:center;">${html}</div>`
+        ? `<div${animClass} style="min-height:100vh;display:flex;flex-direction:column;justify-content:center;">${html}</div>`
         : html;
     })
     .join('');
@@ -399,6 +491,7 @@ export function renderRestaurantPremium(config: PremiumWebsiteConfig): string {
       [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important;}
     }
     @keyframes scrollPulse{0%,100%{opacity:0.4;}50%{opacity:1;}}
+    ${scrollAnimationCSS(anim)}
   </style>
 </head>
 <body>
@@ -460,6 +553,8 @@ ${config.chatbotEnabled && config.chatbotBusinessId ? `
   };
 </script>
 <script src="${config.chatbotApiUrl ?? 'https://chat.embedo.ai'}/widget.js" async></script>` : ''}
+
+${scrollAnimationJS(anim)}
 
 </body>
 </html>`;

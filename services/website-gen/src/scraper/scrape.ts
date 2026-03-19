@@ -261,10 +261,144 @@ Extract as many menu/service items as you can find (up to 20). Be precise with h
   return extracted;
 }
 
+// Extract CSS design tokens from raw HTML/CSS for deeper style analysis
+function extractDesignTokens(html: string): string {
+  const tokens: string[] = [];
+
+  // Extract inline style colors
+  const colorMatches = html.match(/#[0-9a-fA-F]{3,8}|rgb\([^)]+\)|rgba\([^)]+\)|hsl\([^)]+\)/g) ?? [];
+  const uniqueColors = [...new Set(colorMatches)].slice(0, 15);
+  if (uniqueColors.length) tokens.push(`Colors found: ${uniqueColors.join(', ')}`);
+
+  // Extract font families from CSS
+  const fontMatches = html.match(/font-family:\s*([^;}"]+)/gi) ?? [];
+  const uniqueFonts = [...new Set(fontMatches.map(f => f.replace(/font-family:\s*/i, '').trim()))].slice(0, 8);
+  if (uniqueFonts.length) tokens.push(`Fonts: ${uniqueFonts.join(' | ')}`);
+
+  // Extract font sizes
+  const sizeMatches = html.match(/font-size:\s*([^;}"]+)/gi) ?? [];
+  const uniqueSizes = [...new Set(sizeMatches.map(s => s.replace(/font-size:\s*/i, '').trim()))].slice(0, 10);
+  if (uniqueSizes.length) tokens.push(`Font sizes: ${uniqueSizes.join(', ')}`);
+
+  // Extract background colors
+  const bgMatches = html.match(/background(?:-color)?:\s*([^;}"]+)/gi) ?? [];
+  const uniqueBgs = [...new Set(bgMatches.map(b => b.replace(/background(?:-color)?:\s*/i, '').trim()))].filter(b => !b.includes('url(')).slice(0, 8);
+  if (uniqueBgs.length) tokens.push(`Backgrounds: ${uniqueBgs.join(', ')}`);
+
+  // Extract border-radius values (rounded corners style)
+  const radiusMatches = html.match(/border-radius:\s*([^;}"]+)/gi) ?? [];
+  const uniqueRadii = [...new Set(radiusMatches.map(r => r.replace(/border-radius:\s*/i, '').trim()))].slice(0, 5);
+  if (uniqueRadii.length) tokens.push(`Border radius: ${uniqueRadii.join(', ')}`);
+
+  // Extract CSS animations/transitions
+  const animMatches = html.match(/(?:animation|transition):\s*([^;}"]+)/gi) ?? [];
+  if (animMatches.length) tokens.push(`Animations: ${animMatches.length} animation/transition rules found`);
+
+  // Extract layout patterns (grid/flex)
+  const gridCount = (html.match(/display:\s*grid/gi) ?? []).length;
+  const flexCount = (html.match(/display:\s*flex/gi) ?? []).length;
+  if (gridCount || flexCount) tokens.push(`Layout: ${gridCount} grid + ${flexCount} flex containers`);
+
+  return tokens.join('\n');
+}
+
+// Try Playwright-based screenshot for richer visual analysis
+async function screenshotWithPlaywright(url: string): Promise<{ screenshot: string; extractedCSS: string } | null> {
+  try {
+    const pw = await import('playwright');
+    const browser = await pw.chromium.launch({ headless: true });
+    const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+
+    await page.goto(url, { waitUntil: 'networkidle', timeout: 20000 });
+    // Wait for hero/above-fold content to load
+    await page.waitForTimeout(2000);
+
+    // Take full-page screenshot
+    const screenshotBuffer = await page.screenshot({ fullPage: false, type: 'jpeg', quality: 70 });
+    const screenshotBase64 = screenshotBuffer.toString('base64');
+
+    // Extract computed styles from key elements (runs in browser context via Playwright)
+    const extractedCSS = await page.evaluate(`
+      (function() {
+        var tokens = [];
+        var body = document.body;
+        var bodyStyle = getComputedStyle(body);
+        tokens.push('Body bg: ' + bodyStyle.backgroundColor);
+        tokens.push('Body font: ' + bodyStyle.fontFamily);
+        tokens.push('Body color: ' + bodyStyle.color);
+        var h1 = document.querySelector('h1');
+        if (h1) { var s = getComputedStyle(h1); tokens.push('H1: ' + s.fontFamily + ' / ' + s.fontSize + ' / ' + s.fontWeight + ' / ' + s.color); }
+        var h2 = document.querySelector('h2');
+        if (h2) { var s2 = getComputedStyle(h2); tokens.push('H2: ' + s2.fontFamily + ' / ' + s2.fontSize + ' / ' + s2.fontWeight); }
+        var btn = document.querySelector('a[class*="btn"], button[class*="btn"], .btn, .button');
+        if (btn) { var sb = getComputedStyle(btn); tokens.push('CTA: bg=' + sb.backgroundColor + ' color=' + sb.color + ' radius=' + sb.borderRadius); }
+        var secs = document.querySelectorAll('section');
+        for (var i = 0; i < Math.min(secs.length, 4); i++) { var ss = getComputedStyle(secs[i]); tokens.push('Section ' + i + ': bg=' + ss.backgroundColor + ' padding=' + ss.padding); }
+        var isDark = bodyStyle.backgroundColor.match(/rgb\\((\\d+)/);
+        if (isDark && parseInt(isDark[1]) < 50) tokens.push('DARK THEME detected');
+        return tokens.join('\\n');
+      })()
+    `) as string;
+
+    await browser.close();
+    return { screenshot: screenshotBase64, extractedCSS };
+  } catch (err) {
+    logger.warn({ url, error: String(err) }, 'Playwright screenshot failed — falling back to HTTP scrape');
+    return null;
+  }
+}
+
 // Scrape an inspiration site and return a style description for use in copy generation
 export async function scrapeForInspiration(url: string, anthropicKey: string): Promise<string> {
   logger.info({ url }, 'Scraping inspiration site');
   try {
+    // Try Playwright first for visual screenshot + CSS extraction
+    const pwResult = await screenshotWithPlaywright(url);
+
+    if (pwResult) {
+      // Rich analysis: screenshot + computed CSS tokens
+      const client = new Anthropic({ apiKey: anthropicKey });
+      const message = await client.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 600,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: { type: 'base64', media_type: 'image/jpeg', data: pwResult.screenshot },
+            },
+            {
+              type: 'text',
+              text: `You are a web design expert analyzing a website screenshot for style inspiration. The user wants to build a website inspired by this design.
+
+## Extracted CSS tokens from the page:
+${pwResult.extractedCSS}
+
+Write 5-8 sentences describing the visual design in detail. Be very specific about:
+1. **Color palette**: Exact tones (e.g., "deep charcoal #1a1a2e background with warm cream #f5f0e8 text and burnt orange #e07a3b accent")
+2. **Typography**: Serif/sans-serif, weight, spacing, hierarchy
+3. **Layout**: Spacing, grid patterns, white space usage, section rhythm
+4. **Hero section**: Image treatment, headline sizing, CTA button style
+5. **Components**: Card styles, hover effects, border radius, shadows
+6. **Overall mood**: Luxury, playful, minimal, editorial, etc.
+7. **Scroll/animation style**: Any visible motion, parallax, or transitions
+
+Style description only, no preamble:`,
+            },
+          ],
+        }],
+      });
+
+      const block = message.content[0];
+      const text = block && block.type === 'text' ? block.text.trim() : '';
+      if (text) {
+        logger.info({ url }, 'Playwright-powered inspiration analysis complete');
+        return text;
+      }
+    }
+
+    // Fallback to HTTP-based scraping
     const fetched = await fetchWithFallbacks(url);
     if (!fetched) return '';
 
@@ -272,14 +406,15 @@ export async function scrapeForInspiration(url: string, anthropicKey: string): P
     const meta = extractMeta(html);
     const ogTitle = meta['og:title'] ?? '';
     const cleanedText = cleanHtml(html).slice(0, 5000);
+    const designTokens = extractDesignTokens(html);
 
     const client = new Anthropic({ apiKey: anthropicKey });
     const message = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 350,
+      max_tokens: 400,
       messages: [{
         role: 'user',
-        content: `Analyze this website and write 3-5 sentences describing its visual design style as inspiration for building a similar site. Be specific about: color palette (dark/light/warm/cool tones), typography feel (serif/sans-serif, elegant/bold/minimal), layout style (spacious/dense, centered/asymmetric), imagery style (moody/bright/minimalist), and overall brand mood.${ogTitle ? `\n\nSite title: ${ogTitle}` : ''}\n\nPage content:\n${cleanedText}\n\nStyle description only, no preamble:`,
+        content: `Analyze this website and write 5-8 sentences describing its visual design style as inspiration for building a similar site. Be specific about: color palette (dark/light/warm/cool tones), typography feel (serif/sans-serif, elegant/bold/minimal), layout style (spacious/dense, centered/asymmetric), imagery style (moody/bright/minimalist), and overall brand mood.${ogTitle ? `\n\nSite title: ${ogTitle}` : ''}${designTokens ? `\n\n## Design tokens extracted from CSS:\n${designTokens}` : ''}\n\nPage content:\n${cleanedText}\n\nStyle description only, no preamble:`,
       }],
     });
 

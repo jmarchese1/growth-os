@@ -6,6 +6,7 @@ const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 
 type ColorScheme = 'midnight' | 'warm' | 'forest' | 'ocean' | 'ivory' | 'rose' | 'slate' | 'emerald' | 'amber' | 'crimson' | 'navy' | 'sage';
 type FontPairing = 'modern' | 'classic' | 'minimal' | 'elegant' | 'luxury' | 'editorial' | 'tech' | 'literary';
+type AnimationPreset = 'none' | 'fade-up' | 'slide-in' | 'scale-reveal' | 'blur-in' | 'stagger-cascade' | 'parallax-drift';
 type IndustryId = 'restaurant' | 'gym' | 'salon' | 'spa' | 'cafe' | 'retail';
 type SectionKey = 'about' | 'features' | 'menu' | 'gallery' | 'testimonials' | 'hours' | 'reserve';
 
@@ -159,6 +160,16 @@ const FONT_PAIRINGS: { id: FontPairing; label: string; desc: string; headingFami
 
 ];
 
+const ANIMATION_PRESETS: { id: AnimationPreset; label: string; desc: string; preview: string }[] = [
+  { id: 'none',             label: 'None',             desc: 'No scroll animations',               preview: 'Clean & instant' },
+  { id: 'fade-up',          label: 'Fade Up',          desc: 'Sections fade in and rise gently',    preview: 'Elegant & subtle' },
+  { id: 'slide-in',         label: 'Slide In',         desc: 'Alternate left/right entrance',       preview: 'Dynamic & modern' },
+  { id: 'scale-reveal',     label: 'Scale Reveal',     desc: 'Sections scale up from small',        preview: 'Bold & cinematic' },
+  { id: 'blur-in',          label: 'Blur In',          desc: 'Blur-to-sharp focus effect',          preview: 'Dreamy & premium' },
+  { id: 'stagger-cascade',  label: 'Stagger Cascade',  desc: 'Cards animate in sequence',           preview: 'Playful & lively' },
+  { id: 'parallax-drift',   label: 'Parallax Drift',   desc: 'Layered depth on scroll',             preview: 'Immersive & deep' },
+];
+
 const GOOGLE_FONTS_URL = 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400&family=Space+Grotesk:wght@300;400;500;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -210,6 +221,7 @@ interface FormData {
   bookingUrl: string;
   colorScheme: ColorScheme;
   fontPairing: FontPairing;
+  animationPreset: AnimationPreset;
   hours: Record<string, string>;
   menuItems: Array<{ name: string; description: string; price: string; category: string }>;
 }
@@ -254,6 +266,7 @@ export default function WebsiteBuilder({
     bookingUrl: '',
     colorScheme: firstIndustry.defaultColorScheme,
     fontPairing: firstIndustry.defaultFontPairing,
+    animationPreset: 'fade-up',
     hours: {},
     menuItems: [],
   });
@@ -365,6 +378,7 @@ export default function WebsiteBuilder({
   }
 
   async function handleScrape() {
+    // Allow proceeding with just inspiration sites (no scrape URL needed)
     if (!form.existingWebsiteUrl) { setStep(3); return; }
     setScraping(true);
     setError('');
@@ -413,6 +427,7 @@ export default function WebsiteBuilder({
           sections: sectionsPayload,
           inspirationUrls: inspirationUrls.filter(Boolean),
           extraPages: extraPagesPayload,
+          animationPreset: form.animationPreset,
         }),
       });
       const json = await res.json() as { success: boolean; url?: string; html?: string; websiteId?: string; error?: string };
@@ -439,27 +454,7 @@ export default function WebsiteBuilder({
     <div className="min-h-screen p-8 animate-fade-up">
 
       {/* ── Generating overlay ── */}
-      {generating && (
-        <div
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6"
-          style={{ background: 'rgba(10,8,20,0.88)', backdropFilter: 'blur(10px)' }}
-        >
-          <EmbedoCube size={64} />
-          <div className="text-center">
-            <p className="text-white text-xl font-semibold mb-2">Building your website...</p>
-            <p className="text-violet-300/70 text-sm">AI is crafting copy, sections, and style. About 30 seconds.</p>
-          </div>
-          <div className="flex gap-1.5 mt-2">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="w-1.5 h-1.5 rounded-full bg-violet-400"
-                style={{ animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite` }}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      {generating && <GeneratingOverlay />}
 
       {/* Steps header */}
       <div className="max-w-3xl mx-auto mb-10">
@@ -604,7 +599,7 @@ export default function WebsiteBuilder({
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Scanning your website...
                   </span>
-                ) : form.existingWebsiteUrl ? 'Import & Continue' : 'Skip — Start Fresh'}
+                ) : form.existingWebsiteUrl ? 'Import & Continue' : inspirationUrls.some(Boolean) ? 'Continue with Inspiration' : 'Skip — Start Fresh'}
               </button>
             </div>
           </div>
@@ -929,6 +924,52 @@ export default function WebsiteBuilder({
                   })}
                 </div>
               </div>
+
+              {/* Scroll Animations */}
+              <div className="mt-8 pt-8 border-t border-slate-100">
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Scroll Animations</label>
+                <p className="text-xs text-slate-400 mb-4">Sections animate into view as visitors scroll. Powered by native CSS scroll-driven animations.</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  {ANIMATION_PRESETS.map((ap) => {
+                    const selected = form.animationPreset === ap.id;
+                    return (
+                      <button
+                        key={ap.id}
+                        onClick={() => setForm_('animationPreset', ap.id)}
+                        className={`relative p-3.5 rounded-xl border-2 text-left transition-all ${selected ? 'border-violet-500 bg-violet-50 shadow-md shadow-violet-100' : 'border-slate-200 hover:border-slate-300 bg-white'}`}
+                      >
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <div className={`w-5 h-5 rounded-md flex items-center justify-center ${selected ? 'bg-violet-500' : 'bg-slate-100'}`}>
+                            {ap.id === 'none' ? (
+                              <svg viewBox="0 0 16 16" fill={selected ? 'white' : '#94a3b8'} className="w-3 h-3"><path d="M3 8h10M8 3v10" stroke={selected ? 'white' : '#94a3b8'} strokeWidth="1.5" strokeLinecap="round" fill="none"/></svg>
+                            ) : ap.id === 'fade-up' ? (
+                              <svg viewBox="0 0 16 16" fill="none" className="w-3 h-3"><path d="M8 12V4m-3 3l3-3 3 3" stroke={selected ? 'white' : '#94a3b8'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            ) : ap.id === 'slide-in' ? (
+                              <svg viewBox="0 0 16 16" fill="none" className="w-3 h-3"><path d="M2 8h12M10 5l3 3-3 3" stroke={selected ? 'white' : '#94a3b8'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            ) : ap.id === 'scale-reveal' ? (
+                              <svg viewBox="0 0 16 16" fill="none" className="w-3 h-3"><rect x="4" y="4" width="8" height="8" rx="2" stroke={selected ? 'white' : '#94a3b8'} strokeWidth="1.5"/><rect x="2" y="2" width="12" height="12" rx="3" stroke={selected ? 'white' : '#94a3b8'} strokeWidth="1" opacity="0.4"/></svg>
+                            ) : ap.id === 'blur-in' ? (
+                              <svg viewBox="0 0 16 16" fill="none" className="w-3 h-3"><circle cx="8" cy="8" r="3" stroke={selected ? 'white' : '#94a3b8'} strokeWidth="1.5"/><circle cx="8" cy="8" r="6" stroke={selected ? 'white' : '#94a3b8'} strokeWidth="1" opacity="0.3"/></svg>
+                            ) : ap.id === 'stagger-cascade' ? (
+                              <svg viewBox="0 0 16 16" fill="none" className="w-3 h-3"><rect x="2" y="3" width="3" height="3" rx="0.5" fill={selected ? 'white' : '#94a3b8'}/><rect x="6.5" y="5" width="3" height="3" rx="0.5" fill={selected ? 'white' : '#94a3b8'} opacity="0.7"/><rect x="11" y="7" width="3" height="3" rx="0.5" fill={selected ? 'white' : '#94a3b8'} opacity="0.4"/></svg>
+                            ) : (
+                              <svg viewBox="0 0 16 16" fill="none" className="w-3 h-3"><path d="M3 13L8 3l5 10" stroke={selected ? 'white' : '#94a3b8'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M5 9h6" stroke={selected ? 'white' : '#94a3b8'} strokeWidth="1" opacity="0.5"/></svg>
+                            )}
+                          </div>
+                          <span className={`text-[11px] font-bold ${selected ? 'text-violet-700' : 'text-slate-700'}`}>{ap.label}</span>
+                        </div>
+                        <p className="text-[9px] text-slate-400 leading-snug">{ap.desc}</p>
+                        <p className="text-[8px] text-slate-300 mt-1">{ap.preview}</p>
+                        {selected && (
+                          <div className="absolute top-2 right-2 w-4 h-4 bg-violet-500 rounded-full flex items-center justify-center">
+                            <svg viewBox="0 0 12 12" fill="none" className="w-2.5 h-2.5"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             {error && <p className="text-red-500 text-sm text-center">{error}</p>}
@@ -997,6 +1038,77 @@ export default function WebsiteBuilder({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ── Generating Overlay with fun rotating messages ────────────────────────────
+const LOADING_MESSAGES = [
+  'Conbobulating the pixels...',
+  'Thinking really hard...',
+  'Majestifying your brand...',
+  'Teaching AI about good taste...',
+  'Consulting the design gods...',
+  'Arranging ones and zeros...',
+  'Warming up the color wheel...',
+  'Brewing fresh copy...',
+  'Polishing the hero section...',
+  'Aligning all the things...',
+  'Making it look expensive...',
+  'Summoning the font spirits...',
+  'Crafting your digital storefront...',
+  'Almost there, promise...',
+  'Adding a pinch of elegance...',
+  'Optimizing the vibes...',
+  'Sprinkling design dust...',
+  'Questioning our font choices...',
+  'Making pixels behave...',
+  'Refactoring the aesthetic...',
+];
+
+function GeneratingOverlay() {
+  const [msgIndex, setMsgIndex] = useState(0);
+
+  useEffect(() => {
+    // Start with random message
+    setMsgIndex(Math.floor(Math.random() * LOADING_MESSAGES.length));
+    const interval = setInterval(() => {
+      setMsgIndex((prev) => {
+        let next = prev;
+        // Avoid showing the same message twice in a row
+        while (next === prev) next = Math.floor(Math.random() * LOADING_MESSAGES.length);
+        return next;
+      });
+    }, 2800);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6"
+      style={{ background: 'rgba(10,8,20,0.88)', backdropFilter: 'blur(10px)' }}
+    >
+      <EmbedoCube size={64} />
+      <div className="text-center">
+        <p className="text-white text-xl font-semibold mb-2">Building your website...</p>
+        <p
+          key={msgIndex}
+          className="text-violet-300/70 text-sm"
+          style={{ animation: 'fadeInMsg 0.5s ease-out' }}
+        >
+          {LOADING_MESSAGES[msgIndex]}
+        </p>
+      </div>
+      <div className="flex gap-1.5 mt-2">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="w-1.5 h-1.5 rounded-full bg-violet-400"
+            style={{ animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite` }}
+          />
+        ))}
+      </div>
+      <style>{`@keyframes fadeInMsg{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}`}</style>
     </div>
   );
 }

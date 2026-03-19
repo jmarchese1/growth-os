@@ -1,14 +1,151 @@
 import type { FastifyInstance } from 'fastify';
 import Anthropic from '@anthropic-ai/sdk';
 import { db } from '@embedo/db';
-import { NotFoundError, ValidationError } from '@embedo/utils';
+import { NotFoundError, ValidationError, createLogger } from '@embedo/utils';
 import { scrapeWebsite, scrapeForInspiration } from './scraper/scrape.js';
 import { getInsightsForIndustry } from './training/knowledge-base.js';
 import { generateWebsiteCopy } from './generator/content.js';
 import { renderRestaurantPremium } from './templates/restaurant/premium.js';
 import { deployToVercel } from './deploy/vercel.js';
 import { env } from './config.js';
-import type { ColorScheme, FontPairing } from './templates/restaurant/premium.js';
+import type { ColorScheme, FontPairing, AnimationPreset } from './templates/restaurant/premium.js';
+import type { PremiumWebsiteConfig } from './templates/restaurant/premium.js';
+
+const logger = createLogger('website-gen:routes');
+
+// ── AI Self-Review Loop ─────────────────────────────────────────────────────
+async function screenshotUrl(url: string): Promise<string | null> {
+  try {
+    const pw = await import('playwright');
+    const browser = await pw.chromium.launch({ headless: true });
+    const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    await page.goto(url, { waitUntil: 'networkidle', timeout: 25000 });
+    await page.waitForTimeout(2000);
+    // Scroll down to trigger animations and see more content
+    await page.evaluate('window.scrollTo(0, document.body.scrollHeight / 3)');
+    await page.waitForTimeout(1000);
+    await page.evaluate('window.scrollTo(0, 0)');
+    await page.waitForTimeout(500);
+    const screenshot = await page.screenshot({ fullPage: true, type: 'jpeg', quality: 65 });
+    await browser.close();
+    return screenshot.toString('base64');
+  } catch (err) {
+    logger.warn({ url, error: String(err) }, 'Self-review screenshot failed');
+    return null;
+  }
+}
+
+async function selfReviewAndFix(
+  config: PremiumWebsiteConfig,
+  deployUrl: string,
+  anthropicKey: string,
+  businessId: string,
+): Promise<{ html: string; config: PremiumWebsiteConfig; deployUrl: string; fixes: string[] }> {
+  const fixes: string[] = [];
+  let currentConfig = { ...config };
+  let currentUrl = deployUrl;
+  const MAX_ROUNDS = 2;
+
+  for (let round = 0; round < MAX_ROUNDS; round++) {
+    if (!currentUrl) break;
+
+    // Wait a moment for deployment to propagate
+    await new Promise(r => setTimeout(r, 3000));
+
+    const screenshot = await screenshotUrl(currentUrl);
+    if (!screenshot) break;
+
+    const client = new Anthropic({ apiKey: anthropicKey });
+    const reviewResponse = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1500,
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: { type: 'base64', media_type: 'image/jpeg', data: screenshot },
+          },
+          {
+            type: 'text',
+            text: `You are a senior web designer reviewing a generated website. Look at this full-page screenshot and evaluate it.
+
+Current website config: ${JSON.stringify({
+  businessName: currentConfig.businessName,
+  colorScheme: currentConfig.colorScheme,
+  fontPairing: currentConfig.fontPairing,
+  heroHeading: currentConfig.heroHeading,
+  heroSubheading: currentConfig.heroSubheading,
+  ctaText: currentConfig.ctaText,
+  animationPreset: currentConfig.animationPreset,
+}, null, 2)}
+
+Check for these issues:
+1. **Text readability**: Is text readable against backgrounds? Low contrast?
+2. **Layout issues**: Overlapping elements, broken grids, empty sections?
+3. **Visual balance**: Is the hero too empty or too cramped?
+4. **Copy quality**: Does the headline sound generic or AI-ish?
+5. **Color harmony**: Do the colors work together?
+6. **Overall polish**: Does this look professional and premium?
+
+If the site looks GOOD (7/10 or better), respond with exactly: {"quality": "good", "score": N}
+
+If there are issues, respond with a JSON patch to fix them. ONLY include fields that need changing:
+{
+  "quality": "needs_fix",
+  "score": N,
+  "issues": ["brief description of each issue"],
+  "patch": {
+    "heroHeading": "Better heading if current one is generic",
+    "heroSubheading": "Better subheading if needed",
+    "colorScheme": "different scheme if colors clash",
+    "fontPairing": "different font if hard to read"
+  }
+}
+
+Return ONLY valid JSON, no markdown.`,
+          },
+        ],
+      }],
+    });
+
+    let reviewResult: { quality: string; score: number; issues?: string[]; patch?: Record<string, unknown> } = { quality: 'good', score: 8 };
+    try {
+      const block = reviewResponse.content[0];
+      const text = block && block.type === 'text' ? block.text.trim() : '{}';
+      const jsonText = text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+      reviewResult = JSON.parse(jsonText) as typeof reviewResult;
+    } catch {
+      logger.warn('Failed to parse self-review response');
+      break;
+    }
+
+    logger.info({ round: round + 1, quality: reviewResult.quality, score: reviewResult.score, issues: reviewResult.issues }, 'Self-review result');
+
+    if (reviewResult.quality === 'good' || !reviewResult.patch || Object.keys(reviewResult.patch).length === 0) {
+      break;
+    }
+
+    // Apply the patch
+    fixes.push(...(reviewResult.issues ?? []));
+    currentConfig = { ...currentConfig, ...reviewResult.patch } as PremiumWebsiteConfig;
+
+    // Re-render and re-deploy
+    const newHtml = renderRestaurantPremium(currentConfig);
+
+    if (env.VERCEL_API_TOKEN) {
+      const bName = currentConfig.businessName;
+      const slug = `embedo-${bName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 30)}-${businessId.slice(-6)}`;
+      const deployed = await deployToVercel({ projectName: slug, html: newHtml, businessId });
+      currentUrl = deployed.url;
+    }
+
+    logger.info({ round: round + 1, fixes: reviewResult.issues }, 'Applied self-review fixes');
+  }
+
+  const finalHtml = renderRestaurantPremium(currentConfig);
+  return { html: finalHtml, config: currentConfig, deployUrl: currentUrl, fixes };
+}
 
 export async function websiteRoutes(app: FastifyInstance) {
   // POST /scrape — scrape an existing website and return extracted info
@@ -38,6 +175,7 @@ export async function websiteRoutes(app: FastifyInstance) {
       bookingUrl?: string;
       colorScheme: ColorScheme;
       fontPairing: FontPairing;
+      animationPreset?: AnimationPreset;
       existingWebsiteUrl?: string;
       chatbotEnabled?: boolean;
       industryType?: string;
@@ -121,6 +259,7 @@ export async function websiteRoutes(app: FastifyInstance) {
       bookingUrl: body.bookingUrl ?? s['bookingUrl'],
       colorScheme: body.colorScheme ?? 'midnight',
       fontPairing: body.fontPairing ?? 'modern',
+      animationPreset: body.animationPreset ?? 'fade-up',
       heroHeading: copy.heroHeading,
       heroSubheading: copy.heroSubheading,
       aboutHeading: copy.aboutHeading,
@@ -162,21 +301,46 @@ export async function websiteRoutes(app: FastifyInstance) {
       deployedUrl = '';
     }
 
+    // AI Self-Review Loop: screenshot the deployed site, evaluate, and auto-fix
+    let finalHtml = html;
+    let finalUrl = deployedUrl;
+    let finalConfig = premiumConfig;
+    let reviewFixes: string[] = [];
+
+    if (deployedUrl && env.ANTHROPIC_API_KEY) {
+      try {
+        const reviewed = await selfReviewAndFix(
+          premiumConfig as unknown as PremiumWebsiteConfig,
+          deployedUrl,
+          env.ANTHROPIC_API_KEY,
+          body.businessId,
+        );
+        finalHtml = reviewed.html;
+        finalUrl = reviewed.deployUrl;
+        finalConfig = reviewed.config as unknown as typeof premiumConfig;
+        reviewFixes = reviewed.fixes;
+      } catch (err) {
+        logger.warn({ error: String(err) }, 'Self-review failed — using initial generation');
+      }
+    }
+
     await db.generatedWebsite.update({
       where: { id: websiteRecord.id },
       data: {
-        status: deployedUrl ? 'LIVE' : 'GENERATING',
-        deployUrl: deployedUrl || null,
+        status: finalUrl ? 'LIVE' : 'GENERATING',
+        deployUrl: finalUrl || null,
         vercelDeploymentId: deploymentId || null,
         vercelProjectId: vercelProjectId || null,
+        config: finalConfig as unknown as object,
       },
     });
 
     return reply.send({
       success: true,
       websiteId: websiteRecord.id,
-      url: deployedUrl,
-      html, // Always return HTML for preview iframe
+      url: finalUrl,
+      html: finalHtml,
+      reviewFixes: reviewFixes.length > 0 ? reviewFixes : undefined,
     });
   });
 
@@ -250,6 +414,7 @@ Editable fields:
 - heroImage (URL string), bookingUrl (URL string)
 - colorScheme: "midnight" | "warm" | "forest" | "ocean" | "ivory" | "rose" | "slate" | "emerald" | "amber" | "crimson" | "navy" | "sage"
 - fontPairing: "modern" | "classic" | "minimal" | "elegant" | "luxury" | "editorial" | "tech" | "literary"
+- animationPreset: "none" | "fade-up" | "slide-in" | "scale-reveal" | "blur-in" | "stagger-cascade" | "parallax-drift"
 - heroHeading, heroSubheading, aboutHeading, aboutBody, ctaText
 - menuItems: Array<{name,description?,price?,category?}>`,
       messages: [{
@@ -281,16 +446,82 @@ Editable fields:
       deploymentId = deployed.deploymentId;
     }
 
+    // AI Self-Review after edit: screenshot and auto-fix if needed (1 round)
+    let finalHtml = html;
+    let finalUrl = deployedUrl;
+    let finalEditConfig = updatedConfig;
+
+    if (deployedUrl && env.ANTHROPIC_API_KEY) {
+      try {
+        const reviewed = await selfReviewAndFix(
+          updatedConfig as unknown as PremiumWebsiteConfig,
+          deployedUrl,
+          env.ANTHROPIC_API_KEY,
+          website.businessId,
+        );
+        finalHtml = reviewed.html;
+        finalUrl = reviewed.deployUrl;
+        finalEditConfig = reviewed.config as unknown as Record<string, unknown>;
+      } catch {
+        // Fallback to un-reviewed version
+      }
+    }
+
     await db.generatedWebsite.update({
       where: { id: websiteId },
       data: {
-        config: updatedConfig as object,
-        deployUrl: deployedUrl || null,
+        config: finalEditConfig as object,
+        deployUrl: finalUrl || null,
         vercelDeploymentId: deploymentId || null,
       },
     });
 
-    return reply.send({ success: true, html, url: deployedUrl });
+    return reply.send({ success: true, html: finalHtml, url: finalUrl });
+  });
+
+  // POST /generate-image — generate an image using DALL-E 3
+  app.post<{ Body: { prompt: string; size?: string; quality?: string } }>('/generate-image', async (req, reply) => {
+    const { prompt, size = '1024x1024', quality = 'standard' } = req.body;
+    if (!prompt?.trim()) return reply.code(400).send({ success: false, error: 'prompt is required' });
+    if (!env.OPENAI_API_KEY) return reply.code(400).send({ success: false, error: 'OPENAI_API_KEY required for image generation' });
+
+    try {
+      const response = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'dall-e-3',
+          prompt,
+          n: 1,
+          size: ['1024x1024', '1792x1024', '1024x1792'].includes(size) ? size : '1024x1024',
+          quality: quality === 'hd' ? 'hd' : 'standard',
+          response_format: 'url',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json() as { error?: { message?: string } };
+        return reply.code(response.status).send({
+          success: false,
+          error: errorData.error?.message ?? 'Image generation failed',
+        });
+      }
+
+      const data = await response.json() as {
+        data: Array<{ url: string; revised_prompt: string }>;
+      };
+
+      return reply.send({
+        success: true,
+        imageUrl: data.data[0]?.url ?? '',
+        revisedPrompt: data.data[0]?.revised_prompt ?? '',
+      });
+    } catch (err) {
+      return reply.code(500).send({ success: false, error: String(err) });
+    }
   });
 
   // GET /websites/:businessId — get current website for a business
