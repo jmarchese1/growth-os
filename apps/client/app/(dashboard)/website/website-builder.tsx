@@ -7,6 +7,7 @@ const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 type ColorScheme = 'midnight' | 'warm' | 'forest' | 'ocean' | 'ivory' | 'rose' | 'slate' | 'emerald' | 'amber' | 'crimson' | 'navy' | 'sage';
 type FontPairing = 'modern' | 'classic' | 'minimal' | 'elegant' | 'luxury' | 'editorial' | 'tech' | 'literary';
 type AnimationPreset = 'none' | 'fade-up' | 'slide-in' | 'scale-reveal' | 'blur-in' | 'stagger-cascade' | 'parallax-drift';
+type TemplateId = 'premium' | 'minimal' | 'bold' | 'editorial';
 type IndustryId = 'restaurant' | 'gym' | 'salon' | 'spa' | 'cafe' | 'retail';
 type SectionKey = 'about' | 'features' | 'menu' | 'gallery' | 'testimonials' | 'hours' | 'reserve';
 
@@ -170,6 +171,13 @@ const ANIMATION_PRESETS: { id: AnimationPreset; label: string; desc: string; pre
   { id: 'parallax-drift',   label: 'Parallax Drift',   desc: 'Layered depth on scroll',             preview: 'Immersive & deep' },
 ];
 
+const TEMPLATES: { id: TemplateId; label: string; desc: string; preview: string }[] = [
+  { id: 'premium',   label: 'Premium',   desc: 'Full-featured Apple-style layout with all sections',   preview: 'Best for most businesses' },
+  { id: 'minimal',   label: 'Minimal',   desc: 'Clean single-page design, fast loading',              preview: 'Simple & elegant' },
+  { id: 'bold',      label: 'Bold',      desc: 'Large typography, high contrast, statement design',    preview: 'Stand out from the crowd' },
+  { id: 'editorial', label: 'Editorial', desc: 'Magazine-style layout with visual storytelling',       preview: 'For image-heavy brands' },
+];
+
 const GOOGLE_FONTS_URL = 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400&family=Space+Grotesk:wght@300;400;500;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -224,6 +232,10 @@ interface FormData {
   animationPreset: AnimationPreset;
   hours: Record<string, string>;
   menuItems: Array<{ name: string; description: string; price: string; category: string }>;
+  galleryImages: string[];
+  googleAnalyticsId: string;
+  metaPixelId: string;
+  template: TemplateId;
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -269,6 +281,10 @@ export default function WebsiteBuilder({
     animationPreset: 'fade-up',
     hours: {},
     menuItems: [],
+    galleryImages: [],
+    googleAnalyticsId: '',
+    metaPixelId: '',
+    template: 'premium',
   });
 
   const [sections, setSections] = useState<SectionState[]>(buildSectionState(firstIndustry));
@@ -442,10 +458,59 @@ export default function WebsiteBuilder({
     setGenerating(false);
   }
 
+  const [showPreview, setShowPreview] = useState(false);
+
   // Steps: 1=Industry(conditional) 2=Import 3=Details 4=Structure 5=Style 6=Done
   const allStepLabels = industryKnown
     ? ['Import', 'Details', 'Structure', 'Style', 'Done']
     : ['Industry', 'Import', 'Details', 'Structure', 'Style', 'Done'];
+
+  // Build live preview HTML from current form state
+  const previewHtml = React.useMemo(() => {
+    const cs = COLOR_SCHEMES.find(c => c.id === form.colorScheme);
+    const fp = FONT_PAIRINGS.find(f => f.id === form.fontPairing);
+    const bg = cs?.bg ?? '#0a0a0a';
+    const accent = cs?.accent ?? '#a855f7';
+    const heading = fp?.headingFamily ?? 'system-ui, sans-serif';
+    const body = fp?.bodyFamily ?? 'system-ui, sans-serif';
+    const textColor = bg.startsWith('#f') || bg.startsWith('#e') ? '#1a1a1a' : '#f5f5f5';
+    const mutedColor = bg.startsWith('#f') || bg.startsWith('#e') ? '#666' : '#888';
+
+    const enabledSections = sections.filter(s => s.enabled).map(s => s.label);
+    const enabledPages = extraPages.filter(p => p.enabled).map(p => p.label);
+
+    return `<!DOCTYPE html><html><head>
+      <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:${body};background:${bg};color:${textColor};overflow-x:hidden}
+      .hero{min-height:50vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px 20px;${form.heroImage ? `background:url('${form.heroImage}') center/cover;` : ''}}
+      .hero-overlay{${form.heroImage ? `background:${bg}bb;padding:40px;border-radius:16px;` : ''}}
+      h1{font-family:${heading};font-size:clamp(24px,5vw,48px);font-weight:800;letter-spacing:-0.03em;margin-bottom:12px}
+      .sub{font-size:14px;color:${mutedColor};max-width:400px;margin:0 auto 20px}
+      .btn{display:inline-block;padding:10px 24px;background:${accent};color:#fff;border-radius:100px;font-size:13px;font-weight:600}
+      .nav{position:fixed;top:0;left:0;right:0;height:44px;background:${bg}e0;backdrop-filter:blur(8px);display:flex;align-items:center;padding:0 20px;gap:16px;font-size:11px;border-bottom:1px solid ${accent}20;z-index:10}
+      .nav-brand{font-family:${heading};font-weight:700;color:${textColor};font-size:13px}
+      .nav-link{color:${mutedColor};font-size:10px}
+      section{padding:40px 20px}
+      .section-label{font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:${accent};font-weight:600;margin-bottom:8px}
+      h2{font-family:${heading};font-size:20px;font-weight:700;margin-bottom:12px}
+      .card{background:${bg === '#fafaf8' || bg === '#f4f5f0' ? '#ffffff' : bg.replace(/0a/g,'14')};border:1px solid ${accent}20;border-radius:12px;padding:16px;margin-bottom:8px}
+      .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+      .gallery img{width:100%;aspect-ratio:1;object-fit:cover}
+      footer{padding:20px;text-align:center;font-size:10px;color:${mutedColor};border-top:1px solid ${accent}15}
+      </style></head><body>
+      <div class="nav"><span class="nav-brand">${form.businessName || 'Your Business'}</span>${enabledSections.slice(0, 3).map(s => `<span class="nav-link">${s}</span>`).join('')}${enabledPages.length > 0 ? enabledPages.map(p => `<span class="nav-link" style="color:${accent}">${p}</span>`).join('') : ''}</div>
+      <div class="hero" style="margin-top:44px"><div class="hero-overlay">
+        ${form.cuisine ? `<p style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:${accent};font-weight:600;margin-bottom:8px">${form.cuisine}</p>` : ''}
+        <h1>${form.businessName || 'Your Business Name'}</h1>
+        <p class="sub">${form.description || 'Your business description will appear here...'}</p>
+        <span class="btn">${industry.ctaTextDefault}</span>
+      </div></div>
+      ${enabledSections.includes('About Us') || enabledSections.includes('Our Story') ? `<section><p class="section-label">About</p><h2>Our Story</h2><p style="font-size:12px;color:${mutedColor};line-height:1.6">${form.description || 'AI will generate compelling copy about your business...'}</p></section>` : ''}
+      ${form.menuItems.length > 0 ? `<section><p class="section-label">Menu</p><h2>Our Selection</h2>${form.menuItems.slice(0, 4).map(item => `<div class="card"><div style="display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:600">${item.name}</span>${item.price ? `<span style="font-size:12px;color:${accent}">${item.price}</span>` : ''}</div>${item.description ? `<p style="font-size:11px;color:${mutedColor};margin-top:4px">${item.description}</p>` : ''}</div>`).join('')}</section>` : ''}
+      ${form.galleryImages.filter(Boolean).length >= 2 ? `<section style="padding:0"><div class="gallery">${form.galleryImages.filter(Boolean).slice(0, 6).map(url => `<img src="${url}" alt="Gallery" />`).join('')}</div></section>` : ''}
+      ${Object.keys(form.hours).length > 0 ? `<section><p class="section-label">Hours</p><h2>Hours & Location</h2>${Object.entries(form.hours).slice(0, 3).map(([day, time]) => `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px"><span style="color:${mutedColor}">${day}</span><span>${time}</span></div>`).join('')}${form.address ? `<p style="margin-top:12px;font-size:12px;color:${mutedColor}">${form.address}</p>` : ''}</section>` : ''}
+      <footer>${form.businessName || 'Your Business'} &copy; ${new Date().getFullYear()}</footer>
+      </body></html>`;
+  }, [form, sections, extraPages, industry.ctaTextDefault]);
 
   // Map display step index to logical step number (1-based in state)
   const displayStep = industryKnown ? step - 1 : step;
@@ -478,7 +543,35 @@ export default function WebsiteBuilder({
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto">
+      {/* Live preview toggle — visible on steps 3-5 */}
+      {step >= 3 && step <= 5 && (
+        <div className="max-w-3xl mx-auto mb-4 flex justify-end">
+          <button
+            onClick={() => setShowPreview(!showPreview)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${showPreview ? 'border-violet-500 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"/><path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/></svg>
+            {showPreview ? 'Hide Preview' : 'Live Preview'}
+          </button>
+        </div>
+      )}
+
+      <div className={`mx-auto ${showPreview && step >= 3 && step <= 5 ? 'max-w-6xl flex gap-6' : 'max-w-3xl'}`}>
+        {/* Live preview panel */}
+        {showPreview && step >= 3 && step <= 5 && (
+          <div className="w-80 flex-shrink-0 sticky top-24 self-start">
+            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+              <div className="px-3 py-2 border-b border-slate-100 flex items-center gap-1.5">
+                <div className="flex gap-1"><div className="w-2 h-2 rounded-full bg-red-400" /><div className="w-2 h-2 rounded-full bg-amber-400" /><div className="w-2 h-2 rounded-full bg-emerald-400" /></div>
+                <span className="text-[9px] text-slate-400 ml-1">Live Preview</span>
+              </div>
+              <iframe srcDoc={previewHtml} title="Live Preview" className="w-full" style={{ height: '480px', border: 'none' }} sandbox="allow-same-origin" />
+            </div>
+            <p className="text-[10px] text-slate-400 mt-2 text-center">Updates as you type. Final site will look much better.</p>
+          </div>
+        )}
+
+        <div className={showPreview && step >= 3 && step <= 5 ? 'flex-1 min-w-0' : 'w-full'}>
 
         {/* ── STEP 1 — Industry (only shown if not auto-detected) ── */}
         {step === 1 && !industryKnown && (
@@ -717,6 +810,66 @@ export default function WebsiteBuilder({
               )}
             </div>
 
+            {/* Gallery Images */}
+            <div className="mb-6 border-t border-slate-100 pt-6">
+              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                Photo Gallery <span className="font-normal text-slate-400">(paste image URLs — up to 6)</span>
+              </label>
+              <div className="space-y-2 mt-3">
+                {form.galleryImages.map((url, i) => (
+                  <div key={i} className="flex gap-2">
+                    <input
+                      type="url"
+                      value={url}
+                      onChange={(e) => {
+                        const next = [...form.galleryImages];
+                        next[i] = e.target.value;
+                        setForm_('galleryImages', next);
+                      }}
+                      placeholder="https://example.com/photo.jpg"
+                      className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400"
+                    />
+                    <button
+                      onClick={() => setForm_('galleryImages', form.galleryImages.filter((_, j) => j !== i))}
+                      className="px-3 py-2 text-slate-300 hover:text-red-400 transition-colors"
+                    >
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0013.25 4.193V3.75A2.75 2.75 0 0010.5 1h-1.75zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-1.5c-.69 0-1.25.56-1.25 1.25v.325C9.327 4.025 10.157 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd"/></svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+              {form.galleryImages.length < 6 && (
+                <button
+                  onClick={() => setForm_('galleryImages', [...form.galleryImages, ''])}
+                  className="mt-3 flex items-center gap-1.5 text-xs text-violet-600 font-semibold hover:text-violet-800 transition-colors"
+                >
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z"/></svg>
+                  Add image URL{form.galleryImages.length > 0 ? ` (${form.galleryImages.length}/6)` : ''}
+                </button>
+              )}
+              {form.galleryImages.filter(Boolean).length > 0 && (
+                <div className="grid grid-cols-3 gap-2 mt-3">
+                  {form.galleryImages.filter(Boolean).map((url, i) => (
+                    <div key={i} className="aspect-square rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
+                      <img src={url} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Analytics (collapsible) */}
+            <details className="mb-6 border-t border-slate-100 pt-6">
+              <summary className="text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer select-none">
+                Analytics & Tracking <span className="font-normal text-slate-400">(optional)</span>
+              </summary>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                <Field label="Google Analytics ID" value={form.googleAnalyticsId} onChange={(v) => setForm_('googleAnalyticsId', v)} placeholder="G-XXXXXXXXXX" />
+                <Field label="Meta Pixel ID" value={form.metaPixelId} onChange={(v) => setForm_('metaPixelId', v)} placeholder="123456789012345" />
+              </div>
+              <p className="text-[10px] text-slate-400 mt-2">Tracking codes will be injected into your generated website automatically.</p>
+            </details>
+
             <div className="flex gap-3">
               <button onClick={() => setStep(2)} className="px-5 py-3 border border-slate-200 text-slate-600 font-medium rounded-xl text-sm hover:bg-slate-50">Back</button>
               <button onClick={() => setStep(4)} className="flex-1 py-3 bg-violet-600 text-white font-semibold rounded-xl text-sm hover:bg-violet-700">Continue to Structure</button>
@@ -854,8 +1007,42 @@ export default function WebsiteBuilder({
             <div className="bg-white border border-slate-200 rounded-2xl p-8">
               <h2 className="text-xl font-bold text-slate-900 mb-1">Choose Your Style</h2>
               <p className="text-sm text-slate-500 mb-8">
-                Color scheme and font pairing — pre-selected for your industry, but fully customizable.
+                Pick a template, color scheme, font, and scroll animation.
               </p>
+
+              {/* Template selector */}
+              <div className="mb-8">
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-4">Template</label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  {TEMPLATES.map((tmpl) => {
+                    const selected = form.template === tmpl.id;
+                    return (
+                      <button
+                        key={tmpl.id}
+                        onClick={() => setForm_('template', tmpl.id)}
+                        className={`relative p-4 rounded-xl border-2 text-left transition-all ${selected ? 'border-violet-500 bg-violet-50 shadow-md shadow-violet-100' : 'border-slate-200 hover:border-slate-300 bg-white'}`}
+                      >
+                        <div className="w-full h-16 rounded-lg mb-3 overflow-hidden" style={{ background: tmpl.id === 'premium' ? 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%)' : tmpl.id === 'minimal' ? '#fafafa' : tmpl.id === 'bold' ? 'linear-gradient(135deg, #000 0%, #1a0030 100%)' : 'linear-gradient(135deg, #f5f0e8 0%, #e8e0d0 100%)' }}>
+                          <div className="flex items-end justify-center h-full pb-2">
+                            <div className="flex gap-1">
+                              {[1, 2, 3].map(n => (
+                                <div key={n} className="rounded" style={{ width: tmpl.id === 'bold' ? 18 : 14, height: tmpl.id === 'editorial' ? 20 : 10, background: tmpl.id === 'minimal' ? '#ddd' : tmpl.id === 'editorial' ? '#c8b8a0' : 'rgba(255,255,255,0.2)' }} />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <p className={`text-[11px] font-bold ${selected ? 'text-violet-700' : 'text-slate-700'}`}>{tmpl.label}</p>
+                        <p className="text-[9px] text-slate-400 mt-0.5 leading-snug">{tmpl.desc}</p>
+                        {selected && (
+                          <div className="absolute top-2 right-2 w-4 h-4 bg-violet-500 rounded-full flex items-center justify-center">
+                            <svg viewBox="0 0 12 12" fill="none" className="w-2.5 h-2.5"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
               {/* Color schemes — 12 total in 4-col grid */}
               <div className="mb-8">
@@ -1037,7 +1224,8 @@ export default function WebsiteBuilder({
             </button>
           </div>
         )}
-      </div>
+      </div>{/* end flex-1 or w-full wrapper */}
+      </div>{/* end max-w-3xl/6xl flex wrapper */}
     </div>
   );
 }

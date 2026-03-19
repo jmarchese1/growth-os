@@ -541,7 +541,38 @@ function WebsiteEditor({
   const [mobilePreview, setMobilePreview] = useState(false);
   const [showColorWheel, setShowColorWheel] = useState(false);
   const [showImageGen, setShowImageGen] = useState(false);
+  const [showDomainSetup, setShowDomainSetup] = useState(false);
+  const [customDomain, setCustomDomain] = useState('');
+  const [domainStatus, setDomainStatus] = useState<{ configured: boolean; dnsRecords: Array<{ type: string; name: string; value: string }> } | null>(null);
+  const [domainSaving, setDomainSaving] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [versions, setVersions] = useState<Array<{ id: string; label: string | null; createdAt: string }>>([]);
+  const [reverting, setReverting] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  async function loadVersions() {
+    try {
+      const res = await fetch(`${API_URL}/websites/${site.id}/versions`);
+      const data = await res.json() as { success: boolean; versions: typeof versions };
+      if (data.success) setVersions(data.versions);
+    } catch { /* silent */ }
+  }
+
+  async function handleRevert(versionId: string) {
+    setReverting(versionId);
+    try {
+      const res = await fetch(`${API_URL}/websites/${site.id}/revert/${versionId}`, { method: 'POST' });
+      const data = await res.json() as { success: boolean; html?: string; url?: string };
+      if (data.success && data.html) {
+        setHtml(data.html);
+        if (data.url) setDeployUrl(data.url);
+        setMessages((prev) => [...prev, { role: 'assistant', text: 'Reverted to previous version. Preview updated.' }]);
+        void loadVersions();
+      }
+    } catch { /* silent */ }
+    setReverting(null);
+    setShowHistory(false);
+  }
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -669,6 +700,17 @@ function WebsiteEditor({
               </svg>
             </a>
           )}
+          {/* Custom domain button */}
+          <button
+            onClick={() => setShowDomainSetup(!showDomainSetup)}
+            title="Connect custom domain"
+            className={`p-1.5 rounded-lg transition-colors ${showDomainSetup ? 'bg-violet-100 text-violet-700' : 'text-slate-400 hover:text-violet-600 hover:bg-violet-50'}`}
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+              <path fillRule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.497-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z" clipRule="evenodd" />
+            </svg>
+          </button>
+
           <button
             onClick={() => void handleDelete()}
             title="Delete website"
@@ -680,6 +722,64 @@ function WebsiteEditor({
           </button>
         </div>
       </div>
+
+      {/* Domain setup panel */}
+      {showDomainSetup && (
+        <div className="bg-white border-b border-slate-200 px-6 py-4">
+          <div className="max-w-lg">
+            <p className="text-xs font-bold text-slate-700 mb-2">Connect Custom Domain</p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={customDomain}
+                onChange={(e) => setCustomDomain(e.target.value)}
+                placeholder="www.yourbusiness.com"
+                className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400"
+              />
+              <button
+                onClick={async () => {
+                  if (!customDomain.trim()) return;
+                  setDomainSaving(true);
+                  try {
+                    const res = await fetch(`${API_URL}/websites/${site.id}/domain`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ domain: customDomain.trim() }),
+                    });
+                    const data = await res.json() as { success: boolean; configured: boolean; dnsRecords: Array<{ type: string; name: string; value: string }>; error?: string };
+                    if (data.success) {
+                      setDomainStatus({ configured: data.configured, dnsRecords: data.dnsRecords });
+                    }
+                  } catch { /* silent */ }
+                  setDomainSaving(false);
+                }}
+                disabled={domainSaving || !customDomain.trim()}
+                className="px-4 py-2 bg-violet-600 text-white text-xs font-semibold rounded-lg hover:bg-violet-700 disabled:opacity-50 transition-colors"
+              >
+                {domainSaving ? 'Saving...' : 'Connect'}
+              </button>
+            </div>
+            {domainStatus && (
+              <div className="mt-3 bg-slate-50 border border-slate-200 rounded-lg p-3">
+                <p className="text-xs font-semibold text-slate-700 mb-2">
+                  {domainStatus.configured ? 'Domain connected!' : 'Add these DNS records at your registrar:'}
+                </p>
+                {!domainStatus.configured && (
+                  <table className="w-full text-[11px]">
+                    <thead><tr className="text-slate-400"><th className="text-left pr-4">Type</th><th className="text-left pr-4">Name</th><th className="text-left">Value</th></tr></thead>
+                    <tbody>
+                      {domainStatus.dnsRecords.map((r, i) => (
+                        <tr key={i} className="text-slate-700 font-mono"><td className="pr-4">{r.type}</td><td className="pr-4">{r.name}</td><td>{r.value}</td></tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+                <p className="text-[10px] text-slate-400 mt-2">DNS changes can take up to 48 hours to propagate.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Color wheel popup */}
       {showColorWheel && <ColorWheelPopup onClose={() => setShowColorWheel(false)} />}
@@ -726,11 +826,49 @@ function WebsiteEditor({
         {/* Chat */}
         <div className="w-80 flex flex-col bg-white flex-shrink-0">
           <div className="px-4 py-3 border-b border-slate-100 flex-shrink-0">
-            <p className="text-xs font-semibold text-slate-700">AI Editor</p>
-            <p className="text-[11px] text-slate-400 mt-0.5">Ask me to change anything on this site</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-slate-700">{showHistory ? 'Version History' : 'AI Editor'}</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">{showHistory ? 'Revert to any previous version' : 'Ask me to change anything on this site'}</p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowHistory(!showHistory);
+                  if (!showHistory && versions.length === 0) void loadVersions();
+                }}
+                className={`p-1.5 rounded-lg transition-colors ${showHistory ? 'bg-violet-100 text-violet-700' : 'text-slate-400 hover:text-violet-600'}`}
+                title="Version history"
+              >
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clipRule="evenodd"/></svg>
+              </button>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
+            {/* Version history panel */}
+            {showHistory && (
+              <div className="space-y-2">
+                {versions.length === 0 ? (
+                  <p className="text-xs text-slate-400 text-center py-4">No previous versions yet. Versions are saved automatically before each edit.</p>
+                ) : versions.map((v) => (
+                  <div key={v.id} className="flex items-center gap-2 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-medium text-slate-700 truncate">{v.label ?? 'Version'}</p>
+                      <p className="text-[10px] text-slate-400">{new Date(v.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</p>
+                    </div>
+                    <button
+                      onClick={() => void handleRevert(v.id)}
+                      disabled={reverting !== null}
+                      className="px-2.5 py-1 bg-violet-600 text-white text-[10px] font-semibold rounded-md hover:bg-violet-700 disabled:opacity-50 transition-colors flex-shrink-0"
+                    >
+                      {reverting === v.id ? 'Reverting...' : 'Revert'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className={`flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0 ${showHistory ? 'hidden' : ''}`}>
             {messages.length === 0 && (
               <div className="space-y-2 pt-1">
                 <p className="text-[11px] text-slate-400 font-medium uppercase tracking-wide">Try asking:</p>

@@ -43,6 +43,12 @@ export interface PremiumWebsiteConfig {
   chatbotEnabled: boolean;
   chatbotBusinessId?: string;
   chatbotApiUrl?: string;
+  // Analytics
+  googleAnalyticsId?: string;
+  metaPixelId?: string;
+  // Contact form
+  contactFormEnabled?: boolean;
+  contactFormEndpoint?: string;
 }
 
 export type ColorScheme = 'midnight' | 'warm' | 'forest' | 'ocean' | 'ivory' | 'rose' | 'slate' | 'emerald' | 'amber' | 'crimson' | 'navy' | 'sage';
@@ -297,7 +303,16 @@ function renderExtraPages(config: PremiumWebsiteConfig, c: Colors, f: Fonts): st
       case 'contact':
         heading = 'Get in Touch';
         body = `We\u2019d love to hear from you. Whether you have a question, a reservation inquiry, or just want to say hello \u2014 reach out anytime.`;
-        extra = config.phone ? `<p style="margin-top:24px;font-size:17px;color:${c.text};"><a href="tel:${config.phone}" style="color:${c.accent};">${config.phone}</a></p>` : '';
+        extra = `
+        <form id="contact-form" style="margin-top:36px;display:flex;flex-direction:column;gap:16px;max-width:480px;" onsubmit="return handleContactSubmit(event)">
+          <input name="name" type="text" required placeholder="Your name" style="padding:14px 18px;border:1px solid ${c.border};border-radius:12px;background:${c.surface};color:${c.text};font-size:15px;outline:none;font-family:${f.body};" onfocus="this.style.borderColor='${c.accent}'" onblur="this.style.borderColor='${c.border}'" />
+          <input name="email" type="email" required placeholder="Email address" style="padding:14px 18px;border:1px solid ${c.border};border-radius:12px;background:${c.surface};color:${c.text};font-size:15px;outline:none;font-family:${f.body};" onfocus="this.style.borderColor='${c.accent}'" onblur="this.style.borderColor='${c.border}'" />
+          <input name="phone" type="tel" placeholder="Phone (optional)" style="padding:14px 18px;border:1px solid ${c.border};border-radius:12px;background:${c.surface};color:${c.text};font-size:15px;outline:none;font-family:${f.body};" onfocus="this.style.borderColor='${c.accent}'" onblur="this.style.borderColor='${c.border}'" />
+          <textarea name="message" required rows="4" placeholder="How can we help?" style="padding:14px 18px;border:1px solid ${c.border};border-radius:12px;background:${c.surface};color:${c.text};font-size:15px;outline:none;resize:vertical;font-family:${f.body};" onfocus="this.style.borderColor='${c.accent}'" onblur="this.style.borderColor='${c.border}'"></textarea>
+          <button type="submit" class="btn-primary" style="align-self:flex-start;border:none;cursor:pointer;" id="contact-submit-btn">Send Message</button>
+          <p id="contact-status" style="font-size:14px;display:none;"></p>
+        </form>`;
+        if (config.phone) extra += `<p style="margin-top:24px;font-size:17px;color:${c.text};"><a href="tel:${config.phone}" style="color:${c.accent};">${config.phone}</a></p>`;
         if (config.address) extra += `<p style="margin-top:12px;font-size:15px;color:${c.muted};">${config.address}</p>`;
         break;
       case 'careers':
@@ -469,10 +484,18 @@ export function renderRestaurantPremium(config: PremiumWebsiteConfig): string {
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>${config.businessName}${config.city ? ` — ${config.city}` : ''}</title>
   <meta name="description" content="${config.description ?? config.tagline ?? config.businessName}">
+  <link rel="canonical" href="${config.bookingUrl ? new URL(config.bookingUrl).origin : '/'}" />
   <meta property="og:title" content="${config.businessName}">
   <meta property="og:description" content="${config.description ?? ''}">
+  <meta property="og:type" content="website">
   ${config.heroImage ? `<meta property="og:image" content="${config.heroImage}">` : ''}
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${config.businessName}">
+  <meta name="twitter:description" content="${config.description ?? config.tagline ?? ''}">
+  ${config.heroImage ? `<meta name="twitter:image" content="${config.heroImage}">` : ''}
   ${googleFontUrl}
+  ${config.googleAnalyticsId ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${config.googleAnalyticsId}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${config.googleAnalyticsId}');</script>` : ''}
+  ${config.metaPixelId ? `<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${config.metaPixelId}');fbq('track','PageView');</script><noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=${config.metaPixelId}&ev=PageView&noscript=1"/></noscript>` : ''}
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
     html{scroll-behavior:smooth;}
@@ -555,6 +578,51 @@ ${config.chatbotEnabled && config.chatbotBusinessId ? `
 <script src="${config.chatbotApiUrl ?? 'https://chat.embedo.ai'}/widget.js" async></script>` : ''}
 
 ${scrollAnimationJS(anim)}
+
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json">
+${JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': config.cuisine ? 'Restaurant' : 'LocalBusiness',
+  name: config.businessName,
+  ...(config.description ? { description: config.description } : {}),
+  ...(config.phone ? { telephone: config.phone } : {}),
+  ...(config.address ? { address: { '@type': 'PostalAddress', streetAddress: config.address, ...(config.city ? { addressLocality: config.city } : {}) } } : {}),
+  ...(config.cuisine ? { servesCuisine: config.cuisine } : {}),
+  ...(config.heroImage ? { image: config.heroImage } : {}),
+  ...(config.bookingUrl ? { url: config.bookingUrl } : {}),
+  ...(config.hours && Object.keys(config.hours).length > 0 ? {
+    openingHoursSpecification: Object.entries(config.hours).filter(([, v]) => v.toLowerCase() !== 'closed').map(([day, time]) => ({
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: day,
+      opens: time.split(/[–-]/)[0]?.trim() ?? '',
+      closes: time.split(/[–-]/)[1]?.trim() ?? '',
+    }))
+  } : {}),
+})}
+</script>
+
+<!-- Contact Form Handler -->
+${config.contactFormEnabled !== false ? `<script>
+function handleContactSubmit(e){
+  e.preventDefault();
+  var form=e.target;
+  var btn=document.getElementById('contact-submit-btn');
+  var status=document.getElementById('contact-status');
+  var data={name:form.name.value,email:form.email.value,phone:form.phone?form.phone.value:'',message:form.message.value,businessName:'${config.businessName.replace(/'/g, "\\'")}',businessId:'${config.chatbotBusinessId??''}'};
+  btn.textContent='Sending...';btn.disabled=true;
+  ${config.contactFormEndpoint ? `
+  fetch('${config.contactFormEndpoint}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
+    .then(function(r){return r.json()})
+    .then(function(){status.style.display='block';status.style.color='${c.accent}';status.textContent='Message sent! We\\'ll be in touch soon.';form.reset();})
+    .catch(function(){status.style.display='block';status.style.color='#ef4444';status.textContent='Something went wrong. Please try again.';})
+    .finally(function(){btn.textContent='Send Message';btn.disabled=false;});
+  ` : `
+  status.style.display='block';status.style.color='${c.accent}';status.textContent='Message sent! We\\'ll be in touch soon.';form.reset();btn.textContent='Send Message';btn.disabled=false;
+  `}
+  return false;
+}
+</script>` : ''}
 
 </body>
 </html>`;

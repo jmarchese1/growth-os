@@ -71,4 +71,43 @@ export async function websiteRoutes(app: FastifyInstance) {
     const data = await res.json();
     return reply.code(res.status).send(data);
   });
+
+  // Proxy version history
+  app.get<{ Params: { websiteId: string } }>('/websites/:websiteId/versions', async (req, reply) => {
+    const res = await fetch(`${WEBSITE_GEN_URL}/websites/${req.params.websiteId}/versions`);
+    const data = await res.json();
+    return reply.code(res.status).send(data);
+  });
+
+  // Proxy revert to version
+  app.post<{ Params: { websiteId: string; versionId: string } }>('/websites/:websiteId/revert/:versionId', async (req, reply) => {
+    const res = await fetch(`${WEBSITE_GEN_URL}/websites/${req.params.websiteId}/revert/${req.params.versionId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const data = await res.json();
+    return reply.code(res.status).send(data);
+  });
+
+  // Proxy custom domain
+  app.post<{ Params: { websiteId: string } }>('/websites/:websiteId/domain', async (req, reply) => {
+    const res = await fetch(`${WEBSITE_GEN_URL}/websites/${req.params.websiteId}/domain`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body),
+    });
+    const data = await res.json();
+    return reply.code(res.status).send(data);
+  });
+
+  // Proxy contact form submissions (public — called from generated websites)
+  app.post('/websites/contact-form', async (req, reply) => {
+    const res = await fetch(`${WEBSITE_GEN_URL}/contact-form`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body),
+    });
+    const data = await res.json();
+    return reply.code(res.status).send(data);
+  });
 }

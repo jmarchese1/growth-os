@@ -6,7 +6,9 @@ import { scrapeWebsite, scrapeForInspiration } from './scraper/scrape.js';
 import { getInsightsForIndustry } from './training/knowledge-base.js';
 import { generateWebsiteCopy } from './generator/content.js';
 import { renderRestaurantPremium } from './templates/restaurant/premium.js';
-import { deployToVercel } from './deploy/vercel.js';
+import { renderBoldTemplate } from './templates/restaurant/bold.js';
+import { renderEditorialTemplate } from './templates/restaurant/editorial.js';
+import { deployToVercel, addCustomDomain } from './deploy/vercel.js';
 import { env } from './config.js';
 import type { ColorScheme, FontPairing, AnimationPreset } from './templates/restaurant/premium.js';
 import type { PremiumWebsiteConfig } from './templates/restaurant/premium.js';
@@ -182,6 +184,9 @@ export async function websiteRoutes(app: FastifyInstance) {
       sections?: Array<{ id: string; enabled: boolean }>;
       inspirationUrls?: string[];
       extraPages?: Array<{ id: string; label: string; slug: string }>;
+      googleAnalyticsId?: string;
+      metaPixelId?: string;
+      template?: string;
     };
   }>('/generate', async (req, reply) => {
     const body = req.body;
@@ -271,8 +276,19 @@ export async function websiteRoutes(app: FastifyInstance) {
       chatbotBusinessId: body.businessId,
       ...(body.sections ? { sections: body.sections } : {}),
       ...(body.extraPages?.length ? { extraPages: body.extraPages } : {}),
+      // Analytics
+      ...(body.googleAnalyticsId ? { googleAnalyticsId: body.googleAnalyticsId } : {}),
+      ...(body.metaPixelId ? { metaPixelId: body.metaPixelId } : {}),
+      // Contact form — auto-enable if contact page is included
+      contactFormEnabled: body.extraPages?.some(p => p.id === 'contact') ?? false,
+      contactFormEndpoint: `${env.WEBSITE_GEN_URL ?? `http://localhost:${env.PORT}`}/contact-form`,
     };
-    const html = renderRestaurantPremium(premiumConfig as unknown as import('./templates/restaurant/premium.js').PremiumWebsiteConfig);
+    // Select template renderer
+    const cfgCast = premiumConfig as unknown as PremiumWebsiteConfig;
+    const templateId = body.template ?? 'premium';
+    const html = templateId === 'bold' ? renderBoldTemplate(cfgCast)
+      : templateId === 'editorial' ? renderEditorialTemplate(cfgCast)
+      : renderRestaurantPremium(cfgCast);
 
     // Always create a new GeneratedWebsite record — users manage multiple sites from the list view
     const slug = `embedo-${body.businessName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 30)}-${body.businessId.slice(-6)}`;
@@ -280,7 +296,7 @@ export async function websiteRoutes(app: FastifyInstance) {
     let websiteRecord = await db.generatedWebsite.create({
       data: {
         businessId: body.businessId,
-        template: 'restaurant-premium',
+        template: `restaurant-${templateId}`,
         config: premiumConfig as unknown as object,
         status: 'GENERATING',
       },
@@ -400,6 +416,15 @@ export async function websiteRoutes(app: FastifyInstance) {
     }
 
     const currentConfig = website.config as Record<string, unknown>;
+
+    // Save version snapshot before making changes
+    await db.websiteVersion.create({
+      data: {
+        websiteId,
+        config: currentConfig as object,
+        label: `Before: ${message.slice(0, 60)}${message.length > 60 ? '...' : ''}`,
+      },
+    });
 
     const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
 
@@ -522,6 +547,107 @@ Editable fields:
     } catch (err) {
       return reply.code(500).send({ success: false, error: String(err) });
     }
+  });
+
+  // GET /websites/:websiteId/versions — list version history
+  app.get<{ Params: { websiteId: string } }>('/websites/:websiteId/versions', async (req, reply) => {
+    const versions = await db.websiteVersion.findMany({
+      where: { websiteId: req.params.websiteId },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+      select: { id: true, label: true, createdAt: true },
+    });
+    return reply.send({ success: true, versions });
+  });
+
+  // POST /websites/:websiteId/revert/:versionId — revert to a previous version
+  app.post<{ Params: { websiteId: string; versionId: string } }>('/websites/:websiteId/revert/:versionId', async (req, reply) => {
+    const { websiteId, versionId } = req.params;
+
+    const version = await db.websiteVersion.findUnique({ where: { id: versionId } });
+    if (!version || version.websiteId !== websiteId) throw new NotFoundError('WebsiteVersion', versionId);
+
+    const website = await db.generatedWebsite.findUnique({ where: { id: websiteId } });
+    if (!website) throw new NotFoundError('GeneratedWebsite', websiteId);
+
+    // Save current state as a version before reverting
+    await db.websiteVersion.create({
+      data: {
+        websiteId,
+        config: website.config as object,
+        label: 'Before revert',
+      },
+    });
+
+    const revertedConfig = version.config as Record<string, unknown>;
+    const html = renderRestaurantPremium(revertedConfig as unknown as PremiumWebsiteConfig);
+
+    // Redeploy
+    let deployedUrl = website.deployUrl ?? '';
+    if (env.VERCEL_API_TOKEN) {
+      const bName = String(revertedConfig['businessName'] ?? 'site');
+      const slug = `embedo-${bName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 30)}-${website.businessId.slice(-6)}`;
+      const deployed = await deployToVercel({ projectName: slug, html, businessId: website.businessId });
+      deployedUrl = deployed.url;
+    }
+
+    await db.generatedWebsite.update({
+      where: { id: websiteId },
+      data: { config: revertedConfig as object, deployUrl: deployedUrl || null },
+    });
+
+    return reply.send({ success: true, html, url: deployedUrl });
+  });
+
+  // POST /websites/:websiteId/domain — add a custom domain to a website
+  app.post<{ Params: { websiteId: string }; Body: { domain: string } }>('/websites/:websiteId/domain', async (req, reply) => {
+    const { websiteId } = req.params;
+    const { domain } = req.body;
+    if (!domain?.trim()) return reply.code(400).send({ success: false, error: 'domain is required' });
+    if (!env.VERCEL_API_TOKEN) return reply.code(400).send({ success: false, error: 'Vercel token required for custom domains' });
+
+    const website = await db.generatedWebsite.findUnique({ where: { id: websiteId } });
+    if (!website) throw new NotFoundError('GeneratedWebsite', websiteId);
+    if (!website.vercelProjectId) return reply.code(400).send({ success: false, error: 'Website must be deployed to Vercel first' });
+
+    const result = await addCustomDomain({ projectId: website.vercelProjectId, domain: domain.trim() });
+
+    await db.generatedWebsite.update({
+      where: { id: websiteId },
+      data: { customDomain: domain.trim() },
+    });
+
+    return reply.send({
+      success: true,
+      domain: result.domain,
+      configured: result.configured,
+      dnsRecords: result.dnsRecords,
+    });
+  });
+
+  // POST /contact-form — handle contact form submissions from generated websites
+  app.post<{ Body: { name: string; email: string; phone?: string; message: string; businessName?: string; businessId?: string } }>('/contact-form', async (req, reply) => {
+    const { name, email, message, phone, businessName, businessId } = req.body;
+    if (!name || !email || !message) return reply.code(400).send({ success: false, error: 'name, email, and message are required' });
+
+    // Store as a lead if businessId is provided
+    if (businessId) {
+      try {
+        await db.lead.create({
+          data: {
+            businessId,
+            source: 'WEBSITE',
+            rawData: { name, email, phone: phone ?? '', message, source: 'contact_form' },
+            status: 'NEW',
+          },
+        });
+      } catch (err) {
+        logger.warn({ error: String(err) }, 'Failed to create lead from contact form');
+      }
+    }
+
+    logger.info({ businessName, email }, 'Contact form submission received');
+    return reply.send({ success: true });
   });
 
   // GET /websites/:businessId — get current website for a business

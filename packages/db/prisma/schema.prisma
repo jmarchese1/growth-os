@@ -516,6 +516,19 @@ model GeneratedWebsite {
   updatedAt DateTime @updatedAt
 
   @@index([businessId])
+  versions WebsiteVersion[]
+}
+
+model WebsiteVersion {
+  id        String   @id @default(cuid())
+  websiteId String
+  website   GeneratedWebsite @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  config    Json     // Snapshot of the config at this point
+  label     String?  // e.g. "Before color change", auto-generated
+  createdAt DateTime @default(now())
+
+  @@index([websiteId])
 }
 
 // ─── Appointments ─────────────────────────────────────────────────────────────
