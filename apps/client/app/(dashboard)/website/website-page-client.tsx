@@ -548,6 +548,7 @@ function WebsiteEditor({
   const [showHistory, setShowHistory] = useState(false);
   const [versions, setVersions] = useState<Array<{ id: string; label: string | null; createdAt: string }>>([]);
   const [reverting, setReverting] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   async function loadVersions() {
@@ -585,6 +586,7 @@ function WebsiteEditor({
     setMessages((prev) => [...prev, { role: 'user', text }]);
     setInput('');
     setEditing(true);
+    setSuggestions([]);
 
     try {
       const res = await fetch(`${API_URL}/websites/${site.id}/edit`, {
@@ -592,7 +594,7 @@ function WebsiteEditor({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text }),
       });
-      const data = await res.json() as { success: boolean; html?: string; url?: string; error?: string };
+      const data = await res.json() as { success: boolean; html?: string; url?: string; error?: string; suggestions?: string[] };
 
       if (!data.success || !data.html) {
         setMessages((prev) => [...prev, { role: 'assistant', text: data.error ?? 'Something went wrong — try rephrasing.' }]);
@@ -601,7 +603,10 @@ function WebsiteEditor({
 
       setHtml(data.html);
       if (data.url) setDeployUrl(data.url);
-      setMessages((prev) => [...prev, { role: 'assistant', text: 'Done! Preview updated. Want anything else changed?' }]);
+      setMessages((prev) => [...prev, { role: 'assistant', text: 'Done! Preview updated.' }]);
+      if (data.suggestions?.length) {
+        setSuggestions(data.suggestions);
+      }
     } catch {
       setMessages((prev) => [...prev, { role: 'assistant', text: 'Network error — please try again.' }]);
     } finally {
@@ -901,6 +906,25 @@ function WebsiteEditor({
                 </div>
               </div>
             ))}
+
+            {/* Smart AI suggestions — shown after edits */}
+            {suggestions.length > 0 && !editing && messages.length > 0 && (
+              <div className="space-y-1.5 pt-1">
+                <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide flex items-center gap-1">
+                  <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3"><path d="M8 1.5A4.5 4.5 0 003.5 6c0 1.09.39 2.09 1.03 2.87.48.58.72 1.2.72 1.88V11a1 1 0 001 1h3.5a1 1 0 001-1v-.25c0-.68.24-1.3.72-1.88A4.48 4.48 0 0012.5 6 4.5 4.5 0 008 1.5zM6.25 13a.75.75 0 000 1.5h3.5a.75.75 0 000-1.5h-3.5z"/></svg>
+                  Ideas for your next change
+                </p>
+                {suggestions.map((s, i) => (
+                  <button
+                    key={i}
+                    onClick={() => { setInput(s); setSuggestions([]); }}
+                    className="w-full text-left px-3 py-2 rounded-lg bg-violet-50/50 border border-violet-100 text-[11px] text-violet-700 hover:bg-violet-50 hover:border-violet-200 transition-colors"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {editing && (
               <div className="flex justify-start">

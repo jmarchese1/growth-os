@@ -501,7 +501,46 @@ Editable fields:
       },
     });
 
-    return reply.send({ success: true, html: finalHtml, url: finalUrl });
+    // Generate smart suggestions based on current site state
+    let suggestions: string[] = [];
+    try {
+      const sugClient = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+      const sugResponse = await sugClient.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 400,
+        messages: [{
+          role: 'user',
+          content: `You are a web design assistant. A user just edited their business website. Based on the current config, suggest 4 short, specific things they could change next to improve their site. Each suggestion should be a ready-to-use command they can paste — not a question, not vague advice.
+
+Current config summary:
+- Business: ${String(finalEditConfig['businessName'])} (${String(finalEditConfig['cuisine'] ?? 'local business')})
+- Color scheme: ${String(finalEditConfig['colorScheme'])}
+- Font: ${String(finalEditConfig['fontPairing'])}
+- Animation: ${String(finalEditConfig['animationPreset'] ?? 'fade-up')}
+- Hero heading: "${String(finalEditConfig['heroHeading'])}"
+- Has hero image: ${Boolean(finalEditConfig['heroImage'])}
+- Has booking URL: ${Boolean(finalEditConfig['bookingUrl'])}
+- Has gallery images: ${Array.isArray(finalEditConfig['galleryImages']) && (finalEditConfig['galleryImages'] as unknown[]).length > 0}
+- Menu items: ${Array.isArray(finalEditConfig['menuItems']) ? (finalEditConfig['menuItems'] as unknown[]).length : 0}
+- Hours filled: ${finalEditConfig['hours'] && typeof finalEditConfig['hours'] === 'object' ? Object.keys(finalEditConfig['hours'] as object).length : 0} days
+- Extra pages: ${Array.isArray(finalEditConfig['extraPages']) ? (finalEditConfig['extraPages'] as Array<{label: string}>).map(p => p.label).join(', ') : 'none'}
+- User just asked: "${message}"
+
+Return ONLY a JSON array of 4 strings. Each string is a short imperative command (under 60 chars). Mix different types: copy changes, style changes, structural additions, content tweaks. Make them specific to THIS business, not generic.
+
+Example format: ["Change the about section to be more personal", "Try the editorial font for a magazine feel", "Add a seasonal specials section to the menu", "Switch to the scale-reveal scroll animation"]`,
+        }],
+      });
+
+      const sugBlock = sugResponse.content[0];
+      const sugText = sugBlock && sugBlock.type === 'text' ? sugBlock.text.trim() : '[]';
+      const sugJson = sugText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+      suggestions = JSON.parse(sugJson) as string[];
+    } catch {
+      // Non-critical — silently skip suggestions
+    }
+
+    return reply.send({ success: true, html: finalHtml, url: finalUrl, suggestions });
   });
 
   // POST /generate-image — generate an image using DALL-E 3
