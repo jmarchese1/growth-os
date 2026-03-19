@@ -630,26 +630,33 @@ export default function WebsiteBuilder({
                 <span className="text-xs font-semibold text-slate-500">{industry.label}</span>
               </div>
             )}
-            <h2 className="text-xl font-bold text-slate-900 mb-1">Do you have an existing website?</h2>
+            <h2 className="text-xl font-bold text-slate-900 mb-1">Import & Inspiration</h2>
             <p className="text-sm text-slate-500 mb-8">
-              Paste your URL and we&apos;ll use AI to pull your hours, menu, photos, and contact info automatically. Or skip to start fresh.
+              Import data from an existing site, add inspiration URLs for style reference, or skip both to start completely fresh.
             </p>
-            <div className="mb-6">
-              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Your current website URL</label>
+
+            {/* Existing website — collapsible if not needed */}
+            <details className="mb-6" open={!!form.existingWebsiteUrl}>
+              <summary className="text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer select-none mb-2">
+                Import from existing website <span className="font-normal text-slate-400">(optional)</span>
+              </summary>
               <input
                 type="url"
                 placeholder={`https://your${industry.id}.com`}
                 value={form.existingWebsiteUrl}
                 onChange={(e) => setForm_('existingWebsiteUrl', e.target.value)}
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400"
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 mt-2"
               />
-              <p className="text-xs text-slate-400 mt-2">We visit multiple pages (home, menu, contact) to extract as much as possible. You can edit everything after.</p>
-            </div>
+              <p className="text-xs text-slate-400 mt-2">We&apos;ll pull hours, menu, photos, and contact info automatically.</p>
+            </details>
 
-            {/* Inspiration websites */}
+            {/* Inspiration websites — prominently displayed */}
             <div className="border-t border-slate-100 pt-6 mb-6">
-              <p className="text-sm font-bold text-slate-800 mb-1">Got style inspiration?</p>
-              <p className="text-xs text-slate-400 mb-4">Paste URLs of websites whose look and feel you love. Our AI will study them and borrow the vibe — colors, typography mood, layout style.</p>
+              <div className="flex items-center gap-2 mb-1">
+                <p className="text-sm font-bold text-slate-800">Style Inspiration</p>
+                <span className="px-2 py-0.5 bg-violet-100 text-violet-700 text-[10px] font-bold rounded-full">Recommended</span>
+              </div>
+              <p className="text-xs text-slate-400 mb-4">Paste URLs of websites whose look and feel you love. Our AI will screenshot them, extract their design DNA (colors, typography, spacing, layout), and apply that aesthetic to your site. <strong className="text-slate-500">This is what makes each site unique.</strong></p>
               <div className="space-y-2">
                 {inspirationUrls.map((url, i) => (
                   <div key={i} className="flex gap-2">
@@ -692,7 +699,10 @@ export default function WebsiteBuilder({
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Scanning your website...
                   </span>
-                ) : form.existingWebsiteUrl ? 'Import & Continue' : inspirationUrls.some(Boolean) ? 'Continue with Inspiration' : 'Skip — Start Fresh'}
+                ) : form.existingWebsiteUrl && inspirationUrls.some(Boolean) ? 'Import + Inspiration → Continue'
+                  : form.existingWebsiteUrl ? 'Import & Continue'
+                  : inspirationUrls.some(Boolean) ? 'Continue with Inspiration'
+                  : 'Start Fresh →'}
               </button>
             </div>
           </div>
