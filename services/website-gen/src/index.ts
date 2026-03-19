@@ -11,7 +11,7 @@ const log = createLogger('website-gen');
 async function start() {
   const app = Fastify({
     logger: false,
-    requestTimeout: 180000,  // 3 minutes — AI generation can take 30-60s
+    requestTimeout: 0,  // No timeout — AI generation can take variable time
     bodyLimit: 10 * 1024 * 1024, // 10MB for large payloads
   });
   await app.register(cors, { origin: true });

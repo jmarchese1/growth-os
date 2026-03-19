@@ -31,7 +31,7 @@ const log = createLogger('api:gateway');
 export async function buildApp() {
   const app = Fastify({
     logger: false,
-    requestTimeout: 180000,  // 3 minutes — website generation with AI can take 30-60s
+    requestTimeout: 0,  // No timeout
   });
 
   // ─── Plugins ────────────────────────────────────────────────────────────────
