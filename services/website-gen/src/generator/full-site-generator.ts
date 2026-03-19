@@ -25,12 +25,9 @@ export interface SiteData {
   ctaText: string;
   sections?: Array<{ id: string; enabled: boolean; isPage?: boolean }>;
   extraPages?: Array<{ id: string; label: string; slug: string }>;
-  // Analytics
   googleAnalyticsId?: string;
   metaPixelId?: string;
-  // Contact form
   contactFormEndpoint?: string;
-  // Chatbot
   chatbotEnabled?: boolean;
   chatbotBusinessId?: string;
 }
@@ -38,141 +35,97 @@ export interface SiteData {
 /**
  * AI generates the COMPLETE website HTML from scratch.
  * No rigid template — the AI decides layout, CSS, and HTML structure
- * based on the business data and inspiration analysis.
+ * based on the business data and inspiration site source code.
  */
 export async function generateFullWebsite(params: {
   siteData: SiteData;
   inspirationStyleNotes: string;
   industryType: string;
-  inspirationScreenshots?: string[]; // base64 screenshots for vision
 }, anthropicKey: string): Promise<string> {
   const { siteData, inspirationStyleNotes, industryType } = params;
 
   const client = new Anthropic({ apiKey: anthropicKey });
 
-  // Build the data context
   const enabledSections = siteData.sections?.filter(s => s.enabled).map(s => s.id) ?? ['about', 'features', 'menu', 'testimonials', 'hours'];
   const enabledPages = siteData.extraPages ?? [];
 
-  const menuJson = siteData.menuItems?.length
-    ? JSON.stringify(siteData.menuItems.slice(0, 12), null, 2)
-    : 'No menu items provided — skip menu section or generate sample items';
+  const menuData = siteData.menuItems?.length
+    ? siteData.menuItems.slice(0, 12).map(i => `${i.name}${i.price ? ` — ${i.price}` : ''}${i.description ? `: ${i.description}` : ''} [${i.category ?? 'Main'}]`).join('\n')
+    : '';
 
-  const hoursJson = siteData.hours && Object.keys(siteData.hours).length > 0
-    ? JSON.stringify(siteData.hours, null, 2)
-    : 'No hours provided';
+  const hoursData = siteData.hours && Object.keys(siteData.hours).length > 0
+    ? Object.entries(siteData.hours).map(([d, t]) => `${d}: ${t}`).join('\n')
+    : '';
 
   const galleryUrls = siteData.galleryImages?.filter(Boolean) ?? [];
-  const testimonialsJson = siteData.testimonials?.length
-    ? JSON.stringify(siteData.testimonials, null, 2)
-    : 'No testimonials provided — generate 2-3 realistic ones';
-
-  const featuresJson = siteData.features?.length
-    ? JSON.stringify(siteData.features, null, 2)
-    : 'No features provided — generate 3 compelling ones';
-
-  // Build the message content — include screenshots if available
-  const messageContent: Array<{ type: 'text'; text: string } | { type: 'image'; source: { type: 'base64'; media_type: 'image/jpeg'; data: string } }> = [];
-
-  if (params.inspirationScreenshots?.length) {
-    for (const screenshot of params.inspirationScreenshots.slice(0, 2)) {
-      messageContent.push({
-        type: 'image',
-        source: { type: 'base64', media_type: 'image/jpeg', data: screenshot },
-      });
-    }
-    messageContent.push({
-      type: 'text',
-      text: 'Above: Screenshots of inspiration websites the user wants their site to look like. Study every visual detail — layout structure, color palette, typography, spacing, card styles, image treatment, nav style, hero design, section rhythm.',
-    });
-  }
-
-  messageContent.push({
-    type: 'text',
-    text: `You are a world-class web designer and front-end developer. Generate a COMPLETE, production-ready single-page HTML website.
-
-## CRITICAL RULE
-Do NOT use a generic dark-background centered-text template. Every site you generate must have UNIQUE layout, structure, and visual design based on the inspiration below. If the inspiration shows a light site with photo grids — build that. If it shows a moody dark site with giant typography — build that. MATCH THE INSPIRATION.
-
-## Inspiration & Style Analysis
-${inspirationStyleNotes || `No specific inspiration provided. Create a distinctive, high-end ${industryType} website with creative layout choices. Don't default to the same dark-background centered layout every time. Vary between: light/dark themes, left-aligned/centered heroes, card-based/list-based menus, photo-heavy/text-forward designs.`}
-
-## Business Data
-- **Name:** ${siteData.businessName}
-- **Industry:** ${industryType}
-${siteData.cuisine ? `- **Type:** ${siteData.cuisine}` : ''}
-${siteData.city ? `- **City:** ${siteData.city}` : ''}
-${siteData.phone ? `- **Phone:** ${siteData.phone}` : ''}
-${siteData.address ? `- **Address:** ${siteData.address}` : ''}
-${siteData.bookingUrl ? `- **Booking URL:** ${siteData.bookingUrl}` : ''}
-${siteData.heroImage ? `- **Hero Image URL:** ${siteData.heroImage}` : ''}
-- **Hero Heading:** ${siteData.heroHeading}
-- **Hero Subtitle:** ${siteData.heroSubheading}
-- **About Heading:** ${siteData.aboutHeading}
-- **About Body:** ${siteData.aboutBody}
-- **CTA Text:** ${siteData.ctaText}
-${siteData.tagline ? `- **Tagline:** ${siteData.tagline}` : ''}
-
-## Content Sections to Include
-${enabledSections.map(id => `- ${id}`).join('\n')}
-${enabledPages.length > 0 ? `\n## Extra Pages\n${enabledPages.map(p => `- ${p.label} (/${p.slug})`).join('\n')}` : ''}
-
-## Menu Items
-${menuJson}
-
-## Hours
-${hoursJson}
-
-## Gallery Images
-${galleryUrls.length > 0 ? galleryUrls.map((u, i) => `${i + 1}. ${u}`).join('\n') : 'No gallery images'}
-
-## Features
-${featuresJson}
-
-## Testimonials
-${testimonialsJson}
-
-## Requirements
-1. Output a COMPLETE <!DOCTYPE html> document — fully self-contained with inline <style> and no external dependencies except Google Fonts
-2. The design must be RESPONSIVE (mobile-friendly)
-3. Include smooth scroll behavior
-4. Nav should be fixed/sticky with the business name and section links
-5. Use the actual business data above — real name, real phone, real hours, real menu items
-6. If a hero image URL is provided, use it as the hero background
-7. Make the CTA button link to the booking URL (or phone if no booking URL)
-8. The design should look like it was built by a premium agency — not a template
-9. Include hover effects, transitions, and micro-interactions
-10. Every section should have unique visual treatment — NOT the same card-grid pattern repeated
-
-${siteData.googleAnalyticsId ? `## Analytics\nInclude Google Analytics: ${siteData.googleAnalyticsId}` : ''}
-${siteData.metaPixelId ? `Include Meta Pixel: ${siteData.metaPixelId}` : ''}
-
-${enabledPages.some(p => p.id === 'contact') && siteData.contactFormEndpoint ? `## Contact Form\nThe contact page must include a working form that POSTs JSON to: ${siteData.contactFormEndpoint}\nFields: name (required), email (required), phone (optional), message (required), businessName: "${siteData.businessName}", businessId: "${siteData.chatbotBusinessId ?? ''}"\nShow success/error messages after submission.` : ''}
-
-## Output
-Return ONLY the complete HTML document. No markdown, no explanation, no \`\`\` code fences. Just the raw HTML starting with <!DOCTYPE html>.`,
-  });
-
-  logger.info({ businessName: siteData.businessName, sectionsCount: enabledSections.length, hasInspiration: !!inspirationStyleNotes }, 'Generating full website HTML via AI');
 
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 12000,
+    max_tokens: 16000,
     messages: [{
       role: 'user',
-      content: messageContent,
+      content: `You are a senior front-end developer at a top design agency. Build a complete, production-quality website.
+
+## YOUR #1 RULE
+Study the inspiration site CSS and HTML below. Your output must VISUALLY MATCH the inspiration — same color palette, same layout patterns, same typography feel, same spacing rhythm, same visual weight. If the inspiration uses a light background, YOUR site uses a light background. If it uses photo grids, YOU use photo grids. If it uses bold sans-serif, YOU use bold sans-serif. DO NOT default to a dark background with centered serif text.
+
+## INSPIRATION SITE SOURCE CODE & ANALYSIS
+${inspirationStyleNotes}
+
+## BUSINESS DATA
+Name: ${siteData.businessName}
+Industry: ${industryType}
+${siteData.cuisine ? `Type: ${siteData.cuisine}` : ''}
+${siteData.city ? `City: ${siteData.city}` : ''}
+${siteData.phone ? `Phone: ${siteData.phone}` : ''}
+${siteData.address ? `Address: ${siteData.address}` : ''}
+${siteData.heroImage ? `Hero image: ${siteData.heroImage}` : 'No hero image — use a CSS gradient or solid color hero'}
+${siteData.bookingUrl ? `Booking URL: ${siteData.bookingUrl}` : ''}
+Hero heading: ${siteData.heroHeading}
+Hero subtitle: ${siteData.heroSubheading}
+About heading: ${siteData.aboutHeading}
+About body: ${siteData.aboutBody}
+CTA: ${siteData.ctaText}
+${siteData.tagline ? `Tagline: ${siteData.tagline}` : ''}
+
+${menuData ? `## MENU ITEMS\n${menuData}` : ''}
+${hoursData ? `## HOURS\n${hoursData}` : ''}
+${galleryUrls.length > 0 ? `## GALLERY IMAGES\n${galleryUrls.map((u, i) => `${i + 1}. ${u}`).join('\n')}` : ''}
+
+${siteData.features?.length ? `## FEATURES\n${siteData.features.map(f => `- ${f.title}: ${f.description}`).join('\n')}` : ''}
+${siteData.testimonials?.length ? `## TESTIMONIALS\n${siteData.testimonials.map(t => `"${t.quote}" — ${t.author}, ${t.detail}`).join('\n')}` : ''}
+
+## SECTIONS TO INCLUDE
+${enabledSections.join(', ')}
+${enabledPages.length > 0 ? `Extra pages: ${enabledPages.map(p => p.label).join(', ')}` : ''}
+
+## REQUIREMENTS
+1. Output a COMPLETE <!DOCTYPE html> document. Self-contained — all CSS in a <style> tag, no external CSS files (Google Fonts link is OK)
+2. COPY the visual style from the inspiration site — colors, layout structure, typography, spacing, card styles, image treatment
+3. Use the ACTUAL business data above — real name, phone, hours, menu items, etc.
+4. If a hero image URL is given, use it. If gallery image URLs are given, use them.
+5. If NO images are provided, use Unsplash for placeholder images. Use specific queries like: https://images.unsplash.com/photo-SPECIFIC-ID?w=800 or use https://source.unsplash.com/800x600/?restaurant,food (adjust the query to match the industry)
+6. Make it fully responsive (mobile-friendly)
+7. Include hover effects, smooth transitions, and scroll behavior
+8. The CTA should link to the booking URL or phone number
+9. Do NOT generate a generic dark template with centered text. Be creative. Match the inspiration.
+10. Include proper meta tags (title, description, viewport, og:title, og:description)
+
+${siteData.googleAnalyticsId ? `Include Google Analytics: ${siteData.googleAnalyticsId}` : ''}
+${siteData.metaPixelId ? `Include Meta Pixel: ${siteData.metaPixelId}` : ''}
+${enabledPages.some(p => p.id === 'contact') && siteData.contactFormEndpoint ? `Include a contact form that POSTs JSON to ${siteData.contactFormEndpoint} with fields: name, email, phone, message, businessName, businessId` : ''}
+
+Output ONLY the HTML. No markdown fences, no explanation. Start with <!DOCTYPE html>.`,
     }],
   });
 
   const block = response.content[0];
   let html = block && block.type === 'text' ? block.text.trim() : '';
 
-  // Clean up any markdown fencing the AI might add
+  // Clean up markdown fencing
   html = html.replace(/^```(?:html)?\n?/, '').replace(/\n?```$/, '').trim();
 
-  // Validate it's actual HTML
   if (!html.startsWith('<!DOCTYPE') && !html.startsWith('<html')) {
-    // Try to find HTML in the response
     const match = html.match(/<!DOCTYPE[\s\S]*<\/html>/i);
     if (match) {
       html = match[0];
@@ -181,20 +134,12 @@ Return ONLY the complete HTML document. No markdown, no explanation, no \`\`\` c
     }
   }
 
-  // Inject chatbot widget if enabled
+  // Inject chatbot if enabled
   if (siteData.chatbotEnabled && siteData.chatbotBusinessId) {
-    const chatbotScript = `
-<script>
-  window.EmbledoChatConfig = {
-    businessId: "${siteData.chatbotBusinessId}",
-    businessName: "${siteData.businessName.replace(/"/g, '\\"')}",
-    welcomeMessage: "Hi! How can I help you today?"
-  };
-</script>
-<script src="https://chat.embedo.ai/widget.js" async></script>`;
-    html = html.replace('</body>', `${chatbotScript}\n</body>`);
+    const script = `<script>window.EmbledoChatConfig={businessId:"${siteData.chatbotBusinessId}",businessName:"${siteData.businessName.replace(/"/g, '\\"')}",welcomeMessage:"Hi! How can I help you today?"};</script><script src="https://chat.embedo.ai/widget.js" async></script>`;
+    html = html.replace('</body>', `${script}\n</body>`);
   }
 
-  logger.info({ htmlLength: html.length }, 'Full website HTML generated');
+  logger.info({ htmlLength: html.length }, 'Full website generated');
   return html;
 }
