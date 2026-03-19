@@ -15,12 +15,13 @@ export async function websiteRoutes(app: FastifyInstance) {
     return reply.code(res.status).send(data);
   });
 
-  // Proxy generate
+  // Proxy generate — long timeout for AI generation
   app.post('/websites/generate', async (req, reply) => {
     const res = await fetch(`${WEBSITE_GEN_URL}/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(req.body),
+      signal: AbortSignal.timeout(150000), // 2.5 min timeout for AI generation
     });
     const data = await res.json();
     return reply.code(res.status).send(data);

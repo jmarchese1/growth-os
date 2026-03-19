@@ -9,7 +9,11 @@ import { initKnowledgeBase } from './training/knowledge-base.js';
 const log = createLogger('website-gen');
 
 async function start() {
-  const app = Fastify({ logger: false });
+  const app = Fastify({
+    logger: false,
+    requestTimeout: 180000,  // 3 minutes — AI generation can take 30-60s
+    bodyLimit: 10 * 1024 * 1024, // 10MB for large payloads
+  });
   await app.register(cors, { origin: true });
 
   app.setErrorHandler((error: unknown, _request, reply) => {

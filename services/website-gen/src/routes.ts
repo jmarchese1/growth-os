@@ -206,7 +206,10 @@ export async function websiteRoutes(app: FastifyInstance) {
       }
     }
 
-    // Generate AI copy
+    // Check if we're doing full AI generation (skip unnecessary intermediate AI calls)
+    const willUseFullAI = !!(body.inspirationUrls?.some(Boolean)) && !!env.ANTHROPIC_API_KEY;
+
+    // Generate AI copy — SKIP if full AI path will handle everything
     let copy = {
       heroHeading: `Welcome to ${body.businessName}`,
       heroSubheading: body.tagline ?? body.description ?? '',
@@ -219,19 +222,18 @@ export async function websiteRoutes(app: FastifyInstance) {
       features: [] as Array<{ title: string; description: string }>,
       testimonials: [] as Array<{ quote: string; author: string; detail: string }>,
     };
-    if (env.ANTHROPIC_API_KEY) {
+    if (env.ANTHROPIC_API_KEY && !willUseFullAI) {
       copy = await generateWebsiteCopy({
         ...merged,
         businessName: body.businessName,
         ...(body.industryType ? { industryType: body.industryType } : {}),
         ...(inspirationStyleNotes ? { inspirationStyleNotes } : {}),
       }, env.ANTHROPIC_API_KEY);
-
     }
 
-    // Generate AI style overrides based on inspiration analysis
+    // Generate AI style overrides — SKIP if full AI path will handle everything
     let styleOverrides: Partial<import('./templates/restaurant/premium.js').StyleOverrides> = {};
-    if (env.ANTHROPIC_API_KEY) {
+    if (env.ANTHROPIC_API_KEY && !willUseFullAI) {
       try {
         styleOverrides = await generateStyleOverrides({
           inspirationStyleNotes,
