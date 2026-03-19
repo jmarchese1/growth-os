@@ -378,11 +378,13 @@ export async function websiteRoutes(app: FastifyInstance) {
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : String(err);
         logger.error({ error: errMsg, stack: err instanceof Error ? err.stack : undefined }, 'FULL AI GENERATION FAILED');
-        // Still fall back to template but log loudly
-        const cfgCast = premiumConfig as unknown as PremiumWebsiteConfig;
-        html = renderRestaurantPremium(cfgCast);
-        // Inject a visible comment so we can diagnose
-        html = html.replace('</head>', `<!-- GENERATION_PATH: TEMPLATE_FALLBACK | ERROR: ${errMsg.replace(/--/g, '- -').slice(0, 200)} -->\n</head>`);
+        // DON'T silently fall back — return the error so the user can see it
+        return reply.code(500).send({
+          success: false,
+          error: `AI generation failed: ${errMsg}`,
+          generationPath: 'AI_FULL_FAILED',
+          fallbackAvailable: true,
+        });
       }
     } else {
       // Template-based path (no inspiration — use rigid templates)
