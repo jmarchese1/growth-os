@@ -384,19 +384,27 @@ export async function websiteRoutes(app: FastifyInstance) {
           inspirationStyleNotes: fullInspirationContext,
           industryType: body.industryType ?? 'restaurant',
         }, env.ANTHROPIC_API_KEY);
-        logger.info({ htmlLength: html.length }, 'Full AI website generation succeeded');
+        // Mark AI-generated HTML so we can verify which path ran
+        html = html.replace('</head>', `<!-- GENERATION_PATH: AI_FULL | inspirationSources: ${inspirationSources.length} | contextLength: ${fullInspirationContext.length} -->\n</head>`);
+        logger.info({ htmlLength: html.length }, 'Full AI website generation succeeded — AI path');
       } catch (err) {
-        logger.warn({ error: String(err) }, 'Full AI generation failed — falling back to template');
+        const errMsg = err instanceof Error ? err.message : String(err);
+        logger.error({ error: errMsg, stack: err instanceof Error ? err.stack : undefined }, 'FULL AI GENERATION FAILED');
+        // Still fall back to template but log loudly
         const cfgCast = premiumConfig as unknown as PremiumWebsiteConfig;
         html = renderRestaurantPremium(cfgCast);
+        // Inject a visible comment so we can diagnose
+        html = html.replace('</head>', `<!-- GENERATION_PATH: TEMPLATE_FALLBACK | ERROR: ${errMsg.replace(/--/g, '- -').slice(0, 200)} -->\n</head>`);
       }
     } else {
       // Template-based path (no inspiration — use rigid templates)
+      logger.info({ hasInspiration, hasApiKey: !!env.ANTHROPIC_API_KEY }, 'Using template path (no inspiration URLs)');
       const cfgCast = premiumConfig as unknown as PremiumWebsiteConfig;
       const tmplId = body.template ?? 'premium';
       html = tmplId === 'bold' ? renderBoldTemplate(cfgCast)
         : tmplId === 'editorial' ? renderEditorialTemplate(cfgCast)
         : renderRestaurantPremium(cfgCast);
+      html = html.replace('</head>', `<!-- GENERATION_PATH: TEMPLATE | template: ${tmplId} -->\n</head>`);
     }
 
     // Always create a new GeneratedWebsite record — users manage multiple sites from the list view
