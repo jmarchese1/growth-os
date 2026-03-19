@@ -18,25 +18,9 @@ import type { PremiumWebsiteConfig } from './templates/restaurant/premium.js';
 const logger = createLogger('website-gen:routes');
 
 // ── AI Self-Review Loop ─────────────────────────────────────────────────────
-async function screenshotUrl(url: string): Promise<string | null> {
-  try {
-    const pw = await import('playwright');
-    const browser = await pw.chromium.launch({ headless: true });
-    const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-    await page.goto(url, { waitUntil: 'networkidle', timeout: 25000 });
-    await page.waitForTimeout(2000);
-    // Scroll down to trigger animations and see more content
-    await page.evaluate('window.scrollTo(0, document.body.scrollHeight / 3)');
-    await page.waitForTimeout(1000);
-    await page.evaluate('window.scrollTo(0, 0)');
-    await page.waitForTimeout(500);
-    const screenshot = await page.screenshot({ fullPage: true, type: 'jpeg', quality: 65 });
-    await browser.close();
-    return screenshot.toString('base64');
-  } catch (err) {
-    logger.warn({ url, error: String(err) }, 'Self-review screenshot failed');
-    return null;
-  }
+// Screenshot disabled — Playwright doesn't work in Railway containers
+async function screenshotUrl(_url: string): Promise<string | null> {
+  return null;
 }
 
 async function selfReviewAndFix(
