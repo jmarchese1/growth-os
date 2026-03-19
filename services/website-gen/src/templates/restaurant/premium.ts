@@ -49,10 +49,53 @@ export interface PremiumWebsiteConfig {
   // Contact form
   contactFormEnabled?: boolean;
   contactFormEndpoint?: string;
+  // Dynamic style overrides (AI-generated)
+  styleOverrides?: Partial<StyleOverrides>;
 }
 
 export type ColorScheme = 'midnight' | 'warm' | 'forest' | 'ocean' | 'ivory' | 'rose' | 'slate' | 'emerald' | 'amber' | 'crimson' | 'navy' | 'sage';
 export type FontPairing = 'modern' | 'classic' | 'minimal' | 'elegant' | 'luxury' | 'editorial' | 'tech' | 'literary';
+
+// ── Dynamic Style Overrides — AI-generated per site ──────────────────────────
+export interface StyleOverrides {
+  // Layout
+  navHeight: string;           // e.g. "64px", "80px", "56px"
+  navStyle: 'fixed' | 'sticky' | 'static';
+  navBackground: string;       // e.g. "transparent", "${bg}e0", "rgba(0,0,0,0.9)"
+  sectionPadding: string;      // e.g. "100px 0", "140px 0", "80px 0"
+  maxWidth: string;            // e.g. "1100px", "1400px", "900px"
+  contentPadding: string;      // e.g. "0 40px", "0 80px", "0 24px"
+  // Hero
+  heroLayout: 'centered' | 'left-aligned' | 'split' | 'bottom-aligned' | 'overlay-full';
+  heroMinHeight: string;       // e.g. "100vh", "85vh", "70vh"
+  heroHeadingSize: string;     // e.g. "clamp(44px,7vw,96px)", "clamp(64px,10vw,140px)"
+  heroHeadingWeight: string;   // e.g. "800", "400", "900"
+  heroHeadingLetterSpacing: string; // e.g. "-0.04em", "-0.06em", "0.02em"
+  heroSubtitleSize: string;    // e.g. "clamp(16px,2vw,21px)", "clamp(14px,1.5vw,18px)"
+  // Buttons
+  buttonRadius: string;        // e.g. "100px" (pill), "12px" (rounded), "0px" (sharp)
+  buttonPadding: string;       // e.g. "14px 32px", "18px 48px", "12px 24px"
+  buttonStyle: 'filled' | 'outline' | 'underline' | 'ghost';
+  buttonTextTransform: string; // e.g. "none", "uppercase"
+  buttonLetterSpacing: string; // e.g. "0.01em", "0.1em"
+  // Cards & Sections
+  cardRadius: string;          // e.g. "20px", "8px", "0px"
+  cardBorder: boolean;         // whether cards have visible borders
+  cardShadow: string;          // e.g. "none", "0 4px 20px rgba(0,0,0,0.08)"
+  sectionLabelStyle: 'uppercase-small' | 'accent-line' | 'none' | 'large-serif';
+  // Typography
+  headingSizeScale: number;    // multiplier: 1.0 = normal, 1.3 = large, 0.8 = compact
+  bodyLineHeight: string;      // e.g. "1.7", "1.9", "1.5"
+  // Spacing
+  gridGap: string;             // e.g. "24px", "40px", "16px"
+  // Mood
+  useHeroOrbs: boolean;        // decorative gradient orbs on hero
+  useHoverEffects: boolean;    // card hover animations
+  imageStyle: 'full-bleed' | 'rounded' | 'bordered' | 'floating';
+  dividerStyle: 'line' | 'none' | 'gradient' | 'thick';
+  // Custom CSS (AI can inject additional CSS rules)
+  customCSS: string;
+}
 
 const COLOR_SCHEMES: Record<ColorScheme, { bg: string; surface: string; text: string; muted: string; accent: string; accentText: string; border: string }> = {
   midnight: { bg: '#0a0a0a', surface: '#141414', text: '#f5f5f5', muted: '#888',    accent: '#a855f7', accentText: '#fff', border: '#222' },
@@ -83,6 +126,42 @@ const FONT_PAIRINGS: Record<FontPairing, { heading: string; body: string; google
 type Colors = typeof COLOR_SCHEMES[ColorScheme];
 type Fonts = typeof FONT_PAIRINGS[FontPairing];
 
+const DEFAULT_STYLE: StyleOverrides = {
+  navHeight: '64px',
+  navStyle: 'fixed',
+  navBackground: '',  // computed from colors
+  sectionPadding: '100px 0',
+  maxWidth: '1100px',
+  contentPadding: '0 40px',
+  heroLayout: 'centered',
+  heroMinHeight: '100vh',
+  heroHeadingSize: 'clamp(44px,7vw,96px)',
+  heroHeadingWeight: '800',
+  heroHeadingLetterSpacing: '-0.04em',
+  heroSubtitleSize: 'clamp(16px,2vw,21px)',
+  buttonRadius: '100px',
+  buttonPadding: '14px 32px',
+  buttonStyle: 'filled',
+  buttonTextTransform: 'none',
+  buttonLetterSpacing: '0.01em',
+  cardRadius: '20px',
+  cardBorder: true,
+  cardShadow: 'none',
+  sectionLabelStyle: 'uppercase-small',
+  headingSizeScale: 1.0,
+  bodyLineHeight: '1.7',
+  gridGap: '24px',
+  useHeroOrbs: true,
+  useHoverEffects: true,
+  imageStyle: 'rounded',
+  dividerStyle: 'line',
+  customCSS: '',
+};
+
+function resolveStyle(overrides?: Partial<StyleOverrides>): StyleOverrides {
+  return { ...DEFAULT_STYLE, ...overrides };
+}
+
 const DEFAULT_SECTION_ORDER: SectionKey[] = ['about', 'features', 'menu', 'gallery', 'testimonials', 'hours', 'reserve'];
 
 // ── Section renderers ────────────────────────────────────────────────────────
@@ -97,14 +176,34 @@ function hoursTable(hours?: Record<string, string>, c?: Colors): string {
   return `<table style="border-collapse:collapse;width:100%;">${rows}</table>`;
 }
 
-function renderAbout(config: PremiumWebsiteConfig, c: Colors, f: Fonts): string {
+function sectionLabel(text: string, c: Colors, s: StyleOverrides): string {
+  if (s.sectionLabelStyle === 'none') return '';
+  if (s.sectionLabelStyle === 'accent-line') return `<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;"><div style="width:40px;height:2px;background:${c.accent};"></div><span style="font-size:13px;font-weight:600;color:${c.accent};">${text}</span></div>`;
+  if (s.sectionLabelStyle === 'large-serif') return `<p style="font-family:${c.accent};font-size:16px;font-style:italic;color:${c.accent};margin-bottom:16px;">${text}</p>`;
+  return `<p style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:${c.accent};font-weight:600;margin-bottom:16px;">${text}</p>`;
+}
+
+function sectionDivider(c: Colors, s: StyleOverrides): string {
+  if (s.dividerStyle === 'none') return '';
+  if (s.dividerStyle === 'gradient') return `border-image:linear-gradient(to right,transparent,${c.border},transparent) 1;border-top:1px solid;`;
+  if (s.dividerStyle === 'thick') return `border-top:3px solid ${c.accent};`;
+  return `border-top:1px solid ${c.border};`;
+}
+
+function h2Style(f: Fonts, c: Colors, s: StyleOverrides): string {
+  const base = 28 * s.headingSizeScale;
+  const max = 50 * s.headingSizeScale;
+  return `font-family:${f.heading};font-size:clamp(${base}px,3.5vw,${max}px);font-weight:700;color:${c.text};line-height:1.12;letter-spacing:-0.025em;margin-bottom:28px;`;
+}
+
+function renderAbout(config: PremiumWebsiteConfig, c: Colors, f: Fonts, s: StyleOverrides): string {
   return `
-  <section id="about" style="padding:110px 0;background:${c.surface};border-top:1px solid ${c.border};border-bottom:1px solid ${c.border};">
-    <div style="max-width:1100px;margin:0 auto;padding:0 40px;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;">
+  <section id="about" style="padding:${s.sectionPadding};background:${c.surface};${sectionDivider(c, s)}">
+    <div style="max-width:${s.maxWidth};margin:0 auto;padding:${s.contentPadding};display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;">
       <div>
-        <p style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:${c.accent};font-weight:600;margin-bottom:16px;">OUR STORY</p>
-        <h2 style="font-family:${f.heading};font-size:clamp(28px,3.5vw,50px);font-weight:700;color:${c.text};line-height:1.12;letter-spacing:-0.025em;margin-bottom:28px;">${config.aboutHeading}</h2>
-        <p style="font-size:17px;color:${c.muted};line-height:1.8;">${config.aboutBody}</p>
+        ${sectionLabel('OUR STORY', c, s)}
+        <h2 style="${h2Style(f, c, s)}">${config.aboutHeading}</h2>
+        <p style="font-size:17px;color:${c.muted};line-height:${s.bodyLineHeight};">${config.aboutBody}</p>
         ${config.bookingUrl ? `<a href="${config.bookingUrl}" target="_blank" class="btn-primary" style="margin-top:36px;">${config.ctaText}</a>` : config.phone ? `<a href="tel:${config.phone}" class="btn-primary" style="margin-top:36px;">${config.ctaText}</a>` : ''}
       </div>
       <div style="background:${c.bg};border:1px solid ${c.border};border-radius:24px;padding:40px;display:flex;flex-direction:column;gap:24px;">
@@ -140,30 +239,31 @@ function renderAbout(config: PremiumWebsiteConfig, c: Colors, f: Fonts): string 
   </section>`;
 }
 
-function renderFeatures(config: PremiumWebsiteConfig, c: Colors, f: Fonts): string {
+function renderFeatures(config: PremiumWebsiteConfig, c: Colors, f: Fonts, s: StyleOverrides): string {
   if (!config.features || config.features.length === 0) return '';
   const icons = [
     `<svg width="24" height="24" fill="none" stroke="${c.accent}" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 016 0v8.25a3 3 0 01-3 3z"/></svg>`,
     `<svg width="24" height="24" fill="none" stroke="${c.accent}" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>`,
     `<svg width="24" height="24" fill="none" stroke="${c.accent}" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>`,
   ];
+  const hoverAttr = s.useHoverEffects ? `onmouseover="this.style.borderColor='${c.accent}60';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='${s.cardBorder ? c.border : 'transparent'}';this.style.transform='translateY(0)'"` : '';
   const cards = config.features.map((feature, i) => `
-    <div style="background:${c.surface};border:1px solid ${c.border};border-radius:20px;padding:36px;transition:border-color 0.3s,transform 0.3s;" onmouseover="this.style.borderColor='${c.accent}60';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='${c.border}';this.style.transform='translateY(0)'">
+    <div style="background:${c.surface};${s.cardBorder ? `border:1px solid ${c.border};` : ''}border-radius:${s.cardRadius};${s.cardShadow !== 'none' ? `box-shadow:${s.cardShadow};` : ''}padding:36px;transition:border-color 0.3s,transform 0.3s;" ${hoverAttr}>
       <div style="width:52px;height:52px;border-radius:14px;background:${c.accent}18;display:flex;align-items:center;justify-content:center;margin-bottom:24px;">${icons[i % 3]}</div>
-      <h3 style="font-family:${f.heading};font-size:20px;font-weight:700;color:${c.text};margin-bottom:12px;letter-spacing:-0.01em;">${feature.title}</h3>
-      <p style="font-size:15px;color:${c.muted};line-height:1.7;">${feature.description}</p>
+      <h3 style="font-family:${f.heading};font-size:${Math.round(20 * s.headingSizeScale)}px;font-weight:700;color:${c.text};margin-bottom:12px;letter-spacing:-0.01em;">${feature.title}</h3>
+      <p style="font-size:15px;color:${c.muted};line-height:${s.bodyLineHeight};">${feature.description}</p>
     </div>`).join('');
   return `
-  <section style="padding:100px 0;background:${c.surface};border-top:1px solid ${c.border};border-bottom:1px solid ${c.border};">
-    <div style="max-width:1100px;margin:0 auto;padding:0 40px;">
-      <p style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:${c.accent};font-weight:600;margin-bottom:12px;text-align:center;">WHY CHOOSE US</p>
-      <h2 style="font-family:${f.heading};font-size:clamp(32px,4vw,52px);font-weight:700;color:${c.text};text-align:center;margin:0 0 60px;letter-spacing:-0.02em;">The Difference</h2>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">${cards}</div>
+  <section style="padding:${s.sectionPadding};background:${c.surface};${sectionDivider(c, s)}">
+    <div style="max-width:${s.maxWidth};margin:0 auto;padding:${s.contentPadding};">
+      ${sectionLabel('WHY CHOOSE US', c, s)}
+      <h2 style="${h2Style(f, c, s)}text-align:center;margin:0 0 60px;">The Difference</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:${s.gridGap};">${cards}</div>
     </div>
   </section>`;
 }
 
-function renderMenu(config: PremiumWebsiteConfig, c: Colors, f: Fonts): string {
+function renderMenu(config: PremiumWebsiteConfig, c: Colors, f: Fonts, s: StyleOverrides): string {
   if (!config.menuItems || config.menuItems.length === 0) return '';
   const grouped: Record<string, typeof config.menuItems> = {};
   for (const item of config.menuItems) {
@@ -171,45 +271,49 @@ function renderMenu(config: PremiumWebsiteConfig, c: Colors, f: Fonts): string {
     grouped[cat] = grouped[cat] ?? [];
     grouped[cat]!.push(item);
   }
-  const sections = Object.entries(grouped).map(([cat, catItems]) => `
+  const hoverAttr = s.useHoverEffects ? `onmouseover="this.style.borderColor='${c.accent}40'" onmouseout="this.style.borderColor='${s.cardBorder ? c.border : 'transparent'}'"` : '';
+  const menuSections = Object.entries(grouped).map(([cat, catItems]) => `
     <div style="margin-bottom:40px;">
-      <p style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:${c.accent};font-weight:600;margin-bottom:20px;">${cat}</p>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+      ${sectionLabel(cat, c, s)}
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:${s.gridGap};">
         ${catItems!.map((item) => `
-          <div style="background:${c.surface};border:1px solid ${c.border};border-radius:12px;padding:20px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='${c.accent}40'" onmouseout="this.style.borderColor='${c.border}'">
+          <div style="background:${c.surface};${s.cardBorder ? `border:1px solid ${c.border};` : ''}border-radius:${s.cardRadius};${s.cardShadow !== 'none' ? `box-shadow:${s.cardShadow};` : ''}padding:20px;transition:border-color 0.2s;" ${hoverAttr}>
             <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
               <span style="font-family:${f.heading};font-size:16px;font-weight:600;color:${c.text};">${item.name}</span>
               ${item.price ? `<span style="font-size:14px;font-weight:700;color:${c.accent};margin-left:12px;white-space:nowrap;">${item.price}</span>` : ''}
             </div>
-            ${item.description ? `<p style="font-size:13px;color:${c.muted};line-height:1.6;margin:0;">${item.description}</p>` : ''}
+            ${item.description ? `<p style="font-size:13px;color:${c.muted};line-height:${s.bodyLineHeight};margin:0;">${item.description}</p>` : ''}
           </div>`).join('')}
       </div>
     </div>`).join('');
   return `
-  <section id="menu" style="padding:100px 0;background:${c.bg};">
-    <div style="max-width:1100px;margin:0 auto;padding:0 40px;">
-      <p style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:${c.accent};font-weight:600;margin-bottom:12px;text-align:center;">WHAT WE OFFER</p>
-      <h2 style="font-family:${f.heading};font-size:clamp(32px,4vw,52px);font-weight:700;color:${c.text};text-align:center;margin:0 0 60px;letter-spacing:-0.02em;">Our Selection</h2>
-      ${sections}
+  <section id="menu" style="padding:${s.sectionPadding};background:${c.bg};">
+    <div style="max-width:${s.maxWidth};margin:0 auto;padding:${s.contentPadding};">
+      ${sectionLabel('WHAT WE OFFER', c, s)}
+      <h2 style="${h2Style(f, c, s)}text-align:center;margin:0 0 60px;">Our Selection</h2>
+      ${menuSections}
     </div>
   </section>`;
 }
 
-function renderGallery(config: PremiumWebsiteConfig, c: Colors): string {
+function renderGallery(config: PremiumWebsiteConfig, c: Colors, _f: Fonts, s: StyleOverrides): string {
   if (!config.galleryImages || config.galleryImages.length < 2) return '';
   const imgs = config.galleryImages.slice(0, 6);
+  const imgRadius = s.imageStyle === 'rounded' ? 'border-radius:12px;' : s.imageStyle === 'bordered' ? `border:2px solid ${c.border};border-radius:8px;` : '';
+  const gap = s.imageStyle === 'full-bleed' ? '0px' : s.imageStyle === 'floating' ? '16px' : '4px';
+  const hoverAttr = s.useHoverEffects ? `onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"` : '';
   return `
-  <section style="padding:0;background:${c.bg};">
-    <div style="display:grid;grid-template-columns:repeat(${Math.min(imgs.length, 3)},1fr);gap:4px;">
-      ${imgs.map((src) => `<div style="aspect-ratio:1;overflow:hidden;"><img src="${src}" alt="Gallery" loading="lazy" style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" /></div>`).join('')}
+  <section style="padding:${s.imageStyle === 'full-bleed' ? '0' : s.sectionPadding};background:${c.bg};">
+    <div style="${s.imageStyle !== 'full-bleed' ? `max-width:${s.maxWidth};margin:0 auto;padding:${s.contentPadding};` : ''}display:grid;grid-template-columns:repeat(${Math.min(imgs.length, 3)},1fr);gap:${gap};">
+      ${imgs.map((src) => `<div style="aspect-ratio:1;overflow:hidden;${imgRadius}"><img src="${src}" alt="Gallery" loading="lazy" style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s ease;" ${hoverAttr} /></div>`).join('')}
     </div>
   </section>`;
 }
 
-function renderTestimonials(config: PremiumWebsiteConfig, c: Colors, f: Fonts): string {
+function renderTestimonials(config: PremiumWebsiteConfig, c: Colors, f: Fonts, s: StyleOverrides): string {
   if (!config.testimonials || config.testimonials.length === 0) return '';
   const cards = config.testimonials.map((t) => `
-    <div style="background:${c.surface};border:1px solid ${c.border};border-radius:20px;padding:36px;display:flex;flex-direction:column;gap:20px;">
+    <div style="background:${c.surface};${s.cardBorder ? `border:1px solid ${c.border};` : ''}border-radius:${s.cardRadius};${s.cardShadow !== 'none' ? `box-shadow:${s.cardShadow};` : ''}padding:36px;display:flex;flex-direction:column;gap:20px;">
       <div style="display:flex;gap:4px;">${Array(5).fill(0).map(() => `<svg width="16" height="16" fill="${c.accent}" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>`).join('')}</div>
       <p style="font-size:16px;color:${c.text};line-height:1.75;font-style:italic;">"${t.quote}"</p>
       <div style="display:flex;align-items:center;gap:12px;margin-top:auto;">
@@ -221,21 +325,21 @@ function renderTestimonials(config: PremiumWebsiteConfig, c: Colors, f: Fonts): 
       </div>
     </div>`).join('');
   return `
-  <section style="padding:100px 0;background:${c.bg};">
-    <div style="max-width:1100px;margin:0 auto;padding:0 40px;">
-      <p style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:${c.accent};font-weight:600;margin-bottom:12px;text-align:center;">REVIEWS</p>
-      <h2 style="font-family:${f.heading};font-size:clamp(32px,4vw,52px);font-weight:700;color:${c.text};text-align:center;margin:0 0 60px;letter-spacing:-0.02em;">What Our Guests Say</h2>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;">${cards}</div>
+  <section style="padding:${s.sectionPadding};background:${c.bg};">
+    <div style="max-width:${s.maxWidth};margin:0 auto;padding:${s.contentPadding};">
+      ${sectionLabel('REVIEWS', c, s)}
+      <h2 style="${h2Style(f, c, s)}text-align:center;margin:0 0 60px;">What Our Guests Say</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:${s.gridGap};">${cards}</div>
     </div>
   </section>`;
 }
 
-function renderHours(config: PremiumWebsiteConfig, c: Colors, f: Fonts): string {
+function renderHours(config: PremiumWebsiteConfig, c: Colors, f: Fonts, s: StyleOverrides): string {
   return `
-  <section id="hours" style="padding:100px 0;background:${c.surface};border-top:1px solid ${c.border};">
-    <div style="max-width:1100px;margin:0 auto;padding:0 40px;">
-      <p style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:${c.accent};font-weight:600;margin-bottom:12px;text-align:center;">VISIT US</p>
-      <h2 style="font-family:${f.heading};font-size:clamp(28px,3.5vw,48px);font-weight:700;color:${c.text};text-align:center;margin-bottom:60px;letter-spacing:-0.02em;">Hours & Location</h2>
+  <section id="hours" style="padding:${s.sectionPadding};background:${c.surface};${sectionDivider(c, s)}">
+    <div style="max-width:${s.maxWidth};margin:0 auto;padding:${s.contentPadding};">
+      ${sectionLabel('VISIT US', c, s)}
+      <h2 style="${h2Style(f, c, s)}text-align:center;margin-bottom:60px;">Hours & Location</h2>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;">
         <div style="background:${c.bg};border:1px solid ${c.border};border-radius:20px;padding:36px;">
           <p style="font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:${c.muted};margin-bottom:20px;font-weight:600;">Hours</p>
@@ -255,12 +359,12 @@ function renderHours(config: PremiumWebsiteConfig, c: Colors, f: Fonts): string 
   </section>`;
 }
 
-function renderReserve(config: PremiumWebsiteConfig, c: Colors, f: Fonts): string {
+function renderReserve(config: PremiumWebsiteConfig, c: Colors, f: Fonts, s: StyleOverrides): string {
   if (!config.bookingUrl) return '';
   return `
-  <section id="reserve" style="padding:110px 0;background:${c.bg};border-top:1px solid ${c.border};">
-    <div style="max-width:640px;margin:0 auto;padding:0 40px;text-align:center;">
-      <p style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:${c.accent};font-weight:600;margin-bottom:16px;">BOOK NOW</p>
+  <section id="reserve" style="padding:${s.sectionPadding};background:${c.bg};${sectionDivider(c, s)}">
+    <div style="max-width:640px;margin:0 auto;padding:${s.contentPadding};text-align:center;">
+      ${sectionLabel('BOOK NOW', c, s)}
       <h2 style="font-family:${f.heading};font-size:clamp(32px,4vw,56px);font-weight:700;color:${c.text};margin-bottom:20px;letter-spacing:-0.025em;">${config.ctaText}</h2>
       <p style="font-size:17px;color:${c.muted};line-height:1.7;margin-bottom:44px;">We look forward to welcoming you.</p>
       <a href="${config.bookingUrl}" target="_blank" class="btn-primary" style="font-size:17px;padding:18px 48px;">${config.ctaText}</a>
@@ -268,11 +372,11 @@ function renderReserve(config: PremiumWebsiteConfig, c: Colors, f: Fonts): strin
   </section>`;
 }
 
-const SECTION_RENDERERS: Record<SectionKey, (config: PremiumWebsiteConfig, c: Colors, f: Fonts) => string> = {
+const SECTION_RENDERERS: Record<SectionKey, (config: PremiumWebsiteConfig, c: Colors, f: Fonts, s: StyleOverrides) => string> = {
   about:        renderAbout,
   features:     renderFeatures,
   menu:         renderMenu,
-  gallery:      (config, c) => renderGallery(config, c),
+  gallery:      renderGallery,
   testimonials: renderTestimonials,
   hours:        renderHours,
   reserve:      renderReserve,
@@ -436,6 +540,7 @@ function scrollAnimationJS(preset: AnimationPreset): string {
 export function renderRestaurantPremium(config: PremiumWebsiteConfig): string {
   const c = COLOR_SCHEMES[config.colorScheme] ?? COLOR_SCHEMES['midnight'];
   const f = FONT_PAIRINGS[config.fontPairing] ?? FONT_PAIRINGS['modern'];
+  const s = resolveStyle(config.styleOverrides);
   const anim = config.animationPreset ?? 'none';
   const googleFontUrl = f.googleFont
     ? `<link href="https://fonts.googleapis.com/css2?family=${f.googleFont}&display=swap" rel="stylesheet">`
@@ -458,7 +563,7 @@ export function renderRestaurantPremium(config: PremiumWebsiteConfig): string {
   const animClass = anim !== 'none' ? ' class="scroll-animate"' : '';
   const sectionHtml = orderedSections
     .map((id) => {
-      let html = SECTION_RENDERERS[id]?.(config, c, f) ?? '';
+      let html = SECTION_RENDERERS[id]?.(config, c, f, s) ?? '';
       if (!html) return '';
       // Inject scroll-animate class into the top-level <section> tag
       if (anim !== 'none') {
@@ -504,9 +609,9 @@ export function renderRestaurantPremium(config: PremiumWebsiteConfig): string {
     img{max-width:100%;display:block;}
     .nav-link{font-size:14px;font-weight:500;color:${c.muted};transition:color 0.2s;letter-spacing:0.02em;}
     .nav-link:hover{color:${c.text};}
-    .btn-primary{display:inline-flex;align-items:center;justify-content:center;padding:14px 32px;background:${c.accent};color:${c.accentText};font-family:${f.heading};font-size:15px;font-weight:600;border-radius:100px;transition:opacity 0.2s,transform 0.15s;cursor:pointer;border:none;letter-spacing:0.01em;}
+    .btn-primary{display:inline-flex;align-items:center;justify-content:center;padding:${s.buttonPadding};background:${s.buttonStyle === 'outline' || s.buttonStyle === 'ghost' ? 'transparent' : c.accent};color:${s.buttonStyle === 'outline' || s.buttonStyle === 'ghost' ? c.accent : c.accentText};font-family:${f.heading};font-size:15px;font-weight:600;border-radius:${s.buttonRadius};transition:opacity 0.2s,transform 0.15s;cursor:pointer;border:${s.buttonStyle === 'outline' ? `2px solid ${c.accent}` : 'none'};letter-spacing:${s.buttonLetterSpacing};text-transform:${s.buttonTextTransform};${s.buttonStyle === 'underline' ? `border-radius:0;border-bottom:2px solid ${c.accent};padding:8px 0;background:transparent;color:${c.accent};` : ''}}
     .btn-primary:hover{opacity:0.88;transform:translateY(-2px);}
-    .btn-outline{display:inline-flex;align-items:center;justify-content:center;padding:13px 28px;background:transparent;color:${c.text};font-family:${f.heading};font-size:15px;font-weight:500;border-radius:100px;border:1.5px solid ${c.border};transition:border-color 0.2s,background 0.2s;cursor:pointer;letter-spacing:0.01em;}
+    .btn-outline{display:inline-flex;align-items:center;justify-content:center;padding:${s.buttonPadding};background:transparent;color:${c.text};font-family:${f.heading};font-size:15px;font-weight:500;border-radius:${s.buttonRadius};border:1.5px solid ${c.border};transition:border-color 0.2s,background 0.2s;cursor:pointer;letter-spacing:${s.buttonLetterSpacing};text-transform:${s.buttonTextTransform};}
     .btn-outline:hover{border-color:${c.text};background:${c.surface};}
     @media(max-width:768px){
       .nav-links{display:none!important;}
@@ -515,12 +620,13 @@ export function renderRestaurantPremium(config: PremiumWebsiteConfig): string {
     }
     @keyframes scrollPulse{0%,100%{opacity:0.4;}50%{opacity:1;}}
     ${scrollAnimationCSS(anim)}
+    ${s.customCSS}
   </style>
 </head>
 <body>
 
 <!-- NAV -->
-<nav style="position:fixed;top:0;left:0;right:0;z-index:100;padding:0 40px;height:64px;display:flex;align-items:center;justify-content:space-between;background:${c.bg}e0;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid ${c.border}60;">
+<nav style="position:${s.navStyle};top:0;left:0;right:0;z-index:100;padding:0 ${s.contentPadding.split(' ')[1] ?? '40px'};height:${s.navHeight};display:flex;align-items:center;justify-content:space-between;background:${s.navBackground || `${c.bg}e0`};backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid ${c.border}60;">
   <a href="/" style="font-family:${f.heading};font-size:18px;font-weight:700;color:${c.text};letter-spacing:-0.02em;">${config.businessName}</a>
   <div class="nav-links" style="display:flex;align-items:center;gap:32px;">
     ${navLinks(orderedSections, config, c)}
@@ -529,15 +635,15 @@ export function renderRestaurantPremium(config: PremiumWebsiteConfig): string {
 </nav>
 
 <!-- HERO -->
-<section style="min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:120px 40px 80px;position:relative;overflow:hidden;${hasHeroImage ? `background:url('${config.heroImage}') center/cover no-repeat;` : `background:${c.bg};`}">
-  ${hasHeroImage ? `<div style="position:absolute;inset:0;background:linear-gradient(to bottom,${c.bg}88,${c.bg}bb,${c.bg}ee);"></div>` : heroNoImageOrbs}
-  <div style="position:relative;z-index:1;max-width:860px;">
+<section style="min-height:${s.heroMinHeight};display:flex;align-items:${s.heroLayout === 'bottom-aligned' ? 'flex-end' : s.heroLayout === 'split' ? 'stretch' : 'center'};justify-content:${s.heroLayout === 'left-aligned' || s.heroLayout === 'bottom-aligned' ? 'flex-start' : 'center'};text-align:${s.heroLayout === 'left-aligned' || s.heroLayout === 'bottom-aligned' ? 'left' : 'center'};padding:${s.heroLayout === 'bottom-aligned' ? `0 ${s.contentPadding.split(' ')[1] ?? '40px'} 80px` : `120px ${s.contentPadding.split(' ')[1] ?? '40px'} 80px`};position:relative;overflow:hidden;${hasHeroImage ? `background:url('${config.heroImage}') center/cover no-repeat;` : `background:${c.bg};`}">
+  ${hasHeroImage ? `<div style="position:absolute;inset:0;background:linear-gradient(${s.heroLayout === 'bottom-aligned' ? 'to top' : 'to bottom'},${c.bg}88,${c.bg}bb,${c.bg}ee);"></div>` : (s.useHeroOrbs ? heroNoImageOrbs : '')}
+  <div style="position:relative;z-index:1;max-width:${s.heroLayout === 'left-aligned' || s.heroLayout === 'bottom-aligned' ? '720px' : '860px'};">
     ${config.cuisine ? `<p style="font-size:11px;letter-spacing:0.25em;text-transform:uppercase;color:${c.accent};font-weight:600;margin-bottom:24px;">${config.cuisine}</p>` : ''}
-    <h1 style="font-family:${f.heading};font-size:clamp(44px,7vw,96px);font-weight:800;line-height:1.03;letter-spacing:-0.04em;color:${c.text};margin-bottom:28px;">${config.heroHeading}</h1>
-    <p style="font-size:clamp(16px,2vw,21px);color:${c.muted};line-height:1.65;max-width:580px;margin:0 auto 44px;">${config.heroSubheading}</p>
-    <div class="hero-btns" style="display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;">
-      ${config.bookingUrl ? `<a href="${config.bookingUrl}" target="_blank" class="btn-primary" style="font-size:16px;padding:16px 36px;">${config.ctaText}</a>` : config.phone ? `<a href="tel:${config.phone}" class="btn-primary" style="font-size:16px;padding:16px 36px;">${config.ctaText}</a>` : `<a href="#about" class="btn-primary" style="font-size:16px;padding:16px 36px;">${config.ctaText}</a>`}
-      <a href="#about" class="btn-outline" style="font-size:16px;padding:15px 32px;">Learn More</a>
+    <h1 style="font-family:${f.heading};font-size:${s.heroHeadingSize};font-weight:${s.heroHeadingWeight};line-height:1.03;letter-spacing:${s.heroHeadingLetterSpacing};color:${c.text};margin-bottom:28px;">${config.heroHeading}</h1>
+    <p style="font-size:${s.heroSubtitleSize};color:${c.muted};line-height:1.65;max-width:580px;${s.heroLayout === 'centered' ? 'margin:0 auto 44px;' : 'margin:0 0 44px;'}">${config.heroSubheading}</p>
+    <div class="hero-btns" style="display:flex;align-items:center;justify-content:${s.heroLayout === 'left-aligned' || s.heroLayout === 'bottom-aligned' ? 'flex-start' : 'center'};gap:16px;flex-wrap:wrap;">
+      ${config.bookingUrl ? `<a href="${config.bookingUrl}" target="_blank" class="btn-primary" style="font-size:16px;">${config.ctaText}</a>` : config.phone ? `<a href="tel:${config.phone}" class="btn-primary" style="font-size:16px;">${config.ctaText}</a>` : `<a href="#about" class="btn-primary" style="font-size:16px;">${config.ctaText}</a>`}
+      <a href="#about" class="btn-outline" style="font-size:16px;">Learn More</a>
     </div>
     ${config.tagline ? `<p style="margin-top:40px;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:${c.muted}80;">${config.tagline}</p>` : ''}
   </div>

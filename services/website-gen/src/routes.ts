@@ -5,6 +5,7 @@ import { NotFoundError, ValidationError, createLogger } from '@embedo/utils';
 import { scrapeWebsite, scrapeForInspiration } from './scraper/scrape.js';
 import { getInsightsForIndustry } from './training/knowledge-base.js';
 import { generateWebsiteCopy } from './generator/content.js';
+import { generateStyleOverrides } from './generator/style-generator.js';
 import { renderRestaurantPremium } from './templates/restaurant/premium.js';
 import { renderBoldTemplate } from './templates/restaurant/bold.js';
 import { renderEditorialTemplate } from './templates/restaurant/editorial.js';
@@ -242,6 +243,25 @@ export async function websiteRoutes(app: FastifyInstance) {
 
     }
 
+    // Generate AI style overrides based on inspiration analysis
+    let styleOverrides: Partial<import('./templates/restaurant/premium.js').StyleOverrides> = {};
+    if (env.ANTHROPIC_API_KEY) {
+      try {
+        styleOverrides = await generateStyleOverrides({
+          inspirationStyleNotes,
+          industryType: body.industryType ?? 'restaurant',
+          colorScheme: body.colorScheme ?? 'midnight',
+          fontPairing: body.fontPairing ?? 'modern',
+          businessName: body.businessName,
+          hasHeroImage: !!(body.heroImage || (scraped as Record<string, unknown>)['imageUrls']),
+          hasManyMenuItems: (body.menuItems?.length ?? 0) >= 8 || (copy.suggestedMenuItems?.length ?? 0) >= 8,
+          hasGallery: (body.galleryImages?.length ?? 0) >= 2,
+        }, env.ANTHROPIC_API_KEY);
+      } catch (err) {
+        logger.warn({ error: String(err) }, 'Style override generation failed — using defaults');
+      }
+    }
+
     const s = scraped as Record<string, unknown>;
     // Render HTML — cast via unknown to satisfy exactOptionalPropertyTypes
     // Use user-provided data first, then scraped data, then AI-generated fallbacks
@@ -282,6 +302,8 @@ export async function websiteRoutes(app: FastifyInstance) {
       // Contact form — auto-enable if contact page is included
       contactFormEnabled: body.extraPages?.some(p => p.id === 'contact') ?? false,
       contactFormEndpoint: `${env.WEBSITE_GEN_URL ?? `http://localhost:${env.PORT}`}/contact-form`,
+      // AI-generated style overrides (unique per site)
+      styleOverrides,
     };
     // Select template renderer
     const cfgCast = premiumConfig as unknown as PremiumWebsiteConfig;
@@ -441,6 +463,7 @@ Editable fields:
 - fontPairing: "modern" | "classic" | "minimal" | "elegant" | "luxury" | "editorial" | "tech" | "literary"
 - animationPreset: "none" | "fade-up" | "slide-in" | "scale-reveal" | "blur-in" | "stagger-cascade" | "parallax-drift"
 - heroHeading, heroSubheading, aboutHeading, aboutBody, ctaText
+- styleOverrides: object with keys like heroLayout, buttonRadius, cardRadius, sectionPadding, heroHeadingSize, etc. — allows fine-grained visual control
 - menuItems: Array<{name,description?,price?,category?}>`,
       messages: [{
         role: 'user',
