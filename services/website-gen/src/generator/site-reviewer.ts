@@ -38,7 +38,7 @@ export async function reviewAndImprove(params: {
     const hasGoogleFonts = currentHtml.includes('fonts.googleapis.com');
 
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-opus-4-6',
       max_tokens: 8000,
       messages: [{
         role: 'user',

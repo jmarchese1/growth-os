@@ -48,7 +48,14 @@ export async function websiteRoutes(app: FastifyInstance) {
   app.get<{ Params: { websiteId: string } }>('/websites/preview/:websiteId', async (req, reply) => {
     const res = await fetch(`${WEBSITE_GEN_URL}/preview/${req.params.websiteId}`);
     const html = await res.text();
-    return reply.type('text/html').code(res.status).send(html);
+    // Allow iframe embedding from any origin
+    return reply
+      .header('X-Frame-Options', 'ALLOWALL')
+      .header('Content-Security-Policy', "frame-ancestors *")
+      .header('Access-Control-Allow-Origin', '*')
+      .type('text/html')
+      .code(res.status)
+      .send(html);
   });
 
   // Proxy extract-menu

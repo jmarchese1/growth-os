@@ -41,7 +41,11 @@ export async function buildApp() {
   });
 
   await app.register(helmet, {
-    contentSecurityPolicy: false, // disabled for API
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: false,
+    // Allow iframe embedding for website preview
+    frameguard: false,
   });
 
   await app.register(multipart, {
