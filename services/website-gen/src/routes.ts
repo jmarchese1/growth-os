@@ -571,15 +571,21 @@ export async function websiteRoutes(app: FastifyInstance) {
     }
 
     const isAiGenerated = website.template === 'ai-generated';
+    const storedConfig = website.config as Record<string, unknown>;
 
-    // Save version snapshot before making changes
-    // For AI-generated sites, store the current HTML from Vercel
+    // Get current HTML — read from DB first (fast, reliable), Vercel as fallback
     let currentHtml = '';
-    if (isAiGenerated && website.deployUrl) {
-      try {
-        const res = await fetch(website.deployUrl, { signal: AbortSignal.timeout(8000), redirect: 'follow' });
-        if (res.ok) currentHtml = await res.text();
-      } catch { /* continue */ }
+    if (isAiGenerated) {
+      if (storedConfig['html'] && typeof storedConfig['html'] === 'string') {
+        currentHtml = storedConfig['html'];
+        logger.info({ source: 'db' }, 'Loaded current HTML from DB config');
+      } else if (website.deployUrl) {
+        try {
+          const res = await fetch(website.deployUrl, { signal: AbortSignal.timeout(8000), redirect: 'follow' });
+          if (res.ok) currentHtml = await res.text();
+          logger.info({ source: 'vercel' }, 'Loaded current HTML from Vercel');
+        } catch { logger.warn('Failed to fetch HTML from Vercel'); }
+      }
     }
 
     await db.websiteVersion.create({
@@ -657,24 +663,35 @@ Editable: businessName, tagline, description, cuisine, phone, address, city, hou
       });
     }
 
-    // Deploy the edited HTML
-    let deployedUrl = website.deployUrl ?? '';
-    if (env.VERCEL_API_TOKEN) {
-      const bName = String((website.config as Record<string, unknown>)['businessName'] ?? 'site');
-      const slug = `embedo-${bName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 30)}-${website.businessId.slice(-6)}`;
-      const deployed = await deployToVercel({ projectName: slug, html, businessId: website.businessId });
-      deployedUrl = deployed.url;
-    }
-
-    // Store edited HTML in config so preview works after refresh
+    // Store edited HTML in DB FIRST (so preview works even if deploy fails)
     const existingConfig = website.config as Record<string, unknown>;
     await db.generatedWebsite.update({
       where: { id: websiteId },
       data: {
-        deployUrl: deployedUrl || null,
         config: isAiGenerated ? { ...existingConfig, html } as object : existingConfig as object,
       },
     });
+
+    // Deploy to Vercel (non-blocking — edit works even if deploy fails)
+    let deployedUrl = website.deployUrl ?? '';
+    if (env.VERCEL_API_TOKEN) {
+      try {
+        const bName = String(existingConfig['businessName'] ?? 'site');
+        const slug = `embedo-${bName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 30)}-${website.businessId.slice(-6)}`;
+        const deployed = await deployToVercel({ projectName: slug, html, businessId: website.businessId });
+        deployedUrl = deployed.url;
+      } catch (err) {
+        logger.warn({ error: String(err) }, 'Edit deploy failed — HTML saved to DB');
+      }
+    }
+
+    // Update deploy URL if it changed
+    if (deployedUrl && deployedUrl !== website.deployUrl) {
+      await db.generatedWebsite.update({
+        where: { id: websiteId },
+        data: { deployUrl: deployedUrl },
+      });
+    }
 
     return reply.send({ success: true, html, url: deployedUrl });
   });
