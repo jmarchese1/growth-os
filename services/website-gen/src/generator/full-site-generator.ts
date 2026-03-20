@@ -62,6 +62,7 @@ export async function generateFullWebsite(params: {
   logger.info({ imageCount: images.length, heroImg: !!heroImg, galleryCount: galleryImgs.length }, 'Images ready for generation');
 
   const enabledSections = siteData.sections?.filter(s => s.enabled).map(s => s.id) ?? ['about', 'features', 'menu', 'testimonials', 'hours'];
+  const enabledPages = siteData.extraPages ?? [];
 
   const menuData = siteData.menuItems?.length
     ? siteData.menuItems.slice(0, 12).map(i => `${i.name}${i.price ? ` — ${i.price}` : ''}${i.description ? `: ${i.description}` : ''} [${i.category ?? 'Main'}]`).join('\n')
@@ -122,6 +123,12 @@ ${siteData.features?.length ? `## FEATURES\n${siteData.features.map(f => `- ${f.
 ${siteData.testimonials?.length ? `## TESTIMONIALS\n${siteData.testimonials.map(t => `"${t.quote}" — ${t.author}`).join('\n')}` : ''}
 
 ## SECTIONS: ${enabledSections.join(', ')}
+${enabledPages.length > 0 ? `\n## EXTRA PAGES (these should be full separate views, not just sections)\nThese pages should be accessible via nav links. When clicked, hide the main content and show only that page. Use JavaScript to toggle visibility based on URL hash (#menu, #contact, etc.). Each page should feel like its own full page with a back-to-home link.\n${enabledPages.map(p => `- ${p.label} (/${p.slug})`).join('\n')}` : ''}
+
+## NAV BEHAVIOR
+- Nav links for sections (about, features, hours) should smooth-scroll to that section
+- If the business has many menu items, the Menu nav link should scroll to a dedicated full-width menu section with all items beautifully laid out — not a cramped card grid
+- If extra pages exist (Contact, Careers, etc.), those nav links should use hash-based routing to show/hide page content
 
 ## QUALITY CHECKLIST
 1. Tailwind CSS CDN loaded — NO inline styles

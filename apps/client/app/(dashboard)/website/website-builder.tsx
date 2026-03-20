@@ -61,7 +61,7 @@ const INDUSTRIES: IndustryConfig[] = [
     icon: 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z',
     defaultColorScheme: 'warm', defaultFontPairing: 'elegant',
     typeLabel: 'Cuisine Type', typePlaceholder: 'Italian, Sushi, American, Mexican...',
-    bookingLabel: 'Reservation URL', bookingPlaceholder: 'https://resy.com/...',
+    bookingLabel: 'Reservation URL', bookingPlaceholder: 'https://www.opentable.com/your-restaurant',
     descriptionPlaceholder: "A few sentences about your restaurant — the vibe, the food, what makes you special...",
     ctaTextDefault: 'Reserve a Table',
     defaultSections: makeSections({ menu: { label: 'Menu' }, reserve: { label: 'Reservations', defaultEnabled: true } }),
@@ -737,7 +737,12 @@ export default function WebsiteBuilder({
                 />
               </div>
               <Field label="Hero Image URL" value={form.heroImage} onChange={(v) => setForm_('heroImage', v)} placeholder="https://..." />
-              <Field label={industry.bookingLabel} value={form.bookingUrl} onChange={(v) => setForm_('bookingUrl', v)} placeholder={industry.bookingPlaceholder} />
+              <div>
+                <Field label={industry.bookingLabel} value={form.bookingUrl} onChange={(v) => setForm_('bookingUrl', v)} placeholder={industry.bookingPlaceholder} />
+                {form.industryType === 'restaurant' && (
+                  <p className="text-[10px] text-slate-400 mt-1">Most restaurants use <a href="https://www.opentable.com" target="_blank" rel="noreferrer" className="text-violet-500 hover:underline">OpenTable</a>, <a href="https://resy.com" target="_blank" rel="noreferrer" className="text-violet-500 hover:underline">Resy</a>, or <a href="https://www.yelp.com/reservations" target="_blank" rel="noreferrer" className="text-violet-500 hover:underline">Yelp Reservations</a></p>
+                )}
+              </div>
             </div>
             <div className="mb-6">
               <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
