@@ -823,7 +823,7 @@ function WebsiteEditor({
                 onChange={(e) => setPexelsQuery(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void searchPexels(); } }}
                 placeholder="Search for photos... e.g. 'italian restaurant interior'"
-                className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
               />
               <button
                 onClick={() => void searchPexels()}
@@ -834,7 +834,7 @@ function WebsiteEditor({
               </button>
             </div>
             {pexelsResults.length > 0 && (
-              <div className="grid grid-cols-6 gap-2 max-h-48 overflow-y-auto">
+              <div className="grid grid-cols-8 gap-2 max-h-80 overflow-y-auto">
                 {pexelsResults.map((img, i) => (
                   <div key={i} className="relative group cursor-pointer" onClick={() => {
                     void navigator.clipboard.writeText(img.url);

@@ -872,19 +872,22 @@ Editable: businessName, tagline, description, cuisine, phone, address, city, hou
     if (!env.PEXELS_API_KEY) return reply.send({ success: true, images: [] });
 
     try {
-      const res = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=12&orientation=landscape`, {
-        headers: { Authorization: env.PEXELS_API_KEY },
-      });
-      if (res.ok) {
-        const data = await res.json() as { photos: Array<{ src: { large: string; medium: string }; alt: string; photographer: string }> };
-        return reply.send({
-          success: true,
-          images: data.photos.map((p: { src: { large: string }; alt: string; photographer: string }) => ({
-            url: p.src.large,
-            alt: p.alt || query,
-            photographer: p.photographer,
-          })),
+      // Fetch multiple pages to get ~200 results
+      const allPhotos: Array<{ url: string; alt: string; photographer: string }> = [];
+      for (let page = 1; page <= 3; page++) {
+        const res = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=80&page=${page}&orientation=landscape`, {
+          headers: { Authorization: env.PEXELS_API_KEY },
         });
+        if (res.ok) {
+          const data = await res.json() as { photos: Array<{ src: { large: string; medium: string }; alt: string; photographer: string }> };
+          for (const p of data.photos) {
+            allPhotos.push({ url: p.src.large, alt: p.alt || query, photographer: p.photographer });
+          }
+        }
+        if (allPhotos.length >= 200) break;
+      }
+      if (allPhotos.length > 0) {
+        return reply.send({ success: true, images: allPhotos.slice(0, 200) });
       }
     } catch { /* silent */ }
 
