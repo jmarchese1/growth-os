@@ -769,6 +769,15 @@ Editable: businessName, tagline, description, cuisine, phone, address, city, hou
     return reply.send({ success: true, versions });
   });
 
+  // PATCH /websites/:websiteId/versions/:versionId — rename a version
+  app.patch<{ Params: { websiteId: string; versionId: string }; Body: { label: string } }>('/websites/:websiteId/versions/:versionId', async (req, reply) => {
+    const { versionId } = req.params;
+    const { label } = req.body;
+    if (!label?.trim()) return reply.code(400).send({ success: false, error: 'label required' });
+    await db.websiteVersion.update({ where: { id: versionId }, data: { label: label.trim() } });
+    return reply.send({ success: true });
+  });
+
   // POST /websites/:websiteId/revert/:versionId — revert to a previous version
   app.post<{ Params: { websiteId: string; versionId: string } }>('/websites/:websiteId/revert/:versionId', async (req, reply) => {
     const { websiteId, versionId } = req.params;

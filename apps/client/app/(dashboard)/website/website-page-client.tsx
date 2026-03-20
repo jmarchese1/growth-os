@@ -609,6 +609,52 @@ function EditingIndicator() {
   );
 }
 
+function VersionRow({ version, onRevert, onRename, reverting, disabled }: {
+  version: { id: string; label: string | null; createdAt: string };
+  onRevert: () => void;
+  onRename: (label: string) => void;
+  reverting: boolean;
+  disabled: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [editLabel, setEditLabel] = useState(version.label ?? 'Version');
+
+  return (
+    <div className="flex items-center gap-2 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg">
+      <div className="flex-1 min-w-0">
+        {editing ? (
+          <input
+            autoFocus
+            value={editLabel}
+            onChange={(e) => setEditLabel(e.target.value)}
+            onBlur={() => { onRename(editLabel); setEditing(false); }}
+            onKeyDown={(e) => { if (e.key === 'Enter') { onRename(editLabel); setEditing(false); } if (e.key === 'Escape') setEditing(false); }}
+            style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
+            className="w-full text-[11px] font-medium px-1.5 py-0.5 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-400"
+          />
+        ) : (
+          <p
+            className="text-[11px] font-medium text-slate-700 truncate cursor-pointer hover:text-violet-600"
+            onClick={() => setEditing(true)}
+            title="Click to rename"
+          >
+            {version.label ?? 'Version'}
+            <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3 inline ml-1 text-slate-300"><path d="M13.488 2.513a1.75 1.75 0 00-2.475 0L3.22 10.303a.75.75 0 00-.178.31l-.893 3.124a.75.75 0 00.926.926l3.124-.894a.75.75 0 00.31-.178l7.791-7.79a1.75 1.75 0 000-2.475l-.812-.813zM11.72 3.22a.25.25 0 01.354 0l.812.813a.25.25 0 010 .354L5.895 11.38l-1.834.524.524-1.834 6.935-6.85z" /></svg>
+          </p>
+        )}
+        <p className="text-[10px] text-slate-400">{new Date(version.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</p>
+      </div>
+      <button
+        onClick={onRevert}
+        disabled={disabled}
+        className="px-2.5 py-1 bg-violet-600 text-white text-[10px] font-semibold rounded-md hover:bg-violet-700 disabled:opacity-50 transition-colors flex-shrink-0"
+      >
+        {reverting ? 'Reverting...' : 'Revert'}
+      </button>
+    </div>
+  );
+}
+
 function WebsiteEditor({
   site,
   initialHtml,
@@ -646,6 +692,17 @@ function WebsiteEditor({
   const [reverting, setReverting] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  async function handleRenameVersion(versionId: string, newLabel: string) {
+    try {
+      await fetch(`${API_URL}/websites/${site.id}/versions/${versionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label: newLabel }),
+      });
+      setVersions((prev) => prev.map((v) => v.id === versionId ? { ...v, label: newLabel } : v));
+    } catch { /* silent */ }
+  }
 
   async function loadMyImages() {
     try {
@@ -1176,19 +1233,14 @@ function WebsiteEditor({
                 {versions.length === 0 ? (
                   <p className="text-xs text-slate-400 text-center py-4">No previous versions yet. Versions are saved automatically before each edit.</p>
                 ) : versions.map((v) => (
-                  <div key={v.id} className="flex items-center gap-2 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[11px] font-medium text-slate-700 truncate">{v.label ?? 'Version'}</p>
-                      <p className="text-[10px] text-slate-400">{new Date(v.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</p>
-                    </div>
-                    <button
-                      onClick={() => void handleRevert(v.id)}
-                      disabled={reverting !== null}
-                      className="px-2.5 py-1 bg-violet-600 text-white text-[10px] font-semibold rounded-md hover:bg-violet-700 disabled:opacity-50 transition-colors flex-shrink-0"
-                    >
-                      {reverting === v.id ? 'Reverting...' : 'Revert'}
-                    </button>
-                  </div>
+                  <VersionRow
+                    key={v.id}
+                    version={v}
+                    onRevert={() => void handleRevert(v.id)}
+                    onRename={(newLabel) => void handleRenameVersion(v.id, newLabel)}
+                    reverting={reverting === v.id}
+                    disabled={reverting !== null}
+                  />
                 ))}
               </div>
             )}
