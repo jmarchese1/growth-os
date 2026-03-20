@@ -32,7 +32,10 @@ export async function persistImage(params: {
     const name = filename ?? `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const storagePath = `images/${businessId}/${name}.${ext}`;
 
-    // 3. Upload to Supabase Storage
+    // 3. Ensure bucket exists
+    await createBucketIfNeeded();
+
+    // 4. Upload to Supabase Storage using the upload endpoint
     const uploadRes = await fetch(
       `${env.SUPABASE_URL}/storage/v1/object/public-images/${storagePath}`,
       {
@@ -42,34 +45,33 @@ export async function persistImage(params: {
           'Content-Type': contentType,
           'x-upsert': 'true',
         },
-        body: imageBuffer,
+        body: new Uint8Array(imageBuffer),
       },
     );
 
     if (!uploadRes.ok) {
-      // Bucket might not exist — try creating it first
-      if (uploadRes.status === 404 || uploadRes.status === 400) {
-        await createBucketIfNeeded();
-        // Retry upload
-        const retryRes = await fetch(
-          `${env.SUPABASE_URL}/storage/v1/object/public-images/${storagePath}`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-              'Content-Type': contentType,
-              'x-upsert': 'true',
-            },
-            body: imageBuffer,
+      const errText = await uploadRes.text();
+      logger.warn({ status: uploadRes.status, error: errText }, 'Direct upload failed, trying multipart');
+
+      // Try multipart form upload as fallback
+      const formData = new FormData();
+      formData.append('', new Blob([imageBuffer], { type: contentType }), `${name}.${ext}`);
+
+      const multipartRes = await fetch(
+        `${env.SUPABASE_URL}/storage/v1/object/public-images/${storagePath}`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+            'x-upsert': 'true',
           },
-        );
-        if (!retryRes.ok) {
-          const errText = await retryRes.text();
-          throw new Error(`Upload retry failed: ${retryRes.status} ${errText}`);
-        }
-      } else {
-        const errText = await uploadRes.text();
-        throw new Error(`Upload failed: ${uploadRes.status} ${errText}`);
+          body: formData,
+        },
+      );
+
+      if (!multipartRes.ok) {
+        const multiErr = await multipartRes.text();
+        throw new Error(`Upload failed: ${multipartRes.status} ${multiErr}`);
       }
     }
 
@@ -83,11 +85,33 @@ export async function persistImage(params: {
   }
 }
 
+let bucketChecked = false;
+
 async function createBucketIfNeeded() {
-  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) return;
+  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY || bucketChecked) return;
+  bucketChecked = true;
 
   try {
-    await fetch(`${env.SUPABASE_URL}/storage/v1/bucket`, {
+    // Check if bucket exists
+    const checkRes = await fetch(`${env.SUPABASE_URL}/storage/v1/bucket/public-images`, {
+      headers: { 'Authorization': `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}` },
+    });
+
+    if (checkRes.ok) {
+      // Bucket exists — make sure it's public
+      await fetch(`${env.SUPABASE_URL}/storage/v1/bucket/public-images`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ public: true }),
+      });
+      return;
+    }
+
+    // Create bucket
+    const createRes = await fetch(`${env.SUPABASE_URL}/storage/v1/bucket`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
@@ -97,11 +121,18 @@ async function createBucketIfNeeded() {
         id: 'public-images',
         name: 'public-images',
         public: true,
-        file_size_limit: 10485760, // 10MB
+        file_size_limit: 10485760,
+        allowed_mime_types: ['image/png', 'image/jpeg', 'image/webp', 'image/gif'],
       }),
     });
-    logger.info('Created public-images bucket');
-  } catch {
-    // Bucket might already exist — that's fine
+
+    if (createRes.ok) {
+      logger.info('Created public-images bucket');
+    } else {
+      const err = await createRes.text();
+      logger.warn({ error: err }, 'Bucket creation response');
+    }
+  } catch (err) {
+    logger.warn({ error: String(err) }, 'Bucket setup failed');
   }
 }
