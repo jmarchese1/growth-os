@@ -641,56 +641,12 @@ function WebsiteEditor({
         <span className="text-sm font-medium text-slate-800">{siteName(site)}</span>
 
         <div className="flex items-center gap-3 ml-auto">
-          {/* Mobile / Desktop toggle */}
-          <div className="flex items-center gap-0.5 bg-slate-100 rounded-lg p-0.5">
-            <button
-              onClick={() => setMobilePreview(false)}
-              title="Desktop preview"
-              className={`p-1.5 rounded-md transition-colors ${!mobilePreview ? 'bg-white shadow-sm text-slate-700' : 'text-slate-400 hover:text-slate-600'}`}
-            >
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
-                <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 011 1v7a1 1 0 01-1 1H4a1 1 0 01-1-1V5zm14 9H3a1 1 0 000 2h14a1 1 0 000-2z" clipRule="evenodd" />
-              </svg>
-            </button>
-            <button
-              onClick={() => setMobilePreview(true)}
-              title="Mobile preview"
-              className={`p-1.5 rounded-md transition-colors ${mobilePreview ? 'bg-white shadow-sm text-slate-700' : 'text-slate-400 hover:text-slate-600'}`}
-            >
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
-                <path fillRule="evenodd" d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7zm3 14a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
-              </svg>
-            </button>
-          </div>
-
           {site.status === 'LIVE' && (
             <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-200 rounded-full">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               <span className="text-[11px] font-medium text-emerald-700">Live</span>
             </div>
           )}
-          {/* Color wheel button */}
-          <button
-            onClick={() => setShowColorWheel(!showColorWheel)}
-            title="Color picker — find hex codes for precise AI edits"
-            className={`p-1.5 rounded-lg transition-colors ${showColorWheel ? 'bg-violet-100 text-violet-700' : 'text-slate-400 hover:text-violet-600 hover:bg-violet-50'}`}
-          >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 110-12 6 6 0 010 12zm0-2a4 4 0 100-8 4 4 0 000 8zm0-2a2 2 0 110-4 2 2 0 010 4z" clipRule="evenodd" />
-            </svg>
-          </button>
-
-          {/* Image generator button */}
-          <button
-            onClick={() => setShowImageGen(true)}
-            title="AI Image Generator — create images with DALL-E 3"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors"
-          >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-              <path fillRule="evenodd" d="M1 8a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 018.07 3h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0016.07 6H17a2 2 0 012 2v7a2 2 0 01-2 2H3a2 2 0 01-2-2V8zm13.5 3a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM10 14a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-            </svg>
-          </button>
-
           {deployUrl && (
             <a
               href={deployUrl}
@@ -698,23 +654,13 @@ function WebsiteEditor({
               rel="noopener noreferrer"
               className="flex items-center gap-1 text-xs text-violet-600 hover:text-violet-800 transition-colors"
             >
-              <span className="truncate max-w-[200px]">{deployUrl.replace(/^https?:\/\//, '')}</span>
+              <span className="truncate max-w-[160px]">{deployUrl.replace(/^https?:\/\//, '')}</span>
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 flex-shrink-0">
                 <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
                 <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
               </svg>
             </a>
           )}
-          {/* Custom domain button */}
-          <button
-            onClick={() => setShowDomainSetup(!showDomainSetup)}
-            title="Connect custom domain"
-            className={`p-1.5 rounded-lg transition-colors ${showDomainSetup ? 'bg-violet-100 text-violet-700' : 'text-slate-400 hover:text-violet-600 hover:bg-violet-50'}`}
-          >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-              <path fillRule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.497-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z" clipRule="evenodd" />
-            </svg>
-          </button>
 
           <button
             onClick={() => void handleDelete()}
@@ -724,6 +670,49 @@ function WebsiteEditor({
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
               <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* ── Tools Toolbar ── */}
+      <div className="flex items-center gap-2 px-4 py-2 border-b border-slate-200 bg-slate-50 flex-shrink-0">
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Tools</span>
+        <button
+          onClick={() => setShowColorWheel(!showColorWheel)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showColorWheel ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-slate-200 bg-white text-slate-600 hover:border-violet-200 hover:text-violet-600'}`}
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 110-12 6 6 0 010 12zm0-2a4 4 0 100-8 4 4 0 000 8zm0-2a2 2 0 110-4 2 2 0 010 4z" clipRule="evenodd" /></svg>
+          Color Picker
+        </button>
+        <button
+          onClick={() => setShowImageGen(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-violet-200 hover:text-violet-600 transition-colors"
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M1 8a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 018.07 3h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0016.07 6H17a2 2 0 012 2v7a2 2 0 01-2 2H3a2 2 0 01-2-2V8zm13.5 3a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM10 14a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>
+          AI Images
+        </button>
+        <button
+          onClick={() => setShowDomainSetup(!showDomainSetup)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showDomainSetup ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-slate-200 bg-white text-slate-600 hover:border-violet-200 hover:text-violet-600'}`}
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.497-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z" clipRule="evenodd" /></svg>
+          Custom Domain
+        </button>
+        <div className="flex-1" />
+        <div className="flex items-center gap-0.5 bg-white rounded-lg border border-slate-200 p-0.5">
+          <button
+            onClick={() => setMobilePreview(false)}
+            title="Desktop"
+            className={`px-2 py-1 rounded-md text-[10px] font-medium transition-colors ${!mobilePreview ? 'bg-violet-100 text-violet-700' : 'text-slate-400 hover:text-slate-600'}`}
+          >
+            Desktop
+          </button>
+          <button
+            onClick={() => setMobilePreview(true)}
+            title="Mobile"
+            className={`px-2 py-1 rounded-md text-[10px] font-medium transition-colors ${mobilePreview ? 'bg-violet-100 text-violet-700' : 'text-slate-400 hover:text-slate-600'}`}
+          >
+            Mobile
           </button>
         </div>
       </div>
@@ -815,16 +804,30 @@ function WebsiteEditor({
             </div>
           </div>
           <div className={`flex-1 overflow-auto flex ${mobilePreview ? 'items-start justify-center py-6' : ''}`}>
-            <iframe
-              srcDoc={html}
-              title="Website Preview"
-              className="border-0 bg-white"
-              style={mobilePreview
-                ? { width: '375px', height: '812px', flexShrink: 0, borderRadius: '20px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }
-                : { width: '100%', height: '100%' }
-              }
-              sandbox="allow-same-origin allow-scripts"
-            />
+            {/* Use deployed URL as src when available (supports Tailwind CDN + external scripts).
+                Fall back to srcDoc for local preview only. */}
+            {deployUrl ? (
+              <iframe
+                src={deployUrl}
+                title="Website Preview"
+                className="border-0 bg-white"
+                style={mobilePreview
+                  ? { width: '375px', height: '812px', flexShrink: 0, borderRadius: '20px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }
+                  : { width: '100%', height: '100%' }
+                }
+              />
+            ) : (
+              <iframe
+                srcDoc={html}
+                title="Website Preview"
+                className="border-0 bg-white"
+                style={mobilePreview
+                  ? { width: '375px', height: '812px', flexShrink: 0, borderRadius: '20px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }
+                  : { width: '100%', height: '100%' }
+                }
+                sandbox="allow-same-origin allow-scripts"
+              />
+            )}
           </div>
         </div>
 
