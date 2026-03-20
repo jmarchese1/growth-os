@@ -858,7 +858,24 @@ Example format: ["Change the about section to be more personal", "Try the editor
     const website = await db.generatedWebsite.findUnique({ where: { id: req.params.websiteId } });
     if (!website) throw new NotFoundError('GeneratedWebsite', req.params.websiteId);
 
-    // Regenerate HTML from stored config
+    // For AI-generated sites, fetch from Vercel (has the real Tailwind HTML)
+    if (website.template === 'ai-generated' && website.deployUrl) {
+      try {
+        const res = await fetch(website.deployUrl, {
+          headers: { 'User-Agent': 'Embedo-Preview/1.0' },
+          signal: AbortSignal.timeout(8000),
+          redirect: 'follow',
+        });
+        if (res.ok) {
+          const html = await res.text();
+          return reply.type('text/html').send(html);
+        }
+      } catch {
+        // Fall back to config-based rendering
+      }
+    }
+
+    // Template-based sites — regenerate from stored config
     const cfg = website.config as unknown as Parameters<typeof renderRestaurantPremium>[0];
     const html = renderRestaurantPremium(cfg);
     return reply.type('text/html').send(html);

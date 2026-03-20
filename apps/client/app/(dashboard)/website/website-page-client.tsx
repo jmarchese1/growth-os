@@ -804,30 +804,17 @@ function WebsiteEditor({
             </div>
           </div>
           <div className={`flex-1 overflow-auto flex ${mobilePreview ? 'items-start justify-center py-6' : ''}`}>
-            {/* Use deployed URL as src when available (supports Tailwind CDN + external scripts).
-                Fall back to srcDoc for local preview only. */}
-            {deployUrl ? (
-              <iframe
-                src={deployUrl}
-                title="Website Preview"
-                className="border-0 bg-white"
-                style={mobilePreview
-                  ? { width: '375px', height: '812px', flexShrink: 0, borderRadius: '20px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }
-                  : { width: '100%', height: '100%' }
-                }
-              />
-            ) : (
-              <iframe
-                srcDoc={html}
-                title="Website Preview"
-                className="border-0 bg-white"
-                style={mobilePreview
-                  ? { width: '375px', height: '812px', flexShrink: 0, borderRadius: '20px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }
-                  : { width: '100%', height: '100%' }
-                }
-                sandbox="allow-same-origin allow-scripts"
-              />
-            )}
+            {/* Use our own preview API endpoint — serves raw HTML with no X-Frame-Options
+                blocking. Supports Tailwind CDN since it's a full page load, not srcDoc. */}
+            <iframe
+              src={`${API_URL}/websites/preview/${site.id}?t=${Date.now()}`}
+              title="Website Preview"
+              className="border-0 bg-white"
+              style={mobilePreview
+                ? { width: '375px', height: '812px', flexShrink: 0, borderRadius: '20px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }
+                : { width: '100%', height: '100%' }
+              }
+            />
           </div>
         </div>
 
