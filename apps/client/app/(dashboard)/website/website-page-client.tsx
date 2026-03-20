@@ -579,7 +579,6 @@ function WebsiteEditor({
     try {
       const res = await fetch(`${API_URL}/websites/${site.id}/revert/${versionId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
       });
       const data = await res.json() as { success: boolean; html?: string; url?: string; error?: string };
       if (data.success && data.html) {
