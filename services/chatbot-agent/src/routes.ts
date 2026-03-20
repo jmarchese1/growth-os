@@ -23,7 +23,8 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   // ─── Chat endpoint ─────────────────────────────────────────────────────────
   app.post('/chat', async (request, reply) => {
     const body = validate(chatSchema, request.body);
-    const { businessId, channel, message, contactId, test } = body;
+    const { businessId, message, contactId, test } = body;
+    const channel = body.channel ?? 'WEB';
 
     // ── Test mode: skip DB persistence and lead events ──────────────────────
     if (test) {
@@ -49,7 +50,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     }
 
     // ── Normal mode: full DB persistence ────────────────────────────────────
-    let sessionKey = body.sessionKey;
+    let sessionKey: string = body.sessionKey ?? '';
     let session = sessionKey
       ? await db.chatSession.findUnique({ where: { sessionKey } })
       : null;
@@ -59,7 +60,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       session = await db.chatSession.create({
         data: {
           businessId,
-          contactId,
+          ...(contactId ? { contactId } : {}),
           channel,
           sessionKey,
           messages: [],
@@ -99,7 +100,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       businessId,
       businessName: business.name,
       primaryColor: (settings['primaryColor'] as string) ?? '#000000',
-      logoUrl: settings['logoUrl'] as string | undefined,
+      ...(settings['logoUrl'] ? { logoUrl: settings['logoUrl'] as string } : {}),
     });
 
     return reply.code(200).send(config);

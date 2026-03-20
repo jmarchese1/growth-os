@@ -1,13 +1,12 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { db } from '@embedo/db';
-import { createLogger, ExternalApiError } from '@embedo/utils';
+import { ExternalApiError } from '@embedo/utils';
 import { leadCreatedQueue } from '@embedo/queue';
 import { env } from '../config.js';
 import { chatbotTools } from './tools.js';
 import { buildChatbotSystemPrompt } from './prompt-builder.js';
 import type { ChatMessage } from '@embedo/types';
 
-const log = createLogger('chatbot-agent:ai');
 
 const anthropic = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
 

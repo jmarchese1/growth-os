@@ -48,7 +48,7 @@ export function buildWidgetConfig(params: {
     welcomeMessage:
       params.welcomeMessage ??
       `Hi! Welcome to ${params.businessName}. How can I help you today?`,
-    logoUrl: params.logoUrl,
+    ...(params.logoUrl ? { logoUrl: params.logoUrl } : {}),
     position: 'bottom-right',
   };
 }
