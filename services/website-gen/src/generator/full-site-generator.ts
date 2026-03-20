@@ -172,7 +172,8 @@ Output ONLY the HTML. No markdown fences. Start with <!DOCTYPE html>.`,
 
   // Inject chatbot if enabled
   if (siteData.chatbotEnabled && siteData.chatbotBusinessId) {
-    const script = `<script>window.EmbledoChatConfig={businessId:"${siteData.chatbotBusinessId}",businessName:"${siteData.businessName.replace(/"/g, '\\"')}"};</script><script src="https://chat.embedo.ai/widget.js" async></script>`;
+    const chatbotUrl = process.env['CHATBOT_API_URL'] ?? 'https://chatbot-agent-production-e735.up.railway.app';
+    const script = `<script>window.EmbledoChatConfig={businessId:"${siteData.chatbotBusinessId}",apiUrl:"${chatbotUrl}",businessName:"${siteData.businessName.replace(/"/g, '\\"')}",welcomeMessage:"Hi! How can I help you today?",primaryColor:"#7c3aed",position:"bottom-right"};</script><script src="${chatbotUrl}/widget.js" async></script>`;
     html = html.replace('</body>', `${script}\n</body>`);
   }
 

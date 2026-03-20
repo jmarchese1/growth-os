@@ -4,7 +4,7 @@ import { createLogger, NotFoundError } from '@embedo/utils';
 
 const log = createLogger('api:chatbot');
 
-const CHATBOT_URL = process.env['CHATBOT_URL'] ?? 'http://localhost:3003';
+const CHATBOT_URL = process.env['CHATBOT_API_URL'] ?? process.env['CHATBOT_URL'] ?? 'http://localhost:3003';
 
 export async function chatbotRoutes(app: FastifyInstance): Promise<void> {
   /**

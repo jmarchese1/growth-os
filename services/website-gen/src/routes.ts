@@ -292,7 +292,7 @@ export async function websiteRoutes(app: FastifyInstance) {
       ctaText: copy.ctaText,
       features: copy.features,
       testimonials: copy.testimonials,
-      chatbotEnabled: body.chatbotEnabled ?? false,
+      chatbotEnabled: body.chatbotEnabled ?? true,  // Auto-enable chatbot on all generated websites
       chatbotBusinessId: body.businessId,
       ...(body.sections ? { sections: body.sections } : {}),
       ...(body.extraPages?.length ? { extraPages: body.extraPages } : {}),

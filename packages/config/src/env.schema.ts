@@ -77,6 +77,7 @@ export const websiteGenEnvSchema = baseEnvSchema.extend({
   OPENAI_API_KEY: z.string().optional(),
   PEXELS_API_KEY: z.string().optional(),
   WEBSITE_GEN_URL: z.string().optional(),
+  CHATBOT_API_URL: z.string().optional(),
   SUPABASE_URL: z.string().url().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
 });
