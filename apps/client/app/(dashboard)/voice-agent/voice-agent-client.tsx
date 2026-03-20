@@ -738,71 +738,106 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
 
   return (
     <div className="p-8 animate-fade-up">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Phone Agent</h1>
-          <p className="text-sm text-slate-500 mt-1">AI receptionist — call logs, transcripts & analytics</p>
-        </div>
-        <div className="flex items-center gap-3">
-          {/* Status badges */}
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200/60 rounded-full">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs font-medium text-emerald-700">Active</span>
-          </div>
-          {status.twilioNumber && (
-            <div className="px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-full">
-              <span className="text-xs font-medium text-slate-600">{status.twilioNumber}</span>
+      {/* Header with gradient accent */}
+      <div className="relative mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-200">
+                <svg viewBox="0 0 20 20" fill="white" className="w-5 h-5"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Phone Agent</h1>
+                <p className="text-sm text-slate-500">AI receptionist — configure, monitor, and manage calls</p>
+              </div>
             </div>
-          )}
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-sm font-semibold text-emerald-700">Active</span>
+            </div>
+            {status.twilioNumber && (
+              <div className="px-4 py-2 bg-gradient-to-r from-violet-50 to-indigo-50 border border-violet-200 rounded-xl">
+                <span className="text-sm font-semibold text-violet-700">{status.twilioNumber}</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="flex gap-1 mb-6 bg-slate-100 rounded-xl p-1 w-fit">
+      {/* Tab Navigation — pill style with colored active states */}
+      <div className="flex gap-2 mb-8">
         {([
-          { id: 'dashboard' as const, label: 'Dashboard', icon: '📊' },
-          { id: 'voice' as const, label: 'Voice', icon: '🎙' },
-          { id: 'prompt' as const, label: 'System Prompt', icon: '💬' },
-          { id: 'knowledge' as const, label: 'Knowledge Base', icon: '📚' },
-        ]).map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-              activeTab === tab.id
-                ? 'bg-white text-violet-700 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <span className="text-xs">{tab.icon}</span>
-            {tab.label}
-          </button>
-        ))}
+          { id: 'dashboard' as const, label: 'Dashboard', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" /><path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" /></svg>, color: 'violet' },
+          { id: 'voice' as const, label: 'Voice', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" /></svg>, color: 'pink' },
+          { id: 'prompt' as const, label: 'System Prompt', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" /></svg>, color: 'blue' },
+          { id: 'knowledge' as const, label: 'Knowledge Base', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" /></svg>, color: 'emerald' },
+        ] as const).map(tab => {
+          const active = activeTab === tab.id;
+          const colors: Record<string, string> = {
+            violet: active ? 'bg-violet-600 text-white shadow-lg shadow-violet-200' : 'bg-white text-slate-600 border border-slate-200 hover:border-violet-300 hover:text-violet-600 hover:shadow-md',
+            pink: active ? 'bg-pink-600 text-white shadow-lg shadow-pink-200' : 'bg-white text-slate-600 border border-slate-200 hover:border-pink-300 hover:text-pink-600 hover:shadow-md',
+            blue: active ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'bg-white text-slate-600 border border-slate-200 hover:border-blue-300 hover:text-blue-600 hover:shadow-md',
+            emerald: active ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' : 'bg-white text-slate-600 border border-slate-200 hover:border-emerald-300 hover:text-emerald-600 hover:shadow-md',
+          };
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 ${colors[tab.color]}`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Voice Tab */}
       {activeTab === 'voice' && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6">
-          <h2 className="text-lg font-bold text-slate-900 mb-1">Choose a Voice</h2>
-          <p className="text-sm text-slate-500 mb-4">Select the voice your AI receptionist will use. Click the play button to preview.</p>
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-9 h-9 bg-gradient-to-br from-pink-500 to-rose-600 rounded-xl flex items-center justify-center shadow-md shadow-pink-200">
+              <svg viewBox="0 0 20 20" fill="white" className="w-4.5 h-4.5"><path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" /></svg>
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Choose a Voice</h2>
+              <p className="text-sm text-slate-500">Select the voice your AI receptionist will use. Click play to preview.</p>
+            </div>
+          </div>
           <VoiceBrowser businessId={businessId} currentVoiceId={(status.settings as Record<string, unknown>)?.['voiceId'] as string | undefined} />
         </div>
       )}
 
       {/* Prompt Tab */}
       {activeTab === 'prompt' && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6">
-          <h2 className="text-lg font-bold text-slate-900 mb-1">System Prompt</h2>
-          <p className="text-sm text-slate-500 mb-4">Define your AI receptionist&apos;s personality, capabilities, and behavior.</p>
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md shadow-blue-200">
+              <svg viewBox="0 0 20 20" fill="white" className="w-4.5 h-4.5"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" /></svg>
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">System Prompt</h2>
+              <p className="text-sm text-slate-500">Define your AI receptionist&apos;s personality, capabilities, and behavior.</p>
+            </div>
+          </div>
           <PromptEditor businessId={businessId} settings={status.settings as VoiceStatus['settings'] & { customPrompt?: string; firstMessage?: string }} />
         </div>
       )}
 
       {/* Knowledge Base Tab */}
       {activeTab === 'knowledge' && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6">
-          <h2 className="text-lg font-bold text-slate-900 mb-1">Knowledge Base</h2>
-          <p className="text-sm text-slate-500 mb-4">Upload your menu, FAQ, parking info, and policies so the AI can answer accurately.</p>
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md shadow-emerald-200">
+              <svg viewBox="0 0 20 20" fill="white" className="w-4.5 h-4.5"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" /></svg>
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Knowledge Base</h2>
+              <p className="text-sm text-slate-500">Upload your menu, FAQ, parking info, and policies so the AI can answer accurately.</p>
+            </div>
+          </div>
           <KnowledgeBaseManager businessId={businessId} settings={(status.settings as Record<string, unknown>) ?? {}} />
         </div>
       )}
@@ -823,7 +858,7 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
       {/* Analytics row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Intent breakdown */}
-        <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <div className="bg-white border border-slate-200 rounded-xl p-6 hover:shadow-lg hover:border-violet-200 transition-all duration-300">
           <h3 className="text-sm font-semibold text-slate-700 mb-4">Intent Breakdown</h3>
           <div className="space-y-3">
             {['RESERVATION', 'INQUIRY', 'COMPLAINT', 'GENERAL'].map((intent) => {
@@ -845,7 +880,7 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
         </div>
 
         {/* Sentiment */}
-        <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <div className="bg-white border border-slate-200 rounded-xl p-6 hover:shadow-lg hover:border-emerald-200 transition-all duration-300">
           <h3 className="text-sm font-semibold text-slate-700 mb-4">Sentiment Analysis</h3>
           <div className="space-y-3">
             {[
@@ -869,11 +904,6 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
             })}
           </div>
         </div>
-      </div>
-
-      {/* Settings */}
-      <div className="mb-8">
-        <SettingsPanel businessId={businessId} settings={status.settings} onSaved={fetchAll} />
       </div>
 
       {/* Call log table */}
