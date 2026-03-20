@@ -687,10 +687,9 @@ function WebsiteEditor({
   const [pexelsResults, setPexelsResults] = useState<Array<{ url: string; alt: string; photographer: string }>>([]);
   const [pexelsSearching, setPexelsSearching] = useState(false);
   const [showMyImages, setShowMyImages] = useState(false);
-  const [myImages, setMyImages] = useState<Array<{ id: string; url: string; alt: string | null }>>([]);
-  const [showDividers, setShowDividers] = useState(false);
-  const [showFontBrowser, setShowFontBrowser] = useState(false);
-  const [showAnimations, setShowAnimations] = useState(false);
+  const [myImages, setMyImages] = useState<Array<{ id: string; url: string; alt: string | null; category?: string | null }>>([]);
+  const [myImageFilter, setMyImageFilter] = useState('all');
+  const filteredMyImages = myImageFilter === 'all' ? myImages : myImages.filter(img => img.category === myImageFilter);
   const [customDomain, setCustomDomain] = useState('');
   const [domainStatus, setDomainStatus] = useState<{ configured: boolean; dnsRecords: Array<{ type: string; name: string; value: string }> } | null>(null);
   const [domainSaving, setDomainSaving] = useState(false);
@@ -714,7 +713,7 @@ function WebsiteEditor({
   async function loadMyImages() {
     try {
       const res = await fetch(`${API_URL}/images?businessId=${businessId}`);
-      const data = await res.json() as { success: boolean; images: Array<{ id: string; url: string; alt: string | null }> };
+      const data = await res.json() as { success: boolean; images: Array<{ id: string; url: string; alt: string | null; category?: string | null }> };
       if (data.success) setMyImages(data.images);
     } catch { /* silent */ }
   }
@@ -905,143 +904,45 @@ function WebsiteEditor({
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
           </button>
           {showMyImages && (
-            <div className="absolute top-full left-0 mt-1 w-80 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-72 overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-              {myImages.length === 0 ? (
-                <div className="p-4 text-center">
-                  <p className="text-xs text-slate-400">No images yet</p>
-                  <a href="/images" className="text-xs text-violet-600 hover:underline">Go to Image Library</a>
-                </div>
-              ) : (
-                <div className="grid grid-cols-4 gap-1 p-2">
-                  {myImages.map((img) => (
-                    <div
-                      key={img.id}
-                      className="relative group cursor-pointer"
-                      onClick={() => {
-                        setInput(`Use this image: ${img.url}`);
-                        setShowMyImages(false);
-                      }}
-                    >
-                      <img src={img.url} alt={img.alt ?? ''} className="w-full aspect-square object-cover rounded-lg group-hover:ring-2 ring-violet-500 transition-all" />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 rounded-lg transition-all flex items-center justify-center">
-                        <span className="text-white text-[8px] font-bold opacity-0 group-hover:opacity-100">Use</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-        {/* 6. Section Dividers */}
-        <div className="relative">
-          <button
-            onClick={() => { setShowDividers(!showDividers); setShowFontBrowser(false); setShowAnimations(false); }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showDividers ? 'border-amber-300 bg-amber-50 text-amber-700' : 'border-slate-200 bg-white text-slate-600 hover:border-amber-200 hover:text-amber-600'}`}
-          >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" /></svg>
-            Dividers
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
-          </button>
-          {showDividers && (
-            <div className="absolute top-full left-0 mt-1 w-72 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-3 max-h-80 overflow-y-auto">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Section Dividers</p>
-              <div className="space-y-2">
-                {SECTION_DIVIDERS.map((d) => (
+            <div className="absolute top-full left-0 mt-1 w-96 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-80 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+              {/* Category filter tabs */}
+              <div className="flex gap-1 px-2 pt-2 pb-1 border-b border-slate-100 overflow-x-auto">
+                {['all', 'food', 'interior', 'team', 'logo', 'product', 'lifestyle', 'general'].map((cat) => (
                   <button
-                    key={d.id}
-                    onClick={() => {
-                      const code = d.svg
-                        ? `Add this SVG divider between sections: ${d.svg.replace(/FILL/g, 'currentColor')}`
-                        : `Add a gradient fade divider between sections with CSS: ${d.css}`;
-                      setInput(code);
-                      setShowDividers(false);
-                    }}
-                    className="w-full text-left p-2 rounded-lg hover:bg-amber-50 border border-slate-100 hover:border-amber-200 transition-colors"
+                    key={cat}
+                    onClick={() => setMyImageFilter(cat)}
+                    className={`px-2 py-0.5 text-[9px] font-medium rounded-full whitespace-nowrap transition-colors ${myImageFilter === cat ? 'bg-violet-100 text-violet-700' : 'text-slate-400 hover:text-slate-600'}`}
                   >
-                    <p className="text-xs font-medium text-slate-700 mb-1">{d.label}</p>
-                    {d.svg ? (
-                      <div className="bg-slate-900 rounded overflow-hidden" style={{ height: 30 }} dangerouslySetInnerHTML={{ __html: d.svg.replace(/FILL/g, '#374151') }} />
-                    ) : (
-                      <div className="rounded" style={{ height: 30, background: 'linear-gradient(to bottom, #1a1a2e, #2d2b55)' }} />
-                    )}
+                    {cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1)}
                   </button>
                 ))}
               </div>
-              <p className="text-[9px] text-slate-400 mt-2">Click a divider to tell the AI to add it between sections.</p>
-            </div>
-          )}
-        </div>
-        {/* 7. Google Fonts */}
-        <div className="relative">
-          <button
-            onClick={() => { setShowFontBrowser(!showFontBrowser); setShowDividers(false); setShowAnimations(false); }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showFontBrowser ? 'border-blue-300 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:text-blue-600'}`}
-          >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm1 3a1 1 0 011-1h4a1 1 0 110 2H8.5v7a1 1 0 11-2 0V6H5a1 1 0 01-1-1z" clipRule="evenodd" /></svg>
-            Fonts
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
-          </button>
-          {showFontBrowser && (
-            <div className="absolute top-full left-0 mt-1 w-80 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-3 max-h-80 overflow-y-auto">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Font Pairings</p>
-              <div className="space-y-1.5">
-                {FONT_PAIRINGS_LIBRARY.map((fp) => (
-                  <button
-                    key={fp.heading}
-                    onClick={() => {
-                      setInput(`Change the fonts to: heading "${fp.heading}" and body "${fp.body}". Load from Google Fonts: ${fp.url}`);
-                      setShowFontBrowser(false);
-                    }}
-                    className="w-full text-left p-2.5 rounded-lg hover:bg-blue-50 border border-slate-100 hover:border-blue-200 transition-colors"
-                  >
-                    <div className="flex items-baseline justify-between mb-0.5">
-                      <span className="text-xs font-bold text-slate-800">{fp.heading} + {fp.body}</span>
-                      <span className="text-[9px] text-slate-400">{fp.mood}</span>
-                    </div>
-                    <link href={fp.url} rel="stylesheet" />
-                    <p style={{ fontFamily: `'${fp.heading}', serif`, fontSize: 16, fontWeight: 700, lineHeight: 1.2 }} className="text-slate-900">The Art of Dining</p>
-                    <p style={{ fontFamily: `'${fp.body}', sans-serif`, fontSize: 11, lineHeight: 1.4 }} className="text-slate-500">Every evening becomes a memory worth keeping.</p>
-                  </button>
-                ))}
-              </div>
-              <p className="text-[9px] text-slate-400 mt-2">Click a pairing to tell the AI to apply it.</p>
-            </div>
-          )}
-        </div>
-        {/* 8. CSS Animations */}
-        <div className="relative">
-          <button
-            onClick={() => { setShowAnimations(!showAnimations); setShowDividers(false); setShowFontBrowser(false); }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showAnimations ? 'border-pink-300 bg-pink-50 text-pink-700' : 'border-slate-200 bg-white text-slate-600 hover:border-pink-200 hover:text-pink-600'}`}
-          >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>
-            Animations
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
-          </button>
-          {showAnimations && (
-            <div className="absolute top-full right-0 mt-1 w-80 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-3 max-h-80 overflow-y-auto">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">CSS Animations</p>
-              {['entrance', 'hover', 'loop', 'text'].map((cat) => (
-                <div key={cat} className="mb-3">
-                  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">{cat}</p>
-                  <div className="space-y-1">
-                    {CSS_ANIMATIONS.filter(a => a.category === cat).map((anim) => (
-                      <button
-                        key={anim.id}
+              <div className="overflow-y-auto max-h-64">
+                {filteredMyImages.length === 0 ? (
+                  <div className="p-4 text-center">
+                    <p className="text-xs text-slate-400">No images{myImageFilter !== 'all' ? ` in "${myImageFilter}"` : ''}</p>
+                    <a href="/images" className="text-xs text-violet-600 hover:underline">Go to Image Library</a>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-4 gap-1 p-2">
+                    {filteredMyImages.map((img) => (
+                      <div
+                        key={img.id}
+                        className="relative group cursor-pointer"
                         onClick={() => {
-                          setInput(`Add this CSS animation to the site and apply it to appropriate elements:\n${anim.css}`);
-                          setShowAnimations(false);
+                          setInput(`Use this image: ${img.url}`);
+                          setShowMyImages(false);
                         }}
-                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-pink-50 border border-slate-100 hover:border-pink-200 transition-colors"
                       >
-                        <span className="text-xs font-medium text-slate-700">{anim.label}</span>
-                      </button>
+                        <img src={img.url} alt={img.alt ?? ''} className="w-full aspect-square object-cover rounded-lg group-hover:ring-2 ring-violet-500 transition-all" />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 rounded-lg transition-all flex items-center justify-center">
+                          <span className="text-white text-[8px] font-bold opacity-0 group-hover:opacity-100">Use</span>
+                        </div>
+                      </div>
                     ))}
                   </div>
-                </div>
-              ))}
-              <p className="text-[9px] text-slate-400 mt-1">Click an animation to tell the AI to add it.</p>
+                )}
+              </div>
             </div>
           )}
         </div>
