@@ -804,16 +804,17 @@ function WebsiteEditor({
             </div>
           </div>
           <div className={`flex-1 overflow-auto flex ${mobilePreview ? 'items-start justify-center py-6' : ''}`}>
-            {/* Use our own preview API endpoint — serves raw HTML with no X-Frame-Options
-                blocking. Supports Tailwind CDN since it's a full page load, not srcDoc. */}
+            {/* Render HTML directly — srcDoc works for both template and AI-generated HTML.
+                Tailwind CDN loads within the iframe since allow-scripts is set. */}
             <iframe
-              src={`${API_URL}/websites/preview/${site.id}?t=${Date.now()}`}
+              srcDoc={html}
               title="Website Preview"
               className="border-0 bg-white"
               style={mobilePreview
                 ? { width: '375px', height: '812px', flexShrink: 0, borderRadius: '20px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }
                 : { width: '100%', height: '100%' }
               }
+              sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
             />
           </div>
         </div>

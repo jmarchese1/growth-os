@@ -142,16 +142,10 @@ ${enabledPages.length > 0 ? `\n## EXTRA PAGES (these should be full separate vie
 9. Proper spacing — not cramped, not too empty
 10. Footer with business name, contact info, credits
 
-## TRANSITIONS & VISUAL FLAIR (add character but don't overdo it)
-- Fade-in sections on scroll using IntersectionObserver (add a small <script> at the end)
-- Subtle parallax on the hero image (background-attachment: fixed or transform on scroll)
-- Gradient overlays that add depth — not just flat color blocks
-- Consider a subtle animated gradient background for the hero or CTA section
-- Smooth color transitions between sections (e.g. dark hero → warm about → light menu)
-- Card hover effects: slight lift (translateY -4px) + shadow increase
-- Image hover: gentle zoom (scale 1.05) with overflow hidden
-- Nav: transparent on hero, gains background on scroll (add a small scroll listener)
-- DO NOT add excessive animations — keep it classy. 3-4 subtle effects max
+## DESIGN NOTES
+- Keep it clean and professional — no excessive animations or flashy transitions
+- Simple hover effects on buttons and cards (opacity change, subtle shadow) are fine
+- Focus on layout quality, typography hierarchy, and image placement over effects
 
 ${siteData.googleAnalyticsId ? `Include GA: ${siteData.googleAnalyticsId}` : ''}
 ${siteData.contactFormEndpoint ? `Contact form POSTs JSON to: ${siteData.contactFormEndpoint}` : ''}

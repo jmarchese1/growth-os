@@ -458,8 +458,6 @@ export default function WebsiteBuilder({
     setGenerating(false);
   }
 
-  const [showPreview, setShowPreview] = useState(false);
-
   // When inspiration URLs are provided, AI handles all styling — skip the Style step
   const hasInspirationUrls = inspirationUrls.some(Boolean);
 
@@ -467,53 +465,6 @@ export default function WebsiteBuilder({
   const allStepLabels = industryKnown
     ? (hasInspirationUrls ? ['Import', 'Details', 'Structure', 'Done'] : ['Import', 'Details', 'Structure', 'Style', 'Done'])
     : (hasInspirationUrls ? ['Industry', 'Import', 'Details', 'Structure', 'Done'] : ['Industry', 'Import', 'Details', 'Structure', 'Style', 'Done']);
-
-  // Build live preview HTML from current form state
-  const previewHtml = React.useMemo(() => {
-    const cs = COLOR_SCHEMES.find(c => c.id === form.colorScheme);
-    const fp = FONT_PAIRINGS.find(f => f.id === form.fontPairing);
-    const bg = cs?.bg ?? '#0a0a0a';
-    const accent = cs?.accent ?? '#a855f7';
-    const heading = fp?.headingFamily ?? 'system-ui, sans-serif';
-    const body = fp?.bodyFamily ?? 'system-ui, sans-serif';
-    const textColor = bg.startsWith('#f') || bg.startsWith('#e') ? '#1a1a1a' : '#f5f5f5';
-    const mutedColor = bg.startsWith('#f') || bg.startsWith('#e') ? '#666' : '#888';
-
-    const enabledSections = sections.filter(s => s.enabled).map(s => s.label);
-    const enabledPages = extraPages.filter(p => p.enabled).map(p => p.label);
-
-    return `<!DOCTYPE html><html><head>
-      <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:${body};background:${bg};color:${textColor};overflow-x:hidden}
-      .hero{min-height:50vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px 20px;${form.heroImage ? `background:url('${form.heroImage}') center/cover;` : ''}}
-      .hero-overlay{${form.heroImage ? `background:${bg}bb;padding:40px;border-radius:16px;` : ''}}
-      h1{font-family:${heading};font-size:clamp(24px,5vw,48px);font-weight:800;letter-spacing:-0.03em;margin-bottom:12px}
-      .sub{font-size:14px;color:${mutedColor};max-width:400px;margin:0 auto 20px}
-      .btn{display:inline-block;padding:10px 24px;background:${accent};color:#fff;border-radius:100px;font-size:13px;font-weight:600}
-      .nav{position:fixed;top:0;left:0;right:0;height:44px;background:${bg}e0;backdrop-filter:blur(8px);display:flex;align-items:center;padding:0 20px;gap:16px;font-size:11px;border-bottom:1px solid ${accent}20;z-index:10}
-      .nav-brand{font-family:${heading};font-weight:700;color:${textColor};font-size:13px}
-      .nav-link{color:${mutedColor};font-size:10px}
-      section{padding:40px 20px}
-      .section-label{font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:${accent};font-weight:600;margin-bottom:8px}
-      h2{font-family:${heading};font-size:20px;font-weight:700;margin-bottom:12px}
-      .card{background:${bg === '#fafaf8' || bg === '#f4f5f0' ? '#ffffff' : bg.replace(/0a/g,'14')};border:1px solid ${accent}20;border-radius:12px;padding:16px;margin-bottom:8px}
-      .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
-      .gallery img{width:100%;aspect-ratio:1;object-fit:cover}
-      footer{padding:20px;text-align:center;font-size:10px;color:${mutedColor};border-top:1px solid ${accent}15}
-      </style></head><body>
-      <div class="nav"><span class="nav-brand">${form.businessName || 'Your Business'}</span>${enabledSections.slice(0, 3).map(s => `<span class="nav-link">${s}</span>`).join('')}${enabledPages.length > 0 ? enabledPages.map(p => `<span class="nav-link" style="color:${accent}">${p}</span>`).join('') : ''}</div>
-      <div class="hero" style="margin-top:44px"><div class="hero-overlay">
-        ${form.cuisine ? `<p style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:${accent};font-weight:600;margin-bottom:8px">${form.cuisine}</p>` : ''}
-        <h1>${form.businessName || 'Your Business Name'}</h1>
-        <p class="sub">${form.description || 'Your business description will appear here...'}</p>
-        <span class="btn">${industry.ctaTextDefault}</span>
-      </div></div>
-      ${enabledSections.includes('About Us') || enabledSections.includes('Our Story') ? `<section><p class="section-label">About</p><h2>Our Story</h2><p style="font-size:12px;color:${mutedColor};line-height:1.6">${form.description || 'AI will generate compelling copy about your business...'}</p></section>` : ''}
-      ${form.menuItems.length > 0 ? `<section><p class="section-label">Menu</p><h2>Our Selection</h2>${form.menuItems.slice(0, 4).map(item => `<div class="card"><div style="display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:600">${item.name}</span>${item.price ? `<span style="font-size:12px;color:${accent}">${item.price}</span>` : ''}</div>${item.description ? `<p style="font-size:11px;color:${mutedColor};margin-top:4px">${item.description}</p>` : ''}</div>`).join('')}</section>` : ''}
-      ${form.galleryImages.filter(Boolean).length >= 2 ? `<section style="padding:0"><div class="gallery">${form.galleryImages.filter(Boolean).slice(0, 6).map(url => `<img src="${url}" alt="Gallery" />`).join('')}</div></section>` : ''}
-      ${Object.keys(form.hours).length > 0 ? `<section><p class="section-label">Hours</p><h2>Hours & Location</h2>${Object.entries(form.hours).slice(0, 3).map(([day, time]) => `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px"><span style="color:${mutedColor}">${day}</span><span>${time}</span></div>`).join('')}${form.address ? `<p style="margin-top:12px;font-size:12px;color:${mutedColor}">${form.address}</p>` : ''}</section>` : ''}
-      <footer>${form.businessName || 'Your Business'} &copy; ${new Date().getFullYear()}</footer>
-      </body></html>`;
-  }, [form, sections, extraPages, industry.ctaTextDefault]);
 
   // Map display step index to logical step number (1-based in state)
   const displayStep = industryKnown ? step - 1 : step;
@@ -546,35 +497,7 @@ export default function WebsiteBuilder({
         </div>
       </div>
 
-      {/* Live preview toggle — visible on steps 3-5 */}
-      {step >= 3 && step <= 5 && (
-        <div className="max-w-3xl mx-auto mb-4 flex justify-end">
-          <button
-            onClick={() => setShowPreview(!showPreview)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${showPreview ? 'border-violet-500 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
-          >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"/><path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/></svg>
-            {showPreview ? 'Hide Preview' : 'Live Preview'}
-          </button>
-        </div>
-      )}
-
-      <div className={`mx-auto ${showPreview && step >= 3 && step <= 5 ? 'max-w-6xl flex gap-6' : 'max-w-3xl'}`}>
-        {/* Live preview panel */}
-        {showPreview && step >= 3 && step <= 5 && (
-          <div className="w-80 flex-shrink-0 sticky top-24 self-start">
-            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-              <div className="px-3 py-2 border-b border-slate-100 flex items-center gap-1.5">
-                <div className="flex gap-1"><div className="w-2 h-2 rounded-full bg-red-400" /><div className="w-2 h-2 rounded-full bg-amber-400" /><div className="w-2 h-2 rounded-full bg-emerald-400" /></div>
-                <span className="text-[9px] text-slate-400 ml-1">Live Preview</span>
-              </div>
-              <iframe srcDoc={previewHtml} title="Live Preview" className="w-full" style={{ height: '480px', border: 'none' }} sandbox="allow-same-origin" />
-            </div>
-            <p className="text-[10px] text-slate-400 mt-2 text-center">Updates as you type. Final site will look much better.</p>
-          </div>
-        )}
-
-        <div className={showPreview && step >= 3 && step <= 5 ? 'flex-1 min-w-0' : 'w-full'}>
+      <div className="max-w-3xl mx-auto">
 
         {/* ── STEP 1 — Industry (only shown if not auto-detected) ── */}
         {step === 1 && !industryKnown && (
@@ -1271,8 +1194,7 @@ export default function WebsiteBuilder({
             </button>
           </div>
         )}
-      </div>{/* end flex-1 or w-full wrapper */}
-      </div>{/* end max-w-3xl/6xl flex wrapper */}
+      </div>{/* end max-w-3xl */}
     </div>
   );
 }
