@@ -7,6 +7,10 @@ import { getInsightsForIndustry } from './training/knowledge-base.js';
 import { generateWebsiteCopy } from './generator/content.js';
 import { generateStyleOverrides } from './generator/style-generator.js';
 import { generateFullWebsite } from './generator/full-site-generator.js';
+import { extractDesignTokens, formatDesignTokens } from './generator/inspiration-extractor.js';
+import { verifyAndFixImages, cleanImageArtifacts } from './generator/image-verifier.js';
+import { reviewAndImprove } from './generator/site-reviewer.js';
+import { fetchImages } from './generator/image-sourcer.js';
 import { renderRestaurantPremium } from './templates/restaurant/premium.js';
 import { renderBoldTemplate } from './templates/restaurant/bold.js';
 import { renderEditorialTemplate } from './templates/restaurant/editorial.js';
@@ -304,7 +308,7 @@ export async function websiteRoutes(app: FastifyInstance) {
 
     if (hasInspiration && env.ANTHROPIC_API_KEY) {
       try {
-        // Fetch actual HTML source of inspiration sites — more reliable than Playwright screenshots
+        // Fetch inspiration sites and extract SMART design tokens (not raw CSS dump)
         const inspirationSources: string[] = [];
         for (const url of (body.inspirationUrls ?? []).filter(Boolean).slice(0, 2)) {
           try {
@@ -315,15 +319,18 @@ export async function websiteRoutes(app: FastifyInstance) {
             });
             if (res.ok) {
               const rawHtml = await res.text();
-              // Extract just the <style> blocks and first 3000 chars of <body> structure
-              const styleBlocks = Array.from(rawHtml.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)).map(m => m[1]).join('\n').slice(0, 8000);
+              // Extract structured design tokens instead of raw CSS
+              const tokens = extractDesignTokens(rawHtml);
+              const tokenSummary = formatDesignTokens(tokens);
+              // Also grab a small HTML structure sample for layout patterns
               const bodyMatch = rawHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
               const bodyStructure = bodyMatch ? bodyMatch[1]!
                 .replace(/<script[\s\S]*?<\/script>/gi, '')
                 .replace(/<!--[\s\S]*?-->/g, '')
-                .slice(0, 4000) : '';
-              inspirationSources.push(`## Source: ${url}\n### CSS:\n\`\`\`css\n${styleBlocks.slice(0, 6000)}\n\`\`\`\n### HTML Structure (first 4000 chars):\n\`\`\`html\n${bodyStructure}\n\`\`\``);
-              logger.info({ url, cssLength: styleBlocks.length, htmlLength: bodyStructure.length }, 'Fetched inspiration source');
+                .replace(/<[^>]+>/g, (tag) => tag.length > 100 ? tag.slice(0, 80) + '>' : tag)
+                .slice(0, 2000) : '';
+              inspirationSources.push(`## Inspiration: ${url}\n${tokenSummary}\n\n### Layout sample:\n${bodyStructure}`);
+              logger.info({ url, isDark: tokens.isDark, layout: tokens.layoutStyle, colors: tokens.colors.length, fonts: tokens.fontFamilies.length }, 'Extracted design tokens');
             }
           } catch (err) {
             logger.warn({ url, error: String(err) }, 'Failed to fetch inspiration source');
@@ -373,6 +380,38 @@ export async function websiteRoutes(app: FastifyInstance) {
           industryType: body.industryType ?? 'restaurant',
           ...(env.PEXELS_API_KEY ? { pexelsApiKey: env.PEXELS_API_KEY } : {}),
         }, env.ANTHROPIC_API_KEY);
+        // Post-generation quality pipeline
+        // 1. Clean image artifacts (yellow boxes, focus rings)
+        html = cleanImageArtifacts(html);
+
+        // 2. Verify all images load, replace broken ones with fallbacks
+        const fallbackImages = await fetchImages({
+          industryType: body.industryType ?? 'restaurant',
+          ...(body.cuisine ? { cuisine: body.cuisine } : {}),
+          count: 6,
+          ...(env.PEXELS_API_KEY ? { pexelsApiKey: env.PEXELS_API_KEY } : {}),
+        });
+        html = await verifyAndFixImages(html, fallbackImages);
+
+        // 3. AI self-review — analyze the generated HTML and fix quality issues
+        try {
+          const reviewed = await reviewAndImprove({
+            html,
+            deployedUrl: '', // not deployed yet
+            businessName: body.businessName,
+            industryType: body.industryType ?? 'restaurant',
+            inspirationNotes: fullInspirationContext.slice(0, 2000),
+            anthropicKey: env.ANTHROPIC_API_KEY,
+            maxRounds: 1,
+          });
+          if (reviewed.improvements.length > 0) {
+            html = reviewed.html;
+            logger.info({ improvements: reviewed.improvements }, 'Self-review applied fixes');
+          }
+        } catch (err) {
+          logger.warn({ error: String(err) }, 'Self-review failed — using initial generation');
+        }
+
         // Mark AI-generated HTML so we can verify which path ran
         html = html.replace('</head>', `<!-- GENERATION_PATH: AI_FULL | inspirationSources: ${inspirationSources.length} | contextLength: ${fullInspirationContext.length} -->\n</head>`);
         logger.info({ htmlLength: html.length }, 'Full AI website generation succeeded — AI path');
