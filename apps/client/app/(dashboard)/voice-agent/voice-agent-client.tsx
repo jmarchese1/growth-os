@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import KpiCard from '../../../components/ui/kpi-card';
 
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
@@ -429,6 +429,7 @@ function VoiceBrowser({ businessId, currentVoiceId }: { businessId: string; curr
   const [selectedId, setSelectedId] = useState(currentVoiceId ?? '');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -441,13 +442,29 @@ function VoiceBrowser({ businessId, currentVoiceId }: { businessId: string; curr
     })();
   }, [search]);
 
+  // Clean up audio on unmount
+  useEffect(() => {
+    return () => { audioRef.current?.pause(); audioRef.current = null; };
+  }, []);
+
   function playPreview(voice: Voice) {
-    if (playingId === voice.id) { setPlayingId(null); return; }
-    setPlayingId(voice.id);
+    // If same voice is playing, pause it
+    if (playingId === voice.id) {
+      audioRef.current?.pause();
+      audioRef.current = null;
+      setPlayingId(null);
+      return;
+    }
+    // Stop any currently playing audio
+    audioRef.current?.pause();
+    audioRef.current = null;
+
     const audio = new Audio(voice.previewUrl);
-    audio.onended = () => setPlayingId(null);
-    audio.onerror = () => setPlayingId(null);
-    audio.play().catch(() => setPlayingId(null));
+    audioRef.current = audio;
+    setPlayingId(voice.id);
+    audio.onended = () => { setPlayingId(null); audioRef.current = null; };
+    audio.onerror = () => { setPlayingId(null); audioRef.current = null; };
+    audio.play().catch(() => { setPlayingId(null); audioRef.current = null; });
   }
 
   async function handleSave() {
@@ -766,28 +783,26 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
         </div>
       </div>
 
-      {/* Tab Navigation — pill style with colored active states */}
-      <div className="flex gap-2 mb-8">
+      {/* Tab Navigation — Embedo violet theme */}
+      <div className="flex gap-1.5 mb-8 bg-slate-100/80 rounded-2xl p-1.5 w-fit">
         {([
-          { id: 'dashboard' as const, label: 'Dashboard', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" /><path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" /></svg>, color: 'violet' },
-          { id: 'voice' as const, label: 'Voice', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" /></svg>, color: 'pink' },
-          { id: 'prompt' as const, label: 'System Prompt', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" /></svg>, color: 'blue' },
-          { id: 'knowledge' as const, label: 'Knowledge Base', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" /></svg>, color: 'emerald' },
+          { id: 'dashboard' as const, label: 'Dashboard', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" /><path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" /></svg> },
+          { id: 'voice' as const, label: 'Voice', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" /></svg> },
+          { id: 'prompt' as const, label: 'System Prompt', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" /></svg> },
+          { id: 'knowledge' as const, label: 'Knowledge Base', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" /></svg> },
         ] as const).map(tab => {
           const active = activeTab === tab.id;
-          const colors: Record<string, string> = {
-            violet: active ? 'bg-violet-600 text-white shadow-lg shadow-violet-200' : 'bg-white text-slate-600 border border-slate-200 hover:border-violet-300 hover:text-violet-600 hover:shadow-md',
-            pink: active ? 'bg-pink-600 text-white shadow-lg shadow-pink-200' : 'bg-white text-slate-600 border border-slate-200 hover:border-pink-300 hover:text-pink-600 hover:shadow-md',
-            blue: active ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'bg-white text-slate-600 border border-slate-200 hover:border-blue-300 hover:text-blue-600 hover:shadow-md',
-            emerald: active ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' : 'bg-white text-slate-600 border border-slate-200 hover:border-emerald-300 hover:text-emerald-600 hover:shadow-md',
-          };
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 ${colors[tab.color]}`}
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${
+                active
+                  ? 'bg-white text-violet-700 shadow-sm border border-violet-100'
+                  : 'text-slate-500 hover:text-violet-600 hover:bg-white/60'
+              }`}
             >
-              {tab.icon}
+              <span className={active ? 'text-violet-600' : 'text-slate-400'}>{tab.icon}</span>
               {tab.label}
             </button>
           );
@@ -798,8 +813,8 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
       {activeTab === 'voice' && (
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-9 h-9 bg-gradient-to-br from-pink-500 to-rose-600 rounded-xl flex items-center justify-center shadow-md shadow-pink-200">
-              <svg viewBox="0 0 20 20" fill="white" className="w-4.5 h-4.5"><path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" /></svg>
+            <div className="w-9 h-9 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center">
+              <svg viewBox="0 0 20 20" fill="white" className="w-4 h-4"><path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" /></svg>
             </div>
             <div>
               <h2 className="text-lg font-bold text-slate-900">Choose a Voice</h2>
@@ -814,8 +829,8 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
       {activeTab === 'prompt' && (
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md shadow-blue-200">
-              <svg viewBox="0 0 20 20" fill="white" className="w-4.5 h-4.5"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" /></svg>
+            <div className="w-9 h-9 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center">
+              <svg viewBox="0 0 20 20" fill="white" className="w-4 h-4"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" /></svg>
             </div>
             <div>
               <h2 className="text-lg font-bold text-slate-900">System Prompt</h2>
@@ -830,8 +845,8 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
       {activeTab === 'knowledge' && (
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md shadow-emerald-200">
-              <svg viewBox="0 0 20 20" fill="white" className="w-4.5 h-4.5"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" /></svg>
+            <div className="w-9 h-9 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center">
+              <svg viewBox="0 0 20 20" fill="white" className="w-4 h-4"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" /></svg>
             </div>
             <div>
               <h2 className="text-lg font-bold text-slate-900">Knowledge Base</h2>
