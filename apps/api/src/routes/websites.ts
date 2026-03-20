@@ -91,7 +91,6 @@ export async function websiteRoutes(app: FastifyInstance) {
   app.post<{ Params: { websiteId: string; versionId: string } }>('/websites/:websiteId/revert/:versionId', async (req, reply) => {
     const res = await fetch(`${WEBSITE_GEN_URL}/websites/${req.params.websiteId}/revert/${req.params.versionId}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
     });
     const data = await res.json();
     return reply.code(res.status).send(data);
