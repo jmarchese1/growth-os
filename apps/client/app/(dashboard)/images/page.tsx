@@ -43,6 +43,8 @@ export default function ImagesPage() {
   const [selectedImage, setSelectedImage] = useState<ImageAsset | null>(null);
   const [saveUrl, setSaveUrl] = useState('');
   const [showSaveForm, setShowSaveForm] = useState(false);
+  const [allowRewrite, setAllowRewrite] = useState(true);
+  const [lastRevisedPrompt, setLastRevisedPrompt] = useState('');
 
   const loadImages = useCallback(async () => {
     if (!businessId) return;
@@ -71,9 +73,13 @@ export default function ImagesPage() {
       });
       const data = await res.json() as { success: boolean; image?: ImageAsset; error?: string };
       if (!data.success) throw new Error(data.error ?? 'Generation failed');
-      if (data.image) setImages((prev) => [data.image!, ...prev]);
+      if (data.image) {
+        setImages((prev) => [data.image!, ...prev]);
+        if (data.image.prompt && data.image.prompt !== prompt) {
+          setLastRevisedPrompt(data.image.prompt);
+        }
+      }
       setPrompt('');
-      setShowGenerator(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong');
     }
@@ -220,7 +226,24 @@ export default function ImagesPage() {
               ) : 'Generate'}
             </button>
           </div>
+          {/* Rewrite toggle */}
+          <div className="flex items-center gap-3 mt-3">
+            <button
+              onClick={() => setAllowRewrite(!allowRewrite)}
+              className={`relative w-9 h-5 rounded-full transition-colors ${allowRewrite ? 'bg-violet-600' : 'bg-slate-300'}`}
+            >
+              <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${allowRewrite ? 'left-4.5 translate-x-0' : 'left-0.5'}`} style={{ left: allowRewrite ? '18px' : '2px' }} />
+            </button>
+            <span className="text-xs text-slate-600">Let AI rewrite my prompt for better results</span>
+          </div>
           {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
+          {lastRevisedPrompt && (
+            <div className="mt-3 bg-slate-50 border border-slate-200 rounded-lg p-3">
+              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">AI rewrote your prompt to:</p>
+              <p className="text-xs text-slate-700 italic">&quot;{lastRevisedPrompt}&quot;</p>
+              <button onClick={() => { setPrompt(lastRevisedPrompt); setLastRevisedPrompt(''); }} className="text-[10px] text-violet-600 hover:underline mt-1">Use this as my next prompt</button>
+            </div>
+          )}
         </div>
       )}
 
@@ -283,8 +306,15 @@ export default function ImagesPage() {
 
       {/* Image detail modal */}
       {selectedImage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => setSelectedImage(null)}>
-          <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-8" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => setSelectedImage(null)}>
+          <div onClick={(e) => e.stopPropagation()} className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto my-auto">
+            {/* Close button */}
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-3 right-3 z-10 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-white shadow-sm transition-colors"
+            >
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/></svg>
+            </button>
             <div className="aspect-video overflow-hidden rounded-t-2xl bg-slate-100">
               <img src={selectedImage.url} alt={selectedImage.alt ?? ''} className="w-full h-full object-contain" />
             </div>
