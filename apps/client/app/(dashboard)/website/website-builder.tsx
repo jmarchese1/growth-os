@@ -1201,26 +1201,23 @@ export default function WebsiteBuilder({
 
 // ── Generating Overlay with fun rotating messages ────────────────────────────
 const LOADING_MESSAGES = [
-  'Conbobulating the pixels...',
-  'Thinking really hard...',
-  'Majestifying your brand...',
-  'Teaching AI about good taste...',
-  'Consulting the design gods...',
-  'Arranging ones and zeros...',
-  'Warming up the color wheel...',
-  'Brewing fresh copy...',
-  'Polishing the hero section...',
-  'Aligning all the things...',
-  'Making it look expensive...',
-  'Summoning the font spirits...',
-  'Crafting your digital storefront...',
-  'Almost there, promise...',
-  'Adding a pinch of elegance...',
-  'Optimizing the vibes...',
-  'Sprinkling design dust...',
-  'Questioning our font choices...',
-  'Making pixels behave...',
-  'Refactoring the aesthetic...',
+  // Classics
+  'Wiring things up...', 'Connecting the dots...', 'Stitching it together...',
+  'Snapping pieces into place...', 'Tightening the bolts...', 'Laying the foundation...',
+  // Playful
+  'Aligning the pixels...', 'Herding the divs...', 'Untangling spaghetti...',
+  'Polishing the edges...', 'Shuffling the deck...', 'Tuning the knobs...',
+  // Builder vibes
+  'Sketching things out...', 'Mixing the colors...', 'Arranging the furniture...',
+  'Hanging the curtains...', 'Painting the walls...', 'Sweeping up the sawdust...',
+  // Charming
+  'Convincing the buttons to behave...', 'Negotiating with the layout...',
+  'Giving it a pep talk...', 'Poking it with a stick...', 'Asking nicely...',
+  'Shaking out the wrinkles...', 'Feeding the hamsters...',
+  // Originals
+  'Conbobulating the pixels...', 'Majestifying your brand...',
+  'Teaching AI about good taste...', 'Making it look expensive...',
+  'Crafting your digital storefront...', 'Optimizing the vibes...',
 ];
 
 function GeneratingOverlay() {

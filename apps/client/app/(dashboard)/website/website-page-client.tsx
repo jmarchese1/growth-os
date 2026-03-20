@@ -522,6 +522,49 @@ function WebsiteList({
 }
 
 // ── Editor view ──────────────────────────────────────────────────────────────
+const EDITING_SLOGANS = [
+  'Wiring things up...', 'Connecting the dots...', 'Stitching it together...',
+  'Snapping pieces into place...', 'Tightening the bolts...', 'Laying the foundation...',
+  'Aligning the pixels...', 'Herding the divs...', 'Untangling spaghetti...',
+  'Polishing the edges...', 'Shuffling the deck...', 'Tuning the knobs...',
+  'Sketching things out...', 'Mixing the colors...', 'Arranging the furniture...',
+  'Hanging the curtains...', 'Painting the walls...', 'Sweeping up the sawdust...',
+  'Convincing the buttons to behave...', 'Negotiating with the layout...',
+  'Giving it a pep talk...', 'Poking it with a stick...', 'Asking nicely...',
+  'Shaking out the wrinkles...', 'Feeding the hamsters...',
+];
+
+function EditingIndicator() {
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    setIdx(Math.floor(Math.random() * EDITING_SLOGANS.length));
+    const interval = setInterval(() => {
+      setIdx((prev) => {
+        let next = prev;
+        while (next === prev) next = Math.floor(Math.random() * EDITING_SLOGANS.length);
+        return next;
+      });
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="flex justify-start">
+      <div className="bg-slate-100 rounded-xl rounded-bl-sm px-4 py-3 flex items-center gap-2.5">
+        <div className="flex gap-1">
+          {[0, 150, 300].map((delay) => (
+            <div key={delay} className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: `${delay}ms` }} />
+          ))}
+        </div>
+        <span key={idx} className="text-xs text-slate-500 italic" style={{ animation: 'fadeInMsg 0.4s ease-out' }}>
+          {EDITING_SLOGANS[idx]}
+        </span>
+      </div>
+      <style>{`@keyframes fadeInMsg{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}`}</style>
+    </div>
+  );
+}
+
 function WebsiteEditor({
   site,
   initialHtml,
@@ -1044,19 +1087,7 @@ function WebsiteEditor({
               </div>
             )}
 
-            {editing && (
-              <div className="flex justify-start">
-                <div className="bg-slate-100 rounded-xl rounded-bl-sm px-3 py-2.5 flex items-center gap-1">
-                  {[0, 150, 300].map((delay) => (
-                    <div
-                      key={delay}
-                      className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce"
-                      style={{ animationDelay: `${delay}ms` }}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+            {editing && <EditingIndicator />}
             <div ref={chatEndRef} />
           </div>
 
