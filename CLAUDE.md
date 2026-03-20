@@ -142,6 +142,7 @@ pnpm db:studio        # Open Prisma Studio
 - `ContentPost` — social posts with scheduling and engagement metrics
 - `Proposal` — AI-generated proposals with share token and PDF link
 - `GeneratedWebsite` — template config and Vercel deployment info
+- `WebsiteVersion` — version history snapshots for undo/revert on website edits
 
 ---
 
@@ -208,12 +209,14 @@ services/[service-name]/
 | ElevenLabs | api/voice-agent routes | Provisioning handled inline in `apps/api/src/routes/voice-agent.ts` via `POST /voice-agent/provision` — no separate service needed. One agent per business. Agent ID stored on `Business.elevenLabsAgentId`. |
 | Twilio Voice | api/voice-agent routes | Number provisioned inline alongside ElevenLabs agent. TwiML webhook routes inbound calls to ElevenLabs WebSocket. Number stored on `Business.twilioPhoneNumber`. |
 | Twilio SMS | lead-engine, survey-engine | One provisioned number per business for outbound |
-| Anthropic Claude | chatbot-agent, social-media, proposal-engine | Use `claude-haiku-4-5-20251001` for high-volume (chatbot, social). Use `claude-sonnet-4-6` for proposals. |
+| Anthropic Claude | chatbot-agent, social-media, proposal-engine, website-gen | Use `claude-haiku-4-5-20251001` for high-volume (chatbot, social). Use `claude-sonnet-4-6` for proposals and full website generation. |
 | Instagram Graph API | social-media | Access tokens expire — implement refresh. Store encrypted in `Business.settings`. |
 | Cal.com | api (webhook) | `BOOKING_CREATED` webhook → creates appointment, bridges prospect pipeline |
 | Apollo.io | prospector | Email enrichment for prospects ($49/mo Basic, 10k credits). `APOLLO_API_KEY` env var. |
 | SendGrid | lead-engine, survey-engine, proposal-engine | Use Dynamic Templates for email sequences |
-| Vercel API | website-gen | Each generated site = one Vercel project. Store project ID on `GeneratedWebsite`. |
+| Vercel API | website-gen | Each generated site = one Vercel project. Store project ID on `GeneratedWebsite`. Also supports custom domain mapping via `addCustomDomain()`. |
+| Pexels API | website-gen | Free image sourcing for generated websites. 60+ curated fallback URLs work without API key. `PEXELS_API_KEY` env var (optional). |
+| OpenAI DALL-E 3 | website-gen | AI image generation in the editor. `OPENAI_API_KEY` env var (optional). |
 | Supabase Storage | proposal-engine | Store proposal PDFs here. Public bucket for shareable links. |
 
 ---

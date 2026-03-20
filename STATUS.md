@@ -1,6 +1,6 @@
 # Embedo Platform — Current Status
 
-> Last updated: 2026-03-17. Update this file at the end of any session that changes deployment state, implements a new feature, or discovers a broken integration.
+> Last updated: 2026-03-19. Update this file at the end of any session that changes deployment state, implements a new feature, or discovers a broken integration.
 
 ---
 
@@ -72,6 +72,8 @@ OWNER_EMAIL, OWNER_PHONE, API_BASE_URL
 ```
 DATABASE_URL, REDIS_URL, ANTHROPIC_API_KEY
 VERCEL_API_TOKEN (deploys client websites to Vercel)
+PEXELS_API_KEY (optional — curated fallback images work without it)
+OPENAI_API_KEY (optional — for DALL-E 3 image generation in editor)
 PORT=3007, NODE_ENV=production
 ```
 
@@ -104,22 +106,45 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 - **Lead detail page**: View lead info, reply history, convert-to-business action
 
 **Client Dashboard**
-- **QR codes**: Full CRUD, all 7 purposes (survey, discount, spin wheel, signup, menu, review, custom), public `/qr/[token]` page, scan tracking, contact capture, detail page with analytics
-- **Surveys**: Full CRUD, public `/s/[slug]` page, response collection, contact capture, question builder (rating/text/multiple choice/yes-no)
-- **Social media AI generation**: On-demand post generation via Claude Haiku, optional schedule date/time → `SCHEDULED` status, saved as drafts otherwise
-- **Contacts/CRM**: List, view, paginate, manually add contacts, edit contact fields (name/email/phone/notes), send survey via SMS or email directly from contact detail page
+- **QR codes**: Full CRUD, all 7 purposes, public `/qr/[token]` page, scan tracking, contact capture
+- **Surveys**: Full CRUD, public `/s/[slug]` page, response collection, contact capture, question builder
+- **Social media AI generation**: On-demand post generation via Claude Haiku, optional scheduling
+- **Contacts/CRM**: List, view, paginate, manually add, edit, send survey via SMS or email
 - **Campaigns (client)**: EMAIL/SMS campaigns to contacts — create draft, send via SendGrid/Twilio
-- **Voice agent provisioning**: `POST /voice-agent/provision` → creates ElevenLabs agent + provisions Twilio number inline (no separate service needed); idempotent
-- **Website generation**: POST `/websites/generate` → Claude → Vercel deployment
-- **Billing/Subscriptions**: Stripe checkout → webhook → Subscription record in DB; billing dashboard (view, upgrade, cancel, portal)
-- **Integrations page**: OAuth param cleanup (strips `?connected=` from URL after callback)
+- **Voice agent provisioning**: ElevenLabs agent + Twilio number inline; idempotent
+- **Billing/Subscriptions**: Stripe checkout → webhook → Subscription record; billing dashboard
+- **Integrations page**: OAuth param cleanup
 - **Public routes**: `/qr/` and `/s/` middleware-exempted (no auth required)
+
+**Website Generator (major overhaul this session)**
+- **AI-generated websites**: When inspiration URLs provided, Claude generates COMPLETE custom HTML using Tailwind CSS CDN — unique layout, colors, typography per site
+- **Inspiration site analysis**: Fetches raw CSS/HTML source of inspiration URLs, passes to Claude for visual DNA matching
+- **Pexels image sourcing**: 60+ curated industry/cuisine-specific image URLs (italian, cookies, sushi, etc.) guaranteed to load. Optional Pexels API key for fresh searches.
+- **Template fallback**: When no inspiration URLs, falls back to rigid template system (premium, bold, editorial) with color/font presets
+- **6 industry types**: Restaurant, Gym, Salon, Spa, Coffee Shop, Retail Boutique
+- **6-step wizard**: Industry → Import/Inspiration → Details → Structure → Style (skipped with inspiration) → Done
+- **Live preview panel**: Sticky sidebar during wizard steps 3-5 shows real-time preview
+- **Fun loading overlay**: Rotating messages ("Conbobulating...", "Majestifying...") with 3D cube animation
+- **7 scroll animation presets**: fade-up, slide-in, scale-reveal, blur-in, stagger-cascade, parallax-drift
+- **4 template options**: Premium, Minimal, Bold, Editorial (used when no inspiration)
+- **Gallery image upload**: Up to 6 image URLs with thumbnail preview in wizard
+- **Menu import**: Paste text, upload photo, or upload PDF → AI extracts structured items
+- **Analytics injection**: Google Analytics + Meta Pixel fields, injected into generated HTML
+- **Contact form**: Working form on Contact page → creates Lead record in DB
+- **SEO**: JSON-LD structured data, sitemap.xml, robots.txt, canonical URLs, Twitter cards
+- **Custom domains**: Vercel API integration to add custom domain + DNS instructions UI
+- **Version history**: Automatic snapshots before each AI edit, revert to any previous version
+- **AI editor**: Chat-based editor with context-aware suggestions after each edit
+- **Color wheel popup**: HSL color picker in editor toolbar for precise hex codes
+- **DALL-E 3 image generator**: Generate images in editor, insert into site
+- **Vercel deployment**: Auto-deploys to Vercel on generation, returns live URL
 
 ### ⚠️ Built but Not Wired / Untested in Production
 
 - **Chatbot**: API routes exist but proxy to `chatbot-agent` service which isn't deployed
-- **OAuth social connections**: Routes exist (`/auth/:provider/authorize` + `/auth/:provider/callback`) but no Meta App / Google Cloud project / TikTok App created — blocked by Meta device verification
-- **ElevenLabs inbound webhook**: Route exists; now possible to provision agents via dashboard but no business has been provisioned yet in production
+- **OAuth social connections**: Routes exist but no Meta App / Google Cloud project / TikTok App created
+- **ElevenLabs inbound webhook**: Route exists; no business provisioned yet in production
+- **AI self-review loop**: Code exists but disabled for AI-generated sites (was overwriting HTML); needs re-architecture to work with Tailwind sites
 
 ### ❌ Not Implemented / Placeholder
 
@@ -137,13 +162,17 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 | Deploy chatbot-agent | Add to Railway project | Low |
 | Meta/Google/TikTok OAuth apps | Create developer apps, set client IDs/secrets in API env | Low (blocked by Meta device verification) |
 | Provision first voice agent | Use `/voice-agent/provision` in the client dashboard for the demo business | Low |
+| Pexels API key | Set `PEXELS_API_KEY` on website-gen Railway for dynamic image search (curated fallbacks work without it) | Low |
+| OpenAI API key | Set `OPENAI_API_KEY` on website-gen Railway for DALL-E 3 image generation in editor | Low |
+| Re-architect self-review | Self-review loop needs to work with AI-generated Tailwind HTML, not just template-based sites | Medium |
+| WebsiteVersion schema push | Run `prisma db push` to create `WebsiteVersion` table in production Supabase | Medium |
 
 ---
 
 ## Schema State
 
 The Prisma schema has been pushed to Supabase (`prisma db push`) and includes all models.
-Last schema change: Added `Campaign`, `QrCode`, `QrCodeScan` models + `CampaignType`, `CampaignStatus`, `QrPurpose`, `QR_CODE` to `LeadSource` enum.
+Last schema change: Added `WebsiteVersion` model for version history/undo on website edits.
 Migration method: `prisma db push` (non-interactive — use this for local dev; proper migrations TBD).
 
 ---
@@ -152,3 +181,43 @@ Migration method: `prisma db push` (non-interactive — use this for local dev; 
 - **Business ID**: `cmmnr04gf0000wlgw7jtwx2p2`
 - **Owner**: jason@embedo.io
 - **Used in**: `EMBEDO_BUSINESS_ID` env var on API and prospector
+
+---
+
+## Website Generator Architecture
+
+### Two Generation Paths
+
+```
+WITH inspiration URLs (AI-first):
+  Import step → add inspiration URLs
+  Details step → business info + menu + gallery images + analytics
+  Structure step → pick sections → Generate (skips Style step)
+       ↓
+  HTTP fetch raw CSS/HTML from inspiration sites
+       ↓
+  Pexels image sourcing (cuisine-specific)
+       ↓
+  Claude Sonnet generates COMPLETE HTML with Tailwind CSS CDN
+  - Unique layout, colors, typography per site
+  - Real Pexels images throughout
+  - Responsive, hover effects, transitions
+       ↓
+  Deploy to Vercel → return HTML + URL
+
+WITHOUT inspiration URLs (template fallback):
+  Full wizard with Style step (color scheme, font, animation, template)
+  Rigid template system with style override tokens
+  renderRestaurantPremium / renderBoldTemplate / renderEditorialTemplate
+```
+
+### Key Files
+- `services/website-gen/src/generator/full-site-generator.ts` — AI full HTML generation
+- `services/website-gen/src/generator/image-sourcer.ts` — Pexels image fetching
+- `services/website-gen/src/generator/content.ts` — AI copy generation
+- `services/website-gen/src/generator/style-generator.ts` — AI style token generation
+- `services/website-gen/src/templates/restaurant/premium.ts` — Template renderer
+- `services/website-gen/src/scraper/scrape.ts` — Website scraping + inspiration analysis
+- `services/website-gen/src/routes.ts` — All generation endpoints
+- `apps/client/app/(dashboard)/website/website-builder.tsx` — 6-step wizard UI
+- `apps/client/app/(dashboard)/website/website-page-client.tsx` — Editor + list view
