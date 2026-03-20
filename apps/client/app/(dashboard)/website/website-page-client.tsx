@@ -521,6 +521,50 @@ function WebsiteList({
   );
 }
 
+// ── Section Dividers Library ──────────────────────────────────────────────────
+const SECTION_DIVIDERS = [
+  { id: 'wave', label: 'Wave', svg: `<svg viewBox="0 0 1200 120" preserveAspectRatio="none" style="width:100%;height:60px;display:block;"><path d="M0,60 C300,120 900,0 1200,60 L1200,120 L0,120 Z" fill="FILL"/></svg>`, css: '' },
+  { id: 'wave-double', label: 'Double Wave', svg: `<svg viewBox="0 0 1200 120" preserveAspectRatio="none" style="width:100%;height:80px;display:block;"><path d="M0,40 C200,100 400,0 600,40 C800,80 1000,0 1200,40 L1200,120 L0,120 Z" fill="FILL" opacity="0.5"/><path d="M0,60 C300,120 900,0 1200,60 L1200,120 L0,120 Z" fill="FILL"/></svg>`, css: '' },
+  { id: 'diagonal', label: 'Diagonal', svg: `<svg viewBox="0 0 1200 120" preserveAspectRatio="none" style="width:100%;height:60px;display:block;"><path d="M0,0 L1200,120 L1200,120 L0,120 Z" fill="FILL"/></svg>`, css: '' },
+  { id: 'curved', label: 'Curved', svg: `<svg viewBox="0 0 1200 120" preserveAspectRatio="none" style="width:100%;height:60px;display:block;"><path d="M0,120 Q600,-40 1200,120 Z" fill="FILL"/></svg>`, css: '' },
+  { id: 'zigzag', label: 'Zigzag', svg: `<svg viewBox="0 0 1200 120" preserveAspectRatio="none" style="width:100%;height:40px;display:block;"><path d="M0,40 L100,0 L200,40 L300,0 L400,40 L500,0 L600,40 L700,0 L800,40 L900,0 L1000,40 L1100,0 L1200,40 L1200,120 L0,120 Z" fill="FILL"/></svg>`, css: '' },
+  { id: 'triangle', label: 'Triangle', svg: `<svg viewBox="0 0 1200 120" preserveAspectRatio="none" style="width:100%;height:60px;display:block;"><path d="M0,120 L600,0 L1200,120 Z" fill="FILL"/></svg>`, css: '' },
+  { id: 'drops', label: 'Drops', svg: `<svg viewBox="0 0 1200 120" preserveAspectRatio="none" style="width:100%;height:60px;display:block;"><path d="M0,60 Q150,0 300,60 Q450,120 600,60 Q750,0 900,60 Q1050,120 1200,60 L1200,120 L0,120 Z" fill="FILL"/></svg>`, css: '' },
+  { id: 'gradient-fade', label: 'Gradient Fade', svg: '', css: `height:80px;background:linear-gradient(to bottom, var(--from-color, #0a0a0a), var(--to-color, #1a1a2e));` },
+];
+
+// ── Google Fonts Popular Pairings ────────────────────────────────────────────
+const FONT_PAIRINGS_LIBRARY = [
+  { heading: 'Playfair Display', body: 'Source Sans Pro', mood: 'Elegant & readable', url: 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Sans+Pro:wght@400;600&display=swap' },
+  { heading: 'Montserrat', body: 'Merriweather', mood: 'Modern & literary', url: 'https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Merriweather:wght@400&display=swap' },
+  { heading: 'Oswald', body: 'Quattrocento', mood: 'Bold & classic', url: 'https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Quattrocento:wght@400&display=swap' },
+  { heading: 'Raleway', body: 'Roboto', mood: 'Clean & universal', url: 'https://fonts.googleapis.com/css2?family=Raleway:wght@700;800&family=Roboto:wght@400&display=swap' },
+  { heading: 'Cormorant Garamond', body: 'Proza Libre', mood: 'Luxury & warm', url: 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Proza+Libre:wght@400&display=swap' },
+  { heading: 'DM Serif Display', body: 'DM Sans', mood: 'Editorial & sharp', url: 'https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500&display=swap' },
+  { heading: 'Space Grotesk', body: 'Inter', mood: 'Tech & geometric', url: 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400&display=swap' },
+  { heading: 'Libre Baskerville', body: 'Open Sans', mood: 'Timeless & friendly', url: 'https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@700&family=Open+Sans:wght@400&display=swap' },
+  { heading: 'Bebas Neue', body: 'Roboto Condensed', mood: 'Impact & compact', url: 'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto+Condensed:wght@400&display=swap' },
+  { heading: 'Lora', body: 'Nunito', mood: 'Warm & rounded', url: 'https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=Nunito:wght@400&display=swap' },
+  { heading: 'Poppins', body: 'Lato', mood: 'Friendly & polished', url: 'https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Lato:wght@400&display=swap' },
+  { heading: 'Abril Fatface', body: 'Poppins', mood: 'Statement & playful', url: 'https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Poppins:wght@400&display=swap' },
+];
+
+// ── CSS Animation Presets ────────────────────────────────────────────────────
+const CSS_ANIMATIONS = [
+  { id: 'fade-in-up', label: 'Fade In Up', category: 'entrance', css: `@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }\n.animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }` },
+  { id: 'fade-in-left', label: 'Fade In Left', category: 'entrance', css: `@keyframes fadeInLeft { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }\n.animate-fade-in-left { animation: fadeInLeft 0.6s ease-out forwards; }` },
+  { id: 'scale-in', label: 'Scale In', category: 'entrance', css: `@keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }\n.animate-scale-in { animation: scaleIn 0.5s ease-out forwards; }` },
+  { id: 'blur-in', label: 'Blur In', category: 'entrance', css: `@keyframes blurIn { from { opacity: 0; filter: blur(10px); } to { opacity: 1; filter: blur(0); } }\n.animate-blur-in { animation: blurIn 0.7s ease-out forwards; }` },
+  { id: 'hover-lift', label: 'Hover Lift', category: 'hover', css: `.hover-lift { transition: transform 0.3s ease, box-shadow 0.3s ease; }\n.hover-lift:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(0,0,0,0.15); }` },
+  { id: 'hover-glow', label: 'Hover Glow', category: 'hover', css: `.hover-glow { transition: box-shadow 0.3s ease; }\n.hover-glow:hover { box-shadow: 0 0 30px rgba(139,92,246,0.3); }` },
+  { id: 'hover-zoom', label: 'Hover Zoom', category: 'hover', css: `.hover-zoom { overflow: hidden; }\n.hover-zoom img { transition: transform 0.5s ease; }\n.hover-zoom:hover img { transform: scale(1.08); }` },
+  { id: 'hover-underline', label: 'Hover Underline', category: 'hover', css: `.hover-underline { position: relative; }\n.hover-underline::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 0; height: 2px; background: currentColor; transition: width 0.3s ease; }\n.hover-underline:hover::after { width: 100%; }` },
+  { id: 'pulse', label: 'Pulse', category: 'loop', css: `@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }\n.animate-pulse-subtle { animation: pulse 2s ease-in-out infinite; }` },
+  { id: 'float', label: 'Float', category: 'loop', css: `@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }\n.animate-float { animation: float 3s ease-in-out infinite; }` },
+  { id: 'shimmer', label: 'Shimmer', category: 'loop', css: `@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }\n.animate-shimmer { background: linear-gradient(90deg, transparent 33%, rgba(255,255,255,0.1) 50%, transparent 66%); background-size: 200% 100%; animation: shimmer 2s infinite; }` },
+  { id: 'typewriter', label: 'Typewriter', category: 'text', css: `@keyframes typewriter { from { width: 0; } to { width: 100%; } }\n.animate-typewriter { overflow: hidden; white-space: nowrap; border-right: 2px solid; animation: typewriter 2s steps(30) forwards, blink 0.7s step-end infinite; }\n@keyframes blink { 50% { border-color: transparent; } }` },
+];
+
 // ── Editor view ──────────────────────────────────────────────────────────────
 const EDITING_SLOGANS = [
   'Wiring things up...', 'Connecting the dots...', 'Stitching it together...',
@@ -591,6 +635,9 @@ function WebsiteEditor({
   const [pexelsSearching, setPexelsSearching] = useState(false);
   const [showMyImages, setShowMyImages] = useState(false);
   const [myImages, setMyImages] = useState<Array<{ id: string; url: string; alt: string | null }>>([]);
+  const [showDividers, setShowDividers] = useState(false);
+  const [showFontBrowser, setShowFontBrowser] = useState(false);
+  const [showAnimations, setShowAnimations] = useState(false);
   const [customDomain, setCustomDomain] = useState('');
   const [domainStatus, setDomainStatus] = useState<{ configured: boolean; dnsRecords: Array<{ type: string; name: string; value: string }> } | null>(null);
   const [domainSaving, setDomainSaving] = useState(false);
@@ -794,7 +841,7 @@ function WebsiteEditor({
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
           </button>
           {showMyImages && (
-            <div className="absolute top-full left-0 mt-1 w-80 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-72 overflow-y-auto">
+            <div className="absolute top-full left-0 mt-1 w-80 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-72 overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               {myImages.length === 0 ? (
                 <div className="p-4 text-center">
                   <p className="text-xs text-slate-400">No images yet</p>
@@ -819,6 +866,118 @@ function WebsiteEditor({
                   ))}
                 </div>
               )}
+            </div>
+          )}
+        </div>
+        {/* 6. Section Dividers */}
+        <div className="relative">
+          <button
+            onClick={() => { setShowDividers(!showDividers); setShowFontBrowser(false); setShowAnimations(false); }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showDividers ? 'border-amber-300 bg-amber-50 text-amber-700' : 'border-slate-200 bg-white text-slate-600 hover:border-amber-200 hover:text-amber-600'}`}
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" /></svg>
+            Dividers
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+          </button>
+          {showDividers && (
+            <div className="absolute top-full left-0 mt-1 w-72 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-3 max-h-80 overflow-y-auto">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Section Dividers</p>
+              <div className="space-y-2">
+                {SECTION_DIVIDERS.map((d) => (
+                  <button
+                    key={d.id}
+                    onClick={() => {
+                      const code = d.svg
+                        ? `Add this SVG divider between sections: ${d.svg.replace(/FILL/g, 'currentColor')}`
+                        : `Add a gradient fade divider between sections with CSS: ${d.css}`;
+                      setInput(code);
+                      setShowDividers(false);
+                    }}
+                    className="w-full text-left p-2 rounded-lg hover:bg-amber-50 border border-slate-100 hover:border-amber-200 transition-colors"
+                  >
+                    <p className="text-xs font-medium text-slate-700 mb-1">{d.label}</p>
+                    {d.svg ? (
+                      <div className="bg-slate-900 rounded overflow-hidden" style={{ height: 30 }} dangerouslySetInnerHTML={{ __html: d.svg.replace(/FILL/g, '#374151') }} />
+                    ) : (
+                      <div className="rounded" style={{ height: 30, background: 'linear-gradient(to bottom, #1a1a2e, #2d2b55)' }} />
+                    )}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[9px] text-slate-400 mt-2">Click a divider to tell the AI to add it between sections.</p>
+            </div>
+          )}
+        </div>
+        {/* 7. Google Fonts */}
+        <div className="relative">
+          <button
+            onClick={() => { setShowFontBrowser(!showFontBrowser); setShowDividers(false); setShowAnimations(false); }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showFontBrowser ? 'border-blue-300 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:text-blue-600'}`}
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm1 3a1 1 0 011-1h4a1 1 0 110 2H8.5v7a1 1 0 11-2 0V6H5a1 1 0 01-1-1z" clipRule="evenodd" /></svg>
+            Fonts
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+          </button>
+          {showFontBrowser && (
+            <div className="absolute top-full left-0 mt-1 w-80 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-3 max-h-80 overflow-y-auto">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Font Pairings</p>
+              <div className="space-y-1.5">
+                {FONT_PAIRINGS_LIBRARY.map((fp) => (
+                  <button
+                    key={fp.heading}
+                    onClick={() => {
+                      setInput(`Change the fonts to: heading "${fp.heading}" and body "${fp.body}". Load from Google Fonts: ${fp.url}`);
+                      setShowFontBrowser(false);
+                    }}
+                    className="w-full text-left p-2.5 rounded-lg hover:bg-blue-50 border border-slate-100 hover:border-blue-200 transition-colors"
+                  >
+                    <div className="flex items-baseline justify-between mb-0.5">
+                      <span className="text-xs font-bold text-slate-800">{fp.heading} + {fp.body}</span>
+                      <span className="text-[9px] text-slate-400">{fp.mood}</span>
+                    </div>
+                    <link href={fp.url} rel="stylesheet" />
+                    <p style={{ fontFamily: `'${fp.heading}', serif`, fontSize: 16, fontWeight: 700, lineHeight: 1.2 }} className="text-slate-900">The Art of Dining</p>
+                    <p style={{ fontFamily: `'${fp.body}', sans-serif`, fontSize: 11, lineHeight: 1.4 }} className="text-slate-500">Every evening becomes a memory worth keeping.</p>
+                  </button>
+                ))}
+              </div>
+              <p className="text-[9px] text-slate-400 mt-2">Click a pairing to tell the AI to apply it.</p>
+            </div>
+          )}
+        </div>
+        {/* 8. CSS Animations */}
+        <div className="relative">
+          <button
+            onClick={() => { setShowAnimations(!showAnimations); setShowDividers(false); setShowFontBrowser(false); }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showAnimations ? 'border-pink-300 bg-pink-50 text-pink-700' : 'border-slate-200 bg-white text-slate-600 hover:border-pink-200 hover:text-pink-600'}`}
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>
+            Animations
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+          </button>
+          {showAnimations && (
+            <div className="absolute top-full right-0 mt-1 w-80 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-3 max-h-80 overflow-y-auto">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">CSS Animations</p>
+              {['entrance', 'hover', 'loop', 'text'].map((cat) => (
+                <div key={cat} className="mb-3">
+                  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">{cat}</p>
+                  <div className="space-y-1">
+                    {CSS_ANIMATIONS.filter(a => a.category === cat).map((anim) => (
+                      <button
+                        key={anim.id}
+                        onClick={() => {
+                          setInput(`Add this CSS animation to the site and apply it to appropriate elements:\n${anim.css}`);
+                          setShowAnimations(false);
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-pink-50 border border-slate-100 hover:border-pink-200 transition-colors"
+                      >
+                        <span className="text-xs font-medium text-slate-700">{anim.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <p className="text-[9px] text-slate-400 mt-1">Click an animation to tell the AI to add it.</p>
             </div>
           )}
         </div>
