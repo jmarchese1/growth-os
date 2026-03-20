@@ -450,7 +450,8 @@ export async function websiteRoutes(app: FastifyInstance) {
       data: {
         businessId: body.businessId,
         template: hasInspiration ? 'ai-generated' : `restaurant-${body.template ?? 'premium'}`,
-        config: premiumConfig as unknown as object,
+        // For AI-generated sites, store the HTML in config so preview works without Vercel fetch
+        config: hasInspiration ? { html, ...premiumConfig } as unknown as object : premiumConfig as unknown as object,
         status: 'GENERATING',
       },
     });
@@ -500,7 +501,8 @@ export async function websiteRoutes(app: FastifyInstance) {
         deployUrl: finalUrl || null,
         vercelDeploymentId: deploymentId || null,
         vercelProjectId: vercelProjectId || null,
-        config: finalConfig as unknown as object,
+        // Store HTML in config for AI-generated sites so preview works without Vercel
+        config: hasInspiration ? { html: finalHtml, ...finalConfig } as unknown as object : finalConfig as unknown as object,
       },
     });
 
@@ -664,9 +666,14 @@ Editable: businessName, tagline, description, cuisine, phone, address, city, hou
       deployedUrl = deployed.url;
     }
 
+    // Store edited HTML in config so preview works after refresh
+    const existingConfig = website.config as Record<string, unknown>;
     await db.generatedWebsite.update({
       where: { id: websiteId },
-      data: { deployUrl: deployedUrl || null },
+      data: {
+        deployUrl: deployedUrl || null,
+        config: isAiGenerated ? { ...existingConfig, html } as object : existingConfig as object,
+      },
     });
 
     return reply.send({ success: true, html, url: deployedUrl });
@@ -842,20 +849,25 @@ Editable: businessName, tagline, description, cuisine, phone, address, city, hou
     const website = await db.generatedWebsite.findUnique({ where: { id: req.params.websiteId } });
     if (!website) throw new NotFoundError('GeneratedWebsite', req.params.websiteId);
 
-    // For AI-generated sites, fetch from Vercel (has the real Tailwind HTML)
-    if (website.template === 'ai-generated' && website.deployUrl) {
-      try {
-        const res = await fetch(website.deployUrl, {
-          headers: { 'User-Agent': 'Embedo-Preview/1.0' },
-          signal: AbortSignal.timeout(8000),
-          redirect: 'follow',
-        });
-        if (res.ok) {
-          const html = await res.text();
-          return reply.type('text/html').send(html);
-        }
-      } catch {
-        // Fall back to config-based rendering
+    // For AI-generated sites, serve the stored HTML directly (no Vercel fetch needed)
+    if (website.template === 'ai-generated') {
+      const cfg = website.config as Record<string, unknown>;
+      if (cfg['html'] && typeof cfg['html'] === 'string') {
+        return reply.type('text/html').send(cfg['html']);
+      }
+      // Fallback: try fetching from Vercel
+      if (website.deployUrl) {
+        try {
+          const res = await fetch(website.deployUrl, {
+            headers: { 'User-Agent': 'Embedo-Preview/1.0' },
+            signal: AbortSignal.timeout(8000),
+            redirect: 'follow',
+          });
+          if (res.ok) {
+            const html = await res.text();
+            return reply.type('text/html').send(html);
+          }
+        } catch { /* fall through */ }
       }
     }
 
