@@ -69,7 +69,7 @@ export async function imageRoutes(app: FastifyInstance) {
     const genRes = await fetch(`${WEBSITE_GEN_URL}/generate-image`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, size, quality }),
+      body: JSON.stringify({ prompt, size, quality, businessId }),
     });
     const genData = await genRes.json() as { success: boolean; imageUrl?: string; revisedPrompt?: string; error?: string };
 

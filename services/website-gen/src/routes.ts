@@ -11,6 +11,7 @@ import { extractDesignTokens, formatDesignTokens } from './generator/inspiration
 import { verifyAndFixImages, cleanImageArtifacts } from './generator/image-verifier.js';
 import { reviewAndImprove } from './generator/site-reviewer.js';
 import { fetchImages } from './generator/image-sourcer.js';
+import { persistImage } from './generator/image-storage.js';
 import { renderRestaurantPremium } from './templates/restaurant/premium.js';
 import { renderBoldTemplate } from './templates/restaurant/bold.js';
 import { renderEditorialTemplate } from './templates/restaurant/editorial.js';
@@ -697,7 +698,7 @@ Editable: businessName, tagline, description, cuisine, phone, address, city, hou
   });
 
   // POST /generate-image — generate an image using DALL-E 3
-  app.post<{ Body: { prompt: string; size?: string; quality?: string } }>('/generate-image', async (req, reply) => {
+  app.post<{ Body: { prompt: string; size?: string; quality?: string; businessId?: string } }>('/generate-image', async (req, reply) => {
     const { prompt, size = '1024x1024', quality = 'standard' } = req.body;
     if (!prompt?.trim()) return reply.code(400).send({ success: false, error: 'prompt is required' });
     if (!env.OPENAI_API_KEY) return reply.code(400).send({ success: false, error: 'OPENAI_API_KEY required for image generation' });
@@ -731,10 +732,26 @@ Editable: businessName, tagline, description, cuisine, phone, address, city, hou
         data: Array<{ url: string; revised_prompt: string }>;
       };
 
+      const tempUrl = data.data[0]?.url ?? '';
+      const revisedPrompt = data.data[0]?.revised_prompt ?? '';
+
+      // Persist to Supabase Storage so the URL never expires
+      // DALL-E URLs expire after ~1 hour — this makes them permanent
+      let permanentUrl = tempUrl;
+      if (tempUrl) {
+        const businessId = (req.body as Record<string, unknown>)['businessId'] as string | undefined;
+        permanentUrl = await persistImage({
+          tempUrl,
+          businessId: businessId ?? 'shared',
+          filename: `dalle-${Date.now()}`,
+        });
+        logger.info({ temp: tempUrl.slice(0, 60), permanent: permanentUrl.slice(0, 80) }, 'DALL-E image persisted');
+      }
+
       return reply.send({
         success: true,
-        imageUrl: data.data[0]?.url ?? '',
-        revisedPrompt: data.data[0]?.revised_prompt ?? '',
+        imageUrl: permanentUrl,
+        revisedPrompt,
       });
     } catch (err) {
       return reply.code(500).send({ success: false, error: String(err) });
