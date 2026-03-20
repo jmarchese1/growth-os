@@ -731,33 +731,31 @@ function TestCallWidget({ agentId }: { agentId: string }) {
           <div className="absolute bottom-[-30%] left-[-10%] w-[400px] h-[400px] rounded-full bg-indigo-600/10 blur-3xl" />
         </div>
 
-        <div className="relative flex flex-col items-center text-center">
+        <div className="relative flex flex-col items-center text-center py-6">
           <h3 className="text-xl font-bold text-white mb-2">Test Your Agent</h3>
-          <p className="text-sm text-violet-200 mb-1">Talk to your AI receptionist directly from the browser</p>
-          <p className="text-xs text-violet-300/60 mb-8">Click the button below to start a conversation</p>
+          <p className="text-sm text-violet-200 mb-8">Click &quot;Start a call&quot; to talk to your AI receptionist</p>
 
-          {/* ElevenLabs widget — centered with animated ring behind it */}
-          <div className="relative">
-            <div className="absolute inset-[-16px] rounded-full bg-violet-500/15 animate-ping" style={{ animationDuration: '3s' }} />
-            <div className="absolute inset-[-8px] rounded-full bg-violet-500/10 animate-ping" style={{ animationDuration: '3s', animationDelay: '0.5s' }} />
+          {/* Widget container — force centered */}
+          <div className="relative flex items-center justify-center" style={{ minHeight: 120 }}>
             {loaded ? (
-              <div className="relative" dangerouslySetInnerHTML={{
+              <div dangerouslySetInnerHTML={{
                 __html: `<elevenlabs-convai agent-id="${agentId}"></elevenlabs-convai>`
               }} />
             ) : (
-              <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-full flex items-center justify-center shadow-2xl">
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              </div>
+              <div className="w-6 h-6 border-2 border-violet-400 border-t-white rounded-full animate-spin" />
             )}
           </div>
-
-          <p className="text-[10px] text-violet-400/50 mt-8">Powered by ElevenLabs</p>
         </div>
 
-        {/* Override ElevenLabs widget positioning to be inline, not fixed bottom-right */}
         <style>{`
-          elevenlabs-convai { position: relative !important; bottom: auto !important; right: auto !important; }
-          elevenlabs-convai::part(widget) { position: relative !important; }
+          elevenlabs-convai {
+            position: relative !important;
+            bottom: auto !important;
+            right: auto !important;
+            display: flex !important;
+            justify-content: center !important;
+            width: 100% !important;
+          }
         `}</style>
       </div>
     </div>
