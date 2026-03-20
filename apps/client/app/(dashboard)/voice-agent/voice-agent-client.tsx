@@ -731,9 +731,9 @@ function TestCallWidget({ agentId }: { agentId: string }) {
           <div className="absolute bottom-[-30%] left-[-10%] w-[400px] h-[400px] rounded-full bg-indigo-600/10 blur-3xl" />
         </div>
 
-        <div className="relative flex flex-col items-center text-center py-8">
-          <h3 className="text-xl font-bold text-white mb-2">Test Your Agent</h3>
-          <p className="text-sm text-violet-200 mb-4">Click &quot;Start a call&quot; to talk to your AI receptionist</p>
+        <div className="relative flex flex-col items-center text-center pt-6 pb-4">
+          <h3 className="text-xl font-bold text-white mb-1">Test Your Agent</h3>
+          <p className="text-sm text-violet-200 mb-2">Click &quot;Start a call&quot; to talk to your AI receptionist</p>
 
           {/* Widget — directly after text, no extra spacing */}
           {loaded ? (
