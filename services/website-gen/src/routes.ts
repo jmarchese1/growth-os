@@ -766,18 +766,24 @@ Editable: businessName, tagline, description, cuisine, phone, address, city, hou
       html = renderRestaurantPremium(revertedData as unknown as PremiumWebsiteConfig);
     }
 
-    // Redeploy
+    // Redeploy (non-blocking — revert works even if deploy fails)
     let deployedUrl = website.deployUrl ?? '';
     if (env.VERCEL_API_TOKEN) {
-      const bName = String(revertedData['businessName'] ?? (website.config as Record<string, unknown>)['businessName'] ?? 'site');
-      const slug = `embedo-${bName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 30)}-${website.businessId.slice(-6)}`;
-      const deployed = await deployToVercel({ projectName: slug, html, businessId: website.businessId });
-      deployedUrl = deployed.url;
+      try {
+        const bName = String(revertedData['businessName'] ?? (website.config as Record<string, unknown>)['businessName'] ?? 'site');
+        const slug = `embedo-${bName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 30)}-${website.businessId.slice(-6)}`;
+        const deployed = await deployToVercel({ projectName: slug, html, businessId: website.businessId });
+        deployedUrl = deployed.url;
+      } catch (err) {
+        logger.warn({ error: String(err) }, 'Revert deploy failed — still reverting locally');
+      }
     }
 
+    // Store reverted HTML in config for AI-generated sites
+    const updatedConfig = isAiGenerated ? { ...revertedData, html } : revertedData;
     await db.generatedWebsite.update({
       where: { id: websiteId },
-      data: { config: revertedData as object, deployUrl: deployedUrl || null },
+      data: { config: updatedConfig as object, deployUrl: deployedUrl || null },
     });
 
     return reply.send({ success: true, html, url: deployedUrl });

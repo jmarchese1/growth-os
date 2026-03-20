@@ -546,6 +546,8 @@ function WebsiteEditor({
   const [pexelsQuery, setPexelsQuery] = useState('');
   const [pexelsResults, setPexelsResults] = useState<Array<{ url: string; alt: string; photographer: string }>>([]);
   const [pexelsSearching, setPexelsSearching] = useState(false);
+  const [showMyImages, setShowMyImages] = useState(false);
+  const [myImages, setMyImages] = useState<Array<{ id: string; url: string; alt: string | null }>>([]);
   const [customDomain, setCustomDomain] = useState('');
   const [domainStatus, setDomainStatus] = useState<{ configured: boolean; dnsRecords: Array<{ type: string; name: string; value: string }> } | null>(null);
   const [domainSaving, setDomainSaving] = useState(false);
@@ -554,6 +556,14 @@ function WebsiteEditor({
   const [reverting, setReverting] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  async function loadMyImages() {
+    try {
+      const res = await fetch(`${API_URL}/images?businessId=${businessId}`);
+      const data = await res.json() as { success: boolean; images: Array<{ id: string; url: string; alt: string | null }> };
+      if (data.success) setMyImages(data.images);
+    } catch { /* silent */ }
+  }
 
   async function searchPexels() {
     if (!pexelsQuery.trim()) return;
@@ -698,6 +708,7 @@ function WebsiteEditor({
       {/* ── Tools Toolbar ── */}
       <div className="flex items-center gap-2 px-4 py-2 border-b border-slate-200 bg-slate-50 flex-shrink-0">
         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Tools</span>
+        {/* 1. Color Picker */}
         <button
           onClick={() => setShowColorWheel(!showColorWheel)}
           className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showColorWheel ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-slate-200 bg-white text-slate-600 hover:border-violet-200 hover:text-violet-600'}`}
@@ -705,13 +716,7 @@ function WebsiteEditor({
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 110-12 6 6 0 010 12zm0-2a4 4 0 100-8 4 4 0 000 8zm0-2a2 2 0 110-4 2 2 0 010 4z" clipRule="evenodd" /></svg>
           Color Picker
         </button>
-        <button
-          onClick={() => setShowImageGen(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-violet-200 hover:text-violet-600 transition-colors"
-        >
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M1 8a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 018.07 3h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0016.07 6H17a2 2 0 012 2v7a2 2 0 01-2 2H3a2 2 0 01-2-2V8zm13.5 3a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM10 14a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>
-          AI Images
-        </button>
+        {/* 2. Custom Domain */}
         <button
           onClick={() => setShowDomainSetup(!showDomainSetup)}
           className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showDomainSetup ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-slate-200 bg-white text-slate-600 hover:border-violet-200 hover:text-violet-600'}`}
@@ -719,6 +724,7 @@ function WebsiteEditor({
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.497-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z" clipRule="evenodd" /></svg>
           Custom Domain
         </button>
+        {/* 3. Search Photos */}
         <button
           onClick={() => setShowPexelsSearch(!showPexelsSearch)}
           className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showPexelsSearch ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-200 hover:text-emerald-600'}`}
@@ -726,13 +732,53 @@ function WebsiteEditor({
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" /></svg>
           Search Photos
         </button>
-        <a
-          href="/images"
+        {/* 4. AI Images */}
+        <button
+          onClick={() => setShowImageGen(true)}
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-violet-200 hover:text-violet-600 transition-colors"
         >
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" /></svg>
-          My Images
-        </a>
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M1 8a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 018.07 3h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0016.07 6H17a2 2 0 012 2v7a2 2 0 01-2 2H3a2 2 0 01-2-2V8zm13.5 3a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM10 14a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>
+          AI Images
+        </button>
+        {/* 5. My Images (dropdown) */}
+        <div className="relative">
+          <button
+            onClick={() => { setShowMyImages(!showMyImages); if (!showMyImages && myImages.length === 0) void loadMyImages(); }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showMyImages ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-slate-200 bg-white text-slate-600 hover:border-violet-200 hover:text-violet-600'}`}
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" /></svg>
+            My Images
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+          </button>
+          {showMyImages && (
+            <div className="absolute top-full left-0 mt-1 w-80 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-72 overflow-y-auto">
+              {myImages.length === 0 ? (
+                <div className="p-4 text-center">
+                  <p className="text-xs text-slate-400">No images yet</p>
+                  <a href="/images" className="text-xs text-violet-600 hover:underline">Go to Image Library</a>
+                </div>
+              ) : (
+                <div className="grid grid-cols-4 gap-1 p-2">
+                  {myImages.map((img) => (
+                    <div
+                      key={img.id}
+                      className="relative group cursor-pointer"
+                      onClick={() => {
+                        setInput(`Use this image: ${img.url}`);
+                        setShowMyImages(false);
+                      }}
+                    >
+                      <img src={img.url} alt={img.alt ?? ''} className="w-full aspect-square object-cover rounded-lg group-hover:ring-2 ring-violet-500 transition-all" />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 rounded-lg transition-all flex items-center justify-center">
+                        <span className="text-white text-[8px] font-bold opacity-0 group-hover:opacity-100">Use</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         <div className="flex-1" />
         <div className="flex items-center gap-0.5 bg-white rounded-lg border border-slate-200 p-0.5">
           <button
