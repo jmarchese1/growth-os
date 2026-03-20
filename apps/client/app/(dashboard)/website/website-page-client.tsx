@@ -822,7 +822,8 @@ function WebsiteEditor({
                 onChange={(e) => setPexelsQuery(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void searchPexels(); } }}
                 placeholder="Search for photos... e.g. 'italian restaurant interior'"
-                className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
+                className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
               />
               <button
                 onClick={() => void searchPexels()}
