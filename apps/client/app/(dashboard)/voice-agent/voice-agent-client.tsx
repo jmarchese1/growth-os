@@ -731,20 +731,18 @@ function TestCallWidget({ agentId }: { agentId: string }) {
           <div className="absolute bottom-[-30%] left-[-10%] w-[400px] h-[400px] rounded-full bg-indigo-600/10 blur-3xl" />
         </div>
 
-        <div className="relative flex flex-col items-center text-center py-6">
+        <div className="relative flex flex-col items-center text-center py-8">
           <h3 className="text-xl font-bold text-white mb-2">Test Your Agent</h3>
-          <p className="text-sm text-violet-200 mb-8">Click &quot;Start a call&quot; to talk to your AI receptionist</p>
+          <p className="text-sm text-violet-200 mb-4">Click &quot;Start a call&quot; to talk to your AI receptionist</p>
 
-          {/* Widget container — force centered */}
-          <div className="relative flex items-center justify-center" style={{ minHeight: 120 }}>
-            {loaded ? (
-              <div dangerouslySetInnerHTML={{
-                __html: `<elevenlabs-convai agent-id="${agentId}"></elevenlabs-convai>`
-              }} />
-            ) : (
-              <div className="w-6 h-6 border-2 border-violet-400 border-t-white rounded-full animate-spin" />
-            )}
-          </div>
+          {/* Widget — directly after text, no extra spacing */}
+          {loaded ? (
+            <div dangerouslySetInnerHTML={{
+              __html: `<elevenlabs-convai agent-id="${agentId}"></elevenlabs-convai>`
+            }} />
+          ) : (
+            <div className="w-6 h-6 border-2 border-violet-400 border-t-white rounded-full animate-spin mt-4" />
+          )}
         </div>
 
         <style>{`
