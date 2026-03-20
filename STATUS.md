@@ -1,6 +1,6 @@
 # Embedo Platform — Current Status
 
-> Last updated: 2026-03-19. Update this file at the end of any session that changes deployment state, implements a new feature, or discovers a broken integration.
+> Last updated: 2026-03-20. Update this file at the end of any session that changes deployment state, implements a new feature, or discovers a broken integration.
 
 ---
 
@@ -111,7 +111,9 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 - **Social media AI generation**: On-demand post generation via Claude Haiku, optional scheduling
 - **Contacts/CRM**: List, view, paginate, manually add, edit, send survey via SMS or email
 - **Campaigns (client)**: EMAIL/SMS campaigns to contacts — create draft, send via SendGrid/Twilio
-- **Voice agent provisioning**: ElevenLabs agent + Twilio number inline; idempotent
+- **Voice agent provisioning**: ElevenLabs agent + Twilio number inline; idempotent; agent is live and answering calls
+- **Voice agent configuration**: Voice browser (preview + select from 100+ voices), system prompt editor (4 industry templates), knowledge base upload (menu, FAQ, parking, etc.)
+- **Image Library**: Full `/images` page — DALL-E 3 generation, save URLs, category filters (food/interior/team/logo/product/lifestyle), favorites, detail modal. Images persisted to Supabase Storage (permanent URLs, no DALL-E expiry).
 - **Billing/Subscriptions**: Stripe checkout → webhook → Subscription record; billing dashboard
 - **Integrations page**: OAuth param cleanup
 - **Public routes**: `/qr/` and `/s/` middleware-exempted (no auth required)
@@ -123,9 +125,7 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 - **Template fallback**: When no inspiration URLs, falls back to rigid template system (premium, bold, editorial) with color/font presets
 - **6 industry types**: Restaurant, Gym, Salon, Spa, Coffee Shop, Retail Boutique
 - **6-step wizard**: Industry → Import/Inspiration → Details → Structure → Style (skipped with inspiration) → Done
-- **Live preview panel**: Sticky sidebar during wizard steps 3-5 shows real-time preview
-- **Fun loading overlay**: Rotating messages ("Conbobulating...", "Majestifying...") with 3D cube animation
-- **7 scroll animation presets**: fade-up, slide-in, scale-reveal, blur-in, stagger-cascade, parallax-drift
+- **Fun loading overlay**: Rotating slogans (31 messages) with 3D cube animation + editing slogans in AI chat
 - **4 template options**: Premium, Minimal, Bold, Editorial (used when no inspiration)
 - **Gallery image upload**: Up to 6 image URLs with thumbnail preview in wizard
 - **Menu import**: Paste text, upload photo, or upload PDF → AI extracts structured items
@@ -133,18 +133,21 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 - **Contact form**: Working form on Contact page → creates Lead record in DB
 - **SEO**: JSON-LD structured data, sitemap.xml, robots.txt, canonical URLs, Twitter cards
 - **Custom domains**: Vercel API integration to add custom domain + DNS instructions UI
-- **Version history**: Automatic snapshots before each AI edit, revert to any previous version
-- **AI editor**: Chat-based editor with context-aware suggestions after each edit
-- **Color wheel popup**: HSL color picker in editor toolbar for precise hex codes
-- **DALL-E 3 image generator**: Generate images in editor, insert into site
+- **Version history**: Auto-numbered snapshots (Version 1, 2, 3...), inline rename, revert with Vercel redeploy
+- **AI editor**: Chat-based editor modifies HTML directly for AI-generated sites (no template re-render). Rotating slogans during edits.
+- **Editor toolbar**: Color Picker, Custom Domain, Search Photos (Pexels 200 results), AI Images (DALL-E 3), My Images dropdown (with category filters)
+- **AI Editor User Guide**: Polished modal with 25+ example prompts across 5 categories + pro tips
+- **DALL-E 3 image generator**: Generate images, persisted to Supabase Storage (permanent URLs)
+- **Pexels photo search**: Search 200+ free stock photos, click to insert into AI chat
 - **Vercel deployment**: Auto-deploys to Vercel on generation, returns live URL
+- **HTML stored in DB**: AI-generated HTML saved in config.html — preview survives refresh without Vercel fetch
 
 ### ⚠️ Built but Not Wired / Untested in Production
 
 - **Chatbot**: API routes exist but proxy to `chatbot-agent` service which isn't deployed
 - **OAuth social connections**: Routes exist but no Meta App / Google Cloud project / TikTok App created
-- **ElevenLabs inbound webhook**: Route exists; no business provisioned yet in production
-- **AI self-review loop**: Code exists but disabled for AI-generated sites (was overwriting HTML); needs re-architecture to work with Tailwind sites
+- **ElevenLabs inbound webhook**: Route exists; agent is provisioned but webhook for call completion logging not yet tested
+- **AI self-review loop**: Runs on Sonnet after generation; may need tuning for quality threshold
 
 ### ❌ Not Implemented / Placeholder
 
@@ -161,8 +164,8 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 | Apollo.io API key | Set `APOLLO_API_KEY` in prospector Railway env to enable email enrichment | Medium |
 | Deploy chatbot-agent | Add to Railway project | Low |
 | Meta/Google/TikTok OAuth apps | Create developer apps, set client IDs/secrets in API env | Low (blocked by Meta device verification) |
-| Provision first voice agent | Use `/voice-agent/provision` in the client dashboard for the demo business | Low |
-| Pexels API key | Set `PEXELS_API_KEY` on website-gen Railway for dynamic image search (curated fallbacks work without it) | Low |
+| Pexels API key | Set `PEXELS_API_KEY` on website-gen Railway for dynamic image search (curated fallbacks work without it) | Low — already set |
+| Supabase Storage | Fix SUPABASE_SERVICE_ROLE_KEY on website-gen (needs full JWT, not truncated) for DALL-E image persistence | High |
 | OpenAI API key | Set `OPENAI_API_KEY` on website-gen Railway for DALL-E 3 image generation in editor | Low |
 | Re-architect self-review | Self-review loop needs to work with AI-generated Tailwind HTML, not just template-based sites | Medium |
 | WebsiteVersion schema push | Run `prisma db push` to create `WebsiteVersion` table in production Supabase | Medium |

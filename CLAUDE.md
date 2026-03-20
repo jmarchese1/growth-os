@@ -143,6 +143,7 @@ pnpm db:studio        # Open Prisma Studio
 - `Proposal` — AI-generated proposals with share token and PDF link
 - `GeneratedWebsite` — template config and Vercel deployment info
 - `WebsiteVersion` — version history snapshots for undo/revert on website edits
+- `ImageAsset` — centralized image library (DALL-E, Pexels, uploads) with categories and favorites
 
 ---
 
@@ -206,10 +207,11 @@ services/[service-name]/
 
 | API | Service | Notes |
 |---|---|---|
-| ElevenLabs | api/voice-agent routes | Provisioning handled inline in `apps/api/src/routes/voice-agent.ts` via `POST /voice-agent/provision` — no separate service needed. One agent per business. Agent ID stored on `Business.elevenLabsAgentId`. |
+| ElevenLabs | api/voice-agent routes | Full agent management inline in `apps/api/src/routes/voice-agent.ts`. Provisioning, voice selection, prompt editing, knowledge base upload. Agent ID stored on `Business.elevenLabsAgentId`. Phone number managed via ElevenLabs dashboard. |
 | Twilio Voice | api/voice-agent routes | Number provisioned inline alongside ElevenLabs agent. TwiML webhook routes inbound calls to ElevenLabs WebSocket. Number stored on `Business.twilioPhoneNumber`. |
 | Twilio SMS | lead-engine, survey-engine | One provisioned number per business for outbound |
-| Anthropic Claude | chatbot-agent, social-media, proposal-engine, website-gen | Use `claude-haiku-4-5-20251001` for high-volume (chatbot, social). Use `claude-sonnet-4-6` for proposals and full website generation. |
+| Anthropic Claude | chatbot-agent, social-media, proposal-engine, website-gen | Use `claude-haiku-4-5-20251001` for high-volume (chatbot, social). Use `claude-opus-4-6` for website generation, `claude-sonnet-4-6` for edits/reviews. |
+| Supabase Storage | website-gen | Permanent image storage for DALL-E generated images. Bucket: `public-images`. Requires `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` on website-gen. |
 | Instagram Graph API | social-media | Access tokens expire — implement refresh. Store encrypted in `Business.settings`. |
 | Cal.com | api (webhook) | `BOOKING_CREATED` webhook → creates appointment, bridges prospect pipeline |
 | Apollo.io | prospector | Email enrichment for prospects ($49/mo Basic, 10k credits). `APOLLO_API_KEY` env var. |
