@@ -185,17 +185,18 @@ export async function websiteRoutes(app: FastifyInstance) {
       throw new ValidationError('businessId and businessName are required', {});
     }
 
-    // Scrape existing site if URL provided
+    // Check if we're doing full AI generation — determines what to skip
+    const willUseFullAI = !!(body.inspirationUrls?.some(Boolean)) && !!env.ANTHROPIC_API_KEY;
+    logger.info({ willUseFullAI, hasExistingUrl: !!body.existingWebsiteUrl, hasInspiration: !!(body.inspirationUrls?.some(Boolean)) }, 'Generation mode');
+
+    // Scrape existing site if URL provided — SKIP for full AI path (saves ~15s)
     let scraped = {};
-    if (body.existingWebsiteUrl && env.ANTHROPIC_API_KEY) {
+    if (body.existingWebsiteUrl && env.ANTHROPIC_API_KEY && !willUseFullAI) {
       scraped = await scrapeWebsite(body.existingWebsiteUrl, env.ANTHROPIC_API_KEY);
     }
 
     // Merge scraped data with user-provided data (user inputs take precedence)
     const merged = { ...scraped, ...body };
-
-    // Check if we're doing full AI generation — determines what to skip
-    const willUseFullAI = !!(body.inspirationUrls?.some(Boolean)) && !!env.ANTHROPIC_API_KEY;
 
     // Build inspiration context: training KB + user inspiration sites
     // For full AI path: SKIP the slow scrapeForInspiration AI calls — we fetch raw HTML source later
