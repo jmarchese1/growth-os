@@ -723,29 +723,39 @@ function TestCallWidget({ agentId }: { agentId: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-200 rounded-2xl p-6 text-center">
-        <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-violet-200">
-          <svg viewBox="0 0 20 20" fill="white" className="w-8 h-8"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>
+      {/* Main call area */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-violet-950 to-indigo-950 p-8">
+        {/* Background decoration */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-[-50%] right-[-20%] w-[500px] h-[500px] rounded-full bg-violet-600/10 blur-3xl" />
+          <div className="absolute bottom-[-30%] left-[-10%] w-[400px] h-[400px] rounded-full bg-indigo-600/10 blur-3xl" />
         </div>
-        <h3 className="text-lg font-bold text-slate-900 mb-1">Test Your Agent</h3>
-        <p className="text-sm text-slate-500 mb-4">Talk to your AI receptionist directly from the browser. No phone call needed.</p>
-        <p className="text-xs text-slate-400 mb-6">Click the microphone button below to start a conversation.</p>
 
-        {loaded ? (
-          <div className="flex justify-center" dangerouslySetInnerHTML={{
-            __html: `<elevenlabs-convai agent-id="${agentId}"></elevenlabs-convai>`
-          }} />
-        ) : (
-          <div className="flex items-center justify-center py-8">
-            <div className="w-6 h-6 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" />
+        <div className="relative flex flex-col items-center text-center">
+          {/* Animated rings around call button */}
+          <div className="relative mb-6">
+            <div className="absolute inset-0 w-24 h-24 rounded-full bg-violet-500/20 animate-ping" style={{ animationDuration: '3s' }} />
+            <div className="absolute inset-2 w-20 h-20 rounded-full bg-violet-500/10 animate-ping" style={{ animationDuration: '3s', animationDelay: '0.5s' }} />
+            <div className="relative w-24 h-24 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-full flex items-center justify-center shadow-2xl shadow-violet-500/30">
+              <svg viewBox="0 0 24 24" fill="white" className="w-10 h-10"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>
+            </div>
           </div>
-        )}
-      </div>
 
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-        <p className="text-xs text-amber-800">
-          <span className="font-bold">Note:</span> This uses your browser&apos;s microphone. Make sure to allow microphone access when prompted. The agent behaves exactly as it would on a real phone call.
-        </p>
+          <h3 className="text-xl font-bold text-white mb-2">Test Your Agent</h3>
+          <p className="text-sm text-violet-200 mb-1">Talk to your AI receptionist directly from the browser</p>
+          <p className="text-xs text-violet-300/60 mb-8">Uses your microphone — agent behaves exactly as on a real call</p>
+
+          {/* Widget embed */}
+          {loaded ? (
+            <div className="flex justify-center" dangerouslySetInnerHTML={{
+              __html: `<elevenlabs-convai agent-id="${agentId}"></elevenlabs-convai>`
+            }} />
+          ) : (
+            <div className="flex items-center justify-center py-4">
+              <div className="w-6 h-6 border-2 border-violet-400 border-t-white rounded-full animate-spin" />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
