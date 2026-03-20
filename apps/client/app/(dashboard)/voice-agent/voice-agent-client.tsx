@@ -704,6 +704,192 @@ function KnowledgeBaseManager({ businessId, settings }: { businessId: string; se
   );
 }
 
+/* ── Test Call Widget ───────────────────────────────────────────── */
+function TestCallWidget({ agentId }: { agentId: string }) {
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    // Load the ElevenLabs widget script
+    if (typeof window !== 'undefined' && !document.querySelector('script[src*="elevenlabs.io/convai-widget"]')) {
+      const script = document.createElement('script');
+      script.src = 'https://elevenlabs.io/convai-widget/index.js';
+      script.async = true;
+      script.onload = () => setLoaded(true);
+      document.head.appendChild(script);
+    } else {
+      setLoaded(true);
+    }
+  }, []);
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-200 rounded-2xl p-6 text-center">
+        <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-violet-200">
+          <svg viewBox="0 0 20 20" fill="white" className="w-8 h-8"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>
+        </div>
+        <h3 className="text-lg font-bold text-slate-900 mb-1">Test Your Agent</h3>
+        <p className="text-sm text-slate-500 mb-4">Talk to your AI receptionist directly from the browser. No phone call needed.</p>
+        <p className="text-xs text-slate-400 mb-6">Click the microphone button below to start a conversation.</p>
+
+        {loaded ? (
+          <div className="flex justify-center" dangerouslySetInnerHTML={{
+            __html: `<elevenlabs-convai agent-id="${agentId}"></elevenlabs-convai>`
+          }} />
+        ) : (
+          <div className="flex items-center justify-center py-8">
+            <div className="w-6 h-6 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" />
+          </div>
+        )}
+      </div>
+
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+        <p className="text-xs text-amber-800">
+          <span className="font-bold">Note:</span> This uses your browser&apos;s microphone. Make sure to allow microphone access when prompted. The agent behaves exactly as it would on a real phone call.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ── Conversation History ──────────────────────────────────────── */
+interface Conversation {
+  id: string;
+  status: string;
+  startTime: string;
+  duration: number;
+  messageCount: number;
+  successful: string;
+  summary: string;
+}
+
+interface ConversationDetail {
+  id: string;
+  duration: number;
+  transcript: Array<{ role: string; message: string; time_in_call_secs: number }>;
+  summary: string;
+  successful: string;
+  collectedData: Record<string, unknown>;
+}
+
+function ConversationHistory({ businessId }: { businessId: string }) {
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<ConversationDetail | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const res = await fetch(`${API_URL}/voice-agent/conversations/${businessId}`);
+        const data = await res.json() as { success: boolean; conversations: Conversation[] };
+        if (data.success) setConversations(data.conversations);
+      } catch { /* silent */ }
+      setLoading(false);
+    })();
+  }, [businessId]);
+
+  async function loadDetail(conversationId: string) {
+    setLoadingDetail(true);
+    try {
+      const res = await fetch(`${API_URL}/voice-agent/conversation/${conversationId}`);
+      const data = await res.json() as { success: boolean; conversation: ConversationDetail };
+      if (data.success) setSelected(data.conversation);
+    } catch { /* silent */ }
+    setLoadingDetail(false);
+  }
+
+  function formatDur(secs: number): string {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
+
+  if (loading) return <div className="flex justify-center py-12"><div className="w-6 h-6 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" /></div>;
+
+  return (
+    <div className="space-y-4">
+      {conversations.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-sm text-slate-400">No conversations yet. Make a test call to see them here.</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {conversations.map(c => (
+            <div
+              key={c.id}
+              onClick={() => void loadDetail(c.id)}
+              className="flex items-center gap-4 px-4 py-3 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-violet-200 hover:shadow-md transition-all"
+            >
+              <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${c.successful === 'success' ? 'bg-emerald-500' : c.successful === 'failure' ? 'bg-rose-500' : 'bg-slate-300'}`} />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-slate-800 truncate">{c.summary || 'Conversation'}</p>
+                <p className="text-[11px] text-slate-400">{new Date(c.startTime).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} · {formatDur(c.duration)} · {c.messageCount} messages</p>
+              </div>
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-slate-300"><path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" /></svg>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Conversation detail modal */}
+      {(selected || loadingDetail) && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-8" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={() => { setSelected(null); }}>
+          <div onClick={(e) => e.stopPropagation()} className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <button onClick={() => setSelected(null)} className="absolute top-4 right-4 z-10 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-800">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/></svg>
+            </button>
+
+            {loadingDetail && !selected ? (
+              <div className="flex justify-center py-20"><div className="w-6 h-6 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" /></div>
+            ) : selected ? (
+              <>
+                <div className="px-6 py-5 border-b border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full ${selected.successful === 'success' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                    <h3 className="text-lg font-bold text-slate-900">Conversation</h3>
+                    <span className="text-xs text-slate-400">{formatDur(selected.duration)}</span>
+                  </div>
+                  {selected.summary && <p className="text-sm text-slate-500 mt-2">{selected.summary}</p>}
+                </div>
+
+                {Object.keys(selected.collectedData).length > 0 && (
+                  <div className="px-6 py-3 bg-emerald-50 border-b border-emerald-100">
+                    <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider mb-1">Collected Data</p>
+                    <div className="flex flex-wrap gap-2">
+                      {Object.entries(selected.collectedData).map(([key, val]) => (
+                        <span key={key} className="px-2 py-1 bg-white border border-emerald-200 rounded-lg text-xs text-emerald-800">
+                          <span className="font-medium">{key}:</span> {String(typeof val === 'object' ? JSON.stringify(val) : val)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="px-6 py-4 space-y-3">
+                  {selected.transcript.map((msg, i) => (
+                    <div key={i} className={`flex ${msg.role === 'agent' ? 'justify-start' : 'justify-end'}`}>
+                      <div className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl text-sm ${
+                        msg.role === 'agent'
+                          ? 'bg-slate-100 text-slate-700 rounded-bl-sm'
+                          : 'bg-violet-600 text-white rounded-br-sm'
+                      }`}>
+                        {msg.message}
+                        <p className={`text-[9px] mt-1 ${msg.role === 'agent' ? 'text-slate-400' : 'text-violet-200'}`}>
+                          {formatDur(Math.round(msg.time_in_call_secs))}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : null}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Main Voice Agent Dashboard ─────────────────────────────────── */
 export default function VoiceAgentClient({ businessId }: { businessId: string }) {
   const [status, setStatus] = useState<VoiceStatus | null>(null);
@@ -712,7 +898,7 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
   const [totalCalls, setTotalCalls] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedCall, setSelectedCall] = useState<CallLog | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'voice' | 'prompt' | 'knowledge'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'voice' | 'prompt' | 'knowledge' | 'test' | 'history'>('dashboard');
 
   const fetchAll = useCallback(async () => {
     try {
@@ -790,6 +976,8 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
           { id: 'voice' as const, label: 'Voice', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" /></svg> },
           { id: 'prompt' as const, label: 'System Prompt', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" /></svg> },
           { id: 'knowledge' as const, label: 'Knowledge Base', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" /></svg> },
+          { id: 'test' as const, label: 'Test Call', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" /></svg> },
+          { id: 'history' as const, label: 'History', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clipRule="evenodd" /></svg> },
         ] as const).map(tab => {
           const active = activeTab === tab.id;
           return (
@@ -854,6 +1042,38 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
             </div>
           </div>
           <KnowledgeBaseManager businessId={businessId} settings={(status.settings as Record<string, unknown>) ?? {}} />
+        </div>
+      )}
+
+      {/* Test Call Tab */}
+      {activeTab === 'test' && status.agentId && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-9 h-9 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center">
+              <svg viewBox="0 0 20 20" fill="white" className="w-4 h-4"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" /></svg>
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Test Call</h2>
+              <p className="text-sm text-slate-500">Talk to your AI agent directly from the browser.</p>
+            </div>
+          </div>
+          <TestCallWidget agentId={status.agentId} />
+        </div>
+      )}
+
+      {/* Conversation History Tab */}
+      {activeTab === 'history' && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-9 h-9 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center">
+              <svg viewBox="0 0 20 20" fill="white" className="w-4 h-4"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clipRule="evenodd" /></svg>
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Conversation History</h2>
+              <p className="text-sm text-slate-500">All conversations from ElevenLabs — transcripts, summaries, and collected data.</p>
+            </div>
+          </div>
+          <ConversationHistory businessId={businessId} />
         </div>
       )}
 

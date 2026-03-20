@@ -464,4 +464,102 @@ export async function voiceAgentRoutes(app: FastifyInstance): Promise<void> {
       return { success: true, settings: newSettings };
     },
   );
+
+  /**
+   * GET /voice-agent/conversations/:businessId
+   * List conversations from ElevenLabs API for this agent.
+   */
+  app.get<{ Params: { businessId: string }; Querystring: { limit?: string } }>(
+    '/voice-agent/conversations/:businessId',
+    async (request, reply) => {
+      const { businessId } = request.params;
+      const limit = parseInt(request.query.limit ?? '30');
+
+      const business = await db.business.findUnique({ where: { id: businessId } });
+      if (!business?.elevenLabsAgentId) return reply.send({ success: true, conversations: [] });
+
+      const elevenLabsKey = process.env['ELEVENLABS_API_KEY'];
+      if (!elevenLabsKey) return reply.code(500).send({ success: false, error: 'ELEVENLABS_API_KEY not configured' });
+
+      try {
+        const res = await fetch(`https://api.elevenlabs.io/v1/convai/conversations?agent_id=${business.elevenLabsAgentId}&limit=${limit}`, {
+          headers: { 'xi-api-key': elevenLabsKey },
+        });
+        if (!res.ok) throw new Error(`ElevenLabs API ${res.status}`);
+
+        const data = await res.json() as { conversations: Array<{
+          conversation_id: string;
+          agent_id: string;
+          status: string;
+          start_time_unix_secs: number;
+          end_time_unix_secs: number;
+          call_duration_secs: number;
+          message_count: number;
+          metadata: Record<string, unknown>;
+          analysis: { call_successful: string; transcript_summary: string } | null;
+        }> };
+
+        const conversations = data.conversations.map(c => ({
+          id: c.conversation_id,
+          status: c.status,
+          startTime: new Date(c.start_time_unix_secs * 1000).toISOString(),
+          endTime: new Date(c.end_time_unix_secs * 1000).toISOString(),
+          duration: c.call_duration_secs,
+          messageCount: c.message_count,
+          successful: c.analysis?.call_successful ?? 'unknown',
+          summary: c.analysis?.transcript_summary ?? '',
+        }));
+
+        return { success: true, conversations };
+      } catch (err) {
+        return reply.code(500).send({ success: false, error: String(err) });
+      }
+    },
+  );
+
+  /**
+   * GET /voice-agent/conversation/:conversationId
+   * Get full conversation details including transcript.
+   */
+  app.get<{ Params: { conversationId: string } }>(
+    '/voice-agent/conversation/:conversationId',
+    async (request, reply) => {
+      const { conversationId } = request.params;
+
+      const elevenLabsKey = process.env['ELEVENLABS_API_KEY'];
+      if (!elevenLabsKey) return reply.code(500).send({ success: false, error: 'ELEVENLABS_API_KEY not configured' });
+
+      try {
+        const res = await fetch(`https://api.elevenlabs.io/v1/convai/conversations/${conversationId}`, {
+          headers: { 'xi-api-key': elevenLabsKey },
+        });
+        if (!res.ok) throw new Error(`ElevenLabs API ${res.status}`);
+
+        const data = await res.json() as {
+          conversation_id: string;
+          status: string;
+          transcript: Array<{ role: string; message: string; time_in_call_secs: number }>;
+          analysis: { call_successful: string; transcript_summary: string; data_collection_results: Record<string, unknown> } | null;
+          metadata: Record<string, unknown>;
+          call_duration_secs: number;
+        };
+
+        return {
+          success: true,
+          conversation: {
+            id: data.conversation_id,
+            status: data.status,
+            duration: data.call_duration_secs,
+            transcript: data.transcript,
+            summary: data.analysis?.transcript_summary ?? '',
+            successful: data.analysis?.call_successful ?? 'unknown',
+            collectedData: data.analysis?.data_collection_results ?? {},
+            metadata: data.metadata,
+          },
+        };
+      } catch (err) {
+        return reply.code(500).send({ success: false, error: String(err) });
+      }
+    },
+  );
 }
