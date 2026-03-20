@@ -156,7 +156,8 @@ export default function ImagesPage() {
               value={saveUrl}
               onChange={(e) => setSaveUrl(e.target.value)}
               placeholder="https://example.com/image.jpg"
-              className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+              style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
+              className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400"
             />
             <select value={category} onChange={(e) => setCategory(e.target.value)} className="px-3 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-600">
               {CATEGORIES.filter(c => c !== 'all').map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
@@ -175,7 +176,8 @@ export default function ImagesPage() {
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="A beautifully plated pasta dish on a rustic wooden table, warm restaurant lighting, overhead shot, professional food photography..."
             rows={3}
-            className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none mb-3"
+            style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
+            className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none mb-3"
           />
           <div className="flex items-end gap-3">
             <div>
