@@ -568,133 +568,108 @@ export async function websiteRoutes(app: FastifyInstance) {
       return reply.code(400).send({ success: false, error: 'AI editing requires ANTHROPIC_API_KEY' });
     }
 
-    const currentConfig = website.config as Record<string, unknown>;
+    const isAiGenerated = website.template === 'ai-generated';
 
     // Save version snapshot before making changes
+    // For AI-generated sites, store the current HTML from Vercel
+    let currentHtml = '';
+    if (isAiGenerated && website.deployUrl) {
+      try {
+        const res = await fetch(website.deployUrl, { signal: AbortSignal.timeout(8000), redirect: 'follow' });
+        if (res.ok) currentHtml = await res.text();
+      } catch { /* continue */ }
+    }
+
     await db.websiteVersion.create({
       data: {
         websiteId,
-        config: currentConfig as object,
+        config: isAiGenerated ? { html: currentHtml, deployUrl: website.deployUrl } as object : website.config as object,
         label: `Before: ${message.slice(0, 60)}${message.length > 60 ? '...' : ''}`,
       },
     });
 
     const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
 
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 2048,
-      system: `You are a website configuration editor. Given the current website config JSON and a user request, return ONLY a valid JSON object containing ONLY the fields that need to change. Do not include unchanged fields. No explanation, no markdown — pure JSON only.
+    let html: string;
 
-Editable fields:
-- businessName, tagline, description, cuisine, phone, address, city
-- hours: Record<string, string> e.g. {"Monday":"11am–10pm","Tuesday":"Closed"}
-- heroImage (URL string), bookingUrl (URL string)
-- colorScheme: "midnight" | "warm" | "forest" | "ocean" | "ivory" | "rose" | "slate" | "emerald" | "amber" | "crimson" | "navy" | "sage"
-- fontPairing: "modern" | "classic" | "minimal" | "elegant" | "luxury" | "editorial" | "tech" | "literary"
-- animationPreset: "none" | "fade-up" | "slide-in" | "scale-reveal" | "blur-in" | "stagger-cascade" | "parallax-drift"
-- heroHeading, heroSubheading, aboutHeading, aboutBody, ctaText
-- styleOverrides: object with keys like heroLayout, buttonRadius, cardRadius, sectionPadding, heroHeadingSize, etc. — allows fine-grained visual control
-- menuItems: Array<{name,description?,price?,category?}>`,
-      messages: [{
-        role: 'user',
-        content: `Current config:\n${JSON.stringify(currentConfig, null, 2)}\n\nUser request: "${message}"\n\nReturn ONLY the changed fields as JSON.`,
-      }],
-    });
+    if (isAiGenerated && currentHtml) {
+      // AI-generated site: modify the HTML directly
+      // Send Claude the current HTML and ask it to apply the change
+      const editResponse = await client.messages.create({
+        model: 'claude-opus-4-6',
+        max_tokens: 16000,
+        messages: [{
+          role: 'user',
+          content: `You are editing an existing website. The user wants to make a change. Apply ONLY the requested change to the HTML below — do not redesign the entire site, do not change the layout or structure, do not change images or sections that weren't mentioned. Make the MINIMUM change needed.
 
-    let patch: Record<string, unknown> = {};
-    try {
-      const raw = (response.content[0] as { type: string; text: string }).text.trim();
-      const jsonText = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
-      patch = JSON.parse(jsonText) as Record<string, unknown>;
-    } catch {
-      return reply.code(422).send({ success: false, error: 'Could not parse AI response. Try rephrasing your request.' });
+## USER REQUEST
+"${message}"
+
+## CURRENT HTML
+${currentHtml}
+
+Return the COMPLETE modified HTML. No markdown fences. Start with <!DOCTYPE html>.`,
+        }],
+      });
+
+      const block = editResponse.content[0];
+      let editedHtml = block && block.type === 'text' ? block.text.trim() : '';
+      editedHtml = editedHtml.replace(/^```(?:html)?\n?/, '').replace(/\n?```$/, '').trim();
+
+      if (editedHtml.startsWith('<!DOCTYPE') || editedHtml.startsWith('<html')) {
+        html = editedHtml;
+      } else {
+        const match = editedHtml.match(/<!DOCTYPE[\s\S]*<\/html>/i);
+        html = match ? match[0] : currentHtml; // Fall back to unchanged if parse fails
+      }
+    } else {
+      // Template-based site: use config patching (legacy path)
+      const currentConfig = website.config as Record<string, unknown>;
+      const response = await client.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 2048,
+        system: `You are a website configuration editor. Return ONLY a JSON object with changed fields. No explanation.
+
+Editable: businessName, tagline, description, cuisine, phone, address, city, hours, heroImage, bookingUrl, colorScheme, fontPairing, heroHeading, heroSubheading, aboutHeading, aboutBody, ctaText, menuItems`,
+        messages: [{
+          role: 'user',
+          content: `Current config:\n${JSON.stringify(currentConfig, null, 2)}\n\nUser request: "${message}"\n\nReturn ONLY changed fields as JSON.`,
+        }],
+      });
+
+      let patch: Record<string, unknown> = {};
+      try {
+        const raw = (response.content[0] as { type: string; text: string }).text.trim();
+        const jsonText = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+        patch = JSON.parse(jsonText) as Record<string, unknown>;
+      } catch {
+        return reply.code(422).send({ success: false, error: 'Could not parse AI response. Try rephrasing.' });
+      }
+
+      const updatedConfig = { ...currentConfig, ...patch };
+      html = renderRestaurantPremium(updatedConfig as unknown as PremiumWebsiteConfig);
+
+      await db.generatedWebsite.update({
+        where: { id: websiteId },
+        data: { config: updatedConfig as object },
+      });
     }
 
-    const updatedConfig = { ...currentConfig, ...patch };
-    const html = renderRestaurantPremium(updatedConfig as unknown as import('./templates/restaurant/premium.js').PremiumWebsiteConfig);
-
+    // Deploy the edited HTML
     let deployedUrl = website.deployUrl ?? '';
-    let deploymentId = website.vercelDeploymentId ?? '';
-
     if (env.VERCEL_API_TOKEN) {
-      const bName = String(updatedConfig.businessName ?? 'site');
+      const bName = String((website.config as Record<string, unknown>)['businessName'] ?? 'site');
       const slug = `embedo-${bName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 30)}-${website.businessId.slice(-6)}`;
       const deployed = await deployToVercel({ projectName: slug, html, businessId: website.businessId });
       deployedUrl = deployed.url;
-      deploymentId = deployed.deploymentId;
-    }
-
-    // AI Self-Review after edit: screenshot and auto-fix if needed (1 round)
-    let finalHtml = html;
-    let finalUrl = deployedUrl;
-    let finalEditConfig = updatedConfig;
-
-    if (deployedUrl && env.ANTHROPIC_API_KEY) {
-      try {
-        const reviewed = await selfReviewAndFix(
-          updatedConfig as unknown as PremiumWebsiteConfig,
-          deployedUrl,
-          env.ANTHROPIC_API_KEY,
-          website.businessId,
-        );
-        finalHtml = reviewed.html;
-        finalUrl = reviewed.deployUrl;
-        finalEditConfig = reviewed.config as unknown as Record<string, unknown>;
-      } catch {
-        // Fallback to un-reviewed version
-      }
     }
 
     await db.generatedWebsite.update({
       where: { id: websiteId },
-      data: {
-        config: finalEditConfig as object,
-        deployUrl: finalUrl || null,
-        vercelDeploymentId: deploymentId || null,
-      },
+      data: { deployUrl: deployedUrl || null },
     });
 
-    // Generate smart suggestions based on current site state
-    let suggestions: string[] = [];
-    try {
-      const sugClient = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
-      const sugResponse = await sugClient.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 400,
-        messages: [{
-          role: 'user',
-          content: `You are a web design assistant. A user just edited their business website. Based on the current config, suggest 4 short, specific things they could change next to improve their site. Each suggestion should be a ready-to-use command they can paste — not a question, not vague advice.
-
-Current config summary:
-- Business: ${String(finalEditConfig['businessName'])} (${String(finalEditConfig['cuisine'] ?? 'local business')})
-- Color scheme: ${String(finalEditConfig['colorScheme'])}
-- Font: ${String(finalEditConfig['fontPairing'])}
-- Animation: ${String(finalEditConfig['animationPreset'] ?? 'fade-up')}
-- Hero heading: "${String(finalEditConfig['heroHeading'])}"
-- Has hero image: ${Boolean(finalEditConfig['heroImage'])}
-- Has booking URL: ${Boolean(finalEditConfig['bookingUrl'])}
-- Has gallery images: ${Array.isArray(finalEditConfig['galleryImages']) && (finalEditConfig['galleryImages'] as unknown[]).length > 0}
-- Menu items: ${Array.isArray(finalEditConfig['menuItems']) ? (finalEditConfig['menuItems'] as unknown[]).length : 0}
-- Hours filled: ${finalEditConfig['hours'] && typeof finalEditConfig['hours'] === 'object' ? Object.keys(finalEditConfig['hours'] as object).length : 0} days
-- Extra pages: ${Array.isArray(finalEditConfig['extraPages']) ? (finalEditConfig['extraPages'] as Array<{label: string}>).map(p => p.label).join(', ') : 'none'}
-- User just asked: "${message}"
-
-Return ONLY a JSON array of 4 strings. Each string is a short imperative command (under 60 chars). Mix different types: copy changes, style changes, structural additions, content tweaks. Make them specific to THIS business, not generic.
-
-Example format: ["Change the about section to be more personal", "Try the editorial font for a magazine feel", "Add a seasonal specials section to the menu", "Switch to the scale-reveal scroll animation"]`,
-        }],
-      });
-
-      const sugBlock = sugResponse.content[0];
-      const sugText = sugBlock && sugBlock.type === 'text' ? sugBlock.text.trim() : '[]';
-      const sugJson = sugText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
-      suggestions = JSON.parse(sugJson) as string[];
-    } catch {
-      // Non-critical — silently skip suggestions
-    }
-
-    return reply.send({ success: true, html: finalHtml, url: finalUrl, suggestions });
+    return reply.send({ success: true, html, url: deployedUrl });
   });
 
   // POST /generate-image — generate an image using DALL-E 3
@@ -772,13 +747,22 @@ Example format: ["Change the about section to be more personal", "Try the editor
       },
     });
 
-    const revertedConfig = version.config as Record<string, unknown>;
-    const html = renderRestaurantPremium(revertedConfig as unknown as PremiumWebsiteConfig);
+    const revertedData = version.config as Record<string, unknown>;
+    const isAiGenerated = website.template === 'ai-generated';
+
+    // For AI-generated sites, the version stores {html, deployUrl}
+    // For template sites, it stores the config object
+    let html: string;
+    if (isAiGenerated && revertedData['html'] && typeof revertedData['html'] === 'string') {
+      html = revertedData['html'];
+    } else {
+      html = renderRestaurantPremium(revertedData as unknown as PremiumWebsiteConfig);
+    }
 
     // Redeploy
     let deployedUrl = website.deployUrl ?? '';
     if (env.VERCEL_API_TOKEN) {
-      const bName = String(revertedConfig['businessName'] ?? 'site');
+      const bName = String(revertedData['businessName'] ?? (website.config as Record<string, unknown>)['businessName'] ?? 'site');
       const slug = `embedo-${bName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 30)}-${website.businessId.slice(-6)}`;
       const deployed = await deployToVercel({ projectName: slug, html, businessId: website.businessId });
       deployedUrl = deployed.url;
@@ -786,7 +770,7 @@ Example format: ["Change the about section to be more personal", "Try the editor
 
     await db.generatedWebsite.update({
       where: { id: websiteId },
-      data: { config: revertedConfig as object, deployUrl: deployedUrl || null },
+      data: { config: revertedData as object, deployUrl: deployedUrl || null },
     });
 
     return reply.send({ success: true, html, url: deployedUrl });
