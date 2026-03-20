@@ -16,6 +16,7 @@ import { leadCaptureRoutes } from './routes/leads.js';
 import { proposalRoutes } from './routes/proposals.js';
 import { businessRoutes } from './routes/businesses.js';
 import { websiteRoutes } from './routes/websites.js';
+import { imageRoutes } from './routes/images.js';
 import { voiceAgentRoutes } from './routes/voice-agent.js';
 import { chatbotRoutes } from './routes/chatbot.js';
 import { oauthRoutes } from './routes/oauth.js';
@@ -92,6 +93,7 @@ export async function buildApp() {
   await app.register(proposalRoutes);
   await app.register(businessRoutes);
   await app.register(websiteRoutes);
+  await app.register(imageRoutes);
   await app.register(voiceAgentRoutes);
   await app.register(chatbotRoutes);
   await app.register(oauthRoutes);

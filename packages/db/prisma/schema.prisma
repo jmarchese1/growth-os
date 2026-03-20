@@ -223,6 +223,7 @@ model Business {
   qrCodes         QrCode[]
   socialAccounts  SocialAccount[]
   websites        GeneratedWebsite[]
+  images          ImageAsset[]
   proposals       Proposal[]
   callLogs        VoiceCallLog[]
   chatSessions    ChatSession[]
@@ -517,6 +518,31 @@ model GeneratedWebsite {
 
   @@index([businessId])
   versions WebsiteVersion[]
+}
+
+// ─── Image Library ───────────────────────────────────────────────────────────
+
+model ImageAsset {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  url        String   // The image URL (DALL-E URL, Pexels URL, or uploaded URL)
+  thumbnail  String?  // Smaller version for gallery display
+  prompt     String?  // DALL-E prompt used to generate (null for uploads)
+  source     String   // 'dalle' | 'pexels' | 'upload' | 'scrape'
+  alt        String?  // Alt text description
+  category   String?  // User-assigned category: 'food', 'interior', 'team', 'logo', etc.
+  width      Int?
+  height     Int?
+  sizeBytes  Int?
+  favorite   Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([businessId, category])
 }
 
 model WebsiteVersion {
