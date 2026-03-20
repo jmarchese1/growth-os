@@ -604,7 +604,7 @@ export async function websiteRoutes(app: FastifyInstance) {
       // AI-generated site: modify the HTML directly
       // Send Claude the current HTML and ask it to apply the change
       const editResponse = await client.messages.create({
-        model: 'claude-opus-4-6',
+        model: 'claude-sonnet-4-6',
         max_tokens: 16000,
         messages: [{
           role: 'user',
