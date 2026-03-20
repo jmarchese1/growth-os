@@ -371,6 +371,7 @@ export async function websiteRoutes(app: FastifyInstance) {
           siteData,
           inspirationStyleNotes: fullInspirationContext,
           industryType: body.industryType ?? 'restaurant',
+          ...(env.PEXELS_API_KEY ? { pexelsApiKey: env.PEXELS_API_KEY } : {}),
         }, env.ANTHROPIC_API_KEY);
         // Mark AI-generated HTML so we can verify which path ran
         html = html.replace('</head>', `<!-- GENERATION_PATH: AI_FULL | inspirationSources: ${inspirationSources.length} | contextLength: ${fullInspirationContext.length} -->\n</head>`);

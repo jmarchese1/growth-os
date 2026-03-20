@@ -75,6 +75,7 @@ export const websiteGenEnvSchema = baseEnvSchema.extend({
   VERCEL_TEAM_ID: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().min(1, 'ANTHROPIC_API_KEY is required'),
   OPENAI_API_KEY: z.string().optional(),
+  PEXELS_API_KEY: z.string().optional(),
   WEBSITE_GEN_URL: z.string().optional(),
 });
 

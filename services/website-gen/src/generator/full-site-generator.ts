@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createLogger } from '@embedo/utils';
+import { fetchImages } from './image-sourcer.js';
 
 const logger = createLogger('website-gen:full-site');
 
@@ -32,57 +33,35 @@ export interface SiteData {
   chatbotBusinessId?: string;
 }
 
-// Unsplash image queries by industry + cuisine
-function getImageQueries(industryType: string, cuisine?: string): string[] {
-  const base: Record<string, string[]> = {
-    restaurant: ['restaurant interior dining', 'gourmet food plating', 'restaurant ambiance candlelight', 'chef cooking kitchen', 'cocktail bar drinks'],
-    gym: ['modern gym equipment', 'fitness training workout', 'yoga class studio', 'crossfit athletes', 'gym interior design'],
-    salon: ['hair salon interior', 'hairstylist working', 'luxury salon chairs', 'hair color treatment', 'salon products display'],
-    spa: ['spa treatment massage', 'wellness zen stones', 'luxury spa interior', 'facial treatment skincare', 'spa pool relaxation'],
-    cafe: ['coffee latte art', 'cozy cafe interior', 'fresh pastries bakery', 'barista making coffee', 'cafe window morning light'],
-    retail: ['boutique fashion store', 'clothing rack display', 'luxury retail interior', 'shopping bags lifestyle', 'product display minimal'],
-  };
-
-  const cuisineQueries: Record<string, string[]> = {
-    italian: ['italian pasta homemade', 'pizza wood oven fire', 'italian restaurant rustic', 'tiramisu dessert', 'bruschetta appetizer'],
-    pizza: ['pizza wood fired oven', 'pizza dough making', 'pepperoni pizza slice', 'pizzeria interior', 'pizza ingredients fresh'],
-    sushi: ['sushi platter japanese', 'sushi chef preparing', 'japanese restaurant zen', 'sashimi fresh fish', 'ramen noodles bowl'],
-    mexican: ['tacos mexican food', 'mexican restaurant colorful', 'guacamole chips salsa', 'burrito fresh ingredients', 'margarita cocktail'],
-    american: ['burger gourmet american', 'bbq ribs smokehouse', 'american diner retro', 'steak grilled dinner', 'milkshake classic'],
-    french: ['french cuisine elegant', 'croissant paris cafe', 'french wine cheese', 'bistro paris street', 'souffle dessert french'],
-    chinese: ['chinese dim sum', 'wok cooking flames', 'chinese restaurant lanterns', 'noodles chopsticks', 'peking duck chinese'],
-    indian: ['indian curry spices', 'naan bread tandoori', 'indian restaurant colorful', 'biryani rice dish', 'chai tea masala'],
-    thai: ['thai food pad thai', 'thai curry coconut', 'thai restaurant tropical', 'spring rolls fresh', 'mango sticky rice'],
-    cookies: ['fresh baked cookies', 'chocolate chip cookies close up', 'cookie dough baking', 'bakery cookies display', 'warm cookies milk glass'],
-    bakery: ['artisan bread bakery', 'pastry display case', 'baker kneading dough', 'croissant golden flaky', 'cupcakes frosting colorful'],
-    seafood: ['fresh seafood platter', 'lobster dinner elegant', 'oysters ice lemon', 'grilled fish herbs', 'seafood restaurant ocean view'],
-    steakhouse: ['steak ribeye grilled', 'steakhouse dark interior', 'meat aging dry', 'wine cellar restaurant', 'steak dinner candles'],
-  };
-
-  const industry = base[industryType] ?? base['restaurant']!;
-  if (cuisine) {
-    const lower = cuisine.toLowerCase();
-    for (const [key, queries] of Object.entries(cuisineQueries)) {
-      if (lower.includes(key)) return queries;
-    }
-  }
-  return industry;
-}
-
 /**
- * AI generates the COMPLETE website HTML using Tailwind CSS CDN.
- * Includes auto-sourced Unsplash images based on business type.
+ * AI generates the COMPLETE website HTML using Tailwind CSS.
+ * Pre-fetches real images from Pexels, passes them to the AI.
  */
 export async function generateFullWebsite(params: {
   siteData: SiteData;
   inspirationStyleNotes: string;
   industryType: string;
+  pexelsApiKey?: string;
 }, anthropicKey: string): Promise<string> {
   const { siteData, inspirationStyleNotes, industryType } = params;
   const client = new Anthropic({ apiKey: anthropicKey });
 
+  // Pre-fetch REAL working images from Pexels
+  const images = await fetchImages({
+    industryType,
+    ...(siteData.cuisine ? { cuisine: siteData.cuisine } : {}),
+    count: 6,
+    ...(params.pexelsApiKey ? { pexelsApiKey: params.pexelsApiKey } : {}),
+  });
+
+  const heroImg = siteData.heroImage || images[0]?.url || '';
+  const galleryImgs = siteData.galleryImages?.filter(Boolean).length
+    ? siteData.galleryImages.filter(Boolean)
+    : images.slice(1, 5).map(i => i.url);
+
+  logger.info({ imageCount: images.length, heroImg: !!heroImg, galleryCount: galleryImgs.length }, 'Images ready for generation');
+
   const enabledSections = siteData.sections?.filter(s => s.enabled).map(s => s.id) ?? ['about', 'features', 'menu', 'testimonials', 'hours'];
-  const enabledPages = siteData.extraPages ?? [];
 
   const menuData = siteData.menuItems?.length
     ? siteData.menuItems.slice(0, 12).map(i => `${i.name}${i.price ? ` — ${i.price}` : ''}${i.description ? `: ${i.description}` : ''} [${i.category ?? 'Main'}]`).join('\n')
@@ -92,45 +71,36 @@ export async function generateFullWebsite(params: {
     ? Object.entries(siteData.hours).map(([d, t]) => `${d}: ${t}`).join('\n')
     : '';
 
-  const galleryUrls = siteData.galleryImages?.filter(Boolean) ?? [];
-  const imageQueries = getImageQueries(industryType, siteData.cuisine);
-
-  // Build Unsplash image URLs for the AI to use
-  const unsplashImages = imageQueries.map((q, i) =>
-    `Image ${i + 1}: https://images.unsplash.com/photo-${1550000000000 + i * 100000000}?w=800&q=80 (search: "${q}")\nAlt: Use src="https://source.unsplash.com/800x600/?${encodeURIComponent(q)}" for this image`
-  ).join('\n');
+  // Build the image list for the AI
+  const imageList = images.map((img, i) => `  ${i + 1}. ${img.url} — "${img.alt}"`).join('\n');
 
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 16000,
     messages: [{
       role: 'user',
-      content: `You are a senior front-end developer building a premium website. Use Tailwind CSS for ALL styling.
+      content: `You are a senior front-end developer at a premium design agency. Build a complete, stunning website using Tailwind CSS.
 
-## TECH STACK
-- Use the Tailwind CSS CDN: <script src="https://cdn.tailwindcss.com"></script>
-- Use Google Fonts via <link> tag
-- Write clean semantic HTML with Tailwind utility classes
-- NO inline styles. ALL styling via Tailwind classes.
-- Add a <script> block with tailwind.config to customize colors and fonts
+## TECH STACK (MANDATORY)
+- Include: <script src="https://cdn.tailwindcss.com"></script>
+- Include a <script> block to configure tailwind with custom colors/fonts
+- Use Google Fonts via <link> tag — pick fonts that match the inspiration
+- ALL styling via Tailwind utility classes — zero inline styles
+- Use semantic HTML5 (header, main, nav, section, footer)
 
-## YOUR #1 RULE
-Study the inspiration source code below. MATCH its visual style — same color tones, layout patterns, typography weight, spacing rhythm. If the inspiration is light and airy, yours is light and airy. If it's dark and moody, yours is dark and moody. DO NOT default to dark background + centered serif text.
+## RULE #1: MATCH THE INSPIRATION
+Study the CSS and HTML structure below. Your output must use the SAME color palette, layout approach, typography weight, and visual rhythm. If the inspiration has a light cream background — yours does too. If it has photo grids — yours does too.
 
-## IMAGES — CRITICAL
-Every section needs relevant imagery. Use these Unsplash URLs based on the business type:
-${unsplashImages}
+${inspirationStyleNotes}
 
-Rules for images:
-- Hero MUST have a background image (use the first relevant Unsplash URL if no hero image provided)
-- Include at least 3-4 images throughout the page (food shots, interior, ambiance)
-- Use object-cover and proper aspect ratios
-- Gallery section should have 4-6 images in a grid
-${siteData.heroImage ? `- Hero image provided: ${siteData.heroImage}` : '- No hero image provided — use: https://source.unsplash.com/1600x900/?' + encodeURIComponent(imageQueries[0] ?? 'restaurant')}
-${galleryUrls.length > 0 ? `- Gallery images provided: ${galleryUrls.join(', ')}` : `- No gallery images — use Unsplash: ${imageQueries.slice(1, 5).map(q => 'https://source.unsplash.com/800x600/?' + encodeURIComponent(q)).join(', ')}`}
+## RULE #2: USE THESE IMAGES (THEY ARE VERIFIED WORKING)
+These image URLs are pre-verified and will load correctly. USE THEM:
+${imageList}
 
-## INSPIRATION
-${inspirationStyleNotes || 'No specific inspiration. Create a premium, modern design with lots of imagery.'}
+- Hero background: ${heroImg}
+- Gallery/feature images: ${galleryImgs.join(', ')}
+- EVERY section should include at least one image where appropriate
+- Use object-cover, aspect-ratio utilities, and overlay gradients on hero
 
 ## BUSINESS DATA
 Name: ${siteData.businessName}
@@ -142,7 +112,6 @@ ${siteData.address ? `Address: ${siteData.address}` : ''}
 ${siteData.bookingUrl ? `Booking: ${siteData.bookingUrl}` : ''}
 Hero heading: ${siteData.heroHeading}
 Hero subtitle: ${siteData.heroSubheading}
-About heading: ${siteData.aboutHeading}
 About: ${siteData.aboutBody}
 CTA: ${siteData.ctaText}
 ${siteData.tagline ? `Tagline: ${siteData.tagline}` : ''}
@@ -153,26 +122,23 @@ ${siteData.features?.length ? `## FEATURES\n${siteData.features.map(f => `- ${f.
 ${siteData.testimonials?.length ? `## TESTIMONIALS\n${siteData.testimonials.map(t => `"${t.quote}" — ${t.author}`).join('\n')}` : ''}
 
 ## SECTIONS: ${enabledSections.join(', ')}
-${enabledPages.length > 0 ? `Extra pages: ${enabledPages.map(p => p.label).join(', ')}` : ''}
 
-## QUALITY REQUIREMENTS
-1. Use Tailwind CSS classes exclusively — no inline styles
-2. Responsive: mobile-first with sm:, md:, lg: breakpoints
-3. Include hover effects (hover:scale-105, hover:opacity-80, etc.)
-4. Smooth scroll (scroll-smooth on html)
-5. Fixed/sticky nav with backdrop-blur
-6. Proper image treatment — object-cover, rounded corners where appropriate, overlay gradients on hero
-7. Add subtle animations with transition-all, duration-300
-8. The site must look like it was designed by a premium agency
-9. Include proper meta tags
-10. Use semantic HTML (header, main, section, footer, nav)
-11. FILL the page with content and images — no empty white sections
+## QUALITY CHECKLIST
+1. Tailwind CSS CDN loaded — NO inline styles
+2. Custom tailwind.config in <script> with theme colors matching inspiration
+3. Hero with background image, gradient overlay, and compelling CTA
+4. Responsive: mobile-first with sm: md: lg: breakpoints
+5. Fixed/sticky nav with backdrop-blur-md
+6. hover: effects on buttons, cards, images (scale, opacity, shadow)
+7. transition-all duration-300 on interactive elements
+8. Images throughout — hero, about, features, gallery sections
+9. Proper spacing — not cramped, not too empty
+10. Footer with business name, contact info, credits
 
 ${siteData.googleAnalyticsId ? `Include GA: ${siteData.googleAnalyticsId}` : ''}
-${siteData.metaPixelId ? `Include Meta Pixel: ${siteData.metaPixelId}` : ''}
-${enabledPages.some(p => p.id === 'contact') && siteData.contactFormEndpoint ? `Contact form POSTs to: ${siteData.contactFormEndpoint}` : ''}
+${siteData.contactFormEndpoint ? `Contact form POSTs JSON to: ${siteData.contactFormEndpoint}` : ''}
 
-Output ONLY the HTML starting with <!DOCTYPE html>. No explanation.`,
+Output ONLY the HTML. No markdown fences. Start with <!DOCTYPE html>.`,
     }],
   });
 
@@ -183,14 +149,21 @@ Output ONLY the HTML starting with <!DOCTYPE html>. No explanation.`,
   if (!html.startsWith('<!DOCTYPE') && !html.startsWith('<html')) {
     const match = html.match(/<!DOCTYPE[\s\S]*<\/html>/i);
     if (match) html = match[0];
-    else throw new Error('AI did not generate valid HTML — response starts with: ' + html.slice(0, 100));
+    else throw new Error('AI did not generate valid HTML — starts with: ' + html.slice(0, 100));
   }
 
+  // Verify Tailwind CDN is included
+  if (!html.includes('tailwindcss.com')) {
+    logger.warn('AI output missing Tailwind CDN — injecting');
+    html = html.replace('<head>', '<head>\n<script src="https://cdn.tailwindcss.com"></script>');
+  }
+
+  // Inject chatbot if enabled
   if (siteData.chatbotEnabled && siteData.chatbotBusinessId) {
     const script = `<script>window.EmbledoChatConfig={businessId:"${siteData.chatbotBusinessId}",businessName:"${siteData.businessName.replace(/"/g, '\\"')}"};</script><script src="https://chat.embedo.ai/widget.js" async></script>`;
     html = html.replace('</body>', `${script}\n</body>`);
   }
 
-  logger.info({ htmlLength: html.length }, 'Full Tailwind website generated');
+  logger.info({ htmlLength: html.length, hasTailwind: html.includes('tailwindcss.com'), imageCount: images.length }, 'Full Tailwind website generated');
   return html;
 }
