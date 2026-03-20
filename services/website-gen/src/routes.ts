@@ -424,13 +424,13 @@ export async function websiteRoutes(app: FastifyInstance) {
       deployedUrl = '';
     }
 
-    // AI Self-Review Loop: screenshot the deployed site, evaluate, and auto-fix
+    // AI Self-Review Loop — SKIP for AI-generated sites (self-review uses the old template renderer)
     let finalHtml = html;
     let finalUrl = deployedUrl;
     let finalConfig = premiumConfig;
     let reviewFixes: string[] = [];
 
-    if (deployedUrl && env.ANTHROPIC_API_KEY) {
+    if (deployedUrl && env.ANTHROPIC_API_KEY && !hasInspiration) {
       try {
         const reviewed = await selfReviewAndFix(
           premiumConfig as unknown as PremiumWebsiteConfig,
