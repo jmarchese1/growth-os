@@ -170,11 +170,20 @@ Output ONLY the HTML. No markdown fences. Start with <!DOCTYPE html>.`,
     html = html.replace('<head>', '<head>\n<script src="https://cdn.tailwindcss.com"></script>');
   }
 
-  // Inject chatbot if enabled
-  if (siteData.chatbotEnabled && siteData.chatbotBusinessId) {
+  // Inject chatbot widget — always inject if businessId available
+  const chatbotBusinessId = siteData.chatbotBusinessId;
+  if (chatbotBusinessId) {
     const chatbotUrl = process.env['CHATBOT_API_URL'] ?? 'https://chatbot-agent-production-e735.up.railway.app';
-    const script = `<script>window.EmbledoChatConfig={businessId:"${siteData.chatbotBusinessId}",apiUrl:"${chatbotUrl}",businessName:"${siteData.businessName.replace(/"/g, '\\"')}",welcomeMessage:"Hi! How can I help you today?",primaryColor:"#7c3aed",position:"bottom-right"};</script><script src="${chatbotUrl}/widget.js" async></script>`;
-    html = html.replace('</body>', `${script}\n</body>`);
+    const script = `\n<!-- Embedo Chat Widget -->\n<script>window.EmbledoChatConfig={businessId:"${chatbotBusinessId}",apiUrl:"${chatbotUrl}",businessName:"${siteData.businessName.replace(/"/g, '\\"')}",welcomeMessage:"Hi! How can I help you today?",primaryColor:"#7c3aed",position:"bottom-right"};</script>\n<script src="${chatbotUrl}/widget.js" async></script>\n`;
+    // Try multiple injection points (case-insensitive)
+    if (html.match(/<\/body>/i)) {
+      html = html.replace(/<\/body>/i, `${script}</body>`);
+    } else if (html.match(/<\/html>/i)) {
+      html = html.replace(/<\/html>/i, `${script}</html>`);
+    } else {
+      html += script;
+    }
+    logger.info({ chatbotUrl, businessId: chatbotBusinessId }, 'Chatbot widget injected');
   }
 
   logger.info({ htmlLength: html.length, hasTailwind: html.includes('tailwindcss.com'), imageCount: images.length }, 'Full Tailwind website generated');

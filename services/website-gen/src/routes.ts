@@ -13,8 +13,6 @@ import { reviewAndImprove } from './generator/site-reviewer.js';
 import { fetchImages } from './generator/image-sourcer.js';
 import { persistImage } from './generator/image-storage.js';
 import { renderRestaurantPremium } from './templates/restaurant/premium.js';
-import { renderBoldTemplate } from './templates/restaurant/bold.js';
-import { renderEditorialTemplate } from './templates/restaurant/editorial.js';
 import { deployToVercel, addCustomDomain } from './deploy/vercel.js';
 import { env } from './config.js';
 import type { ColorScheme, FontPairing, AnimationPreset } from './templates/restaurant/premium.js';
@@ -179,6 +177,7 @@ export async function websiteRoutes(app: FastifyInstance) {
       googleAnalyticsId?: string;
       metaPixelId?: string;
       template?: string;
+      dreamPrompt?: string;
     };
   }>('/generate', async (req, reply) => {
     const body = req.body;
@@ -306,15 +305,16 @@ export async function websiteRoutes(app: FastifyInstance) {
       styleOverrides,
     };
 
-    // ── Choose generation path ──
-    // Path A: Full AI generation (when inspiration URLs exist) — AI writes the entire HTML
-    // Path B: Template-based (no inspiration) — uses rigid templates with style overrides
+    // ── AI Generation (always) ──
     let html: string;
     const hasInspiration = !!(body.inspirationUrls?.some(Boolean));
-    logger.info({ hasInspiration, inspirationUrls: body.inspirationUrls, hasApiKey: !!env.ANTHROPIC_API_KEY }, 'Generation path decision');
+    logger.info({ hasInspiration, inspirationUrls: body.inspirationUrls, hasApiKey: !!env.ANTHROPIC_API_KEY }, 'Starting AI generation');
 
-    if (hasInspiration && env.ANTHROPIC_API_KEY) {
-      try {
+    if (!env.ANTHROPIC_API_KEY) {
+      return reply.code(500).send({ success: false, error: 'ANTHROPIC_API_KEY required for website generation' });
+    }
+
+    try {
         // Fetch inspiration sites and extract SMART design tokens (not raw CSS dump)
         const inspirationSources: string[] = [];
         for (const url of (body.inspirationUrls ?? []).filter(Boolean).slice(0, 2)) {
@@ -377,6 +377,7 @@ export async function websiteRoutes(app: FastifyInstance) {
         const fullInspirationContext = [
           inspirationStyleNotes,
           inspirationSources.length > 0 ? '\n\n---\n\n## Actual Source Code from Inspiration Sites\n' + inspirationSources.join('\n\n') : '',
+          body.dreamPrompt ? `\n\n---\n\n## User's Vision for Their Website\n${body.dreamPrompt}` : '',
         ].filter(Boolean).join('\n');
 
         logger.info({ inspirationContextLength: fullInspirationContext.length, sourceCount: inspirationSources.length }, 'Calling full AI generation');
@@ -433,16 +434,6 @@ export async function websiteRoutes(app: FastifyInstance) {
           fallbackAvailable: true,
         });
       }
-    } else {
-      // Template-based path (no inspiration — use rigid templates)
-      logger.info({ hasInspiration, hasApiKey: !!env.ANTHROPIC_API_KEY }, 'Using template path (no inspiration URLs)');
-      const cfgCast = premiumConfig as unknown as PremiumWebsiteConfig;
-      const tmplId = body.template ?? 'premium';
-      html = tmplId === 'bold' ? renderBoldTemplate(cfgCast)
-        : tmplId === 'editorial' ? renderEditorialTemplate(cfgCast)
-        : renderRestaurantPremium(cfgCast);
-      html = html.replace('</head>', `<!-- GENERATION_PATH: TEMPLATE | template: ${tmplId} -->\n</head>`);
-    }
 
     // Always create a new GeneratedWebsite record — users manage multiple sites from the list view
     const slug = `embedo-${body.businessName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 30)}-${body.businessId.slice(-6)}`;

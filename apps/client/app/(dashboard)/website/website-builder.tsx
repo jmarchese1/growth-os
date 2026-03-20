@@ -255,6 +255,7 @@ export default function WebsiteBuilder({
   const [step, setStep] = useState(industryKnown ? 2 : 1);
 
   const [inspirationUrls, setInspirationUrls] = useState<string[]>([]);
+  const [dreamPrompt, setDreamPrompt] = useState('');
   const [menuInputMode, setMenuInputMode] = useState<'text' | 'image' | 'pdf' | null>(null);
   const [menuText, setMenuText] = useState('');
   const [extractingMenu, setExtractingMenu] = useState(false);
@@ -442,6 +443,7 @@ export default function WebsiteBuilder({
           businessId,
           sections: sectionsPayload,
           inspirationUrls: inspirationUrls.filter(Boolean),
+          dreamPrompt: dreamPrompt || undefined,
           extraPages: extraPagesPayload,
           animationPreset: form.animationPreset,
         }),
@@ -458,13 +460,12 @@ export default function WebsiteBuilder({
     setGenerating(false);
   }
 
-  // When inspiration URLs are provided, AI handles all styling — skip the Style step
   const hasInspirationUrls = inspirationUrls.some(Boolean);
 
-  // Steps: 1=Industry(conditional) 2=Import 3=Details 4=Structure 5=Style(optional) 6=Done
+  // Steps: 1=Industry(conditional) 2=Import 3=Details 4=Structure 6=Done (no Style step)
   const allStepLabels = industryKnown
-    ? (hasInspirationUrls ? ['Import', 'Details', 'Structure', 'Done'] : ['Import', 'Details', 'Structure', 'Style', 'Done'])
-    : (hasInspirationUrls ? ['Industry', 'Import', 'Details', 'Structure', 'Done'] : ['Industry', 'Import', 'Details', 'Structure', 'Style', 'Done']);
+    ? ['Import', 'Details', 'Structure', 'Done']
+    : ['Industry', 'Import', 'Details', 'Structure', 'Done'];
 
   // Map display step index to logical step number (1-based in state)
   const displayStep = industryKnown ? step - 1 : step;
@@ -611,6 +612,23 @@ export default function WebsiteBuilder({
                   Add inspiration site{inspirationUrls.length > 0 ? ` (${inspirationUrls.length}/3)` : ''}
                 </button>
               )}
+            </div>
+
+            {/* Dream prompt — describe what you want */}
+            <div className="border-t border-slate-100 pt-6 mb-6">
+              <div className="flex items-center gap-2 mb-1">
+                <p className="text-sm font-bold text-slate-800">Or Describe Your Dream Site</p>
+                <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-full">Alternative</span>
+              </div>
+              <p className="text-xs text-slate-400 mb-3">No inspiration URL? Just describe the look and feel you want. The AI will design from your description.</p>
+              <textarea
+                value={dreamPrompt}
+                onChange={(e) => setDreamPrompt(e.target.value)}
+                placeholder="A warm, rustic Italian restaurant site with earth tones, lots of food photography, serif headings, and a cozy feel. Dark background with cream text. The menu should be prominent with categories..."
+                rows={3}
+                style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
+              />
             </div>
 
             <div className="flex gap-3">
@@ -951,22 +969,18 @@ export default function WebsiteBuilder({
 
             <div className="flex gap-3">
               <button onClick={() => setStep(3)} className="px-5 py-3 border border-slate-200 text-slate-600 font-medium rounded-xl text-sm hover:bg-slate-50">Back</button>
-              {hasInspirationUrls ? (
-                <button
-                  onClick={() => void handleGenerate()}
-                  disabled={generating}
-                  className="flex-1 py-3.5 bg-violet-600 text-white font-bold rounded-xl text-sm hover:bg-violet-700 disabled:opacity-60 transition-colors"
-                >
-                  {generating ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Generating...
-                    </span>
-                  ) : `Generate My ${industry.label} Website`}
-                </button>
-              ) : (
-                <button onClick={() => setStep(5)} className="flex-1 py-3 bg-violet-600 text-white font-semibold rounded-xl text-sm hover:bg-violet-700">Continue to Style</button>
-              )}
+              <button
+                onClick={() => void handleGenerate()}
+                disabled={generating}
+                className="flex-1 py-3.5 bg-violet-600 text-white font-bold rounded-xl text-sm hover:bg-violet-700 disabled:opacity-60 transition-colors"
+              >
+                {generating ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Generating...
+                  </span>
+                ) : `Generate My ${industry.label} Website`}
+              </button>
             </div>
           </div>
         )}
