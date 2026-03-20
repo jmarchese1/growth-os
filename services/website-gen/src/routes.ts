@@ -593,7 +593,7 @@ export async function websiteRoutes(app: FastifyInstance) {
       data: {
         websiteId,
         config: isAiGenerated ? { html: currentHtml, deployUrl: website.deployUrl } as object : website.config as object,
-        label: `Before: ${message.slice(0, 60)}${message.length > 60 ? '...' : ''}`,
+        label: `Version ${(await db.websiteVersion.count({ where: { websiteId } })) + 1}`,
       },
     });
 
@@ -793,7 +793,7 @@ Editable: businessName, tagline, description, cuisine, phone, address, city, hou
       data: {
         websiteId,
         config: website.config as object,
-        label: 'Before revert',
+        label: `Version ${(await db.websiteVersion.count({ where: { websiteId } })) + 1}`,
       },
     });
 

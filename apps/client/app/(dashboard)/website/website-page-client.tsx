@@ -206,7 +206,14 @@ type View =
   | { mode: 'editor'; site: WebsiteRecord; html: string };
 
 function siteName(site: WebsiteRecord): string {
-  return String(site.config?.['businessName'] ?? 'Untitled Website');
+  if (site.config?.['businessName']) return String(site.config['businessName']);
+  // For AI-generated sites, try to extract title from stored HTML
+  const html = site.config?.['html'];
+  if (typeof html === 'string') {
+    const titleMatch = html.match(/<title>([^<]+)<\/title>/i);
+    if (titleMatch?.[1]) return titleMatch[1].split('—')[0]?.trim() ?? 'Untitled Website';
+  }
+  return 'Untitled Website';
 }
 
 function formatDate(iso: string): string {
