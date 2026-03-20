@@ -379,6 +379,181 @@ function ImageGeneratorPopup({
 }
 
 // ── List view ────────────────────────────────────────────────────────────────
+function UserGuideModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-6" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto">
+        {/* Close */}
+        <button onClick={onClose} className="absolute top-4 right-4 z-10 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-800 transition-colors">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/></svg>
+        </button>
+
+        {/* Header */}
+        <div className="bg-gradient-to-br from-violet-600 to-indigo-700 px-8 py-8 rounded-t-2xl">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+              <svg viewBox="0 0 20 20" fill="white" className="w-5 h-5"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white">AI Website Editor Guide</h2>
+              <p className="text-violet-200 text-sm">Everything you can do with the AI editor</p>
+            </div>
+          </div>
+          <p className="text-violet-100 text-sm leading-relaxed">
+            After generating your website, use the AI Editor chat to make any changes. Just describe what you want in plain English — the AI modifies your site&apos;s HTML directly.
+          </p>
+        </div>
+
+        {/* Content */}
+        <div className="px-8 py-6 space-y-6">
+
+          {/* Text & Copy */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-7 h-7 bg-violet-100 rounded-lg flex items-center justify-center text-violet-600 text-sm font-bold">T</span>
+              <h3 className="text-sm font-bold text-slate-800">Text & Copy</h3>
+            </div>
+            <div className="space-y-2">
+              {[
+                'Change the hero heading to "Warm From the Oven, Made With Joy"',
+                'Rewrite the about section to be more personal and mention our family recipe',
+                'Update the phone number to (614) 469-0053',
+                'Add a tagline under the logo: "Handcrafted since 2019"',
+                'Make the CTA button say "Order Now" instead of "Reserve a Table"',
+              ].map((tip) => (
+                <div key={tip} className="flex gap-2 items-start">
+                  <span className="text-violet-400 mt-0.5 flex-shrink-0">
+                    <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5"><path d="M12.416 3.376a.75.75 0 01.208 1.04l-5 7.5a.75.75 0 01-1.154.114l-3-3a.75.75 0 011.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 011.04-.207z"/></svg>
+                  </span>
+                  <p className="text-xs text-slate-600 leading-relaxed">{tip}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="h-px bg-slate-100" />
+
+          {/* Layout & Structure */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 text-sm font-bold">L</span>
+              <h3 className="text-sm font-bold text-slate-800">Layout & Structure</h3>
+            </div>
+            <div className="space-y-2">
+              {[
+                'Move the image in the about section from the right to the left and make it smaller with a circular border',
+                'Make the menu section a 3-column grid instead of a list',
+                'Add more space between the hero and the about section',
+                'Center the hours section and make it full-width',
+                'Put the testimonials in a horizontal carousel layout',
+              ].map((tip) => (
+                <div key={tip} className="flex gap-2 items-start">
+                  <span className="text-blue-400 mt-0.5 flex-shrink-0">
+                    <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5"><path d="M12.416 3.376a.75.75 0 01.208 1.04l-5 7.5a.75.75 0 01-1.154.114l-3-3a.75.75 0 011.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 011.04-.207z"/></svg>
+                  </span>
+                  <p className="text-xs text-slate-600 leading-relaxed">{tip}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="h-px bg-slate-100" />
+
+          {/* Visual & Style */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-7 h-7 bg-pink-100 rounded-lg flex items-center justify-center text-pink-600 text-sm font-bold">V</span>
+              <h3 className="text-sm font-bold text-slate-800">Visual & Style</h3>
+            </div>
+            <div className="space-y-2">
+              {[
+                'Change the background color to a warm cream (#f5f0e8)',
+                'Make all the buttons rounded with a pink color (#e91e63)',
+                'Add a nice background animation to the hero with a subtle zoom in and out effect',
+                'Change the font to something more modern and bold',
+                'Add a dark overlay on the hero image so the text is more readable',
+              ].map((tip) => (
+                <div key={tip} className="flex gap-2 items-start">
+                  <span className="text-pink-400 mt-0.5 flex-shrink-0">
+                    <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5"><path d="M12.416 3.376a.75.75 0 01.208 1.04l-5 7.5a.75.75 0 01-1.154.114l-3-3a.75.75 0 011.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 011.04-.207z"/></svg>
+                  </span>
+                  <p className="text-xs text-slate-600 leading-relaxed">{tip}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="h-px bg-slate-100" />
+
+          {/* Images & Media */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-7 h-7 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 text-sm font-bold">I</span>
+              <h3 className="text-sm font-bold text-slate-800">Images & Media</h3>
+            </div>
+            <div className="space-y-2">
+              {[
+                'Use this image as the hero background: https://example.com/my-photo.jpg',
+                'Add a gallery section with 4 photos of our cookies',
+                'Make an animated floating image of a cartoon pizza and put it next to the locations section — it should bob up and down',
+                'Replace the about section image with a circular team photo',
+                'Add our logo to the top left of the navigation: https://example.com/logo.png',
+              ].map((tip) => (
+                <div key={tip} className="flex gap-2 items-start">
+                  <span className="text-emerald-400 mt-0.5 flex-shrink-0">
+                    <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5"><path d="M12.416 3.376a.75.75 0 01.208 1.04l-5 7.5a.75.75 0 01-1.154.114l-3-3a.75.75 0 011.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 011.04-.207z"/></svg>
+                  </span>
+                  <p className="text-xs text-slate-600 leading-relaxed">{tip}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="h-px bg-slate-100" />
+
+          {/* Animations & Effects */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-7 h-7 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600 text-sm font-bold">A</span>
+              <h3 className="text-sm font-bold text-slate-800">Animations & Effects</h3>
+            </div>
+            <div className="space-y-2">
+              {[
+                'Add a fade-in animation when sections scroll into view',
+                'Make the menu cards lift up with a shadow when hovered',
+                'Add a subtle parallax effect on the hero image',
+                'Make the CTA button pulse gently to draw attention',
+                'Add a typewriter effect on the hero heading',
+              ].map((tip) => (
+                <div key={tip} className="flex gap-2 items-start">
+                  <span className="text-amber-400 mt-0.5 flex-shrink-0">
+                    <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5"><path d="M12.416 3.376a.75.75 0 01.208 1.04l-5 7.5a.75.75 0 01-1.154.114l-3-3a.75.75 0 011.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 011.04-.207z"/></svg>
+                  </span>
+                  <p className="text-xs text-slate-600 leading-relaxed">{tip}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="h-px bg-slate-100" />
+
+          {/* Pro Tips */}
+          <div className="bg-violet-50 border border-violet-100 rounded-xl p-4">
+            <h3 className="text-sm font-bold text-violet-800 mb-2">Pro Tips</h3>
+            <div className="space-y-2">
+              <p className="text-xs text-violet-700">Use the <strong>Color Picker</strong> tool to find exact hex codes, then tell the AI: &quot;Change the hero background to #2d1b4e&quot;</p>
+              <p className="text-xs text-violet-700">Use <strong>Search Photos</strong> to find Pexels images, click one, and the URL auto-fills your chat</p>
+              <p className="text-xs text-violet-700">Use <strong>My Images</strong> to insert images you&apos;ve generated with DALL-E or saved to your library</p>
+              <p className="text-xs text-violet-700">Be specific — &quot;make the text bigger&quot; is vague, &quot;make the hero heading 72px bold&quot; is precise</p>
+              <p className="text-xs text-violet-700">You can undo any change using the <strong>Version History</strong> (clock icon in the AI Editor panel)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function WebsiteList({
   sites,
   onSelect,
@@ -391,23 +566,34 @@ function WebsiteList({
   onDelete: (site: WebsiteRecord) => void;
 }) {
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [showGuide, setShowGuide] = useState(false);
 
   return (
     <div className="p-8 animate-fade-up">
+      {showGuide && <UserGuideModal onClose={() => setShowGuide(false)} />}
       <div className="flex items-start justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Websites</h1>
           <p className="text-sm text-slate-500 mt-1">All your AI-generated websites</p>
         </div>
-        <button
-          onClick={onBuildNew}
-          className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-700 transition-colors"
-        >
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-          </svg>
-          Build New Website
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowGuide(true)}
+            className="flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-600 text-sm font-medium rounded-xl hover:bg-slate-50 transition-colors"
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
+            User Guide
+          </button>
+          <button
+            onClick={onBuildNew}
+            className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-700 transition-colors"
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+              <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+            </svg>
+            Build New Website
+          </button>
+        </div>
       </div>
 
       {sites.length === 0 ? (
