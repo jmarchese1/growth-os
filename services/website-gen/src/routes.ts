@@ -189,10 +189,15 @@ export async function websiteRoutes(app: FastifyInstance) {
     const willUseFullAI = !!(body.inspirationUrls?.some(Boolean)) && !!env.ANTHROPIC_API_KEY;
     logger.info({ willUseFullAI, hasExistingUrl: !!body.existingWebsiteUrl, hasInspiration: !!(body.inspirationUrls?.some(Boolean)) }, 'Generation mode');
 
-    // Scrape existing site if URL provided — SKIP for full AI path (saves ~15s)
+    // Scrape existing site if URL provided — extracts menu, hours, phone, etc.
     let scraped = {};
-    if (body.existingWebsiteUrl && env.ANTHROPIC_API_KEY && !willUseFullAI) {
-      scraped = await scrapeWebsite(body.existingWebsiteUrl, env.ANTHROPIC_API_KEY);
+    if (body.existingWebsiteUrl && env.ANTHROPIC_API_KEY) {
+      try {
+        scraped = await scrapeWebsite(body.existingWebsiteUrl, env.ANTHROPIC_API_KEY);
+        logger.info({ fields: Object.keys(scraped).length }, 'Scraped existing website');
+      } catch (err) {
+        logger.warn({ error: String(err) }, 'Scrape failed — continuing without scraped data');
+      }
     }
 
     // Merge scraped data with user-provided data (user inputs take precedence)
