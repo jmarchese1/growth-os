@@ -237,13 +237,6 @@ export default function ImagesPage() {
             <span className="text-xs text-slate-600">Let AI rewrite my prompt for better results</span>
           </div>
           {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
-          {lastRevisedPrompt && (
-            <div className="mt-3 bg-slate-50 border border-slate-200 rounded-lg p-3">
-              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">AI rewrote your prompt to:</p>
-              <p className="text-xs text-slate-700 italic">&quot;{lastRevisedPrompt}&quot;</p>
-              <button onClick={() => { setPrompt(lastRevisedPrompt); setLastRevisedPrompt(''); }} className="text-[10px] text-violet-600 hover:underline mt-1">Use this as my next prompt</button>
-            </div>
-          )}
         </div>
       )}
 
