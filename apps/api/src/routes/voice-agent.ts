@@ -39,6 +39,194 @@ When you collect reservation details output: RESERVATION_DATA: {"name":"...","pa
 
 export async function voiceAgentRoutes(app: FastifyInstance): Promise<void> {
   /**
+   * GET /voice-agent/voices
+   * List available ElevenLabs voices with preview URLs.
+   */
+  app.get<{ Querystring: { search?: string; category?: string } }>(
+    '/voice-agent/voices',
+    async (request, reply) => {
+      const elevenLabsKey = process.env['ELEVENLABS_API_KEY'];
+      if (!elevenLabsKey) return reply.code(500).send({ success: false, error: 'ELEVENLABS_API_KEY not configured' });
+
+      const { search, category } = request.query;
+      try {
+        const url = new URL('https://api.elevenlabs.io/v1/voices');
+        url.searchParams.set('page_size', '100');
+        if (search) url.searchParams.set('search', search);
+
+        const res = await fetch(url.toString(), {
+          headers: { 'xi-api-key': elevenLabsKey },
+        });
+        if (!res.ok) throw new Error(`ElevenLabs API ${res.status}`);
+
+        const data = await res.json() as { voices: Array<{
+          voice_id: string; name: string; category: string;
+          labels: Record<string, string>;
+          preview_url: string;
+          description: string;
+        }> };
+
+        let voices = data.voices.map(v => ({
+          id: v.voice_id,
+          name: v.name,
+          category: v.category,
+          accent: v.labels?.['accent'] ?? '',
+          gender: v.labels?.['gender'] ?? '',
+          age: v.labels?.['age'] ?? '',
+          useCase: v.labels?.['use case'] ?? '',
+          description: v.description ?? '',
+          previewUrl: v.preview_url,
+        }));
+
+        if (category && category !== 'all') {
+          voices = voices.filter(v => v.gender?.toLowerCase() === category.toLowerCase() || v.category === category);
+        }
+
+        return { success: true, voices };
+      } catch (err) {
+        return reply.code(500).send({ success: false, error: String(err) });
+      }
+    },
+  );
+
+  /**
+   * PATCH /voice-agent/voice/:businessId
+   * Update the agent's voice.
+   */
+  app.patch<{ Params: { businessId: string }; Body: { voiceId: string } }>(
+    '/voice-agent/voice/:businessId',
+    async (request, reply) => {
+      const { businessId } = request.params;
+      const { voiceId } = request.body as { voiceId: string };
+      if (!voiceId) return reply.code(400).send({ success: false, error: 'voiceId required' });
+
+      const business = await db.business.findUnique({ where: { id: businessId } });
+      if (!business?.elevenLabsAgentId) return reply.code(400).send({ success: false, error: 'Agent not provisioned' });
+
+      const elevenLabsKey = process.env['ELEVENLABS_API_KEY'];
+      if (!elevenLabsKey) return reply.code(500).send({ success: false, error: 'ELEVENLABS_API_KEY not configured' });
+
+      try {
+        const el = new ElevenLabsClient({ apiKey: elevenLabsKey });
+        await el.conversationalAi.updateAgent(business.elevenLabsAgentId, {
+          conversation_config: { tts: { voice_id: voiceId } },
+        });
+
+        // Store selected voice in settings
+        const settings = (business.settings as Record<string, unknown>) ?? {};
+        await db.business.update({
+          where: { id: businessId },
+          data: { settings: { ...settings, voiceId } as object },
+        });
+
+        log.info({ businessId, voiceId }, 'Agent voice updated');
+        return { success: true };
+      } catch (err) {
+        return reply.code(500).send({ success: false, error: String(err) });
+      }
+    },
+  );
+
+  /**
+   * POST /voice-agent/knowledge/:businessId
+   * Upload a document to the agent's knowledge base.
+   */
+  app.post<{ Params: { businessId: string } }>(
+    '/voice-agent/knowledge/:businessId',
+    async (request, reply) => {
+      const { businessId } = request.params;
+      const body = request.body as { name: string; content: string; type?: string };
+      if (!body.name || !body.content) return reply.code(400).send({ success: false, error: 'name and content required' });
+
+      const business = await db.business.findUnique({ where: { id: businessId } });
+      if (!business?.elevenLabsAgentId) return reply.code(400).send({ success: false, error: 'Agent not provisioned' });
+
+      const elevenLabsKey = process.env['ELEVENLABS_API_KEY'];
+      if (!elevenLabsKey) return reply.code(500).send({ success: false, error: 'ELEVENLABS_API_KEY not configured' });
+
+      try {
+        // Add to ElevenLabs knowledge base via API
+        const res = await fetch(`https://api.elevenlabs.io/v1/convai/agents/${business.elevenLabsAgentId}/add-to-knowledge-base`, {
+          method: 'POST',
+          headers: {
+            'xi-api-key': elevenLabsKey,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: body.name,
+            text: body.content,
+          }),
+        });
+
+        if (!res.ok) {
+          const errData = await res.text();
+          throw new Error(`ElevenLabs KB upload failed: ${res.status} ${errData}`);
+        }
+
+        const data = await res.json() as { id?: string };
+
+        // Store KB entry in settings
+        const settings = (business.settings as Record<string, unknown>) ?? {};
+        const kbEntries = (settings['knowledgeBase'] as Array<{ id: string; name: string }>) ?? [];
+        kbEntries.push({ id: data.id ?? `kb_${Date.now()}`, name: body.name });
+        await db.business.update({
+          where: { id: businessId },
+          data: { settings: { ...settings, knowledgeBase: kbEntries } as object },
+        });
+
+        log.info({ businessId, name: body.name }, 'Knowledge base entry added');
+        return { success: true, id: data.id };
+      } catch (err) {
+        return reply.code(500).send({ success: false, error: String(err) });
+      }
+    },
+  );
+
+  /**
+   * PATCH /voice-agent/prompt/:businessId
+   * Update the agent's system prompt directly.
+   */
+  app.patch<{ Params: { businessId: string }; Body: { prompt: string; firstMessage?: string } }>(
+    '/voice-agent/prompt/:businessId',
+    async (request, reply) => {
+      const { businessId } = request.params;
+      const { prompt, firstMessage } = request.body as { prompt: string; firstMessage?: string };
+      if (!prompt?.trim()) return reply.code(400).send({ success: false, error: 'prompt required' });
+
+      const business = await db.business.findUnique({ where: { id: businessId } });
+      if (!business?.elevenLabsAgentId) return reply.code(400).send({ success: false, error: 'Agent not provisioned' });
+
+      const elevenLabsKey = process.env['ELEVENLABS_API_KEY'];
+      if (!elevenLabsKey) return reply.code(500).send({ success: false, error: 'ELEVENLABS_API_KEY not configured' });
+
+      try {
+        const el = new ElevenLabsClient({ apiKey: elevenLabsKey });
+        const updateData: Record<string, unknown> = {
+          conversation_config: {
+            agent: {
+              prompt: { prompt },
+              ...(firstMessage ? { first_message: firstMessage } : {}),
+            },
+          },
+        };
+        await el.conversationalAi.updateAgent(business.elevenLabsAgentId, updateData);
+
+        // Store custom prompt in settings
+        const settings = (business.settings as Record<string, unknown>) ?? {};
+        await db.business.update({
+          where: { id: businessId },
+          data: { settings: { ...settings, customPrompt: prompt, firstMessage: firstMessage ?? settings['firstMessage'] } as object },
+        });
+
+        log.info({ businessId }, 'Agent prompt updated');
+        return { success: true };
+      } catch (err) {
+        return reply.code(500).send({ success: false, error: String(err) });
+      }
+    },
+  );
+
+  /**
    * GET /voice-agent/status/:businessId
    * Returns provisioning status: ElevenLabs agent ID, Twilio number, and config.
    */

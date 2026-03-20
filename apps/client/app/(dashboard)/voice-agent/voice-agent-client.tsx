@@ -417,6 +417,276 @@ function TranscriptModal({ call, onClose }: { call: CallLog; onClose: () => void
   );
 }
 
+/* ── Voice Browser ──────────────────────────────────────────────── */
+interface Voice { id: string; name: string; category: string; accent: string; gender: string; age: string; useCase: string; description: string; previewUrl: string; }
+
+function VoiceBrowser({ businessId, currentVoiceId }: { businessId: string; currentVoiceId?: string }) {
+  const [voices, setVoices] = useState<Voice[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('all');
+  const [playingId, setPlayingId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState(currentVoiceId ?? '');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const res = await fetch(`${API_URL}/voice-agent/voices?${search ? `search=${encodeURIComponent(search)}` : ''}`);
+        const data = await res.json() as { success: boolean; voices: Voice[] };
+        if (data.success) setVoices(data.voices);
+      } catch { /* silent */ }
+      setLoading(false);
+    })();
+  }, [search]);
+
+  function playPreview(voice: Voice) {
+    if (playingId === voice.id) { setPlayingId(null); return; }
+    setPlayingId(voice.id);
+    const audio = new Audio(voice.previewUrl);
+    audio.onended = () => setPlayingId(null);
+    audio.onerror = () => setPlayingId(null);
+    audio.play().catch(() => setPlayingId(null));
+  }
+
+  async function handleSave() {
+    if (!selectedId) return;
+    setSaving(true);
+    try {
+      await fetch(`${API_URL}/voice-agent/voice/${businessId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ voiceId: selectedId }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch { /* silent */ }
+    setSaving(false);
+  }
+
+  const filtered = filter === 'all' ? voices : voices.filter(v => v.gender?.toLowerCase() === filter);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-3">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search voices... (e.g. 'Sarah', 'British', 'warm')"
+          style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
+          className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400"
+        />
+        <div className="flex gap-1">
+          {['all', 'female', 'male'].map(f => (
+            <button key={f} onClick={() => setFilter(f)} className={`px-3 py-2 text-xs font-medium rounded-lg border ${filter === f ? 'border-violet-500 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500'}`}>
+              {f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-12"><div className="w-6 h-6 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" /></div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 max-h-96 overflow-y-auto">
+          {filtered.slice(0, 40).map(voice => (
+            <div
+              key={voice.id}
+              onClick={() => setSelectedId(voice.id)}
+              className={`relative p-3 rounded-xl border-2 cursor-pointer transition-all ${selectedId === voice.id ? 'border-violet-500 bg-violet-50 shadow-md' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <button
+                  onClick={(e) => { e.stopPropagation(); playPreview(voice); }}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${playingId === voice.id ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-violet-100 hover:text-violet-600'}`}
+                >
+                  {playingId === voice.id ? (
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+                  ) : (
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" /></svg>
+                  )}
+                </button>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-slate-800 truncate">{voice.name}</p>
+                  <p className="text-[10px] text-slate-400">{voice.gender}{voice.accent ? ` · ${voice.accent}` : ''}</p>
+                </div>
+              </div>
+              {voice.useCase && <p className="text-[9px] text-slate-400 truncate">{voice.useCase}</p>}
+              {selectedId === voice.id && (
+                <div className="absolute top-2 right-2 w-4 h-4 bg-violet-500 rounded-full flex items-center justify-center">
+                  <svg viewBox="0 0 12 12" fill="none" className="w-2.5 h-2.5"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="flex justify-end">
+        <button onClick={handleSave} disabled={!selectedId || saving} className="px-6 py-2.5 bg-violet-600 text-white text-sm font-semibold rounded-xl hover:bg-violet-700 disabled:opacity-50 transition-colors">
+          {saved ? 'Voice Saved!' : saving ? 'Saving...' : 'Save Voice Selection'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── System Prompt Editor ──────────────────────────────────────── */
+function PromptEditor({ businessId, settings }: { businessId: string; settings: VoiceStatus['settings'] & { customPrompt?: string; firstMessage?: string } }) {
+  const [prompt, setPrompt] = useState((settings as Record<string, unknown>)['customPrompt'] as string ?? '');
+  const [firstMsg, setFirstMsg] = useState((settings as Record<string, unknown>)['firstMessage'] as string ?? '');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const templates: Record<string, string> = {
+    restaurant: `You are the AI receptionist for a restaurant. Be warm, helpful, and concise.\n\nYou can:\n1. Answer questions about hours, location, and menu\n2. Take reservation requests (collect: name, party size, date, time, phone)\n3. Handle dietary restriction questions\n4. Transfer to a human if needed\n\nKeep responses short — this is a phone call, not a text chat.`,
+    gym: `You are the AI receptionist for a fitness center. Be energetic and motivating.\n\nYou can:\n1. Explain membership options and pricing\n2. Schedule tours and free trials\n3. Answer questions about classes and equipment\n4. Transfer to a trainer if needed`,
+    salon: `You are the AI receptionist for a hair salon. Be friendly and professional.\n\nYou can:\n1. Book appointments (collect: name, service, preferred stylist, date/time, phone)\n2. Answer questions about services and pricing\n3. Handle cancellations and rescheduling\n4. Transfer to the front desk if needed`,
+    general: `You are the AI receptionist. Be professional and helpful.\n\nYou can:\n1. Answer common questions about the business\n2. Take messages and collect caller information\n3. Schedule callbacks\n4. Transfer to a human if needed`,
+  };
+
+  async function handleSave() {
+    if (!prompt.trim()) return;
+    setSaving(true);
+    try {
+      await fetch(`${API_URL}/voice-agent/prompt/${businessId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, firstMessage: firstMsg || undefined }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch { /* silent */ }
+    setSaving(false);
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Templates */}
+      <div>
+        <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Quick Templates</label>
+        <div className="flex gap-2">
+          {Object.entries(templates).map(([key, val]) => (
+            <button key={key} onClick={() => setPrompt(val)} className="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:border-violet-200 hover:text-violet-600 transition-colors capitalize">
+              {key}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* First message */}
+      <div>
+        <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">First Message (greeting when caller connects)</label>
+        <input
+          type="text"
+          value={firstMsg}
+          onChange={(e) => setFirstMsg(e.target.value)}
+          placeholder="Thank you for calling! I'm your AI assistant. How can I help you today?"
+          style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
+          className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400"
+        />
+      </div>
+
+      {/* System prompt */}
+      <div>
+        <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">System Prompt (agent behavior & personality)</label>
+        <textarea
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          rows={12}
+          style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
+          className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm font-mono placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none"
+          placeholder="Describe how your AI receptionist should behave..."
+        />
+        <p className="text-[10px] text-slate-400 mt-1">{prompt.length} characters</p>
+      </div>
+
+      <div className="flex justify-end">
+        <button onClick={handleSave} disabled={!prompt.trim() || saving} className="px-6 py-2.5 bg-violet-600 text-white text-sm font-semibold rounded-xl hover:bg-violet-700 disabled:opacity-50 transition-colors">
+          {saved ? 'Prompt Saved!' : saving ? 'Saving...' : 'Save Prompt'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── Knowledge Base Manager ────────────────────────────────────── */
+function KnowledgeBaseManager({ businessId, settings }: { businessId: string; settings: Record<string, unknown> }) {
+  const [entries, setEntries] = useState<Array<{ id: string; name: string }>>((settings['knowledgeBase'] as Array<{ id: string; name: string }>) ?? []);
+  const [name, setName] = useState('');
+  const [content, setContent] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleUpload() {
+    if (!name.trim() || !content.trim()) return;
+    setUploading(true);
+    setError('');
+    try {
+      const res = await fetch(`${API_URL}/voice-agent/knowledge/${businessId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, content }),
+      });
+      const data = await res.json() as { success: boolean; id?: string; error?: string };
+      if (!data.success) throw new Error(data.error ?? 'Upload failed');
+      setEntries(prev => [...prev, { id: data.id ?? `kb_${Date.now()}`, name }]);
+      setName('');
+      setContent('');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Upload failed');
+    }
+    setUploading(false);
+  }
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-slate-500">Upload documents, menus, FAQs, and policies. The AI agent will use these to answer caller questions accurately.</p>
+
+      {/* Existing entries */}
+      {entries.length > 0 && (
+        <div className="space-y-2">
+          <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider">Uploaded Documents</label>
+          {entries.map((entry) => (
+            <div key={entry.id} className="flex items-center gap-3 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-emerald-600 flex-shrink-0"><path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" /></svg>
+              <span className="text-sm text-emerald-800 font-medium">{entry.name}</span>
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-emerald-400 ml-auto"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Upload new */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5">
+        <h4 className="text-sm font-bold text-slate-700 mb-3">Add New Document</h4>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Document name (e.g. 'Full Menu', 'Parking Info', 'FAQ')"
+          style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
+          className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 mb-3"
+        />
+        <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          rows={8}
+          placeholder="Paste the full text content here — menu items, FAQ answers, parking instructions, policies, etc."
+          style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
+          className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none mb-3"
+        />
+        {error && <p className="text-red-500 text-xs mb-2">{error}</p>}
+        <button onClick={handleUpload} disabled={!name.trim() || !content.trim() || uploading} className="px-6 py-2.5 bg-violet-600 text-white text-sm font-semibold rounded-xl hover:bg-violet-700 disabled:opacity-50 transition-colors">
+          {uploading ? 'Uploading...' : 'Upload to Knowledge Base'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ── Main Voice Agent Dashboard ─────────────────────────────────── */
 export default function VoiceAgentClient({ businessId }: { businessId: string }) {
   const [status, setStatus] = useState<VoiceStatus | null>(null);
@@ -425,6 +695,7 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
   const [totalCalls, setTotalCalls] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedCall, setSelectedCall] = useState<CallLog | null>(null);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'voice' | 'prompt' | 'knowledge'>('dashboard');
 
   const fetchAll = useCallback(async () => {
     try {
@@ -486,6 +757,57 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
         </div>
       </div>
 
+      {/* Tab Navigation */}
+      <div className="flex gap-1 mb-6 bg-slate-100 rounded-xl p-1 w-fit">
+        {([
+          { id: 'dashboard' as const, label: 'Dashboard', icon: '📊' },
+          { id: 'voice' as const, label: 'Voice', icon: '🎙' },
+          { id: 'prompt' as const, label: 'System Prompt', icon: '💬' },
+          { id: 'knowledge' as const, label: 'Knowledge Base', icon: '📚' },
+        ]).map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+              activeTab === tab.id
+                ? 'bg-white text-violet-700 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <span className="text-xs">{tab.icon}</span>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Voice Tab */}
+      {activeTab === 'voice' && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-6">
+          <h2 className="text-lg font-bold text-slate-900 mb-1">Choose a Voice</h2>
+          <p className="text-sm text-slate-500 mb-4">Select the voice your AI receptionist will use. Click the play button to preview.</p>
+          <VoiceBrowser businessId={businessId} currentVoiceId={(status.settings as Record<string, unknown>)?.['voiceId'] as string | undefined} />
+        </div>
+      )}
+
+      {/* Prompt Tab */}
+      {activeTab === 'prompt' && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-6">
+          <h2 className="text-lg font-bold text-slate-900 mb-1">System Prompt</h2>
+          <p className="text-sm text-slate-500 mb-4">Define your AI receptionist&apos;s personality, capabilities, and behavior.</p>
+          <PromptEditor businessId={businessId} settings={status.settings as VoiceStatus['settings'] & { customPrompt?: string; firstMessage?: string }} />
+        </div>
+      )}
+
+      {/* Knowledge Base Tab */}
+      {activeTab === 'knowledge' && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-6">
+          <h2 className="text-lg font-bold text-slate-900 mb-1">Knowledge Base</h2>
+          <p className="text-sm text-slate-500 mb-4">Upload your menu, FAQ, parking info, and policies so the AI can answer accurately.</p>
+          <KnowledgeBaseManager businessId={businessId} settings={(status.settings as Record<string, unknown>) ?? {}} />
+        </div>
+      )}
+
+      {activeTab !== 'dashboard' ? null : <>
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <KpiCard label="Total Calls" value={s.totalCalls} color="violet"
@@ -636,6 +958,7 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
 
       {/* Transcript modal */}
       {selectedCall && <TranscriptModal call={selectedCall} onClose={() => setSelectedCall(null)} />}
+      </>}
     </div>
   );
 }
