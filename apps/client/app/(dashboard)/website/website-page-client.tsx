@@ -542,6 +542,10 @@ function WebsiteEditor({
   const [showColorWheel, setShowColorWheel] = useState(false);
   const [showImageGen, setShowImageGen] = useState(false);
   const [showDomainSetup, setShowDomainSetup] = useState(false);
+  const [showPexelsSearch, setShowPexelsSearch] = useState(false);
+  const [pexelsQuery, setPexelsQuery] = useState('');
+  const [pexelsResults, setPexelsResults] = useState<Array<{ url: string; alt: string; photographer: string }>>([]);
+  const [pexelsSearching, setPexelsSearching] = useState(false);
   const [customDomain, setCustomDomain] = useState('');
   const [domainStatus, setDomainStatus] = useState<{ configured: boolean; dnsRecords: Array<{ type: string; name: string; value: string }> } | null>(null);
   const [domainSaving, setDomainSaving] = useState(false);
@@ -550,6 +554,17 @@ function WebsiteEditor({
   const [reverting, setReverting] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  async function searchPexels() {
+    if (!pexelsQuery.trim()) return;
+    setPexelsSearching(true);
+    try {
+      const res = await fetch(`${API_URL}/images/search-pexels?query=${encodeURIComponent(pexelsQuery)}`);
+      const data = await res.json() as { success: boolean; images: Array<{ url: string; alt: string; photographer: string }> };
+      if (data.success) setPexelsResults(data.images);
+    } catch { /* silent */ }
+    setPexelsSearching(false);
+  }
 
   async function loadVersions() {
     try {
@@ -562,15 +577,22 @@ function WebsiteEditor({
   async function handleRevert(versionId: string) {
     setReverting(versionId);
     try {
-      const res = await fetch(`${API_URL}/websites/${site.id}/revert/${versionId}`, { method: 'POST' });
-      const data = await res.json() as { success: boolean; html?: string; url?: string };
+      const res = await fetch(`${API_URL}/websites/${site.id}/revert/${versionId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json() as { success: boolean; html?: string; url?: string; error?: string };
       if (data.success && data.html) {
         setHtml(data.html);
         if (data.url) setDeployUrl(data.url);
         setMessages((prev) => [...prev, { role: 'assistant', text: 'Reverted to previous version. Preview updated.' }]);
         void loadVersions();
+      } else {
+        setMessages((prev) => [...prev, { role: 'assistant', text: `Revert failed: ${data.error ?? 'Unknown error'}` }]);
       }
-    } catch { /* silent */ }
+    } catch (e) {
+      setMessages((prev) => [...prev, { role: 'assistant', text: `Revert error: ${e instanceof Error ? e.message : 'Network error'}` }]);
+    }
     setReverting(null);
     setShowHistory(false);
   }
@@ -698,6 +720,20 @@ function WebsiteEditor({
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.497-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z" clipRule="evenodd" /></svg>
           Custom Domain
         </button>
+        <button
+          onClick={() => setShowPexelsSearch(!showPexelsSearch)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showPexelsSearch ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-200 hover:text-emerald-600'}`}
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" /></svg>
+          Search Photos
+        </button>
+        <a
+          href="/images"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-violet-200 hover:text-violet-600 transition-colors"
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" /></svg>
+          My Images
+        </a>
         <div className="flex-1" />
         <div className="flex items-center gap-0.5 bg-white rounded-lg border border-slate-200 p-0.5">
           <button
@@ -770,6 +806,51 @@ function WebsiteEditor({
                 )}
                 <p className="text-[10px] text-slate-400 mt-2">DNS changes can take up to 48 hours to propagate.</p>
               </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Pexels search panel */}
+      {showPexelsSearch && (
+        <div className="bg-white border-b border-slate-200 px-6 py-4">
+          <div className="max-w-3xl">
+            <p className="text-xs font-bold text-slate-700 mb-2">Search Free Photos (Pexels)</p>
+            <div className="flex gap-2 mb-3">
+              <input
+                type="text"
+                value={pexelsQuery}
+                onChange={(e) => setPexelsQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void searchPexels(); } }}
+                placeholder="Search for photos... e.g. 'italian restaurant interior'"
+                className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              />
+              <button
+                onClick={() => void searchPexels()}
+                disabled={!pexelsQuery.trim() || pexelsSearching}
+                className="px-4 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-50"
+              >
+                {pexelsSearching ? 'Searching...' : 'Search'}
+              </button>
+            </div>
+            {pexelsResults.length > 0 && (
+              <div className="grid grid-cols-6 gap-2 max-h-48 overflow-y-auto">
+                {pexelsResults.map((img, i) => (
+                  <div key={i} className="relative group cursor-pointer" onClick={() => {
+                    void navigator.clipboard.writeText(img.url);
+                    setInput(`Use this image: ${img.url}`);
+                    setShowPexelsSearch(false);
+                  }}>
+                    <img src={img.url} alt={img.alt} className="w-full aspect-square object-cover rounded-lg group-hover:ring-2 ring-emerald-500 transition-all" />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 rounded-lg transition-all flex items-center justify-center">
+                      <span className="text-white text-[9px] font-bold opacity-0 group-hover:opacity-100 transition-opacity">Click to use</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {pexelsResults.length > 0 && (
+              <p className="text-[9px] text-slate-400 mt-2">Photos by <a href="https://www.pexels.com" target="_blank" rel="noreferrer" className="underline">Pexels</a> photographers. Click an image to use it.</p>
             )}
           </div>
         </div>

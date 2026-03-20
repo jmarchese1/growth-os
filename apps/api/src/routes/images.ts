@@ -3,7 +3,42 @@ import { db } from '@embedo/db';
 
 const WEBSITE_GEN_URL = process.env['WEBSITE_GEN_URL'] ?? 'http://localhost:3007';
 
+const PEXELS_API_KEY = process.env['PEXELS_API_KEY'] ?? '';
+
 export async function imageRoutes(app: FastifyInstance) {
+  // GET /images/search-pexels — search Pexels for free stock photos
+  app.get<{ Querystring: { query: string } }>('/images/search-pexels', async (req, reply) => {
+    const { query } = req.query;
+    if (!query) return reply.code(400).send({ success: false, error: 'query required' });
+
+    // Try Pexels API if key available
+    if (PEXELS_API_KEY) {
+      try {
+        const res = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=12&orientation=landscape`, {
+          headers: { Authorization: PEXELS_API_KEY },
+        });
+        if (res.ok) {
+          const data = await res.json() as { photos: Array<{ src: { large: string; medium: string }; alt: string; photographer: string }> };
+          return reply.send({
+            success: true,
+            images: data.photos.map(p => ({ url: p.src.large, alt: p.alt || query, photographer: p.photographer })),
+          });
+        }
+      } catch { /* fall through */ }
+    }
+
+    // Fallback: proxy through website-gen which may have the key
+    try {
+      const res = await fetch(`${WEBSITE_GEN_URL}/search-pexels?query=${encodeURIComponent(query)}`);
+      if (res.ok) {
+        const data = await res.json();
+        return reply.send(data);
+      }
+    } catch { /* fall through */ }
+
+    return reply.send({ success: true, images: [] });
+  });
+
   // GET /images — list all images for a business
   app.get<{ Querystring: { businessId: string; category?: string; source?: string; favorite?: string } }>('/images', async (req, reply) => {
     const { businessId, category, source, favorite } = req.query;

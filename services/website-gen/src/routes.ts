@@ -864,4 +864,30 @@ Editable: businessName, tagline, description, cuisine, phone, address, city, hou
     const html = renderRestaurantPremium(cfg);
     return reply.type('text/html').send(html);
   });
+
+  // GET /search-pexels — search Pexels for free stock photos
+  app.get<{ Querystring: { query: string } }>('/search-pexels', async (req, reply) => {
+    const { query } = req.query;
+    if (!query) return reply.code(400).send({ success: false, error: 'query required' });
+    if (!env.PEXELS_API_KEY) return reply.send({ success: true, images: [] });
+
+    try {
+      const res = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=12&orientation=landscape`, {
+        headers: { Authorization: env.PEXELS_API_KEY },
+      });
+      if (res.ok) {
+        const data = await res.json() as { photos: Array<{ src: { large: string; medium: string }; alt: string; photographer: string }> };
+        return reply.send({
+          success: true,
+          images: data.photos.map((p: { src: { large: string }; alt: string; photographer: string }) => ({
+            url: p.src.large,
+            alt: p.alt || query,
+            photographer: p.photographer,
+          })),
+        });
+      }
+    } catch { /* silent */ }
+
+    return reply.send({ success: true, images: [] });
+  });
 }
