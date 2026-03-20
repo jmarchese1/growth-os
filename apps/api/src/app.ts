@@ -53,6 +53,16 @@ export async function buildApp() {
     attachFieldsToBody: 'keyValues',
   });
 
+  // Parse application/x-www-form-urlencoded (needed for Twilio webhooks)
+  app.addContentTypeParser('application/x-www-form-urlencoded', { parseAs: 'string' }, (_req, body, done) => {
+    try {
+      const parsed = Object.fromEntries(new URLSearchParams(body as string));
+      done(null, parsed);
+    } catch (err) {
+      done(err as Error, undefined);
+    }
+  });
+
   await app.register(rateLimit, {
     max: 200,
     timeWindow: '1 minute',
