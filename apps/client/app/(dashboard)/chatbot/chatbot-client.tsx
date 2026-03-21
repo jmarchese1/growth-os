@@ -72,6 +72,7 @@ const CHANNEL_COLORS: Record<string, string> = {
 const TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
   { id: 'appearance', label: 'Appearance', icon: 'M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008z' },
+  { id: 'options', label: 'Options', icon: 'M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z' },
   { id: 'prompt', label: 'System Prompt', icon: 'M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z' },
   { id: 'knowledge', label: 'Knowledge Base', icon: 'M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25' },
   { id: 'test', label: 'Test Chat', icon: 'M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155' },
@@ -164,8 +165,8 @@ function DeployHero({ businessId, onEnabled }: { businessId: string; onEnabled: 
 }
 
 /* ── Live Preview Widget ──────────────────────────────────────── */
-function WidgetPreview({ color, secondaryColor, bubbleSize, borderRadius, fontFamily, welcomeMsg, businessName, windowWidth, windowHeight }: {
-  color: string; secondaryColor: string; bubbleSize: number; borderRadius: number; fontFamily: string; welcomeMsg: string; businessName: string; windowWidth: number; windowHeight: number;
+function WidgetPreview({ color, secondaryColor, bubbleSize, borderRadius, fontFamily, welcomeMsg, businessName, windowWidth, windowHeight, subtitle, quickReplies }: {
+  color: string; secondaryColor: string; bubbleSize: number; borderRadius: number; fontFamily: string; welcomeMsg: string; businessName: string; windowWidth: number; windowHeight: number; subtitle?: string; quickReplies?: string[];
 }) {
   // Load Google Font for preview
   const fontOption = FONT_OPTIONS.find((f) => f.value === fontFamily);
@@ -188,14 +189,26 @@ function WidgetPreview({ color, secondaryColor, bubbleSize, borderRadius, fontFa
       <p className="absolute top-3 left-4 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Live Preview</p>
       {/* Chat window preview */}
       <div className="mr-2 mb-16 shadow-xl" style={{ width: Math.min(windowWidth, 320), height: Math.min(windowHeight, 380), background: '#fff', borderRadius, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily }}>
-        <div style={{ background: color, padding: '14px 16px', color: '#fff', borderRadius: `${borderRadius}px ${borderRadius}px 0 0` }}>
-          <div style={{ fontWeight: 600, fontSize: 14 }}>{businessName || 'Your Business'}</div>
-          <div style={{ fontSize: 11, opacity: 0.85, marginTop: 2 }}>{welcomeMsg || 'Hi! How can I help you?'}</div>
+        <div style={{ background: color, padding: '14px 16px', color: '#fff', borderRadius: `${borderRadius}px ${borderRadius}px 0 0`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 14 }}>{businessName || 'Your Business'}</div>
+            {subtitle && <div style={{ fontSize: 11, opacity: 0.85, marginTop: 2 }}>{subtitle}</div>}
+          </div>
+          <div style={{ width: 18, height: 18, cursor: 'pointer', opacity: 0.7, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 2 }}>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="white"><path d="M1 1l10 10M11 1L1 11" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>
+          </div>
         </div>
         <div style={{ flex: 1, padding: 12, display: 'flex', flexDirection: 'column', gap: 6, justifyContent: 'flex-end' }}>
           <div style={{ alignSelf: 'flex-start', background: secondaryColor || '#f0f0f0', color: '#333', padding: '6px 10px', borderRadius: msgBr, fontSize: 12, maxWidth: '80%' }}>
-            Welcome! How can I help you today?
+            {welcomeMsg || 'Hi! How can I help you today?'}
           </div>
+          {quickReplies && quickReplies.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 2 }}>
+              {quickReplies.filter(Boolean).slice(0, 4).map((qr, i) => (
+                <div key={i} style={{ padding: '4px 10px', borderRadius: msgBr, fontSize: 11, border: `1px solid ${color}`, color: color, cursor: 'pointer', background: '#fff' }}>{qr}</div>
+              ))}
+            </div>
+          )}
           <div style={{ alignSelf: 'flex-end', background: color, color: '#fff', padding: '6px 10px', borderRadius: msgBr, fontSize: 12 }}>
             What are your hours?
           </div>
@@ -222,6 +235,7 @@ function AppearanceTab({ businessId, settings, businessName, onSaved }: {
 }) {
   const [color, setColor] = useState(settings.primaryColor ?? '#a855f7');
   const [secondaryColor, setSecondaryColor] = useState((settings as Record<string, unknown>)['chatbotSecondaryColor'] as string ?? '#f0f0f0');
+  const [subtitle, setSubtitle] = useState((settings as Record<string, unknown>)['chatbotSubtitle'] as string ?? '');
   const [welcomeMsg, setWelcomeMsg] = useState(settings.welcomeMessage ?? 'Hi! How can I help you today?');
   const [bubbleSize, setBubbleSize] = useState(settings.chatbotBubbleSize ?? 56);
   const [borderRadius, setBorderRadius] = useState(settings.chatbotBorderRadius ?? 16);
@@ -241,6 +255,7 @@ function AppearanceTab({ businessId, settings, businessName, onSaved }: {
         body: JSON.stringify({
           primaryColor: color,
           chatbotSecondaryColor: secondaryColor,
+          chatbotSubtitle: subtitle,
           welcomeMessage: welcomeMsg,
           chatbotBubbleSize: bubbleSize,
           chatbotBorderRadius: borderRadius,
@@ -288,8 +303,17 @@ function AppearanceTab({ businessId, settings, businessName, onSaved }: {
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1.5">Welcome Message</label>
+              <label className="block text-xs font-medium text-slate-500 mb-1.5">Welcome Message <span className="text-slate-400">(first chat bubble)</span></label>
               <input type="text" value={welcomeMsg} onChange={(e) => setWelcomeMsg(e.target.value)} placeholder="Hi! How can I help you today?" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1.5">Header Subtitle <span className="text-slate-400">(optional — below business name)</span></label>
+              <input type="text" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} placeholder="Typically replies in seconds" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
+              <div className="flex flex-wrap gap-1.5 mt-1.5">
+                {['Typically replies in seconds', 'Online now', 'Ask us anything', 'We usually reply instantly'].map((s) => (
+                  <button key={s} onClick={() => setSubtitle(s)} className="px-2 py-0.5 text-[10px] rounded border border-slate-200 text-slate-500 hover:bg-violet-50 hover:text-violet-600 hover:border-violet-200 transition-all">{s}</button>
+                ))}
+              </div>
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-500 mb-1.5">Font</label>
@@ -344,7 +368,7 @@ function AppearanceTab({ businessId, settings, businessName, onSaved }: {
 
       {/* Live Preview */}
       <div className="lg:sticky lg:top-4">
-        <WidgetPreview color={color} secondaryColor={secondaryColor} bubbleSize={bubbleSize} borderRadius={borderRadius} fontFamily={fontFamily} welcomeMsg={welcomeMsg} businessName={businessName} windowWidth={windowWidth} windowHeight={windowHeight} />
+        <WidgetPreview color={color} secondaryColor={secondaryColor} bubbleSize={bubbleSize} borderRadius={borderRadius} fontFamily={fontFamily} welcomeMsg={welcomeMsg} businessName={businessName} windowWidth={windowWidth} windowHeight={windowHeight} subtitle={subtitle} />
       </div>
     </div>
   );
@@ -482,6 +506,174 @@ function KnowledgeBaseTab({ businessId, settings, onSaved }: {
       <div className="flex items-center gap-3">
         <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-500 disabled:opacity-50 transition-colors">
           {saving ? 'Saving...' : 'Save Knowledge Base'}
+        </button>
+        {saved && <span className="text-xs text-emerald-600 font-medium">Saved</span>}
+      </div>
+    </div>
+  );
+}
+
+/* ── Options Tab ──────────────────────────────────────────────── */
+function OptionsTab({ businessId, settings, onSaved }: {
+  businessId: string; settings: ChatbotStatus['settings']; onSaved: () => void;
+}) {
+  const s = settings as Record<string, unknown>;
+  const [showCloseBtn, setShowCloseBtn] = useState((s['chatbotShowClose'] as boolean) ?? true);
+  const [soundEnabled, setSoundEnabled] = useState((s['chatbotSoundEnabled'] as boolean) ?? false);
+  const [autoOpenEnabled, setAutoOpenEnabled] = useState((s['chatbotAutoOpen'] as boolean) ?? false);
+  const [autoOpenDelay, setAutoOpenDelay] = useState((s['chatbotAutoOpenDelay'] as number) ?? 5);
+  const [quickRepliesEnabled, setQuickRepliesEnabled] = useState((s['chatbotQuickRepliesEnabled'] as boolean) ?? false);
+  const [quickReplies, setQuickReplies] = useState<string[]>((s['chatbotQuickReplies'] as string[]) ?? ['View Menu', 'Make Reservation', 'Hours & Location']);
+  const [poweredBy, setPoweredBy] = useState((s['chatbotPoweredBy'] as boolean) ?? true);
+  const [newQuickReply, setNewQuickReply] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  function addQuickReply() {
+    const text = newQuickReply.trim();
+    if (!text || quickReplies.length >= 6) return;
+    setQuickReplies([...quickReplies, text]);
+    setNewQuickReply('');
+  }
+
+  function removeQuickReply(index: number) {
+    setQuickReplies(quickReplies.filter((_, i) => i !== index));
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      await fetch(`${API_URL}/chatbot/settings/${businessId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chatbotShowClose: showCloseBtn,
+          chatbotSoundEnabled: soundEnabled,
+          chatbotAutoOpen: autoOpenEnabled,
+          chatbotAutoOpenDelay: autoOpenDelay,
+          chatbotQuickRepliesEnabled: quickRepliesEnabled,
+          chatbotQuickReplies: quickReplies,
+          chatbotPoweredBy: poweredBy,
+        }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+      onSaved();
+    } finally { setSaving(false); }
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Toggle options */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <h3 className="text-sm font-semibold text-slate-700 mb-4">Behavior</h3>
+        <div className="space-y-5">
+          {/* Close Button */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-700">Close Button (X)</p>
+              <p className="text-xs text-slate-400 mt-0.5">Show an X button in the header to close the chat window</p>
+            </div>
+            <button onClick={() => setShowCloseBtn(!showCloseBtn)} className={`relative w-11 h-6 rounded-full transition-colors ${showCloseBtn ? 'bg-violet-600' : 'bg-slate-300'}`}>
+              <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${showCloseBtn ? 'left-[22px]' : 'left-0.5'}`} />
+            </button>
+          </div>
+
+          {/* Sound */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-700">Sound Notification</p>
+              <p className="text-xs text-slate-400 mt-0.5">Play a subtle chime when the bot responds</p>
+            </div>
+            <button onClick={() => setSoundEnabled(!soundEnabled)} className={`relative w-11 h-6 rounded-full transition-colors ${soundEnabled ? 'bg-violet-600' : 'bg-slate-300'}`}>
+              <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${soundEnabled ? 'left-[22px]' : 'left-0.5'}`} />
+            </button>
+          </div>
+
+          {/* Powered By */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-700">Show &quot;Powered by Embedo&quot;</p>
+              <p className="text-xs text-slate-400 mt-0.5">Display branding footer in the chat window</p>
+            </div>
+            <button onClick={() => setPoweredBy(!poweredBy)} className={`relative w-11 h-6 rounded-full transition-colors ${poweredBy ? 'bg-violet-600' : 'bg-slate-300'}`}>
+              <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${poweredBy ? 'left-[22px]' : 'left-0.5'}`} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Auto-Open */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-700">Auto-Open Chat</h3>
+            <p className="text-xs text-slate-400 mt-0.5">Automatically open the chat window after a delay — 3-5x more engagement</p>
+          </div>
+          <button onClick={() => setAutoOpenEnabled(!autoOpenEnabled)} className={`relative w-11 h-6 rounded-full transition-colors ${autoOpenEnabled ? 'bg-violet-600' : 'bg-slate-300'}`}>
+            <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${autoOpenEnabled ? 'left-[22px]' : 'left-0.5'}`} />
+          </button>
+        </div>
+        {autoOpenEnabled && (
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1.5">Delay: {autoOpenDelay} seconds</label>
+            <input type="range" min={1} max={30} value={autoOpenDelay} onChange={(e) => setAutoOpenDelay(Number(e.target.value))} className="w-full accent-violet-600" />
+            <div className="flex justify-between text-[10px] text-slate-400 mt-1">
+              <span>1s (aggressive)</span>
+              <span>5s (recommended)</span>
+              <span>30s (subtle)</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Quick Replies */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-700">Quick Reply Buttons</h3>
+            <p className="text-xs text-slate-400 mt-0.5">Show clickable buttons below the welcome message — removes the &quot;what do I say?&quot; barrier</p>
+          </div>
+          <button onClick={() => setQuickRepliesEnabled(!quickRepliesEnabled)} className={`relative w-11 h-6 rounded-full transition-colors ${quickRepliesEnabled ? 'bg-violet-600' : 'bg-slate-300'}`}>
+            <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${quickRepliesEnabled ? 'left-[22px]' : 'left-0.5'}`} />
+          </button>
+        </div>
+        {quickRepliesEnabled && (
+          <div>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {quickReplies.map((qr, i) => (
+                <div key={i} className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-violet-200 bg-violet-50 text-sm text-violet-700">
+                  {qr}
+                  <button onClick={() => removeQuickReply(i)} className="ml-1 text-violet-400 hover:text-violet-700 text-xs">x</button>
+                </div>
+              ))}
+            </div>
+            {quickReplies.length < 6 && (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newQuickReply}
+                  onChange={(e) => setNewQuickReply(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addQuickReply(); } }}
+                  placeholder="Add a quick reply..."
+                  className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+                />
+                <button onClick={addQuickReply} disabled={!newQuickReply.trim()} className="px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 transition-colors">Add</button>
+              </div>
+            )}
+            <p className="text-[10px] text-slate-400 mt-2">{quickReplies.length}/6 quick replies. Keep them short and action-oriented.</p>
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {['View Menu', 'Make Reservation', 'Hours & Location', 'Catering Info', 'Delivery Options', 'Special Events'].filter((s) => !quickReplies.includes(s)).slice(0, 3).map((s) => (
+                <button key={s} onClick={() => { if (quickReplies.length < 6) setQuickReplies([...quickReplies, s]); }} className="px-2 py-0.5 text-[10px] rounded border border-slate-200 text-slate-500 hover:bg-violet-50 hover:text-violet-600 transition-all">+ {s}</button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-500 disabled:opacity-50 transition-colors">
+          {saving ? 'Saving...' : 'Save Options'}
         </button>
         {saved && <span className="text-xs text-emerald-600 font-medium">Saved</span>}
       </div>
@@ -801,6 +993,11 @@ export default function ChatbotClient({ businessId }: { businessId: string }) {
       {/* Knowledge Base Tab */}
       {tab === 'knowledge' && (
         <KnowledgeBaseTab businessId={businessId} settings={status.settings} onSaved={fetchAll} />
+      )}
+
+      {/* Options Tab */}
+      {tab === 'options' && (
+        <OptionsTab businessId={businessId} settings={status.settings} onSaved={fetchAll} />
       )}
 
       {/* Test Chat Tab */}

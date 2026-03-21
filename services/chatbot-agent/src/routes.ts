@@ -101,13 +101,22 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       businessId,
       businessName: business.name,
       primaryColor: (settings['primaryColor'] as string) ?? '#a855f7',
-      welcomeMessage: (settings['welcomeMessage'] as string) ?? `Hi! How can I help you today?`,
+      secondaryColor: (settings['chatbotSecondaryColor'] as string) ?? '#f0f0f0',
+      welcomeMessage: (settings['welcomeMessage'] as string) ?? 'Hi! How can I help you today?',
+      subtitle: (settings['chatbotSubtitle'] as string) ?? '',
       position: (settings['chatbotPosition'] as string) ?? 'bottom-right',
       bubbleSize: (settings['chatbotBubbleSize'] as number) ?? 56,
       borderRadius: (settings['chatbotBorderRadius'] as number) ?? 16,
       fontFamily: (settings['chatbotFontFamily'] as string) ?? '-apple-system, BlinkMacSystemFont, sans-serif',
       windowWidth: (settings['chatbotWindowWidth'] as number) ?? 360,
       windowHeight: (settings['chatbotWindowHeight'] as number) ?? 500,
+      showClose: (settings['chatbotShowClose'] as boolean) ?? true,
+      soundEnabled: (settings['chatbotSoundEnabled'] as boolean) ?? false,
+      autoOpen: (settings['chatbotAutoOpen'] as boolean) ?? false,
+      autoOpenDelay: (settings['chatbotAutoOpenDelay'] as number) ?? 5,
+      quickRepliesEnabled: (settings['chatbotQuickRepliesEnabled'] as boolean) ?? false,
+      quickReplies: (settings['chatbotQuickReplies'] as string[]) ?? [],
+      poweredBy: (settings['chatbotPoweredBy'] as boolean) ?? true,
       apiUrl: env.CHATBOT_API_URL,
       ...(settings['logoUrl'] ? { logoUrl: settings['logoUrl'] as string } : {}),
     });
@@ -181,6 +190,14 @@ function buildWidgetJs(): string {
     var wh = C.windowHeight || C.chatbotWindowHeight || 500;
     var pos = C.position || C.chatbotPosition || 'bottom-right';
     var wm = C.welcomeMessage || 'Hi! How can I help you today?';
+    var sub = C.subtitle || '';
+    var showClose = C.showClose !== false;
+    var soundOn = !!C.soundEnabled;
+    var autoOpen = !!C.autoOpen;
+    var autoDelay = (C.autoOpenDelay || 5) * 1000;
+    var qrEnabled = !!C.quickRepliesEnabled;
+    var qrList = (C.quickReplies && C.quickReplies.length) ? C.quickReplies : [];
+    var showPowered = C.poweredBy !== false;
     var sk = null;
     var busy = false;
     var isOpen = false;
@@ -209,7 +226,20 @@ function buildWidgetJs(): string {
     var headerBr = br + 'px ' + br + 'px 0 0';
     var inputBr = Math.max(br/2, 6);
     var msgBr = Math.max(br*0.75, 8);
-    win.innerHTML='<div style="background:'+pc+';padding:16px;color:#fff;border-radius:'+headerBr+'"><div style="font-weight:600;font-size:16px">'+(C.businessName||'Chat')+'</div></div><div id="ec-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px"></div><div style="padding:12px;border-top:1px solid #f0f0f0;display:flex;gap:8px"><input id="ec-in" type="text" placeholder="Type a message..." style="flex:1;border:1px solid #e0e0e0;border-radius:'+inputBr+'px;padding:8px 12px;outline:none;font-size:14px;font-family:'+ff+'"><button id="ec-btn" style="background:'+pc+';color:#fff;border:none;border-radius:'+inputBr+'px;padding:8px 16px;cursor:pointer;font-size:14px;font-family:'+ff+'">Send</button></div>';
+
+    // Header with optional close button and subtitle
+    var headerHtml = '<div style="background:'+pc+';padding:16px;color:#fff;border-radius:'+headerBr+';display:flex;justify-content:space-between;align-items:flex-start">';
+    headerHtml += '<div><div style="font-weight:600;font-size:16px">'+(C.businessName||'Chat')+'</div>';
+    if (sub) headerHtml += '<div style="font-size:12px;opacity:.8;margin-top:2px">'+sub+'</div>';
+    headerHtml += '</div>';
+    if (showClose) headerHtml += '<div id="ec-close" style="cursor:pointer;padding:4px;opacity:.7;transition:opacity .2s"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>';
+    headerHtml += '</div>';
+
+    // Powered by footer
+    var footerHtml = '';
+    if (showPowered) footerHtml = '<div style="text-align:center;padding:4px 0;font-size:10px;color:#bbb;border-top:1px solid #f0f0f0">Powered by <a href="https://embedo.io" target="_blank" style="color:#aaa;text-decoration:none">Embedo</a></div>';
+
+    win.innerHTML = headerHtml + '<div id="ec-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px"></div>' + footerHtml + '<div style="padding:12px;border-top:1px solid #f0f0f0;display:flex;gap:8px"><input id="ec-in" type="text" placeholder="Type a message..." style="flex:1;border:1px solid #e0e0e0;border-radius:'+inputBr+'px;padding:8px 12px;outline:none;font-size:14px;font-family:'+ff+'"><button id="ec-btn" style="background:'+pc+';color:#fff;border:none;border-radius:'+inputBr+'px;padding:8px 16px;cursor:pointer;font-size:14px;font-family:'+ff+'">Send</button></div>';
 
     document.body.appendChild(bub);
     document.body.appendChild(win);
@@ -218,18 +248,68 @@ function buildWidgetJs(): string {
     var inp = document.getElementById('ec-in');
     var btn = document.getElementById('ec-btn');
 
-    // Show welcome message as first bot message in the conversation
+    // Welcome message as first chat bubble
     var wmDiv = document.createElement('div');
     wmDiv.setAttribute('style','max-width:80%;padding:8px 12px;border-radius:'+msgBr+'px;font-size:14px;line-height:1.4;word-wrap:break-word;align-self:flex-start;background:'+sc+';color:#333');
     wmDiv.textContent = wm;
     msgs.appendChild(wmDiv);
 
-    bub.onclick = function() {
+    // Quick reply buttons
+    if (qrEnabled && qrList.length) {
+      var qrWrap = document.createElement('div');
+      qrWrap.id = 'ec-qr';
+      qrWrap.setAttribute('style','display:flex;flex-wrap:wrap;gap:6px;margin-top:4px');
+      for (var qi = 0; qi < qrList.length; qi++) {
+        (function(txt) {
+          var qb = document.createElement('button');
+          qb.setAttribute('style','padding:6px 14px;border-radius:'+msgBr+'px;font-size:13px;border:1px solid '+pc+';color:'+pc+';background:#fff;cursor:pointer;font-family:'+ff+';transition:background .2s,color .2s');
+          qb.textContent = txt;
+          qb.onmouseover = function(){ qb.style.background=pc; qb.style.color='#fff'; };
+          qb.onmouseout = function(){ qb.style.background='#fff'; qb.style.color=pc; };
+          qb.onclick = function() {
+            var qrEl = document.getElementById('ec-qr');
+            if (qrEl) qrEl.remove();
+            inp.value = txt;
+            doSend();
+          };
+          qrWrap.appendChild(qb);
+        })(qrList[qi]);
+      }
+      msgs.appendChild(qrWrap);
+    }
+
+    function toggleChat() {
       isOpen = !isOpen;
       win.style.display = isOpen ? 'flex' : 'none';
       bub.style.transform = isOpen ? 'scale(.9)' : 'scale(1)';
       if (isOpen) inp.focus();
-    };
+    }
+
+    bub.onclick = toggleChat;
+
+    // Close button handler
+    var closeBtn = document.getElementById('ec-close');
+    if (closeBtn) closeBtn.onclick = function() { isOpen = false; win.style.display = 'none'; bub.style.transform = 'scale(1)'; };
+
+    // Auto-open after delay
+    if (autoOpen) { setTimeout(function() { if (!isOpen) toggleChat(); }, autoDelay); }
+
+    // Sound notification helper
+    function playChime() {
+      if (!soundOn) return;
+      try {
+        var ctx = new (window.AudioContext || window.webkitAudioContext)();
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 800;
+        gain.gain.value = 0.1;
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        osc.stop(ctx.currentTime + 0.3);
+      } catch(e) {}
+    }
 
     function addMsg(txt, isUser) {
       var d = document.createElement('div');
@@ -242,9 +322,12 @@ function buildWidgetJs(): string {
     function lock() { busy=true; inp.disabled=true; btn.disabled=true; btn.textContent='...'; btn.style.opacity='.5'; }
     function unlock() { busy=false; inp.disabled=false; btn.disabled=false; btn.textContent='Send'; btn.style.opacity='1'; inp.focus(); }
 
-    function send() {
+    function doSend() {
       var txt = (inp.value||'').trim();
       if (!txt || busy) return;
+      // Remove quick replies on first real message
+      var qrEl = document.getElementById('ec-qr');
+      if (qrEl) qrEl.remove();
       lock(); inp.value=''; addMsg(txt, true);
 
       var dot = document.createElement('div');
@@ -264,7 +347,7 @@ function buildWidgetJs(): string {
 
       xhr.onload = function() {
         var t = document.getElementById('ec-typing'); if (t) t.remove();
-        try { var d = JSON.parse(xhr.responseText); if (d.reply) { addMsg(d.reply, false); if (d.sessionKey) sk = d.sessionKey; } else { addMsg('Sorry, something went wrong.', false); } }
+        try { var d = JSON.parse(xhr.responseText); if (d.reply) { addMsg(d.reply, false); if (d.sessionKey) sk = d.sessionKey; playChime(); } else { addMsg('Sorry, something went wrong.', false); } }
         catch(e) { addMsg('Sorry, I had trouble connecting.', false); }
         unlock();
       };
@@ -273,8 +356,8 @@ function buildWidgetJs(): string {
       xhr.send(JSON.stringify(body));
     }
 
-    btn.onclick = send;
-    inp.onkeydown = function(e) { if (e.key === 'Enter') send(); };
+    btn.onclick = doSend;
+    inp.onkeydown = function(e) { if (e.key === 'Enter') doSend(); };
   }
 })();
 `.trim();
