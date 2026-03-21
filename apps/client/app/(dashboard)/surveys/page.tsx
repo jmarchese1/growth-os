@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import KpiCard from '../../../components/ui/kpi-card';
 import { useBusiness } from '../../../components/auth/business-provider';
 
@@ -435,14 +436,15 @@ export default function QrCodesPage() {
         </div>
       )}
 
-      {/* Create Modal */}
-      {showCreate && (
+      {/* Create Modal — portal to body so it escapes any parent overflow/transform */}
+      {showCreate && typeof document !== 'undefined' && createPortal(
         <CreateQrModal
           businessId={business.id}
           surveys={surveys}
           onCreated={(qr) => { setQrCodes([qr, ...qrCodes]); }}
           onClose={() => { setShowCreate(false); fetchData(); }}
-        />
+        />,
+        document.body,
       )}
     </div>
   );
