@@ -254,18 +254,18 @@ function buildWidgetJs(): string {
     wmDiv.textContent = wm;
     msgs.appendChild(wmDiv);
 
-    // Quick reply buttons
+    // Quick reply buttons — right-aligned vertical stack like user messages
     if (qrEnabled && qrList.length) {
       var qrWrap = document.createElement('div');
       qrWrap.id = 'ec-qr';
-      qrWrap.setAttribute('style','display:flex;flex-wrap:wrap;gap:6px;margin-top:4px');
+      qrWrap.setAttribute('style','display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-top:4px');
       for (var qi = 0; qi < qrList.length; qi++) {
         (function(txt) {
           var qb = document.createElement('button');
-          qb.setAttribute('style','padding:6px 14px;border-radius:'+msgBr+'px;font-size:13px;border:1px solid '+pc+';color:'+pc+';background:#fff;cursor:pointer;font-family:'+ff+';transition:background .2s,color .2s');
+          qb.setAttribute('style','padding:8px 16px;border-radius:'+msgBr+'px;font-size:13px;border:1.5px solid '+pc+';color:'+pc+';background:#fff;cursor:pointer;font-family:'+ff+';transition:background .15s,color .15s,transform .15s;max-width:80%');
           qb.textContent = txt;
-          qb.onmouseover = function(){ qb.style.background=pc; qb.style.color='#fff'; };
-          qb.onmouseout = function(){ qb.style.background='#fff'; qb.style.color=pc; };
+          qb.onmouseover = function(){ qb.style.background=pc; qb.style.color='#fff'; qb.style.transform='scale(1.03)'; };
+          qb.onmouseout = function(){ qb.style.background='#fff'; qb.style.color=pc; qb.style.transform='scale(1)'; };
           qb.onclick = function() {
             var qrEl = document.getElementById('ec-qr');
             if (qrEl) qrEl.remove();
