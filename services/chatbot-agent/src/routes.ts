@@ -9,11 +9,11 @@ import type { ChatMessage } from '@embedo/types';
 const log = createLogger('chatbot-agent:routes');
 
 const chatSchema = z.object({
-  sessionKey: z.string().optional(),
+  sessionKey: z.string().nullable().optional(),
   businessId: z.string().min(1),
   channel: z.enum(['WEB', 'INSTAGRAM', 'FACEBOOK']).default('WEB'),
   message: z.string().min(1).max(2000),
-  contactId: z.string().optional(),
+  contactId: z.string().nullable().optional(),
   test: z.boolean().optional(),
 });
 
@@ -264,12 +264,11 @@ function buildWidgetJs(): string {
       var res = await fetch(config.apiUrl + '/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: JSON.stringify(Object.assign({
           businessId: config.businessId,
           message: message,
-          sessionKey: sessionKey,
           channel: 'WEB',
-        }),
+        }, sessionKey ? { sessionKey: sessionKey } : {})),
       });
       var data = await res.json();
       sessionKey = data.sessionKey;
