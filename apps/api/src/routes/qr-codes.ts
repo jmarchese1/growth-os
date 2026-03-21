@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { db } from '@embedo/db';
 import { createLogger, NotFoundError } from '@embedo/utils';
 import type { QrPurpose } from '@embedo/db';
+import { sendRewardEmail } from '../email/reward-email.js';
 
 const log = createLogger('api:qr-codes');
 
@@ -276,9 +277,17 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
       phone?: string;
       outcome?: string;
       deviceFingerprint?: string;
+      prizeName?: string;
     };
 
-    const qrCode = await db.qrCode.findUnique({ where: { token }, select: { id: true, businessId: true, active: true, expiresAt: true } });
+    const qrCode = await db.qrCode.findUnique({
+      where: { token },
+      select: {
+        id: true, businessId: true, active: true, expiresAt: true, purpose: true,
+        discountValue: true, discountCode: true, surveyReward: true, metadata: true,
+        business: { select: { name: true } },
+      },
+    });
     if (!qrCode) return reply.code(404).send({ success: false, error: 'QR code not found' });
     if (!qrCode.active) return reply.code(410).send({ success: false, error: 'QR code is inactive' });
     if (qrCode.expiresAt && qrCode.expiresAt < new Date()) return reply.code(410).send({ success: false, error: 'QR code has expired' });
@@ -327,6 +336,32 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
     });
 
     log.info({ qrCodeId: qrCode.id, contactId }, 'QR code signup captured');
+
+    // Send reward email (fire-and-forget)
+    if (body.email && body.outcome && body.outcome !== 'signup') {
+      const meta = (qrCode.metadata ?? {}) as Record<string, string>;
+      const rewardTitle = body.outcome === 'won_prize'
+        ? body.prizeName || qrCode.surveyReward || 'Your Prize'
+        : body.outcome === 'claimed_discount'
+          ? qrCode.discountValue || 'Your Discount'
+          : qrCode.surveyReward || 'Your Reward';
+
+      const rewardType = body.outcome === 'won_prize' ? 'spin_prize'
+        : body.outcome === 'claimed_discount' ? 'discount'
+        : 'survey_reward';
+
+      sendRewardEmail({
+        to: body.email,
+        recipientName: body.name,
+        businessName: qrCode.business.name,
+        rewardTitle,
+        rewardType: rewardType as 'spin_prize' | 'discount' | 'survey_reward',
+        discountCode: qrCode.discountCode ?? undefined,
+        accentColor: meta['accentColor'] ?? meta['pageColor'],
+        logoUrl: meta['pageLogo'],
+      }).catch(() => {});
+    }
+
     return { success: true, contactId };
   });
 }

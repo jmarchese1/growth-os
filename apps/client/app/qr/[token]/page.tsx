@@ -640,11 +640,11 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
     return () => clearInterval(interval);
   }, [cooldownUntil]);
 
-  async function signupViaQr(name: string, email: string, phone: string, outcome: string) {
+  async function signupViaQr(name: string, email: string, phone: string, outcome: string, prizeName?: string) {
     await fetch(`${API_URL}/qr-codes/public/${token}/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, phone, outcome, deviceFingerprint: fp.current }),
+      body: JSON.stringify({ name, email, phone, outcome, deviceFingerprint: fp.current, ...(prizeName ? { prizeName } : {}) }),
     });
   }
 
@@ -675,7 +675,7 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
   }
 
   async function handleSpinSignup(name: string, email: string, phone: string) {
-    await signupViaQr(name, email, phone, 'won_prize');
+    await signupViaQr(name, email, phone, 'won_prize', wonPrize?.label);
     setDone(true);
     setPhase('result');
   }
