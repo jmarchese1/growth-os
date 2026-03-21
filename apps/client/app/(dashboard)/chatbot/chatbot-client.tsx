@@ -79,15 +79,26 @@ const TABS = [
 ];
 
 const FONT_OPTIONS = [
-  { label: 'System Default', value: '-apple-system, BlinkMacSystemFont, sans-serif' },
-  { label: 'Inter', value: "'Inter', sans-serif" },
-  { label: 'Poppins', value: "'Poppins', sans-serif" },
-  { label: 'DM Sans', value: "'DM Sans', sans-serif" },
-  { label: 'Nunito', value: "'Nunito', sans-serif" },
-  { label: 'Roboto', value: "'Roboto', sans-serif" },
-  { label: 'Open Sans', value: "'Open Sans', sans-serif" },
-  { label: 'Lato', value: "'Lato', sans-serif" },
-  { label: 'Montserrat', value: "'Montserrat', sans-serif" },
+  { label: 'System Default', value: '-apple-system, BlinkMacSystemFont, sans-serif', gf: '' },
+  { label: 'Inter', value: "'Inter', sans-serif", gf: 'Inter:wght@400;500;600' },
+  { label: 'Poppins', value: "'Poppins', sans-serif", gf: 'Poppins:wght@400;500;600' },
+  { label: 'DM Sans', value: "'DM Sans', sans-serif", gf: 'DM+Sans:wght@400;500;600' },
+  { label: 'Nunito', value: "'Nunito', sans-serif", gf: 'Nunito:wght@400;600;700' },
+  { label: 'Roboto', value: "'Roboto', sans-serif", gf: 'Roboto:wght@400;500;700' },
+  { label: 'Open Sans', value: "'Open Sans', sans-serif", gf: 'Open+Sans:wght@400;600;700' },
+  { label: 'Lato', value: "'Lato', sans-serif", gf: 'Lato:wght@400;700' },
+  { label: 'Montserrat', value: "'Montserrat', sans-serif", gf: 'Montserrat:wght@400;500;600' },
+  { label: 'Playfair Display', value: "'Playfair Display', serif", gf: 'Playfair+Display:wght@400;600;700' },
+  { label: 'Raleway', value: "'Raleway', sans-serif", gf: 'Raleway:wght@400;500;600' },
+  { label: 'Source Sans 3', value: "'Source Sans 3', sans-serif", gf: 'Source+Sans+3:wght@400;600' },
+  { label: 'Merriweather', value: "'Merriweather', serif", gf: 'Merriweather:wght@400;700' },
+  { label: 'Quicksand', value: "'Quicksand', sans-serif", gf: 'Quicksand:wght@400;500;600' },
+  { label: 'Josefin Sans', value: "'Josefin Sans', sans-serif", gf: 'Josefin+Sans:wght@400;500;600' },
+  { label: 'Outfit', value: "'Outfit', sans-serif", gf: 'Outfit:wght@400;500;600' },
+  { label: 'Space Grotesk', value: "'Space Grotesk', sans-serif", gf: 'Space+Grotesk:wght@400;500;600' },
+  { label: 'Plus Jakarta Sans', value: "'Plus Jakarta Sans', sans-serif", gf: 'Plus+Jakarta+Sans:wght@400;500;600' },
+  { label: 'Cabin', value: "'Cabin', sans-serif", gf: 'Cabin:wght@400;500;600' },
+  { label: 'Work Sans', value: "'Work Sans', sans-serif", gf: 'Work+Sans:wght@400;500;600' },
 ];
 
 const PROMPT_TEMPLATES = [
@@ -153,32 +164,48 @@ function DeployHero({ businessId, onEnabled }: { businessId: string; onEnabled: 
 }
 
 /* ── Live Preview Widget ──────────────────────────────────────── */
-function WidgetPreview({ color, bubbleSize, borderRadius, fontFamily, welcomeMsg, businessName, windowWidth, windowHeight }: {
-  color: string; bubbleSize: number; borderRadius: number; fontFamily: string; welcomeMsg: string; businessName: string; windowWidth: number; windowHeight: number;
+function WidgetPreview({ color, secondaryColor, bubbleSize, borderRadius, fontFamily, welcomeMsg, businessName, windowWidth, windowHeight }: {
+  color: string; secondaryColor: string; bubbleSize: number; borderRadius: number; fontFamily: string; welcomeMsg: string; businessName: string; windowWidth: number; windowHeight: number;
 }) {
+  // Load Google Font for preview
+  const fontOption = FONT_OPTIONS.find((f) => f.value === fontFamily);
+  useEffect(() => {
+    if (!fontOption?.gf) return;
+    const id = `gf-${fontOption.gf.replace(/[^a-z]/gi, '')}`;
+    if (document.getElementById(id)) return;
+    const link = document.createElement('link');
+    link.id = id;
+    link.rel = 'stylesheet';
+    link.href = `https://fonts.googleapis.com/css2?family=${fontOption.gf}&display=swap`;
+    document.head.appendChild(link);
+  }, [fontOption]);
+
+  const msgBr = Math.max(borderRadius * 0.75, 8);
+  const inputBr = Math.max(borderRadius / 2, 6);
+
   return (
     <div className="relative bg-slate-100 rounded-xl p-6 min-h-[400px] flex items-end justify-end">
       <p className="absolute top-3 left-4 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Live Preview</p>
       {/* Chat window preview */}
-      <div className="mr-2 mb-16 shadow-xl" style={{ width: Math.min(windowWidth, 320), height: Math.min(windowHeight, 380), background: '#fff', borderRadius: borderRadius, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily }}>
+      <div className="mr-2 mb-16 shadow-xl" style={{ width: Math.min(windowWidth, 320), height: Math.min(windowHeight, 380), background: '#fff', borderRadius, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily }}>
         <div style={{ background: color, padding: '14px 16px', color: '#fff', borderRadius: `${borderRadius}px ${borderRadius}px 0 0` }}>
           <div style={{ fontWeight: 600, fontSize: 14 }}>{businessName || 'Your Business'}</div>
           <div style={{ fontSize: 11, opacity: 0.85, marginTop: 2 }}>{welcomeMsg || 'Hi! How can I help you?'}</div>
         </div>
         <div style={{ flex: 1, padding: 12, display: 'flex', flexDirection: 'column', gap: 6, justifyContent: 'flex-end' }}>
-          <div style={{ alignSelf: 'flex-start', background: '#f0f0f0', color: '#333', padding: '6px 10px', borderRadius: 10, fontSize: 12, maxWidth: '80%' }}>
+          <div style={{ alignSelf: 'flex-start', background: secondaryColor || '#f0f0f0', color: '#333', padding: '6px 10px', borderRadius: msgBr, fontSize: 12, maxWidth: '80%' }}>
             Welcome! How can I help you today?
           </div>
-          <div style={{ alignSelf: 'flex-end', background: color, color: '#fff', padding: '6px 10px', borderRadius: 10, fontSize: 12 }}>
+          <div style={{ alignSelf: 'flex-end', background: color, color: '#fff', padding: '6px 10px', borderRadius: msgBr, fontSize: 12 }}>
             What are your hours?
           </div>
-          <div style={{ alignSelf: 'flex-start', background: '#f0f0f0', color: '#333', padding: '6px 10px', borderRadius: 10, fontSize: 12, maxWidth: '80%' }}>
+          <div style={{ alignSelf: 'flex-start', background: secondaryColor || '#f0f0f0', color: '#333', padding: '6px 10px', borderRadius: msgBr, fontSize: 12, maxWidth: '80%' }}>
             We&apos;re open Mon-Sat 11am-10pm!
           </div>
         </div>
         <div style={{ padding: '8px 12px', borderTop: '1px solid #f0f0f0', display: 'flex', gap: 6 }}>
-          <div style={{ flex: 1, border: '1px solid #e0e0e0', borderRadius: borderRadius / 2, padding: '6px 10px', fontSize: 11, color: '#999' }}>Type a message...</div>
-          <div style={{ background: color, color: '#fff', border: 'none', borderRadius: borderRadius / 2, padding: '6px 12px', fontSize: 11, fontWeight: 600 }}>Send</div>
+          <div style={{ flex: 1, border: '1px solid #e0e0e0', borderRadius: inputBr, padding: '6px 10px', fontSize: 11, color: '#999' }}>Type a message...</div>
+          <div style={{ background: color, color: '#fff', border: 'none', borderRadius: inputBr, padding: '6px 12px', fontSize: 11, fontWeight: 600 }}>Send</div>
         </div>
       </div>
       {/* Bubble preview */}
@@ -194,6 +221,7 @@ function AppearanceTab({ businessId, settings, businessName, onSaved }: {
   businessId: string; settings: ChatbotStatus['settings']; businessName: string; onSaved: () => void;
 }) {
   const [color, setColor] = useState(settings.primaryColor ?? '#a855f7');
+  const [secondaryColor, setSecondaryColor] = useState((settings as Record<string, unknown>)['chatbotSecondaryColor'] as string ?? '#f0f0f0');
   const [welcomeMsg, setWelcomeMsg] = useState(settings.welcomeMessage ?? 'Hi! How can I help you today?');
   const [bubbleSize, setBubbleSize] = useState(settings.chatbotBubbleSize ?? 56);
   const [borderRadius, setBorderRadius] = useState(settings.chatbotBorderRadius ?? 16);
@@ -212,6 +240,7 @@ function AppearanceTab({ businessId, settings, businessName, onSaved }: {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           primaryColor: color,
+          chatbotSecondaryColor: secondaryColor,
           welcomeMessage: welcomeMsg,
           chatbotBubbleSize: bubbleSize,
           chatbotBorderRadius: borderRadius,
@@ -240,9 +269,21 @@ function AppearanceTab({ businessId, settings, businessName, onSaved }: {
                 <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="w-12 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5" />
                 <input type="text" value={color} onChange={(e) => setColor(e.target.value)} className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
               </div>
-              <div className="flex gap-2 mt-2">
-                {['#a855f7', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#6366f1', '#14b8a6', '#000000'].map((c) => (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {['#a855f7', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#6366f1', '#14b8a6', '#000000', '#1e293b', '#dc2626', '#0ea5e9'].map((c) => (
                   <button key={c} onClick={() => setColor(c)} className="w-6 h-6 rounded-full border-2 transition-all hover:scale-110" style={{ background: c, borderColor: color === c ? '#333' : 'transparent' }} />
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1.5">Secondary Color <span className="text-slate-400">(bot messages background)</span></label>
+              <div className="flex items-center gap-3">
+                <input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-12 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5" />
+                <input type="text" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
+              </div>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {['#f0f0f0', '#e8e0f7', '#dbeafe', '#d1fae5', '#fef3c7', '#ffe4e6', '#f1f5f9', '#fdf4ff', '#ecfdf5', '#fff7ed'].map((c) => (
+                  <button key={c} onClick={() => setSecondaryColor(c)} className="w-6 h-6 rounded-full border-2 transition-all hover:scale-110" style={{ background: c, borderColor: secondaryColor === c ? '#333' : 'transparent' }} />
                 ))}
               </div>
             </div>
@@ -303,7 +344,7 @@ function AppearanceTab({ businessId, settings, businessName, onSaved }: {
 
       {/* Live Preview */}
       <div className="lg:sticky lg:top-4">
-        <WidgetPreview color={color} bubbleSize={bubbleSize} borderRadius={borderRadius} fontFamily={fontFamily} welcomeMsg={welcomeMsg} businessName={businessName} windowWidth={windowWidth} windowHeight={windowHeight} />
+        <WidgetPreview color={color} secondaryColor={secondaryColor} bubbleSize={bubbleSize} borderRadius={borderRadius} fontFamily={fontFamily} welcomeMsg={welcomeMsg} businessName={businessName} windowWidth={windowWidth} windowHeight={windowHeight} />
       </div>
     </div>
   );

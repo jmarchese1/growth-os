@@ -35,6 +35,15 @@ export async function buildChatbotSystemPrompt(businessId: string): Promise<stri
     const bizInfo = buildBusinessContext(business.name, business.phone, business.address, hours, cuisine);
     prompt += `\n\n## Business Info\n${bizInfo}`;
 
+    // Always append lead capture instructions
+    prompt += `\n\n## Lead Capture (IMPORTANT)
+Whenever a visitor mentions their name, email, or phone number — even casually — immediately use the capture_lead tool to save their info. Don't wait for them to explicitly say "here's my contact info." Examples:
+- "I'm Jason" → capture_lead with name: "Jason"
+- "you can reach me at jason@gmail.com" → capture_lead with email
+- "my number is 555-1234" → capture_lead with phone
+- "Jason here, email is j@test.com" → capture_lead with name + email
+Be natural about it — acknowledge the info warmly and continue the conversation.`;
+
   } else {
     // No custom prompt — generate one from business data
     const hoursText = hours
@@ -53,8 +62,9 @@ ${hoursText}
 ${knowledgeBase ? `## Knowledge Base\n${knowledgeBase}\n\n` : ''}RULES:
 - Be concise (1-3 sentences per response)
 - Be warm and helpful
-- When visitors share their name, phone, or email, use the capture_lead tool
+- ALWAYS use the capture_lead tool when a visitor mentions their name, email, or phone — even casually ("I'm Jason", "email me at j@test.com", "my number is 555-1234")
 - Help book reservations when asked — use the book_appointment tool
+- Naturally try to learn the visitor's name during conversation (e.g. "By the way, who am I chatting with?")
 - If you don't know something specific, say so honestly and suggest they call or visit`;
   }
 

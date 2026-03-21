@@ -48,9 +48,9 @@ export async function processMessage(params: {
   let leadCaptured = false;
   let appointmentRequested = false;
 
-  // Only include tools when message might contain lead/booking intent (saves ~500ms)
-  const lowerMsg = message.toLowerCase();
-  const needsTools = /\b(book|reserv|appointment|name is|my name|email|phone|call me|contact)\b/.test(lowerMsg);
+  // Include tools when message or history might contain lead/contact info
+  const allText = (message + ' ' + history.map((m) => m.content).join(' ')).toLowerCase();
+  const needsTools = /\b(book|reserv|appointment|name is|my name|i'm|email|@|phone|\d{3}[-.\s]?\d{3}[-.\s]?\d{4}|call me|contact|sign up|interested|schedule)\b/.test(allText);
 
   try {
     const response = await anthropic.messages.create({
@@ -72,6 +72,62 @@ export async function processMessage(params: {
         if (block.name === 'capture_lead') {
           leadCaptured = true;
           if (!test) {
+            // Create or update Contact directly in the database
+            const name = (toolInput['name'] as string) ?? '';
+            const nameParts = name.trim().split(/\s+/);
+            const firstName = nameParts[0] ?? '';
+            const lastName = nameParts.slice(1).join(' ') ?? '';
+            const email = (toolInput['email'] as string) ?? '';
+            const phone = (toolInput['phone'] as string) ?? '';
+
+            try {
+              // Check if contact already exists by email or phone
+              let contact = null;
+              if (email) {
+                contact = await db.contact.findFirst({ where: { businessId, email } });
+              }
+              if (!contact && phone) {
+                contact = await db.contact.findFirst({ where: { businessId, phone } });
+              }
+
+              if (contact) {
+                // Update existing contact with any new info
+                await db.contact.update({
+                  where: { id: contact.id },
+                  data: {
+                    ...(firstName && !contact.firstName ? { firstName } : {}),
+                    ...(lastName && !contact.lastName ? { lastName } : {}),
+                    ...(email && !contact.email ? { email } : {}),
+                    ...(phone && !contact.phone ? { phone } : {}),
+                    source: contact.source ?? 'CHATBOT',
+                  },
+                });
+                log.info({ contactId: contact.id, businessId }, 'Updated existing contact from chat');
+              } else if (firstName || email || phone) {
+                // Create new contact
+                const contactData: Record<string, unknown> = {
+                  businessId,
+                  firstName: firstName || 'Unknown',
+                  lastName: lastName || '',
+                  source: 'CHATBOT',
+                  notes: `Captured from chat widget. Interest: ${(toolInput['interest'] as string) ?? 'general inquiry'}`,
+                };
+                if (email) contactData['email'] = email;
+                if (phone) contactData['phone'] = phone;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const newContact = await (db.contact.create as any)({ data: contactData });
+                // Link contact to the chat session
+                await db.chatSession.update({
+                  where: { sessionKey },
+                  data: { contactId: newContact.id },
+                });
+                log.info({ contactId: newContact.id, businessId }, 'Created new contact from chat');
+              }
+            } catch (contactErr) {
+              log.error({ err: contactErr instanceof Error ? contactErr.message : String(contactErr) }, 'Failed to save contact from chat');
+            }
+
+            // Also emit the lead event for other services
             await leadCreatedQueue().add(`lead:chat:${sessionKey}:${Date.now()}`, {
               businessId,
               source: channel === 'WEB' ? 'CHATBOT' : 'SOCIAL',
