@@ -1,6 +1,6 @@
 # Embedo Platform — Current Status
 
-> Last updated: 2026-03-20. Update this file at the end of any session that changes deployment state, implements a new feature, or discovers a broken integration.
+> Last updated: 2026-03-21. Update this file at the end of any session that changes deployment state, implements a new feature, or discovers a broken integration.
 
 ---
 
@@ -122,8 +122,16 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 - **Voice agent provisioning**: ElevenLabs agent + Twilio number inline; idempotent; agent is live and answering calls via ElevenLabs phone number integration
 - **Voice agent configuration**: Voice browser (preview + select from 100+ voices), system prompt editor (4 industry templates), knowledge base upload, test call widget (ElevenLabs web embed), conversation history from ElevenLabs API
 - **Voice agent UI**: Redesigned with 6 tabs (Dashboard, Voice, System Prompt, Knowledge Base, Test Call, History), Embedo violet theme, animated test call hero
-- **Chatbot widget**: Deployed chatbot-agent service on Railway. Widget auto-injected into all generated websites. Claude Haiku-powered AI chat with lead capture + appointment booking tools.
-- **Chatbot dashboard**: Enable/disable, settings (persona, welcome message, color), test chat, embed snippet, conversation list, stats
+- **Chatbot widget**: Deployed chatbot-agent on Railway. Widget auto-injected into generated websites. Claude Haiku AI chat with lead capture + appointment booking. XMLHttpRequest-based widget with 30s timeout, bulletproof error handling.
+- **Chatbot builder (major overhaul)**: 6-tab interface (Dashboard, Appearance, Options, System Prompt, Knowledge Base, Test Chat). Pill-shaped tabs, animated transitions, gradient status badges.
+  - **Appearance tab**: Primary + secondary colors (12+ swatches each), 20 Google Fonts with live preview, bubble size/border radius/window size sliders, position toggle, header subtitle with presets
+  - **Options tab**: Close button toggle, sound notification (Web Audio chime), auto-open delay (1-30s slider), quick reply buttons (up to 6, right-aligned vertical bubbles), powered-by toggle, embed snippet
+  - **AI Personality tab**: Wizard mode with 4 sliders (Tone/Length/Energy/Expertise) auto-generating system prompt, or Advanced mode with raw editor + 4 industry templates (Restaurant, Bakery, Retail, Service)
+  - **Knowledge Base tab**: Paste menu/FAQ/hours/policies with quick-add buttons and token count
+  - **One-click templates**: Italian Restaurant, Coffee Shop, Hair Salon, Professional Services — sets prompt + knowledge + colors + quick replies in one click
+  - **Auto lead capture**: Chatbot creates Contact records in DB when visitors share name/email/phone. Broader intent detection across full conversation history.
+  - **Live widget settings**: Widget fetches `/widget/config/:businessId` on every page load — appearance changes take effect immediately without regenerating the site
+  - **Settings persistence**: Status endpoint returns all 20+ chatbot settings fields
 - **Image Library**: Full `/images` page — DALL-E 3 generation, save URLs, category filters (food/interior/team/logo/product/lifestyle), favorites, detail modal. Images persisted to Supabase Storage (permanent URLs).
 - **Billing/Subscriptions**: Stripe checkout → webhook → Subscription record; billing dashboard
 - **Integrations page**: OAuth param cleanup
@@ -155,8 +163,7 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 
 ### ⚠️ Built but Needs Work
 
-- **Chatbot widget reliability**: Widget deployed and injected into generated sites, but second message sometimes fails to get a response. Needs debugging — likely widget.js state management issue with isSending flag.
-- **Chatbot customizer**: Need multi-chatbot support, system prompt editor with menu/knowledge upload, and dropdown selector when building websites
+- **Website iframe preview**: Preview in editor sometimes shows blocked icon (Vercel X-Frame-Options). srcDoc approach works but needs Tailwind inlining.
 - **OAuth social connections**: Routes exist but no Meta App / Google Cloud project / TikTok App created
 - **ElevenLabs inbound webhook**: Route exists; agent provisioned but webhook for call completion logging not tested
 - **Voice agent call routing**: Agent says "let me transfer you" but no actual Twilio transfer logic
@@ -173,10 +180,12 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 
 | Item | What's needed | Priority |
 |---|---|---|
-| Fix chatbot widget reliability | Second message sometimes fails — debug isSending flag in widget.js | High |
-| Build chatbot customizer | Multi-chatbot support, system prompt + knowledge base editor, website dropdown selector | High |
+| Contacts search + bulk actions | Add search bar, bulk tag/status update, CSV export | High |
+| Campaign targeting + templates | Recipient filtering, scheduling picker, email/SMS templates | High |
+| Survey response analytics | Aggregate results dashboard (avg rating, response charts) | Medium |
+| Social media account connect UI | Show connected accounts, connect/disconnect buttons | Medium |
 | Apollo.io API key | Set `APOLLO_API_KEY` in prospector Railway env to enable email enrichment | Medium |
-| Meta/Google/TikTok OAuth apps | Create developer apps, set client IDs/secrets in API env | Low (blocked by Meta device verification) |
+| Meta/Google/TikTok OAuth apps | Create developer apps, set client IDs/secrets in API env | Low |
 
 ---
 
