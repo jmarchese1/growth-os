@@ -375,16 +375,39 @@ function AppearanceTab({ businessId, settings, businessName, onSaved }: {
 }
 
 /* ── System Prompt Tab ────────────────────────────────────────── */
+function generatePromptFromTraits(traits: { tone: number; length: number; energy: number; expertise: number }, name: string): string {
+  const tone = traits.tone > 65 ? 'casual, friendly, and conversational' : traits.tone < 35 ? 'professional and formal' : 'warm and approachable';
+  const length = traits.length > 65 ? 'Give detailed, thorough answers with examples' : traits.length < 35 ? 'Keep responses very brief — 1-2 sentences max' : 'Keep responses concise but helpful — 2-3 sentences';
+  const energy = traits.energy > 65 ? 'Be enthusiastic and upbeat' : traits.energy < 35 ? 'Be calm and measured' : 'Be naturally engaged';
+  const expertise = traits.expertise > 65 ? 'Show deep expertise — share specific details, insider knowledge, and recommendations' : traits.expertise < 35 ? 'Keep things simple and easy to understand — avoid jargon' : 'Be knowledgeable but accessible';
+  return `You are the AI assistant for ${name}. Your tone is ${tone}. ${length}. ${energy}. ${expertise}.\n\nHelp customers with questions about the menu, hours, reservations, location, and anything else about the business. When visitors share their name, email, or phone, use the capture_lead tool. Help book reservations when asked.`;
+}
+
 function SystemPromptTab({ businessId, settings, businessName, onSaved }: {
   businessId: string; settings: ChatbotStatus['settings']; businessName: string; onSaved: () => void;
 }) {
-  const [prompt, setPrompt] = useState(settings.chatbotSystemPrompt ?? '');
+  const stg = settings as Record<string, unknown>;
+  const savedTraits = (stg['chatbotPersonalityTraits'] as { tone: number; length: number; energy: number; expertise: number }) ?? null;
+  const [mode, setMode] = useState<'wizard' | 'advanced'>(savedTraits ? 'wizard' : (settings.chatbotSystemPrompt ? 'advanced' : 'wizard'));
+  const [traits, setTraits] = useState(savedTraits ?? { tone: 65, length: 50, energy: 60, expertise: 50 });
+  const [prompt, setPrompt] = useState(settings.chatbotSystemPrompt ?? generatePromptFromTraits(savedTraits ?? traits, businessName));
   const [persona, setPersona] = useState(settings.chatbotPersona ?? '');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  function updateTrait(key: keyof typeof traits, value: number) {
+    const next = { ...traits, [key]: value };
+    setTraits(next);
+    setPrompt(generatePromptFromTraits(next, businessName));
+    // Auto-generate persona from traits
+    const toneWord = next.tone > 65 ? 'casual' : next.tone < 35 ? 'formal' : 'warm';
+    const energyWord = next.energy > 65 ? 'enthusiastic' : next.energy < 35 ? 'calm' : 'friendly';
+    setPersona(`${toneWord}, ${energyWord}, and helpful`);
+  }
+
   function applyTemplate(template: string) {
     setPrompt(template.replace(/\{\{businessName\}\}/g, businessName));
+    setMode('advanced');
   }
 
   async function handleSave() {
@@ -393,7 +416,11 @@ function SystemPromptTab({ businessId, settings, businessName, onSaved }: {
       await fetch(`${API_URL}/chatbot/settings/${businessId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chatbotSystemPrompt: prompt, chatbotPersona: persona }),
+        body: JSON.stringify({
+          chatbotSystemPrompt: prompt,
+          chatbotPersona: persona,
+          ...(mode === 'wizard' ? { chatbotPersonalityTraits: traits } : {}),
+        }),
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
@@ -401,48 +428,95 @@ function SystemPromptTab({ businessId, settings, businessName, onSaved }: {
     } finally { setSaving(false); }
   }
 
+  const sliders: Array<{ key: keyof typeof traits; label: string; left: string; right: string; leftEmoji: string; rightEmoji: string }> = [
+    { key: 'tone', label: 'Tone', left: 'Formal', right: 'Casual', leftEmoji: '\uD83D\uDC54', rightEmoji: '\uD83E\uDD19' },
+    { key: 'length', label: 'Response Length', left: 'Brief', right: 'Detailed', leftEmoji: '\u26A1', rightEmoji: '\uD83D\uDCDD' },
+    { key: 'energy', label: 'Energy', left: 'Calm', right: 'Enthusiastic', leftEmoji: '\uD83E\uDDD8', rightEmoji: '\uD83C\uDF89' },
+    { key: 'expertise', label: 'Expertise', left: 'Simple', right: 'Expert', leftEmoji: '\uD83D\uDC76', rightEmoji: '\uD83C\uDF93' },
+  ];
+
   return (
     <div className="space-y-6">
-      <div className="bg-white border border-slate-200 rounded-xl p-6">
-        <h3 className="text-sm font-semibold text-slate-700 mb-1">System Prompt</h3>
-        <p className="text-xs text-slate-400 mb-4">This is the core instruction that tells the AI how to behave. It controls personality, knowledge boundaries, and what tools it uses.</p>
+      {/* Mode toggle */}
+      <div className="flex items-center gap-2">
+        <div className="flex bg-slate-100 rounded-xl p-1">
+          <button onClick={() => setMode('wizard')} className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${mode === 'wizard' ? 'bg-white text-violet-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+            Personality Wizard
+          </button>
+          <button onClick={() => setMode('advanced')} className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${mode === 'advanced' ? 'bg-white text-violet-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+            Advanced Editor
+          </button>
+        </div>
+      </div>
 
-        <div className="mb-4">
-          <label className="block text-xs font-medium text-slate-500 mb-1.5">Quick Templates</label>
-          <div className="flex flex-wrap gap-2">
-            {PROMPT_TEMPLATES.map((t) => (
-              <button key={t.label} onClick={() => applyTemplate(t.prompt)} className="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-violet-50 hover:border-violet-300 hover:text-violet-700 transition-all">
-                {t.label}
-              </button>
-            ))}
+      {mode === 'wizard' ? (
+        <div className="space-y-6">
+          {/* Personality Sliders */}
+          <div className="bg-gradient-to-br from-violet-50/50 to-indigo-50/50 border border-violet-200/40 rounded-2xl p-6">
+            <p className="text-xs text-violet-600 font-medium mb-4 uppercase tracking-wider">Drag the sliders to shape your chatbot&apos;s personality</p>
+            <div className="space-y-5">
+              {sliders.map(({ key, label, left, right, leftEmoji, rightEmoji }) => (
+                <div key={key}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-sm font-medium text-slate-700">{label}</label>
+                    <span className="text-xs text-slate-400">{traits[key]}%</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm w-24 text-right text-slate-500">{leftEmoji} {left}</span>
+                    <input type="range" min={0} max={100} value={traits[key]} onChange={(e) => updateTrait(key, Number(e.target.value))} className="flex-1 accent-violet-600 h-2" />
+                    <span className="text-sm w-24 text-slate-500">{right} {rightEmoji}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Auto-generated prompt preview */}
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-medium text-slate-500">Generated System Prompt</p>
+              <button onClick={() => setMode('advanced')} className="text-[10px] text-violet-600 hover:text-violet-800 font-medium">Edit manually</button>
+            </div>
+            <pre className="text-xs text-slate-600 whitespace-pre-wrap font-mono leading-relaxed">{prompt}</pre>
           </div>
         </div>
+      ) : (
+        <div className="space-y-4">
+          {mode === 'advanced' && savedTraits && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-2.5 flex items-center justify-between">
+              <p className="text-xs text-amber-700">Manual edits will disconnect from the personality wizard sliders.</p>
+              <button onClick={() => { setMode('wizard'); setPrompt(generatePromptFromTraits(traits, businessName)); }} className="text-xs text-amber-600 hover:text-amber-800 font-medium whitespace-nowrap ml-4">Back to wizard</button>
+            </div>
+          )}
 
-        <textarea
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          placeholder="You are a helpful AI assistant for our business. You help customers with..."
-          rows={12}
-          className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-800 font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 resize-y"
-        />
-        <p className="text-[10px] text-slate-400 mt-1">{prompt.length} characters</p>
-      </div>
+          <div>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {PROMPT_TEMPLATES.map((t) => (
+                <button key={t.label} onClick={() => applyTemplate(t.prompt)} className="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-violet-50 hover:border-violet-300 hover:text-violet-700 transition-all">
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="You are a helpful AI assistant for our business..."
+              rows={12}
+              className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-800 font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-violet-500/30 resize-y"
+            />
+            <p className="text-[10px] text-slate-400 mt-1">{prompt.length} characters</p>
+          </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl p-6">
-        <h3 className="text-sm font-semibold text-slate-700 mb-1">Personality / Persona</h3>
-        <p className="text-xs text-slate-400 mb-3">Short description of the chatbot&apos;s tone — e.g. &quot;friendly, warm, and professional&quot;</p>
-        <input
-          type="text"
-          value={persona}
-          onChange={(e) => setPersona(e.target.value)}
-          placeholder="friendly, warm, and professional"
-          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
-        />
-      </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1.5">Personality / Persona</label>
+            <input type="text" value={persona} onChange={(e) => setPersona(e.target.value)} placeholder="friendly, warm, and professional" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center gap-3">
         <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-500 disabled:opacity-50 transition-colors">
-          {saving ? 'Saving...' : 'Save Prompt'}
+          {saving ? 'Saving...' : 'Save Personality'}
         </button>
         {saved && <span className="text-xs text-emerald-600 font-medium">Saved</span>}
       </div>
@@ -865,6 +939,100 @@ function ConversationModal({ session, onClose }: { session: ChatSession; onClose
   );
 }
 
+/* ── Quick Setup Templates (Phase 4) ──────────────────────────── */
+const BUSINESS_TEMPLATES = [
+  {
+    id: 'italian', label: 'Italian Restaurant', emoji: '\uD83C\uDF55', color: '#dc2626',
+    persona: 'warm, passionate about food, welcoming',
+    welcomeMessage: 'Benvenuto! Welcome — can I help you with our menu or a reservation?',
+    primaryColor: '#dc2626',
+    prompt: 'You are a warm, friendly AI host for {{name}}, an Italian restaurant. Help with menu questions, reservations, hours, and catering. Be passionate about the food. Keep responses concise.',
+    knowledge: '## Menu Highlights\n\n### Antipasti\n- Bruschetta - $12\n- Calamari Fritti - $14\n\n### Pasta\n- Spaghetti Carbonara - $18\n- Fettuccine Alfredo - $17\n\n### Pizza\n- Margherita - $16\n- Diavola - $18\n\n### Dessert\n- Tiramisu - $10\n- Panna Cotta - $9',
+    quickReplies: ['View Menu', 'Make Reservation', 'Hours & Location'],
+  },
+  {
+    id: 'coffee', label: 'Coffee Shop / Bakery', emoji: '\u2615', color: '#92400e',
+    persona: 'cheerful, warm, knowledgeable about coffee',
+    welcomeMessage: 'Hey there! What can I brew up for you today?',
+    primaryColor: '#92400e',
+    prompt: 'You are a cheerful AI barista for {{name}}, a coffee shop and bakery. Help with menu items, daily specials, custom cake orders, loyalty program, and hours. Be enthusiastic about the craft.',
+    knowledge: '## Drinks\n\n- Espresso - $3.50\n- Latte - $5\n- Cappuccino - $4.50\n- Cold Brew - $5\n- Matcha Latte - $5.50\n\n## Bakery\n\n- Croissant - $4\n- Blueberry Muffin - $3.50\n- Sourdough Loaf - $8\n- Chocolate Chip Cookie - $3',
+    quickReplies: ['Today\'s Specials', 'Order Ahead', 'Catering Info'],
+  },
+  {
+    id: 'salon', label: 'Hair Salon / Spa', emoji: '\uD83D\uDC87', color: '#ec4899',
+    persona: 'elegant, professional, warm',
+    welcomeMessage: 'Welcome! Looking to book an appointment or learn about our services?',
+    primaryColor: '#ec4899',
+    prompt: 'You are an elegant AI receptionist for {{name}}, a hair salon and spa. Help with booking appointments, services and pricing, availability, and aftercare tips. Be professional yet warm.',
+    knowledge: '## Services\n\n### Hair\n- Women\'s Cut & Style - $65+\n- Men\'s Cut - $35\n- Color & Highlights - $120+\n- Blowout - $45\n\n### Spa\n- Swedish Massage (60min) - $90\n- Facial Treatment - $80\n- Mani/Pedi Combo - $65',
+    quickReplies: ['Book Appointment', 'Services & Pricing', 'Gift Cards'],
+  },
+  {
+    id: 'professional', label: 'Professional Services', emoji: '\uD83D\uDCBC', color: '#1e40af',
+    persona: 'professional, knowledgeable, solution-oriented',
+    welcomeMessage: 'Hello! How can we help your business today?',
+    primaryColor: '#1e40af',
+    prompt: 'You are a professional AI assistant for {{name}}. Help potential clients understand services, book consultations, and answer FAQ. Be knowledgeable and solution-oriented. Collect contact info when appropriate.',
+    knowledge: '## Services\n\n- Strategy Consulting\n- Implementation Support\n- Ongoing Management\n- Training & Workshops\n\n## Process\n\n1. Free Discovery Call (30 min)\n2. Custom Proposal\n3. Kickoff & Onboarding\n4. Ongoing Support',
+    quickReplies: ['Book Consultation', 'Our Services', 'Pricing Info'],
+  },
+];
+
+function QuickSetupTemplates({ businessId, businessName, onApplied }: {
+  businessId: string; businessName: string; onApplied: () => void;
+}) {
+  const [applying, setApplying] = useState<string | null>(null);
+
+  async function applyTemplate(t: typeof BUSINESS_TEMPLATES[0]) {
+    setApplying(t.id);
+    try {
+      await fetch(`${API_URL}/chatbot/settings/${businessId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chatbotSystemPrompt: t.prompt.replace(/\{\{name\}\}/g, businessName),
+          chatbotKnowledgeBase: t.knowledge,
+          chatbotPersona: t.persona,
+          welcomeMessage: t.welcomeMessage,
+          primaryColor: t.color,
+          chatbotQuickRepliesEnabled: true,
+          chatbotQuickReplies: t.quickReplies,
+        }),
+      });
+      onApplied();
+    } finally { setApplying(null); }
+  }
+
+  return (
+    <div className="bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-200/60 rounded-2xl p-6">
+      <div className="flex items-center gap-2 mb-1">
+        <span className="text-lg">&#x2728;</span>
+        <h3 className="text-sm font-bold text-violet-900">Quick Setup</h3>
+      </div>
+      <p className="text-xs text-violet-600 mb-4">Pick a template to instantly configure your chatbot — system prompt, knowledge base, colors, and quick replies. You can customize everything after.</p>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {BUSINESS_TEMPLATES.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => applyTemplate(t)}
+            disabled={!!applying}
+            className="bg-white border border-violet-200/60 rounded-xl p-4 text-left hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 group"
+          >
+            <div className="text-2xl mb-2">{t.emoji}</div>
+            <p className="text-sm font-semibold text-slate-800 group-hover:text-violet-700 transition-colors">{t.label}</p>
+            <div className="flex items-center gap-1.5 mt-2">
+              <div className="w-3 h-3 rounded-full" style={{ background: t.color }} />
+              <span className="text-[10px] text-slate-400">{t.quickReplies.length} quick replies</span>
+            </div>
+            {applying === t.id && <div className="mt-2 w-4 h-4 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" />}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ── Widget Snippet Panel ─────────────────────────────────────── */
 function EmbedSnippet({ businessId }: { businessId: string }) {
   const [snippet, setSnippet] = useState('');
@@ -927,6 +1095,68 @@ export default function ChatbotClient({ businessId }: { businessId: string }) {
 
   const s = stats ?? { totalSessions: 0, leadsCapture: 0, appointmentsMade: 0, totalMessages: 0, channelBreakdown: {} };
 
+  // Phase 3: Completion progress
+  const stg = status.settings as Record<string, unknown>;
+  const progressItems = [
+    { label: 'System Prompt', done: !!stg['chatbotSystemPrompt'], tab: 'prompt' },
+    { label: 'Knowledge Base', done: !!stg['chatbotKnowledgeBase'], tab: 'knowledge' },
+    { label: 'Appearance', done: (stg['primaryColor'] as string) !== '#a855f7' && !!stg['primaryColor'], tab: 'appearance' },
+    { label: 'Welcome Message', done: !!stg['welcomeMessage'] && stg['welcomeMessage'] !== 'Hi! How can I help you today?', tab: 'appearance' },
+    { label: 'Quick Replies', done: !!stg['chatbotQuickRepliesEnabled'], tab: 'options' },
+  ];
+  const doneCount = progressItems.filter((p) => p.done).length;
+
+  // Phase 4: Tab card metadata
+  const TAB_META: Record<string, { title: string; desc: string; icon: string }> = {
+    appearance: { title: 'Customize Appearance', desc: 'Colors, fonts, sizing, and live preview', icon: 'M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197' },
+    options: { title: 'Widget Options', desc: 'Behavior, auto-open, quick replies, and more', icon: 'M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281' },
+    prompt: { title: 'AI Personality', desc: 'Shape how your chatbot thinks and responds', icon: 'M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25' },
+    knowledge: { title: 'Knowledge Base', desc: 'Menu, FAQ, hours, and business details', icon: 'M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292' },
+    test: { title: 'Test Your Chatbot', desc: 'Have a live conversation — not logged', icon: 'M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193' },
+    history: { title: 'Conversation History', desc: 'Browse past conversations and captured leads', icon: 'M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z' },
+  };
+
+  const tabContent = (
+    <>
+      {tab === 'dashboard' && (
+        <div className="space-y-8">
+          {/* One-Click Templates (Phase 4) — show when unconfigured */}
+          {doneCount < 2 && (
+            <QuickSetupTemplates businessId={businessId} businessName={status.businessName} onApplied={() => { fetchAll(); setTab('prompt'); }} />
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <KpiCard label="Conversations" value={s.totalSessions} color="violet" icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7z" clipRule="evenodd" /></svg>} />
+            <KpiCard label="Leads Captured" value={s.leadsCapture} color="emerald" icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>} />
+            <KpiCard label="Appointments" value={s.appointmentsMade} color="amber" icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1z" clipRule="evenodd" /></svg>} />
+            <KpiCard label="Messages" value={s.totalMessages} color="sky" icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2z" clipRule="evenodd" /></svg>} />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {[{ channel: 'Web Widget', key: 'WEB', color: 'violet' }, { channel: 'Instagram DMs', key: 'INSTAGRAM', color: 'rose' }, { channel: 'Facebook Messenger', key: 'FACEBOOK', color: 'sky' }].map(({ channel, key }) => (
+              <div key={channel} className="bg-white border border-slate-200 rounded-2xl p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+                <p className="text-xs text-slate-500">{channel}</p>
+                <p className="text-xl font-bold text-slate-800 mt-1">{s.channelBreakdown[key] ?? 0}</p>
+                <p className="text-[10px] text-slate-400 mt-1">conversations</p>
+              </div>
+            ))}
+          </div>
+
+          <EmbedSnippet businessId={businessId} />
+        </div>
+      )}
+
+      {tab === 'appearance' && <AppearanceTab businessId={businessId} settings={status.settings} businessName={status.businessName} onSaved={fetchAll} />}
+      {tab === 'prompt' && <SystemPromptTab businessId={businessId} settings={status.settings} businessName={status.businessName} onSaved={fetchAll} />}
+      {tab === 'knowledge' && <KnowledgeBaseTab businessId={businessId} settings={status.settings} onSaved={fetchAll} />}
+      {tab === 'options' && <OptionsTab businessId={businessId} settings={status.settings} onSaved={fetchAll} />}
+      {tab === 'test' && <TestChatTab businessId={businessId} />}
+      {tab === 'history' && <HistoryTab sessions={sessions} totalSessions={totalSessions} onSelect={setSelectedSession} />}
+    </>
+  );
+
+  const meta = TAB_META[tab];
+
   return (
     <div className="p-8 animate-fade-up">
       {/* Header */}
@@ -940,73 +1170,64 @@ export default function ChatbotClient({ businessId }: { businessId: string }) {
             <p className="text-sm text-slate-500">AI chatbot — configure, customize, and monitor</p>
           </div>
         </div>
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200/60 rounded-full">
-          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-xs font-medium text-emerald-700">Active</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl">
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-sm font-semibold text-emerald-700">Active</span>
+          </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-1 mb-8 border-b border-slate-200 overflow-x-auto">
+      {/* Phase 3: Completion Progress */}
+      <div className="mb-6 bg-white border border-slate-200 rounded-2xl p-4">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Setup Progress</p>
+          <span className="text-xs font-medium text-slate-400">{doneCount} of {progressItems.length} configured</span>
+        </div>
+        <div className="flex gap-1.5 mb-2">
+          {progressItems.map((item, i) => (
+            <button key={i} onClick={() => setTab(item.tab)} className={`flex-1 h-2 rounded-full transition-all duration-300 ${item.done ? 'bg-gradient-to-r from-violet-500 to-indigo-500' : 'bg-slate-100 hover:bg-slate-200'}`} title={item.label} />
+          ))}
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          {progressItems.map((item, i) => (
+            <button key={i} onClick={() => setTab(item.tab)} className={`text-[10px] px-2 py-0.5 rounded-full transition-all ${item.done ? 'bg-violet-100 text-violet-700 font-medium' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}>
+              {item.done ? '\u2713' : '\u25CB'} {item.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Phase 1: Pill Tabs */}
+      <div className="flex gap-1.5 mb-8 bg-slate-100/80 rounded-2xl p-1.5 overflow-x-auto">
         {TABS.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-all ${tab === t.id ? 'border-violet-600 text-violet-700' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}`}>
+          <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl whitespace-nowrap transition-all duration-200 ${tab === t.id ? 'bg-white text-violet-700 shadow-sm border border-violet-100' : 'text-slate-500 hover:text-violet-600 hover:bg-white/60'}`}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d={t.icon} /></svg>
             {t.label}
           </button>
         ))}
       </div>
 
-      {/* Dashboard Tab */}
-      {tab === 'dashboard' && (
-        <div className="space-y-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <KpiCard label="Conversations" value={s.totalSessions} color="violet" icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7z" clipRule="evenodd" /></svg>} />
-            <KpiCard label="Leads Captured" value={s.leadsCapture} color="emerald" icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>} />
-            <KpiCard label="Appointments" value={s.appointmentsMade} color="amber" icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1z" clipRule="evenodd" /></svg>} />
-            <KpiCard label="Messages" value={s.totalMessages} color="sky" icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2z" clipRule="evenodd" /></svg>} />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {[{ channel: 'Web Widget', key: 'WEB', color: 'violet' }, { channel: 'Instagram DMs', key: 'INSTAGRAM', color: 'rose' }, { channel: 'Facebook Messenger', key: 'FACEBOOK', color: 'sky' }].map(({ channel, key, color }) => (
-              <div key={channel} className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-md transition-shadow">
-                <p className="text-xs text-slate-500">{channel}</p>
-                <p className="text-xl font-bold text-slate-800 mt-1">{s.channelBreakdown[key] ?? 0}</p>
-                <p className="text-[10px] text-slate-400 mt-1">conversations</p>
+      {/* Phase 2: Animated Tab Content */}
+      <div key={tab} className="animate-fade-up">
+        {meta ? (
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-9 h-9 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-sm">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" className="w-4.5 h-4.5"><path strokeLinecap="round" strokeLinejoin="round" d={meta.icon} /></svg>
               </div>
-            ))}
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">{meta.title}</h2>
+                <p className="text-sm text-slate-500">{meta.desc}</p>
+              </div>
+            </div>
+            {tabContent}
           </div>
+        ) : (
+          tabContent
+        )}
+      </div>
 
-          <EmbedSnippet businessId={businessId} />
-        </div>
-      )}
-
-      {/* Appearance Tab */}
-      {tab === 'appearance' && (
-        <AppearanceTab businessId={businessId} settings={status.settings} businessName={status.businessName} onSaved={fetchAll} />
-      )}
-
-      {/* System Prompt Tab */}
-      {tab === 'prompt' && (
-        <SystemPromptTab businessId={businessId} settings={status.settings} businessName={status.businessName} onSaved={fetchAll} />
-      )}
-
-      {/* Knowledge Base Tab */}
-      {tab === 'knowledge' && (
-        <KnowledgeBaseTab businessId={businessId} settings={status.settings} onSaved={fetchAll} />
-      )}
-
-      {/* Options Tab */}
-      {tab === 'options' && (
-        <OptionsTab businessId={businessId} settings={status.settings} onSaved={fetchAll} />
-      )}
-
-      {/* Test Chat Tab */}
-      {tab === 'test' && <TestChatTab businessId={businessId} />}
-
-      {/* History Tab */}
-      {tab === 'history' && <HistoryTab sessions={sessions} totalSessions={totalSessions} onSelect={setSelectedSession} />}
-
-      {/* Conversation modal */}
       {selectedSession && <ConversationModal session={selectedSession} onClose={() => setSelectedSession(null)} />}
     </div>
   );
