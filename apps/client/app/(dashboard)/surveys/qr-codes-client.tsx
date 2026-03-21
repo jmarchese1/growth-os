@@ -122,6 +122,13 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
   const [spinPrizes, setSpinPrizes] = useState<SpinPrize[]>(DEFAULT_PRIZES);
   const [destinationUrl, setDestinationUrl] = useState('');
   const [expiresAt, setExpiresAt] = useState('');
+  // Page style
+  const [pageColor, setPageColor] = useState('#7C3AED');
+  const [pageBackground, setPageBackground] = useState<'gradient' | 'solid' | 'dark'>('gradient');
+  const [pageHeading, setPageHeading] = useState('');
+  const [pageSubheading, setPageSubheading] = useState('');
+  const [pageLogo, setPageLogo] = useState('');
+  const [pageButtonText, setPageButtonText] = useState('');
   const [step, setStep] = useState<'form' | 'preview'>('form');
   const [createdQr, setCreatedQr] = useState<QrCode | null>(null);
   const [saving, setSaving] = useState(false);
@@ -139,6 +146,13 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
     if (purpose === 'SPIN_WHEEL') payload['spinPrizes'] = spinPrizes;
     if (['MENU', 'REVIEW', 'CUSTOM'].includes(purpose)) payload['destinationUrl'] = destinationUrl.trim();
     if (expiresAt) payload['expiresAt'] = expiresAt;
+    payload['metadata'] = {
+      pageColor, pageBackground,
+      ...(pageHeading ? { pageHeading } : {}),
+      ...(pageSubheading ? { pageSubheading } : {}),
+      ...(pageLogo ? { pageLogo } : {}),
+      ...(pageButtonText ? { pageButtonText } : {}),
+    };
 
     const qr = await onCreate(payload);
     setSaving(false);
@@ -255,6 +269,53 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
                 <p className="text-[11px] text-sky-700 mt-1">Customers scan, enter their name + email or phone number, and are automatically added to your Contacts with source "QR Code".</p>
               </div>
             )}
+
+            {/* Page Appearance */}
+            <div className="space-y-3 border border-slate-200 rounded-xl p-4">
+              <p className="text-xs font-semibold text-slate-700">Page Appearance</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-medium text-slate-500 mb-1">Brand Color</label>
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={pageColor} onChange={(e) => setPageColor(e.target.value)} className="w-7 h-7 rounded border-0 cursor-pointer" />
+                    <input type="text" value={pageColor} onChange={(e) => setPageColor(e.target.value)} className="flex-1 px-2 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-800 font-mono" />
+                  </div>
+                  <div className="flex gap-1 mt-1">
+                    {['#7C3AED', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#EC4899', '#000000', '#0EA5E9'].map((c) => (
+                      <button key={c} onClick={() => setPageColor(c)} className="w-4 h-4 rounded-full border transition-all hover:scale-125" style={{ background: c, borderColor: pageColor === c ? '#333' : 'transparent' }} />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-medium text-slate-500 mb-1">Background Style</label>
+                  <div className="flex gap-1.5">
+                    {([{ value: 'gradient', label: 'Gradient' }, { value: 'solid', label: 'Solid' }, { value: 'dark', label: 'Dark' }] as const).map((bg) => (
+                      <button key={bg.value} onClick={() => setPageBackground(bg.value)} className={`px-2.5 py-1.5 text-[10px] font-medium rounded-lg border transition-all ${pageBackground === bg.value ? 'bg-violet-100 border-violet-300 text-violet-700' : 'border-slate-200 text-slate-500 hover:bg-slate-100'}`}>
+                        {bg.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-medium text-slate-500 mb-1">Custom Heading (optional)</label>
+                <input type="text" value={pageHeading} onChange={(e) => setPageHeading(e.target.value)} placeholder={purpose === 'SURVEY' ? "We'd love your feedback!" : purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'DISCOUNT' ? 'Your Exclusive Offer' : 'Join Us!'} className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-medium text-slate-500 mb-1">Subheading (optional)</label>
+                <input type="text" value={pageSubheading} onChange={(e) => setPageSubheading(e.target.value)} placeholder="Short description shown below the heading" className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-medium text-slate-500 mb-1">Logo URL (optional)</label>
+                  <input type="url" value={pageLogo} onChange={(e) => setPageLogo(e.target.value)} placeholder="https://..." className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-800" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-medium text-slate-500 mb-1">Button Text (optional)</label>
+                  <input type="text" value={pageButtonText} onChange={(e) => setPageButtonText(e.target.value)} placeholder={purpose === 'SURVEY' ? 'Submit Feedback' : purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'SIGNUP' ? 'Sign Me Up' : 'Claim Now'} className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
+                </div>
+              </div>
+            </div>
 
             {/* Expiration */}
             <div>
