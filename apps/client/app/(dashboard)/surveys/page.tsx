@@ -547,11 +547,29 @@ const DEFAULT_EMAIL_SETTINGS: RewardEmailSettings = {
   },
 };
 
+interface ImageAsset { id: string; url: string; alt: string | null; category: string | null; thumbnail: string | null }
+
 function RewardEmailPanel({ businessId, businessName, settings }: { businessId: string; businessName: string; settings: Record<string, unknown> | null }) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<'spin_prize' | 'discount' | 'survey_reward'>('spin_prize');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [images, setImages] = useState<ImageAsset[]>([]);
+  const [showImagePicker, setShowImagePicker] = useState(false);
+  const imagesFetched = useRef(false);
+
+  // Fetch images when panel opens
+  useEffect(() => {
+    if (open && !imagesFetched.current) {
+      imagesFetched.current = true;
+      fetch(`${API_URL}/images?businessId=${businessId}`)
+        .then((r) => r.json())
+        .then((data: { success: boolean; images: ImageAsset[] }) => {
+          if (data.success) setImages(data.images);
+        })
+        .catch(() => {});
+    }
+  }, [open, businessId]);
 
   const existing = (settings?.['rewardEmails'] ?? {}) as Partial<RewardEmailSettings>;
   const [accentColor, setAccentColor] = useState(existing.accentColor || DEFAULT_EMAIL_SETTINGS.accentColor);
@@ -613,8 +631,47 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-medium text-slate-500 mb-1">Logo URL (optional)</label>
-                  <input type="url" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://..." className="w-full px-2.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700" />
+                  <label className="block text-[10px] font-medium text-slate-500 mb-1">Logo</label>
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowImagePicker(!showImagePicker)}
+                      className="w-full flex items-center gap-2 px-2.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 hover:bg-slate-50 transition-colors text-left"
+                    >
+                      {logoUrl ? (
+                        <>
+                          <img src={logoUrl} alt="" className="w-5 h-5 rounded object-cover flex-shrink-0" />
+                          <span className="truncate flex-1">Selected</span>
+                        </>
+                      ) : (
+                        <span className="text-slate-400">Choose from My Images...</span>
+                      )}
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-slate-400 flex-shrink-0"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+                    </button>
+                    {showImagePicker && (
+                      <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        {logoUrl && (
+                          <button onClick={() => { setLogoUrl(''); setShowImagePicker(false); }} className="w-full px-3 py-2 text-left text-[10px] text-slate-400 hover:bg-slate-50 border-b border-slate-100">
+                            Remove logo
+                          </button>
+                        )}
+                        {images.length === 0 ? (
+                          <p className="px-3 py-4 text-[10px] text-slate-400 text-center">No images yet — upload some in the Images tab</p>
+                        ) : (
+                          <div className="grid grid-cols-4 gap-1 p-2">
+                            {images.map((img) => (
+                              <button
+                                key={img.id}
+                                onClick={() => { setLogoUrl(img.url); setShowImagePicker(false); }}
+                                className={`relative rounded overflow-hidden border-2 transition-all hover:opacity-80 ${logoUrl === img.url ? 'border-violet-500' : 'border-transparent'}`}
+                              >
+                                <img src={img.thumbnail || img.url} alt={img.alt || ''} className="w-full aspect-square object-cover" />
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
