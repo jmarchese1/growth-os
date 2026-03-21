@@ -12,6 +12,7 @@
 | `crm-core` | Railway | internal only (no public domain) | ✅ Online |
 | `prospector` | Railway | https://prospector-production-bc03.up.railway.app | ✅ Online |
 | `website-gen` | Railway | https://website-gen-production.up.railway.app | ✅ Online |
+| `chatbot-agent` | Railway | https://chatbot-agent-production-e735.up.railway.app | ✅ Online |
 | `Redis` | Railway | redis.railway.internal:6379 | ✅ Online |
 | `apps/client` | Vercel | https://app.embedo.io | ✅ Live |
 | `apps/web` | Vercel | https://embedo.io | ✅ Live (assumed) |
@@ -19,7 +20,6 @@
 
 **NOT yet deployed to Railway (services are skeletal — logic lives in API gateway):**
 - `voice-agent` (port 3002) — provisioning now handled inline in API gateway; ElevenLabs + Twilio work without this service
-- `chatbot-agent` (port 3003) — chatbot routes in gateway proxy to this; not deployed
 - `lead-engine` (port 3004) — event workers exist but no HTTP routes; not deployed
 - `survey-engine` (port 3005) — survey routes live directly in API gateway; this service not needed
 - `social-media` (port 3006) — skeleton only; social routes live in API gateway
@@ -72,9 +72,17 @@ OWNER_EMAIL, OWNER_PHONE, API_BASE_URL
 ```
 DATABASE_URL, REDIS_URL, ANTHROPIC_API_KEY
 VERCEL_API_TOKEN (deploys client websites to Vercel)
-PEXELS_API_KEY (optional — curated fallback images work without it)
-OPENAI_API_KEY (optional — for DALL-E 3 image generation in editor)
+PEXELS_API_KEY, OPENAI_API_KEY
+SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (for DALL-E image persistence)
+CHATBOT_API_URL=https://chatbot-agent-production-e735.up.railway.app
 PORT=3007, NODE_ENV=production
+```
+
+### `chatbot-agent` (Railway)
+```
+DATABASE_URL, REDIS_URL, ANTHROPIC_API_KEY
+CHATBOT_API_URL=https://chatbot-agent-production-e735.up.railway.app
+PORT=3003, NODE_ENV=production
 ```
 
 ### `apps/client` (Vercel — growth-os-client project)
@@ -111,9 +119,12 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 - **Social media AI generation**: On-demand post generation via Claude Haiku, optional scheduling
 - **Contacts/CRM**: List, view, paginate, manually add, edit, send survey via SMS or email
 - **Campaigns (client)**: EMAIL/SMS campaigns to contacts — create draft, send via SendGrid/Twilio
-- **Voice agent provisioning**: ElevenLabs agent + Twilio number inline; idempotent; agent is live and answering calls
-- **Voice agent configuration**: Voice browser (preview + select from 100+ voices), system prompt editor (4 industry templates), knowledge base upload (menu, FAQ, parking, etc.)
-- **Image Library**: Full `/images` page — DALL-E 3 generation, save URLs, category filters (food/interior/team/logo/product/lifestyle), favorites, detail modal. Images persisted to Supabase Storage (permanent URLs, no DALL-E expiry).
+- **Voice agent provisioning**: ElevenLabs agent + Twilio number inline; idempotent; agent is live and answering calls via ElevenLabs phone number integration
+- **Voice agent configuration**: Voice browser (preview + select from 100+ voices), system prompt editor (4 industry templates), knowledge base upload, test call widget (ElevenLabs web embed), conversation history from ElevenLabs API
+- **Voice agent UI**: Redesigned with 6 tabs (Dashboard, Voice, System Prompt, Knowledge Base, Test Call, History), Embedo violet theme, animated test call hero
+- **Chatbot widget**: Deployed chatbot-agent service on Railway. Widget auto-injected into all generated websites. Claude Haiku-powered AI chat with lead capture + appointment booking tools.
+- **Chatbot dashboard**: Enable/disable, settings (persona, welcome message, color), test chat, embed snippet, conversation list, stats
+- **Image Library**: Full `/images` page — DALL-E 3 generation, save URLs, category filters (food/interior/team/logo/product/lifestyle), favorites, detail modal. Images persisted to Supabase Storage (permanent URLs).
 - **Billing/Subscriptions**: Stripe checkout → webhook → Subscription record; billing dashboard
 - **Integrations page**: OAuth param cleanup
 - **Public routes**: `/qr/` and `/s/` middleware-exempted (no auth required)
@@ -142,12 +153,13 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 - **Vercel deployment**: Auto-deploys to Vercel on generation, returns live URL
 - **HTML stored in DB**: AI-generated HTML saved in config.html — preview survives refresh without Vercel fetch
 
-### ⚠️ Built but Not Wired / Untested in Production
+### ⚠️ Built but Needs Work
 
-- **Chatbot**: API routes exist but proxy to `chatbot-agent` service which isn't deployed
+- **Chatbot widget reliability**: Widget deployed and injected into generated sites, but second message sometimes fails to get a response. Needs debugging — likely widget.js state management issue with isSending flag.
+- **Chatbot customizer**: Need multi-chatbot support, system prompt editor with menu/knowledge upload, and dropdown selector when building websites
 - **OAuth social connections**: Routes exist but no Meta App / Google Cloud project / TikTok App created
-- **ElevenLabs inbound webhook**: Route exists; agent is provisioned but webhook for call completion logging not yet tested
-- **AI self-review loop**: Runs on Sonnet after generation; may need tuning for quality threshold
+- **ElevenLabs inbound webhook**: Route exists; agent provisioned but webhook for call completion logging not tested
+- **Voice agent call routing**: Agent says "let me transfer you" but no actual Twilio transfer logic
 
 ### ❌ Not Implemented / Placeholder
 
@@ -161,14 +173,10 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 
 | Item | What's needed | Priority |
 |---|---|---|
+| Fix chatbot widget reliability | Second message sometimes fails — debug isSending flag in widget.js | High |
+| Build chatbot customizer | Multi-chatbot support, system prompt + knowledge base editor, website dropdown selector | High |
 | Apollo.io API key | Set `APOLLO_API_KEY` in prospector Railway env to enable email enrichment | Medium |
-| Deploy chatbot-agent | Add to Railway project | Low |
 | Meta/Google/TikTok OAuth apps | Create developer apps, set client IDs/secrets in API env | Low (blocked by Meta device verification) |
-| Pexels API key | Set `PEXELS_API_KEY` on website-gen Railway for dynamic image search (curated fallbacks work without it) | Low — already set |
-| Supabase Storage | Fix SUPABASE_SERVICE_ROLE_KEY on website-gen (needs full JWT, not truncated) for DALL-E image persistence | High |
-| OpenAI API key | Set `OPENAI_API_KEY` on website-gen Railway for DALL-E 3 image generation in editor | Low |
-| Re-architect self-review | Self-review loop needs to work with AI-generated Tailwind HTML, not just template-based sites | Medium |
-| WebsiteVersion schema push | Run `prisma db push` to create `WebsiteVersion` table in production Supabase | Medium |
 
 ---
 

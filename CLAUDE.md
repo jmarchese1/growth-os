@@ -207,7 +207,7 @@ services/[service-name]/
 
 | API | Service | Notes |
 |---|---|---|
-| ElevenLabs | api/voice-agent routes | Full agent management inline in `apps/api/src/routes/voice-agent.ts`. Provisioning, voice selection, prompt editing, knowledge base upload. Agent ID stored on `Business.elevenLabsAgentId`. Phone number managed via ElevenLabs dashboard. |
+| ElevenLabs | api/voice-agent routes | Full agent management inline in `apps/api/src/routes/voice-agent.ts`. Provisioning, voice selection, prompt editing, knowledge base upload, conversation history, test call widget. Agent ID stored on `Business.elevenLabsAgentId`. Phone number managed via ElevenLabs dashboard. |
 | Twilio Voice | api/voice-agent routes | Number provisioned inline alongside ElevenLabs agent. TwiML webhook routes inbound calls to ElevenLabs WebSocket. Number stored on `Business.twilioPhoneNumber`. |
 | Twilio SMS | lead-engine, survey-engine | One provisioned number per business for outbound |
 | Anthropic Claude | chatbot-agent, social-media, proposal-engine, website-gen | Use `claude-haiku-4-5-20251001` for high-volume (chatbot, social). Use `claude-opus-4-6` for website generation, `claude-sonnet-4-6` for edits/reviews. |
