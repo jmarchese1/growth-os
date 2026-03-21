@@ -39,6 +39,8 @@ interface QrData {
   spinPrizes: SpinPrize[] | null;
   destinationUrl: string | null;
   metadata: PageMeta | null;
+  cooldownPeriod: string | null;
+  cooldownUntil: string | null;
 }
 
 interface Question {
@@ -47,6 +49,53 @@ interface Question {
   label: string;
   options?: string[];
   required: boolean;
+}
+
+/* ── Device fingerprint + cooldown helpers ───────────────────── */
+function getDeviceFingerprint(): string {
+  if (typeof window === 'undefined') return 'ssr';
+  const parts = [navigator.userAgent, screen.width + 'x' + screen.height, Intl.DateTimeFormat().resolvedOptions().timeZone, navigator.language];
+  let hash = 0;
+  const str = parts.join('|');
+  for (let i = 0; i < str.length; i++) { hash = ((hash << 5) - hash) + str.charCodeAt(i); hash |= 0; }
+  return 'fp_' + Math.abs(hash).toString(36);
+}
+
+function getStorageKey(token: string) { return `embedo_qr_${token}`; }
+
+function getLocalCooldown(token: string): string | null {
+  try {
+    const raw = localStorage.getItem(getStorageKey(token));
+    if (!raw) return null;
+    const data = JSON.parse(raw) as { claimedAt: string; cooldownPeriod?: string };
+    if (!data.cooldownPeriod) return null;
+    const cooldownMs: Record<string, number> = { ONCE: Infinity, DAILY: 86400000, WEEKLY: 604800000, MONTHLY: 2592000000 };
+    const window = cooldownMs[data.cooldownPeriod];
+    if (!window) return null;
+    if (window === Infinity) return 'forever';
+    const expiresAt = new Date(new Date(data.claimedAt).getTime() + window);
+    return expiresAt > new Date() ? expiresAt.toISOString() : null;
+  } catch { return null; }
+}
+
+function setLocalCooldown(token: string, cooldownPeriod: string) {
+  try {
+    const data = JSON.stringify({ claimedAt: new Date().toISOString(), cooldownPeriod });
+    localStorage.setItem(getStorageKey(token), data);
+    const maxAge = cooldownPeriod === 'ONCE' ? 31536000 : cooldownPeriod === 'MONTHLY' ? 2592000 : cooldownPeriod === 'WEEKLY' ? 604800 : 86400;
+    document.cookie = `${getStorageKey(token)}=${encodeURIComponent(data)}; max-age=${maxAge}; path=/; SameSite=Lax`;
+  } catch {}
+}
+
+function formatCountdown(until: string): string {
+  if (until === 'forever') return 'already claimed';
+  const ms = new Date(until).getTime() - Date.now();
+  if (ms <= 0) return 'now';
+  const hours = Math.floor(ms / 3600000);
+  const mins = Math.floor((ms % 3600000) / 60000);
+  if (hours >= 24) { const days = Math.floor(hours / 24); return `${days} day${days > 1 ? 's' : ''}`; }
+  if (hours > 0) return `${hours}h ${mins}m`;
+  return `${mins}m`;
 }
 
 /** Resolve colors from metadata with backward compat */
@@ -543,16 +592,27 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
   const [phase, setPhase] = useState<'landing' | 'survey' | 'signup' | 'result'>('landing');
   const [wonPrize, setWonPrize] = useState<SpinPrize | null>(null);
   const [done, setDone] = useState(false);
+  const [cooldownUntil, setCooldownUntil] = useState<string | null>(null);
+  const [countdownText, setCountdownText] = useState('');
   const redirected = useRef(false);
+  const fp = useRef('');
 
   useEffect(() => {
-    fetch(`${API_URL}/qr-codes/public/${token}`)
+    fp.current = getDeviceFingerprint();
+
+    // Check localStorage first for instant feedback
+    const localCooldown = getLocalCooldown(token);
+    if (localCooldown) setCooldownUntil(localCooldown);
+
+    fetch(`${API_URL}/qr-codes/public/${token}?fp=${fp.current}`)
       .then((r) => r.json())
       .then((data: { success: boolean; qr?: QrData; error?: string }) => {
         if (!data.success || !data.qr) {
           setError(data.error ?? 'QR code not found');
         } else {
           setQr(data.qr);
+          // Server cooldown takes priority over local
+          if (data.qr.cooldownUntil) setCooldownUntil(data.qr.cooldownUntil);
           if (['MENU', 'REVIEW', 'CUSTOM'].includes(data.qr.purpose) && data.qr.destinationUrl && !redirected.current) {
             redirected.current = true;
             window.location.href = data.qr.destinationUrl;
@@ -563,11 +623,23 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
       .finally(() => setLoading(false));
   }, [token]);
 
+  // Live countdown timer
+  useEffect(() => {
+    if (!cooldownUntil || cooldownUntil === 'forever') {
+      if (cooldownUntil === 'forever') setCountdownText('already claimed');
+      return;
+    }
+    function tick() { setCountdownText(formatCountdown(cooldownUntil!)); }
+    tick();
+    const interval = setInterval(tick, 30000);
+    return () => clearInterval(interval);
+  }, [cooldownUntil]);
+
   async function signupViaQr(name: string, email: string, phone: string, outcome: string) {
     await fetch(`${API_URL}/qr-codes/public/${token}/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, phone, outcome }),
+      body: JSON.stringify({ name, email, phone, outcome, deviceFingerprint: fp.current }),
     });
   }
 
@@ -593,10 +665,19 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
   async function handleSpinResult(prize: SpinPrize) {
     setWonPrize(prize);
     setPhase('signup');
+    // Mark cooldown locally immediately after spin
+    if (qr?.cooldownPeriod) setLocalCooldown(token, qr.cooldownPeriod);
   }
 
   async function handleSpinSignup(name: string, email: string, phone: string) {
     await signupViaQr(name, email, phone, 'won_prize');
+    setDone(true);
+    setPhase('result');
+  }
+
+  async function handleDiscountClaim(name: string, email: string, phone: string) {
+    await signupViaQr(name, email, phone, 'claimed_discount');
+    if (qr?.cooldownPeriod) setLocalCooldown(token, qr.cooldownPeriod);
     setDone(true);
     setPhase('result');
   }
@@ -690,32 +771,64 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
   );
 
   // DISCOUNT
-  if (qr.purpose === 'DISCOUNT') return (
-    <Wrapper>
-      <div className="text-center space-y-5">
-        <h2 className="text-2xl font-bold" style={{ color: colors.heading }}>{meta.pageHeading || 'Your Discount'}</h2>
-        {meta.pageSubheading && <p className="text-sm -mt-2" style={{ color: colors.text }}>{meta.pageSubheading}</p>}
-        <div className="rounded-2xl px-8 py-8 shadow-xl" style={{ background: `linear-gradient(135deg, ${colors.accent}, ${colors.accent}dd)`, boxShadow: `0 10px 25px ${colors.accent}40`, color: colors.btnText }}>
-          <p className="text-5xl font-black">{qr.discountValue}</p>
-          {qr.discountCode && (
-            <div className="mt-4 bg-white/20 rounded-xl px-4 py-2">
-              <p className="text-xs opacity-70 mb-0.5">Discount Code</p>
-              <p className="text-2xl font-mono font-bold">{qr.discountCode}</p>
-            </div>
-          )}
+  if (qr.purpose === 'DISCOUNT') {
+    // Cooldown active — already claimed
+    if (cooldownUntil && phase === 'landing') return (
+      <Wrapper>
+        <div className="text-center space-y-5 py-6">
+          <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-2" style={{ backgroundColor: colors.accent + '15' }}>
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-7 h-7" style={{ color: colors.accent }}><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.828a1 1 0 101.415-1.414L11 9.586V6z" clipRule="evenodd" /></svg>
+          </div>
+          <h2 className="text-xl font-bold" style={{ color: colors.heading }}>Already Claimed</h2>
+          <p className="text-sm" style={{ color: colors.text }}>
+            {cooldownUntil === 'forever' ? "You've already claimed this discount." : `Come back in ${countdownText} to claim again.`}
+          </p>
         </div>
-        <p className="text-sm" style={{ color: colors.text }}>Show this screen to your server or cashier</p>
-        <div className="pt-4">
-          <p className="text-xs mb-3" style={{ color: colors.text }}>Want us to send deals directly to you?</p>
-          <SignupForm businessName={qr.businessName} accentColor={colors.accent} btnTextColor={colors.btnText} buttonText={meta.pageButtonText} onSubmit={async (n, e, p) => { await signupViaQr(n, e, p, 'claimed_discount'); setDone(true); setPhase('result'); }} />
+      </Wrapper>
+    );
+
+    return (
+      <Wrapper>
+        <div className="text-center space-y-5">
+          <h2 className="text-2xl font-bold" style={{ color: colors.heading }}>{meta.pageHeading || 'Your Discount'}</h2>
+          {meta.pageSubheading && <p className="text-sm -mt-2" style={{ color: colors.text }}>{meta.pageSubheading}</p>}
+          <div className="rounded-2xl px-8 py-8 shadow-xl" style={{ background: `linear-gradient(135deg, ${colors.accent}, ${colors.accent}dd)`, boxShadow: `0 10px 25px ${colors.accent}40`, color: colors.btnText }}>
+            <p className="text-5xl font-black">{qr.discountValue}</p>
+            {qr.discountCode && (
+              <div className="mt-4 bg-white/20 rounded-xl px-4 py-2">
+                <p className="text-xs opacity-70 mb-0.5">Discount Code</p>
+                <p className="text-2xl font-mono font-bold">{qr.discountCode}</p>
+              </div>
+            )}
+          </div>
+          <p className="text-sm" style={{ color: colors.text }}>Show this screen to your server or cashier</p>
+          <div className="pt-4">
+            <p className="text-xs mb-3" style={{ color: colors.text }}>Want us to send deals directly to you?</p>
+            <SignupForm businessName={qr.businessName} accentColor={colors.accent} btnTextColor={colors.btnText} buttonText={meta.pageButtonText} onSubmit={handleDiscountClaim} />
+          </div>
         </div>
-      </div>
-    </Wrapper>
-  );
+      </Wrapper>
+    );
+  }
 
   // SPIN_WHEEL
   if (qr.purpose === 'SPIN_WHEEL') {
     const prizes = qr.spinPrizes ?? [{ label: '10% Off', probability: 50 }, { label: '5% Off', probability: 50 }];
+
+    // Cooldown active — show wheel frozen with comeback message
+    if (cooldownUntil && phase === 'landing') return (
+      <Wrapper>
+        <div className="space-y-6 text-center">
+          <div>
+            <h2 className="text-2xl font-bold" style={{ color: colors.heading }}>{meta.pageHeading || 'Spin to Win!'}</h2>
+            <p className="text-sm mt-1" style={{ color: colors.text }}>
+              {cooldownUntil === 'forever' ? "You've already spun this wheel." : `Come back in ${countdownText} for another spin!`}
+            </p>
+          </div>
+          <SpinWheel prizes={prizes} accentColor={colors.accent} btnTextColor={colors.btnText} interactive={false} />
+        </div>
+      </Wrapper>
+    );
 
     if (phase === 'signup' && wonPrize) return (
       <Wrapper>

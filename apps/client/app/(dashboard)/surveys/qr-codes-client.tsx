@@ -336,6 +336,7 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
   const [discountCode, setDiscountCode] = useState('');
   const [spinPrizes, setSpinPrizes] = useState<SpinPrize[]>(DEFAULT_PRIZES);
   const [destinationUrl, setDestinationUrl] = useState('');
+  const [cooldownPeriod, setCooldownPeriod] = useState('DAILY');
   const [expiresAt, setExpiresAt] = useState('');
   // Appearance
   const [accentColor, setAccentColor] = useState('#7C3AED');
@@ -360,6 +361,7 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
       if (discountCode.trim()) payload['discountCode'] = discountCode.trim();
     }
     if (purpose === 'SPIN_WHEEL') payload['spinPrizes'] = spinPrizes;
+    if (['SPIN_WHEEL', 'DISCOUNT'].includes(purpose) && cooldownPeriod) payload['cooldownPeriod'] = cooldownPeriod;
     if (['MENU', 'REVIEW', 'CUSTOM'].includes(purpose)) payload['destinationUrl'] = destinationUrl.trim();
     if (expiresAt) payload['expiresAt'] = expiresAt;
     const isDark = bgColor === '#1a1a2e' || bgColor === '#0f172a' || bgColor < '#444444';
@@ -490,6 +492,21 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
                   <div className="bg-sky-50 border border-sky-200 rounded-lg px-4 py-3">
                     <p className="text-xs text-sky-800 font-medium">How Sign-up works</p>
                     <p className="text-[11px] text-sky-700 mt-1">Customers scan, enter their name + email or phone number, and are automatically added to your Contacts with source "QR Code".</p>
+                  </div>
+                )}
+
+                {/* Cooldown / usage limit */}
+                {['SPIN_WHEEL', 'DISCOUNT'].includes(purpose) && (
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">Usage Limit</label>
+                    <select value={cooldownPeriod} onChange={(e) => setCooldownPeriod(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800">
+                      <option value="DAILY">Once per day</option>
+                      <option value="WEEKLY">Once per week</option>
+                      <option value="MONTHLY">Once per month</option>
+                      <option value="ONCE">One-time only</option>
+                      <option value="">Unlimited (no limit)</option>
+                    </select>
+                    <p className="text-[10px] text-slate-400 mt-1">How often the same person can {purpose === 'SPIN_WHEEL' ? 'spin' : 'claim'}</p>
                   </div>
                 )}
 

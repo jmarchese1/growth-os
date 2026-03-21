@@ -129,6 +129,7 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
   const [pageSubheading, setPageSubheading] = useState('');
   const [pageLogo, setPageLogo] = useState('');
   const [pageButtonText, setPageButtonText] = useState('');
+  const [cooldownPeriod, setCooldownPeriod] = useState('DAILY');
   // Spin wheel
   const [spinPrizes, setSpinPrizes] = useState([
     { label: '10% Off', probability: 35 }, { label: 'Free Dessert', probability: 20 },
@@ -184,6 +185,7 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
       if (discountValue) body['discountValue'] = discountValue;
       if (discountCode) body['discountCode'] = discountCode;
       if (purpose === 'SPIN_WHEEL') body['spinPrizes'] = spinPrizes;
+      if (['SPIN_WHEEL', 'DISCOUNT'].includes(purpose) && cooldownPeriod) body['cooldownPeriod'] = cooldownPeriod;
       if (destinationUrl) body['destinationUrl'] = destinationUrl;
       if (expiresAt) body['expiresAt'] = new Date(expiresAt).toISOString();
       // Page style stored in metadata JSON — heading/text/button colors auto-derived from bg
@@ -357,6 +359,21 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
                     <button onClick={() => setSpinPrizes([...spinPrizes, { label: '', probability: 0 }])} className="text-xs text-violet-600 hover:text-violet-800 font-medium">+ Add Prize</button>
                     <span className={`text-xs font-medium ${totalProb === 100 ? 'text-emerald-600' : 'text-rose-500'}`}>Total: {totalProb}%</span>
                   </div>
+                </div>
+              )}
+
+              {/* Cooldown / usage limit */}
+              {['SPIN_WHEEL', 'DISCOUNT'].includes(purpose) && (
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Usage Limit</label>
+                  <select value={cooldownPeriod} onChange={(e) => setCooldownPeriod(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800">
+                    <option value="DAILY">Once per day</option>
+                    <option value="WEEKLY">Once per week</option>
+                    <option value="MONTHLY">Once per month</option>
+                    <option value="ONCE">One-time only</option>
+                    <option value="">Unlimited (no limit)</option>
+                  </select>
+                  <p className="text-[10px] text-slate-400 mt-1">How often the same person can {purpose === 'SPIN_WHEEL' ? 'spin' : 'claim'}</p>
                 </div>
               )}
 

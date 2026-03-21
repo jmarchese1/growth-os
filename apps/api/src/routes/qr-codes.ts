@@ -66,7 +66,7 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
    */
   app.patch<{ Params: { id: string } }>('/qr-codes/:id', async (request) => {
     const { id } = request.params;
-    const body = request.body as { active?: boolean; label?: string; expiresAt?: string | null };
+    const body = request.body as { active?: boolean; label?: string; expiresAt?: string | null; cooldownPeriod?: string | null };
 
     const qrCode = await db.qrCode.findUnique({ where: { id } });
     if (!qrCode) throw new NotFoundError('QrCode', id);
@@ -77,6 +77,7 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
         ...(body.active !== undefined ? { active: body.active } : {}),
         ...(body.label ? { label: body.label.trim() } : {}),
         ...(body.expiresAt !== undefined ? { expiresAt: body.expiresAt ? new Date(body.expiresAt) : null } : {}),
+        ...(body.cooldownPeriod !== undefined ? { cooldownPeriod: body.cooldownPeriod } : {}),
       },
       include: {
         survey: { select: { id: true, title: true, slug: true } },
@@ -105,6 +106,7 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
       destinationUrl?: string;
       expiresAt?: string;
       metadata?: Record<string, unknown>;
+      cooldownPeriod?: string;
     };
 
     if (!body.businessId) return reply.code(400).send({ success: false, error: 'businessId is required' });
@@ -133,6 +135,7 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
         destinationUrl: body.destinationUrl ?? null,
         ...(body.expiresAt ? { expiresAt: new Date(body.expiresAt) } : {}),
         ...(body.metadata ? { metadata: body.metadata as object } : {}),
+        ...(body.cooldownPeriod ? { cooldownPeriod: body.cooldownPeriod } : {}),
         active: true,
       },
       include: {
@@ -161,8 +164,9 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
    * Public endpoint — scan a QR code. Returns QR data and records the scan.
    * Called by the customer-facing /qr/[token] page on first load.
    */
-  app.get<{ Params: { token: string } }>('/qr-codes/public/:token', async (request, reply) => {
+  app.get<{ Params: { token: string }; Querystring: { fp?: string } }>('/qr-codes/public/:token', async (request, reply) => {
     const { token } = request.params;
+    const fp = (request.query as { fp?: string }).fp;
     const ip = (request.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? request.ip;
 
     const qrCode = await db.qrCode.findUnique({
@@ -179,12 +183,47 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
       return reply.code(410).send({ success: false, error: 'This QR code has expired' });
     }
 
+    // Cooldown check — find last claimed scan from this device
+    let cooldownUntil: string | null = null;
+    if (qrCode.cooldownPeriod) {
+      const cooldownMs: Record<string, number> = {
+        ONCE: Infinity,
+        DAILY: 24 * 60 * 60 * 1000,
+        WEEKLY: 7 * 24 * 60 * 60 * 1000,
+        MONTHLY: 30 * 24 * 60 * 60 * 1000,
+      };
+      const window = cooldownMs[qrCode.cooldownPeriod];
+
+      if (window !== undefined) {
+        // Find last scan from same IP AND fingerprint (both must match to avoid shared-WiFi false positives)
+        const lastScan = await db.qrCodeScan.findFirst({
+          where: {
+            qrCodeId: qrCode.id,
+            outcome: { not: null }, // only count claimed scans, not passive views
+            ...(fp ? { ipAddress: ip, deviceFingerprint: fp } : { ipAddress: ip }),
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        if (lastScan) {
+          if (window === Infinity) {
+            cooldownUntil = 'forever';
+          } else {
+            const expiresAt = new Date(lastScan.createdAt.getTime() + window);
+            if (expiresAt > new Date()) {
+              cooldownUntil = expiresAt.toISOString();
+            }
+          }
+        }
+      }
+    }
+
     // Record scan (fire-and-forget, don't block the response)
     db.qrCode.update({
       where: { token },
       data: {
         scanCount: { increment: 1 },
-        scans: { create: { ipAddress: ip } },
+        scans: { create: { ipAddress: ip, ...(fp ? { deviceFingerprint: fp } : {}) } },
       },
     }).catch(() => {});
 
@@ -196,6 +235,8 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
         purpose: qrCode.purpose,
         businessName: qrCode.business.name,
         expiresAt: qrCode.expiresAt,
+        cooldownPeriod: qrCode.cooldownPeriod,
+        cooldownUntil,
         // Survey
         survey: qrCode.survey ? {
           id: qrCode.survey.id,
@@ -229,6 +270,7 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
       email?: string;
       phone?: string;
       outcome?: string;
+      deviceFingerprint?: string;
     };
 
     const qrCode = await db.qrCode.findUnique({ where: { token }, select: { id: true, businessId: true, active: true, expiresAt: true } });
@@ -268,11 +310,14 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
     }
 
     // Record scan outcome
+    const ip = (request.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? request.ip;
     await db.qrCodeScan.create({
       data: {
         qrCodeId: qrCode.id,
         ...(contactId ? { contactId } : {}),
         outcome: body.outcome ?? 'signup',
+        ipAddress: ip,
+        ...(body.deviceFingerprint ? { deviceFingerprint: body.deviceFingerprint } : {}),
       },
     });
 

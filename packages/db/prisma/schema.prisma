@@ -813,6 +813,8 @@ model QrCode {
 
   // Page appearance customization (JSON)
   metadata Json?  // { pageColor, pageBackground, pageHeading, pageSubheading, pageLogo, pageButtonText }
+  // "ONCE" | "DAILY" | "WEEKLY" | "MONTHLY" | null (unlimited)
+  cooldownPeriod String?
 
   expiresAt DateTime?
   active    Boolean   @default(true)
@@ -837,10 +839,12 @@ model QrCodeScan {
 
   outcome   String?  // "completed_survey" | "claimed_discount" | "won_prize" | "signup" | "redirect"
   ipAddress String?
+  deviceFingerprint String?
 
   createdAt DateTime @default(now())
 
   @@index([qrCodeId])
+  @@index([qrCodeId, ipAddress])
   @@index([contactId])
 }
 
