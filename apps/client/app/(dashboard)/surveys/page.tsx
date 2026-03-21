@@ -100,12 +100,9 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
   // Discount fields
   const [discountValue, setDiscountValue] = useState('');
   const [discountCode, setDiscountCode] = useState('');
-  // Page style fields — granular colors
+  // Page style fields
   const [accentColor, setAccentColor] = useState('#7C3AED');
   const [bgColor, setBgColor] = useState('#f8fafc');
-  const [headingColor, setHeadingColor] = useState('#1e293b');
-  const [textColor, setTextColor] = useState('#64748b');
-  const [btnTextColor, setBtnTextColor] = useState('#ffffff');
   const [fontFamily, setFontFamily] = useState('system');
   const [pageHeading, setPageHeading] = useState('');
   const [pageSubheading, setPageSubheading] = useState('');
@@ -166,9 +163,13 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
       if (purpose === 'SPIN_WHEEL') body['spinPrizes'] = spinPrizes;
       if (destinationUrl) body['destinationUrl'] = destinationUrl;
       if (expiresAt) body['expiresAt'] = new Date(expiresAt).toISOString();
-      // Page style stored in metadata JSON
+      // Page style stored in metadata JSON — heading/text/button colors auto-derived from bg
+      const isDark = bgColor === '#1a1a2e' || bgColor === '#0f172a' || bgColor < '#444444';
       body['metadata'] = {
-        accentColor, bgColor, headingColor, textColor, buttonTextColor: btnTextColor, fontFamily,
+        accentColor, bgColor, fontFamily,
+        headingColor: isDark ? '#ffffff' : '#1e293b',
+        textColor: isDark ? 'rgba(255,255,255,0.6)' : '#64748b',
+        buttonTextColor: '#ffffff',
         ...(pageHeading ? { pageHeading } : {}),
         ...(pageSubheading ? { pageSubheading } : {}),
         ...(pageLogo ? { pageLogo } : {}),
@@ -354,19 +355,12 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
               {/* Page Style */}
               {['SURVEY', 'SPIN_WHEEL', 'DISCOUNT', 'SIGNUP'].includes(purpose) && (
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Page Appearance</p>
-                    <div className="flex gap-1">
-                      <button onClick={() => { setBgColor('#f8fafc'); setHeadingColor('#1e293b'); setTextColor('#64748b'); setBtnTextColor('#ffffff'); }} className="px-2 py-1 text-[9px] font-medium rounded border border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100">Light</button>
-                      <button onClick={() => { setBgColor('#1a1a2e'); setHeadingColor('#ffffff'); setTextColor('rgba(255,255,255,0.6)'); setBtnTextColor('#ffffff'); }} className="px-2 py-1 text-[9px] font-medium rounded border border-slate-600 bg-slate-800 text-white hover:bg-slate-700">Dark</button>
-                      <button onClick={() => { setBgColor(accentColor); setHeadingColor('#ffffff'); setTextColor('rgba(255,255,255,0.7)'); setBtnTextColor('#1e293b'); }} className="px-2 py-1 text-[9px] font-medium rounded border text-white" style={{ backgroundColor: accentColor, borderColor: accentColor }}>Brand</button>
-                    </div>
-                  </div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Page Appearance</p>
 
-                  {/* Color pickers */}
+                  {/* Two color pickers: accent + background */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Accent / Buttons</label>
+                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Accent Color</label>
                       <div className="flex items-center gap-1.5">
                         <input type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="w-6 h-6 rounded border-0 cursor-pointer flex-shrink-0" />
                         <input type="text" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="w-20 px-1.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 font-mono" />
@@ -376,33 +370,13 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Background</label>
+                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Background Color</label>
                       <div className="flex items-center gap-1.5">
                         <input type="color" value={bgColor.startsWith('#') ? bgColor : '#f8fafc'} onChange={(e) => setBgColor(e.target.value)} className="w-6 h-6 rounded border-0 cursor-pointer flex-shrink-0" />
                         <input type="text" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="flex-1 px-1.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 font-mono" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Heading</label>
-                      <div className="flex items-center gap-1.5">
-                        <input type="color" value={headingColor.startsWith('#') ? headingColor : '#1e293b'} onChange={(e) => setHeadingColor(e.target.value)} className="w-6 h-6 rounded border-0 cursor-pointer flex-shrink-0" />
-                        <input type="text" value={headingColor} onChange={(e) => setHeadingColor(e.target.value)} className="flex-1 px-1.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 font-mono" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Body Text</label>
-                      <div className="flex items-center gap-1.5">
-                        <input type="color" value={textColor.startsWith('#') ? textColor : '#64748b'} onChange={(e) => setTextColor(e.target.value)} className="w-6 h-6 rounded border-0 cursor-pointer flex-shrink-0" />
-                        <input type="text" value={textColor} onChange={(e) => setTextColor(e.target.value)} className="flex-1 px-1.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 font-mono" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Button Text</label>
-                      <div className="flex items-center gap-1.5">
-                        <input type="color" value={btnTextColor.startsWith('#') ? btnTextColor : '#ffffff'} onChange={(e) => setBtnTextColor(e.target.value)} className="w-6 h-6 rounded border-0 cursor-pointer flex-shrink-0" />
-                        <input type="text" value={btnTextColor} onChange={(e) => setBtnTextColor(e.target.value)} className="flex-1 px-1.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 font-mono" />
+                        {['#f8fafc', '#ffffff', '#1a1a2e', '#0f172a'].map((c) => (
+                          <button key={c} onClick={() => setBgColor(c)} className="w-3.5 h-3.5 rounded-full border transition-all hover:scale-125 flex-shrink-0" style={{ background: c, borderColor: bgColor === c ? '#333' : c === '#ffffff' ? '#e2e8f0' : 'transparent' }} />
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -421,7 +395,7 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
 
                   {/* Text overrides */}
                   <div>
-                    <label className="block text-[10px] font-medium text-slate-500 mb-1">Custom Heading (optional)</label>
+                    <label className="block text-[10px] font-medium text-slate-500 mb-1">Heading (optional)</label>
                     <input type="text" value={pageHeading} onChange={(e) => setPageHeading(e.target.value)} placeholder={purpose === 'SURVEY' ? 'We\'d love your feedback!' : purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'DISCOUNT' ? 'Your Exclusive Offer' : 'Join Us!'} className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
                   </div>
                   <div>
@@ -451,16 +425,15 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
                       <div className="w-6 h-6 rounded-md flex items-center justify-center mb-1.5 shadow-sm" style={{ backgroundColor: accentColor }}>
                         <svg viewBox="0 0 32 32" fill="none" className="w-4 h-4"><polygon points="16,4 28,10 16,16 4,10" fill="#fff" fillOpacity="0.9" /><polygon points="4,10 16,16 16,28 4,22" fill="#fff" fillOpacity="0.5" /><polygon points="28,10 16,16 16,28 28,22" fill="#fff" fillOpacity="0.7" /></svg>
                       </div>
-                      <p className="text-[9px] mb-2" style={{ color: textColor }}>Business Name</p>
-                      <p className="text-xs font-bold text-center mb-0.5" style={{ color: headingColor }}>{pageHeading || (purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'DISCOUNT' ? 'Your Discount' : 'Join Us!')}</p>
-                      <p className="text-[9px] text-center mb-2" style={{ color: textColor }}>{pageSubheading || 'Your subheading here'}</p>
+                      <p className="text-xs font-bold text-center mb-0.5" style={{ color: bgColor === '#f8fafc' || bgColor === '#ffffff' ? '#1e293b' : '#ffffff' }}>{pageHeading || (purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'DISCOUNT' ? 'Your Discount' : 'Join Us!')}</p>
+                      <p className="text-[9px] text-center mb-2" style={{ color: bgColor === '#f8fafc' || bgColor === '#ffffff' ? '#64748b' : 'rgba(255,255,255,0.6)' }}>{pageSubheading || 'Your subheading here'}</p>
                       {purpose === 'SPIN_WHEEL' && (
                         <div className="mb-2">
                           <MiniSpinPreview prizes={spinPrizes} accentColor={accentColor} />
                         </div>
                       )}
                       {purpose === 'DISCOUNT' && (
-                        <div className="rounded-lg px-3 py-2 mb-2 text-center w-full max-w-[140px]" style={{ background: `linear-gradient(135deg, ${accentColor}, ${accentColor}dd)`, color: btnTextColor }}>
+                        <div className="rounded-lg px-3 py-2 mb-2 text-center w-full max-w-[140px]" style={{ background: `linear-gradient(135deg, ${accentColor}, ${accentColor}dd)`, color: '#ffffff' }}>
                           <p className="text-sm font-black">{discountValue || '10% Off'}</p>
                           {discountCode && <p className="text-[8px] font-mono mt-0.5 opacity-80">Code: {discountCode}</p>}
                         </div>
@@ -471,7 +444,7 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
                           <div className="w-full h-4 bg-white/80 rounded border border-slate-200" />
                         </div>
                       )}
-                      <div className="px-4 py-1 rounded-full text-[9px] font-semibold" style={{ backgroundColor: accentColor, color: btnTextColor }}>
+                      <div className="px-4 py-1 rounded-full text-[9px] font-semibold text-white" style={{ backgroundColor: accentColor }}>
                         {pageButtonText || 'Submit'}
                       </div>
                     </div>

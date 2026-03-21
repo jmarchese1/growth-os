@@ -241,13 +241,10 @@ function MiniSpinWheel({ prizes, accentColor, size = 160 }: { prizes: SpinPrize[
 }
 
 /* ── Live Preview ──────────────────────────────────────────────── */
-function LivePreview({ purpose, accentColor, bgColor, headingColor, textColor, btnTextColor, fontFamily, heading, subheading, buttonText, prizes, discountValue, discountCode }: {
+function LivePreview({ purpose, accentColor, bgColor, fontFamily, heading, subheading, buttonText, prizes, discountValue, discountCode }: {
   purpose: QrPurpose;
   accentColor: string;
   bgColor: string;
-  headingColor: string;
-  textColor: string;
-  btnTextColor: string;
   fontFamily: string;
   heading: string;
   subheading: string;
@@ -257,6 +254,9 @@ function LivePreview({ purpose, accentColor, bgColor, headingColor, textColor, b
   discountCode: string;
 }) {
   const fontStack = FONT_MAP[fontFamily] || FONT_MAP.system;
+  const isDark = bgColor === '#1a1a2e' || bgColor === '#0f172a' || bgColor < '#444444';
+  const headingColor = isDark ? '#ffffff' : '#1e293b';
+  const textColor = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
   const defaultHeading = purpose === 'SURVEY' ? "We'd love your feedback!" : purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'DISCOUNT' ? 'Your Exclusive Offer' : 'Join Us!';
   const defaultSub = purpose === 'SPIN_WHEEL' ? 'Try your luck — what will you get?' : purpose === 'SIGNUP' ? 'Sign up for exclusive deals' : '';
   const defaultBtn = purpose === 'SURVEY' ? 'Submit Feedback' : purpose === 'SPIN_WHEEL' ? 'Spin the Wheel!' : purpose === 'SIGNUP' ? 'Sign Me Up' : 'Claim Now';
@@ -270,7 +270,6 @@ function LivePreview({ purpose, accentColor, bgColor, headingColor, textColor, b
         <span className="text-[9px] text-slate-400 ml-2">Preview</span>
       </div>
       <div className="p-4 flex flex-col items-center" style={{ backgroundColor: bgColor, fontFamily: fontStack, minHeight: purpose === 'SPIN_WHEEL' ? 300 : 200 }}>
-        {/* Logo placeholder */}
         <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-2 shadow" style={{ backgroundColor: accentColor }}>
           <svg viewBox="0 0 32 32" fill="none" className="w-5 h-5">
             <polygon points="16,4 28,10 16,16 4,10" fill="#fff" fillOpacity="0.9" />
@@ -278,12 +277,10 @@ function LivePreview({ purpose, accentColor, bgColor, headingColor, textColor, b
             <polygon points="28,10 16,16 16,28 28,22" fill="#fff" fillOpacity="0.7" />
           </svg>
         </div>
-        <p className="text-[9px] mb-3" style={{ color: textColor }}>Business Name</p>
 
         <p className="text-sm font-bold text-center mb-0.5" style={{ color: headingColor }}>{heading || defaultHeading}</p>
         <p className="text-[10px] text-center mb-3" style={{ color: textColor }}>{subheading || defaultSub}</p>
 
-        {/* Purpose-specific content */}
         {purpose === 'SPIN_WHEEL' && (
           <div className="mb-3">
             <MiniSpinWheel prizes={prizes} accentColor={accentColor} size={140} />
@@ -291,7 +288,7 @@ function LivePreview({ purpose, accentColor, bgColor, headingColor, textColor, b
         )}
 
         {purpose === 'DISCOUNT' && (
-          <div className="rounded-xl px-4 py-3 mb-3 text-center w-full max-w-[180px]" style={{ background: `linear-gradient(135deg, ${accentColor}, ${accentColor}dd)`, color: btnTextColor }}>
+          <div className="rounded-xl px-4 py-3 mb-3 text-center w-full max-w-[180px]" style={{ background: `linear-gradient(135deg, ${accentColor}, ${accentColor}dd)`, color: '#ffffff' }}>
             <p className="text-lg font-black">{discountValue || '10% Off'}</p>
             {discountCode && (
               <div className="mt-1.5 bg-white/20 rounded-lg px-2 py-1">
@@ -310,10 +307,7 @@ function LivePreview({ purpose, accentColor, bgColor, headingColor, textColor, b
           </div>
         )}
 
-        <div
-          className="px-6 py-1.5 rounded-full text-[10px] font-semibold shadow-sm"
-          style={{ backgroundColor: accentColor, color: btnTextColor }}
-        >
+        <div className="px-6 py-1.5 rounded-full text-[10px] font-semibold text-white shadow-sm" style={{ backgroundColor: accentColor }}>
           {buttonText || defaultBtn}
         </div>
 
@@ -341,9 +335,6 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
   // Appearance
   const [accentColor, setAccentColor] = useState('#7C3AED');
   const [bgColor, setBgColor] = useState('#f8fafc');
-  const [headingColor, setHeadingColor] = useState('#1e293b');
-  const [textColor, setTextColor] = useState('#64748b');
-  const [btnTextColor, setBtnTextColor] = useState('#ffffff');
   const [fontFamily, setFontFamily] = useState('system');
   const [pageHeading, setPageHeading] = useState('');
   const [pageSubheading, setPageSubheading] = useState('');
@@ -366,8 +357,12 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
     if (purpose === 'SPIN_WHEEL') payload['spinPrizes'] = spinPrizes;
     if (['MENU', 'REVIEW', 'CUSTOM'].includes(purpose)) payload['destinationUrl'] = destinationUrl.trim();
     if (expiresAt) payload['expiresAt'] = expiresAt;
+    const isDark = bgColor === '#1a1a2e' || bgColor === '#0f172a' || bgColor < '#444444';
     payload['metadata'] = {
-      accentColor, bgColor, headingColor, textColor, buttonTextColor: btnTextColor, fontFamily,
+      accentColor, bgColor, fontFamily,
+      headingColor: isDark ? '#ffffff' : '#1e293b',
+      textColor: isDark ? 'rgba(255,255,255,0.6)' : '#64748b',
+      buttonTextColor: '#ffffff',
       ...(pageHeading ? { pageHeading } : {}),
       ...(pageSubheading ? { pageSubheading } : {}),
       ...(pageLogo ? { pageLogo } : {}),
@@ -394,13 +389,6 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
   const canGenerate = label.trim() &&
     (purpose !== 'SURVEY' || surveyId) &&
     (!['MENU', 'REVIEW', 'CUSTOM'].includes(purpose) || destinationUrl.trim());
-
-  // Quick theme presets
-  function applyTheme(theme: 'light' | 'dark' | 'brand') {
-    if (theme === 'light') { setBgColor('#f8fafc'); setHeadingColor('#1e293b'); setTextColor('#64748b'); setBtnTextColor('#ffffff'); }
-    if (theme === 'dark') { setBgColor('#1a1a2e'); setHeadingColor('#ffffff'); setTextColor('rgba(255,255,255,0.6)'); setBtnTextColor('#ffffff'); }
-    if (theme === 'brand') { setBgColor(accentColor); setHeadingColor('#ffffff'); setTextColor('rgba(255,255,255,0.7)'); setBtnTextColor(accentColor === '#000000' ? '#ffffff' : '#1e293b'); }
-  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
@@ -502,32 +490,22 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
 
                 {/* Page Appearance */}
                 <div className="space-y-3 border border-slate-200 rounded-xl p-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold text-slate-700">Page Appearance</p>
-                    <div className="flex gap-1">
-                      {[
-                        { key: 'light' as const, label: 'Light', bg: '#f8fafc', border: '#e2e8f0' },
-                        { key: 'dark' as const, label: 'Dark', bg: '#1a1a2e', border: '#334155' },
-                        { key: 'brand' as const, label: 'Brand', bg: accentColor, border: accentColor },
-                      ].map((t) => (
-                        <button key={t.key} onClick={() => applyTheme(t.key)} className="px-2 py-1 text-[9px] font-medium rounded border transition-colors hover:opacity-80" style={{ backgroundColor: t.bg, borderColor: t.border, color: t.key === 'light' ? '#475569' : '#fff' }}>
-                          {t.label}
-                        </button>
-                      ))}
+                  <p className="text-xs font-semibold text-slate-700">Page Appearance</p>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <ColorPicker label="Accent Color" value={accentColor} onChange={setAccentColor} />
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Background Color</label>
+                      <div className="flex items-center gap-1.5">
+                        <input type="color" value={bgColor.startsWith('#') ? bgColor : '#f8fafc'} onChange={(e) => setBgColor(e.target.value)} className="w-6 h-6 rounded border-0 cursor-pointer flex-shrink-0" />
+                        <input type="text" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="w-20 px-1.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 font-mono" />
+                        {['#f8fafc', '#ffffff', '#1a1a2e', '#0f172a'].map((c) => (
+                          <button key={c} onClick={() => setBgColor(c)} className="w-3.5 h-3.5 rounded-full border transition-all hover:scale-125 flex-shrink-0" style={{ background: c, borderColor: bgColor === c ? '#333' : c === '#ffffff' ? '#e2e8f0' : 'transparent' }} />
+                        ))}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <ColorPicker label="Accent / Buttons" value={accentColor} onChange={setAccentColor} />
-                    <ColorPicker label="Background" value={bgColor} onChange={setBgColor} />
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <ColorPicker label="Heading" value={headingColor} onChange={setHeadingColor} />
-                    <ColorPicker label="Body Text" value={textColor} onChange={setTextColor} />
-                    <ColorPicker label="Button Text" value={btnTextColor} onChange={setBtnTextColor} />
-                  </div>
-
-                  {/* Font */}
                   <div>
                     <label className="block text-[10px] font-medium text-slate-500 mb-1">Font</label>
                     <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-800">
@@ -535,9 +513,8 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
                     </select>
                   </div>
 
-                  {/* Text overrides */}
                   <div>
-                    <label className="block text-[10px] font-medium text-slate-500 mb-1">Custom Heading (optional)</label>
+                    <label className="block text-[10px] font-medium text-slate-500 mb-1">Heading (optional)</label>
                     <input type="text" value={pageHeading} onChange={(e) => setPageHeading(e.target.value)} placeholder={purpose === 'SURVEY' ? "We'd love your feedback!" : purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'DISCOUNT' ? 'Your Exclusive Offer' : 'Join Us!'} className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
                   </div>
                   <div>
@@ -579,9 +556,6 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
                   purpose={purpose}
                   accentColor={accentColor}
                   bgColor={bgColor}
-                  headingColor={headingColor}
-                  textColor={textColor}
-                  btnTextColor={btnTextColor}
                   fontFamily={fontFamily}
                   heading={pageHeading}
                   subheading={pageSubheading}
