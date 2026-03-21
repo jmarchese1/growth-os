@@ -414,7 +414,7 @@ function SpinWheel({ prizes, onResult, accentColor = '#7C3AED', buttonText, btnT
         <button
           onClick={spin}
           disabled={spinning || spun}
-          className="px-10 py-3.5 text-sm font-bold rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xl active:scale-95 hover:scale-105"
+          className="w-full max-w-[280px] py-4 text-sm font-bold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xl active:scale-[0.97] hover:shadow-2xl hover:brightness-110"
           style={{ backgroundColor: accentColor, color: btnTextColor, boxShadow: `0 8px 30px ${accentColor}40` }}
         >
           {spinning ? 'Spinning...' : spun ? 'Done!' : (buttonText || 'Spin the Wheel!')}
@@ -699,26 +699,55 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
     document.head.appendChild(link);
   }, [meta.fontFamily]);
 
-  // Branded wrapper
-  const Wrapper = ({ children }: { children: React.ReactNode }) => (
-    <>
+  // Branded wrapper — vertically centered with subtle animated bg
+  const Wrapper = ({ children }: { children: React.ReactNode }) => {
+    const isDarkBg = colors.bg === '#1a1a2e' || colors.bg === '#0f172a' || colors.bg < '#444444';
+    return (
       <div
-        className="min-h-screen flex flex-col items-center px-4 py-10"
+        className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden"
         style={{ backgroundColor: colors.bg, fontFamily: fontStack }}
       >
-        <div className="w-full max-w-sm">
+        {/* Subtle animated gradient orbs */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div
+            className="absolute rounded-full blur-3xl animate-pulse"
+            style={{
+              width: 400, height: 400, top: '-10%', right: '-10%', opacity: 0.08,
+              background: `radial-gradient(circle, ${colors.accent}, transparent)`,
+              animationDuration: '6s',
+            }}
+          />
+          <div
+            className="absolute rounded-full blur-3xl animate-pulse"
+            style={{
+              width: 350, height: 350, bottom: '-8%', left: '-8%', opacity: 0.06,
+              background: `radial-gradient(circle, ${colors.accent}, transparent)`,
+              animationDuration: '8s', animationDelay: '2s',
+            }}
+          />
+          <div
+            className="absolute rounded-full blur-3xl animate-pulse"
+            style={{
+              width: 200, height: 200, top: '40%', left: '60%', opacity: 0.04,
+              background: `radial-gradient(circle, ${isDarkBg ? '#ffffff' : colors.accent}, transparent)`,
+              animationDuration: '10s', animationDelay: '4s',
+            }}
+          />
+        </div>
+
+        <div className="w-full max-w-sm relative z-10">
           {qr && meta.pageLogo && (
-            <div className="text-center mb-8">
+            <div className="text-center mb-6">
               <img src={meta.pageLogo} alt="" className="w-14 h-14 rounded-2xl mx-auto mb-3 object-cover shadow-lg" />
               <p className="text-xs font-medium" style={{ color: colors.text }}>{qr.businessName}</p>
             </div>
           )}
           {children}
-          <p className="text-center text-[10px] mt-10" style={{ color: colors.text }}>Powered by Embedo</p>
+          <p className="text-center text-[10px] mt-8 opacity-40" style={{ color: isDarkBg ? '#ffffff' : '#64748b' }}>Powered by Embedo</p>
         </div>
       </div>
-    </>
-  );
+    );
+  };
 
   if (loading) return (
     <Wrapper>
