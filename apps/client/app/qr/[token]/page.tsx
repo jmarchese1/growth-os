@@ -58,7 +58,7 @@ const WHEEL_PALETTES = [
   ['#14B8A6', '#0D9488'],
 ];
 
-function SpinWheel({ prizes, onResult, brandColor = '#7C3AED' }: { prizes: SpinPrize[]; onResult: (prize: SpinPrize) => void; brandColor?: string }) {
+function SpinWheel({ prizes, onResult, brandColor = '#7C3AED', buttonText }: { prizes: SpinPrize[]; onResult: (prize: SpinPrize) => void; brandColor?: string; buttonText?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [spinning, setSpinning] = useState(false);
   const [spun, setSpun] = useState(false);
@@ -358,14 +358,14 @@ function SpinWheel({ prizes, onResult, brandColor = '#7C3AED' }: { prizes: SpinP
         className="px-10 py-3.5 text-white text-sm font-bold rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xl active:scale-95 hover:scale-105"
         style={{ backgroundColor: brandColor, boxShadow: `0 8px 30px ${brandColor}40` }}
       >
-        {spinning ? 'Spinning...' : spun ? 'Done!' : 'Spin the Wheel!'}
+        {spinning ? 'Spinning...' : spun ? 'Done!' : (buttonText || 'Spin the Wheel!')}
       </button>
     </div>
   );
 }
 
 /* ── Survey Form ─────────────────────────────────────────────────── */
-function SurveyForm({ survey, onSubmit, brandColor = '#7C3AED' }: { survey: QrData['survey']; onSubmit: (answers: Record<string, unknown>, name: string, email: string, phone: string) => Promise<void>; brandColor?: string }) {
+function SurveyForm({ survey, onSubmit, brandColor = '#7C3AED', buttonText }: { survey: QrData['survey']; onSubmit: (answers: Record<string, unknown>, name: string, email: string, phone: string) => Promise<void>; brandColor?: string; buttonText?: string }) {
   const questions = (survey?.questions ?? []) as Question[];
   const [answers, setAnswers] = useState<Record<string, unknown>>({});
   const [name, setName] = useState('');
@@ -471,14 +471,14 @@ function SurveyForm({ survey, onSubmit, brandColor = '#7C3AED' }: { survey: QrDa
         className="w-full py-3.5 text-white text-sm font-semibold rounded-xl disabled:opacity-50 transition-colors flex items-center justify-center gap-2 shadow-lg" style={{ backgroundColor: brandColor }}
       >
         {submitting && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-        {submitting ? 'Submitting...' : 'Submit Feedback'}
+        {submitting ? 'Submitting...' : (buttonText || 'Submit Feedback')}
       </button>
     </form>
   );
 }
 
 /* ── Sign-up Form ────────────────────────────────────────────────── */
-function SignupForm({ businessName, reward, onSubmit, brandColor = '#7C3AED' }: { businessName: string; reward?: string; onSubmit: (name: string, email: string, phone: string) => Promise<void>; brandColor?: string }) {
+function SignupForm({ businessName, reward, onSubmit, brandColor = '#7C3AED', buttonText }: { businessName: string; reward?: string; onSubmit: (name: string, email: string, phone: string) => Promise<void>; brandColor?: string; buttonText?: string }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -511,7 +511,7 @@ function SignupForm({ businessName, reward, onSubmit, brandColor = '#7C3AED' }: 
         className="w-full py-3.5 text-white text-sm font-semibold rounded-xl disabled:opacity-50 transition-colors shadow-lg flex items-center justify-center gap-2" style={{ backgroundColor: brandColor }}
       >
         {submitting && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-        {submitting ? 'Joining...' : `Join ${businessName}`}
+        {submitting ? 'Joining...' : (buttonText || `Join ${businessName}`)}
       </button>
     </form>
   );
@@ -673,7 +673,8 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
   if (qr.purpose === 'DISCOUNT') return (
     <Wrapper>
       <div className="text-center space-y-5">
-        <h2 className="text-2xl font-bold text-slate-900">Your Discount</h2>
+        <h2 className="text-2xl font-bold text-slate-900">{meta.pageHeading || 'Your Discount'}</h2>
+        {meta.pageSubheading && <p className="text-sm text-slate-500 -mt-2">{meta.pageSubheading}</p>}
         <div className="rounded-2xl px-8 py-8 text-white shadow-xl" style={{ background: `linear-gradient(135deg, ${brandColor}, ${brandColor}dd)`, boxShadow: `0 10px 25px ${brandColor}40` }}>
           <p className="text-5xl font-black">{qr.discountValue}</p>
           {qr.discountCode && (
@@ -687,7 +688,7 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
         {/* Optionally capture info */}
         <div className="pt-4">
           <p className="text-xs text-slate-400 mb-3">Want us to send deals directly to you?</p>
-          <SignupForm businessName={qr.businessName} brandColor={brandColor} onSubmit={async (n, e, p) => { await signupViaQr(n, e, p, 'claimed_discount'); setDone(true); setPhase('result'); }} />
+          <SignupForm businessName={qr.businessName} brandColor={brandColor} buttonText={meta.pageButtonText} onSubmit={async (n, e, p) => { await signupViaQr(n, e, p, 'claimed_discount'); setDone(true); setPhase('result'); }} />
         </div>
       </div>
     </Wrapper>
@@ -705,7 +706,7 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
             <h2 className="text-xl font-bold text-slate-900">You won {wonPrize.label}!</h2>
             <p className="text-sm text-slate-500 mt-1">Enter your info to claim your prize</p>
           </div>
-          <SignupForm businessName={qr.businessName} reward={wonPrize.label} brandColor={brandColor} onSubmit={handleSpinSignup} />
+          <SignupForm businessName={qr.businessName} reward={wonPrize.label} brandColor={brandColor} buttonText={meta.pageButtonText} onSubmit={handleSpinSignup} />
         </div>
       </Wrapper>
     );
@@ -714,10 +715,10 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
       <Wrapper>
         <div className="space-y-6 text-center">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900">Spin to Win!</h2>
-            <p className="text-sm text-slate-500 mt-1">Try your luck — what will you get?</p>
+            <h2 className="text-2xl font-bold text-slate-900">{meta.pageHeading || 'Spin to Win!'}</h2>
+            <p className="text-sm text-slate-500 mt-1">{meta.pageSubheading || 'Try your luck — what will you get?'}</p>
           </div>
-          <SpinWheel prizes={prizes} brandColor={brandColor} onResult={handleSpinResult} />
+          <SpinWheel prizes={prizes} brandColor={brandColor} buttonText={meta.pageButtonText} onResult={handleSpinResult} />
         </div>
       </Wrapper>
     );
@@ -744,7 +745,7 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
               </div>
             )}
           </div>
-          <SurveyForm survey={qr.survey} brandColor={brandColor} onSubmit={handleSurveySubmit} />
+          <SurveyForm survey={qr.survey} brandColor={brandColor} buttonText={meta.pageButtonText} onSubmit={handleSurveySubmit} />
         </div>
       </Wrapper>
     );
@@ -755,10 +756,10 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
     <Wrapper>
       <div className="space-y-6">
         <div className="text-center">
-          <h2 className="text-xl font-bold text-slate-900">Join {qr.businessName}</h2>
-          <p className="text-sm text-slate-500 mt-1">Sign up to receive exclusive deals and updates</p>
+          <h2 className="text-xl font-bold text-slate-900">{meta.pageHeading || `Join ${qr.businessName}`}</h2>
+          <p className="text-sm text-slate-500 mt-1">{meta.pageSubheading || 'Sign up to receive exclusive deals and updates'}</p>
         </div>
-        <SignupForm businessName={qr.businessName} brandColor={brandColor} onSubmit={handleSignup} />
+        <SignupForm businessName={qr.businessName} brandColor={brandColor} buttonText={meta.pageButtonText} onSubmit={handleSignup} />
       </div>
     </Wrapper>
   );
