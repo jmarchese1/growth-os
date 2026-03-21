@@ -180,7 +180,7 @@ Output ONLY the HTML. No markdown fences. Start with <!DOCTYPE html>.`,
     let widgetColor = '#7c3aed'; // default violet
     if (colorMatch?.[2]) widgetColor = colorMatch[2];
     else if (btnColorMatch?.[1]) widgetColor = btnColorMatch[1].replace(/[\[\]]/g, '');
-    const script = `\n<!-- Embedo Chat Widget -->\n<script>window.EmbledoChatConfig={businessId:"${chatbotBusinessId}",apiUrl:"${chatbotUrl}",businessName:"${siteData.businessName.replace(/"/g, '\\"')}",welcomeMessage:"Hi! How can I help you today?",primaryColor:"${widgetColor}",position:"bottom-right"};</script>\n<script src="${chatbotUrl}/widget.js" async></script>\n`;
+    const script = `\n<!-- Embedo Chat Widget -->\n<script>window.EmbledoChatConfig={businessId:"${chatbotBusinessId}",apiUrl:"${chatbotUrl}",businessName:"${siteData.businessName.replace(/"/g, '\\"')}",welcomeMessage:"Hi! How can I help you today?",primaryColor:"${widgetColor}",position:"bottom-right"};</script>\n<script src="${chatbotUrl}/widget.js?v=${Date.now()}" async></script>\n`;
     // Try multiple injection points (case-insensitive)
     if (html.match(/<\/body>/i)) {
       html = html.replace(/<\/body>/i, `${script}</body>`);

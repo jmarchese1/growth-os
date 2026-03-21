@@ -132,6 +132,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     return reply
       .header('Content-Type', 'application/javascript')
       .header('Access-Control-Allow-Origin', '*')
+      .header('Cache-Control', 'no-cache, no-store, must-revalidate')
       .send(widgetJs);
   });
 }
