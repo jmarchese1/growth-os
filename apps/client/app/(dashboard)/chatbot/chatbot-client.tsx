@@ -751,6 +751,11 @@ function OptionsTab({ businessId, settings, onSaved }: {
         </button>
         {saved && <span className="text-xs text-emerald-600 font-medium">Saved</span>}
       </div>
+
+      {/* Embed Code */}
+      <div className="mt-6">
+        <EmbedSnippet businessId={businessId} />
+      </div>
     </div>
   );
 }
@@ -1095,26 +1100,9 @@ export default function ChatbotClient({ businessId }: { businessId: string }) {
 
   const s = stats ?? { totalSessions: 0, leadsCapture: 0, appointmentsMade: 0, totalMessages: 0, channelBreakdown: {} };
 
-  // Phase 3: Completion progress
+  // Check if unconfigured (for showing templates)
   const stg = status.settings as Record<string, unknown>;
-  const progressItems = [
-    { label: 'System Prompt', done: !!stg['chatbotSystemPrompt'], tab: 'prompt' },
-    { label: 'Knowledge Base', done: !!stg['chatbotKnowledgeBase'], tab: 'knowledge' },
-    { label: 'Appearance', done: (stg['primaryColor'] as string) !== '#a855f7' && !!stg['primaryColor'], tab: 'appearance' },
-    { label: 'Welcome Message', done: !!stg['welcomeMessage'] && stg['welcomeMessage'] !== 'Hi! How can I help you today?', tab: 'appearance' },
-    { label: 'Quick Replies', done: !!stg['chatbotQuickRepliesEnabled'], tab: 'options' },
-  ];
-  const doneCount = progressItems.filter((p) => p.done).length;
-
-  // Phase 4: Tab card metadata
-  const TAB_META: Record<string, { title: string; desc: string; icon: string }> = {
-    appearance: { title: 'Customize Appearance', desc: 'Colors, fonts, sizing, and live preview', icon: 'M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197' },
-    options: { title: 'Widget Options', desc: 'Behavior, auto-open, quick replies, and more', icon: 'M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281' },
-    prompt: { title: 'AI Personality', desc: 'Shape how your chatbot thinks and responds', icon: 'M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25' },
-    knowledge: { title: 'Knowledge Base', desc: 'Menu, FAQ, hours, and business details', icon: 'M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292' },
-    test: { title: 'Test Your Chatbot', desc: 'Have a live conversation — not logged', icon: 'M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193' },
-    history: { title: 'Conversation History', desc: 'Browse past conversations and captured leads', icon: 'M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z' },
-  };
+  const doneCount = [stg['chatbotSystemPrompt'], stg['chatbotKnowledgeBase']].filter(Boolean).length;
 
   const tabContent = (
     <>
@@ -1141,8 +1129,6 @@ export default function ChatbotClient({ businessId }: { businessId: string }) {
               </div>
             ))}
           </div>
-
-          <EmbedSnippet businessId={businessId} />
         </div>
       )}
 
@@ -1154,8 +1140,6 @@ export default function ChatbotClient({ businessId }: { businessId: string }) {
       {tab === 'history' && <HistoryTab sessions={sessions} totalSessions={totalSessions} onSelect={setSelectedSession} />}
     </>
   );
-
-  const meta = TAB_META[tab];
 
   return (
     <div className="p-8 animate-fade-up">
@@ -1178,27 +1162,7 @@ export default function ChatbotClient({ businessId }: { businessId: string }) {
         </div>
       </div>
 
-      {/* Phase 3: Completion Progress */}
-      <div className="mb-6 bg-white border border-slate-200 rounded-2xl p-4">
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Setup Progress</p>
-          <span className="text-xs font-medium text-slate-400">{doneCount} of {progressItems.length} configured</span>
-        </div>
-        <div className="flex gap-1.5 mb-2">
-          {progressItems.map((item, i) => (
-            <button key={i} onClick={() => setTab(item.tab)} className={`flex-1 h-2 rounded-full transition-all duration-300 ${item.done ? 'bg-gradient-to-r from-violet-500 to-indigo-500' : 'bg-slate-100 hover:bg-slate-200'}`} title={item.label} />
-          ))}
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          {progressItems.map((item, i) => (
-            <button key={i} onClick={() => setTab(item.tab)} className={`text-[10px] px-2 py-0.5 rounded-full transition-all ${item.done ? 'bg-violet-100 text-violet-700 font-medium' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}>
-              {item.done ? '\u2713' : '\u25CB'} {item.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Phase 1: Pill Tabs */}
+      {/* Pill Tabs */}
       <div className="flex gap-1.5 mb-8 bg-slate-100/80 rounded-2xl p-1.5 overflow-x-auto">
         {TABS.map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl whitespace-nowrap transition-all duration-200 ${tab === t.id ? 'bg-white text-violet-700 shadow-sm border border-violet-100' : 'text-slate-500 hover:text-violet-600 hover:bg-white/60'}`}>
@@ -1208,24 +1172,9 @@ export default function ChatbotClient({ businessId }: { businessId: string }) {
         ))}
       </div>
 
-      {/* Phase 2: Animated Tab Content */}
+      {/* Animated Tab Content */}
       <div key={tab} className="animate-fade-up">
-        {meta ? (
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-9 h-9 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-sm">
-                <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" className="w-4.5 h-4.5"><path strokeLinecap="round" strokeLinejoin="round" d={meta.icon} /></svg>
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-slate-900">{meta.title}</h2>
-                <p className="text-sm text-slate-500">{meta.desc}</p>
-              </div>
-            </div>
-            {tabContent}
-          </div>
-        ) : (
-          tabContent
-        )}
+        {tabContent}
       </div>
 
       {selectedSession && <ConversationModal session={selectedSession} onClose={() => setSelectedSession(null)} />}
