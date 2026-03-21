@@ -1,11 +1,13 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { db } from '@embedo/db';
-import { ExternalApiError } from '@embedo/utils';
+import { ExternalApiError, createLogger } from '@embedo/utils';
 import { leadCreatedQueue } from '@embedo/queue';
 import { env } from '../config.js';
 import { chatbotTools } from './tools.js';
 import { buildChatbotSystemPrompt } from './prompt-builder.js';
 import type { ChatMessage } from '@embedo/types';
+
+const log = createLogger('chatbot-agent:ai');
 
 
 const anthropic = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
@@ -46,11 +48,11 @@ export async function processMessage(params: {
   let leadCaptured = false;
   let appointmentRequested = false;
 
-  try {
-    // Only include tools when message might contain lead/booking intent (saves ~500ms)
-    const lowerMsg = message.toLowerCase();
-    const needsTools = /\b(book|reserv|appointment|name is|my name|email|phone|call me|contact)\b/.test(lowerMsg);
+  // Only include tools when message might contain lead/booking intent (saves ~500ms)
+  const lowerMsg = message.toLowerCase();
+  const needsTools = /\b(book|reserv|appointment|name is|my name|email|phone|call me|contact)\b/.test(lowerMsg);
 
+  try {
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 200,
@@ -65,13 +67,11 @@ export async function processMessage(params: {
         reply += block.text;
       } else if (block.type === 'tool_use') {
         const toolInput = block.input as Record<string, unknown>;
-
         actions.push({ type: block.name, data: toolInput });
 
         if (block.name === 'capture_lead') {
           leadCaptured = true;
           if (!test) {
-            // Emit lead.created event (skipped in test mode)
             await leadCreatedQueue().add(`lead:chat:${sessionKey}:${Date.now()}`, {
               businessId,
               source: channel === 'WEB' ? 'CHATBOT' : 'SOCIAL',
@@ -84,7 +84,6 @@ export async function processMessage(params: {
         if (block.name === 'book_appointment') {
           appointmentRequested = true;
           if (!test) {
-            // Emit lead with appointment intent (skipped in test mode)
             await leadCreatedQueue().add(`lead:chat:booking:${sessionKey}:${Date.now()}`, {
               businessId,
               source: 'CHATBOT',
@@ -95,26 +94,36 @@ export async function processMessage(params: {
         }
       }
     }
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    log.error({ err: errMsg, businessId, sessionKey, messageCount: messages.length }, 'Anthropic API call failed');
+    throw new ExternalApiError('Anthropic', `Chat failed: ${errMsg}`, err);
+  }
 
-    // Update session in DB (skipped in test mode)
-    if (!test) {
-      await db.chatSession.update({
+  // Update session in DB separately — don't let DB errors kill the response
+  if (!test) {
+    try {
+      // Read current messages, append, and write back (push on Json fields is unreliable)
+      const currentSession = await db.chatSession.findUnique({ where: { sessionKey }, select: { messages: true } });
+      const currentMsgs = Array.isArray(currentSession?.messages) ? currentSession.messages : [];
+      const updatedMsgs = [
+        ...(currentMsgs as Array<Record<string, string>>),
+        { role: 'user', content: message, timestamp: new Date().toISOString() },
+        { role: 'assistant', content: reply, timestamp: new Date().toISOString() },
+      ];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (db.chatSession.update as any)({
         where: { sessionKey },
         data: {
-          messages: {
-            push: [
-              { role: 'user', content: message, timestamp: new Date().toISOString() },
-              { role: 'assistant', content: reply, timestamp: new Date().toISOString() },
-            ],
-          },
+          messages: updatedMsgs,
           leadCaptured: leadCaptured,
           appointmentMade: appointmentRequested,
         },
       });
+    } catch (dbErr) {
+      log.error({ err: dbErr instanceof Error ? dbErr.message : String(dbErr), sessionKey }, 'DB update failed — reply still returned');
     }
-
-    return { reply, leadCaptured, appointmentRequested, actions };
-  } catch (err) {
-    throw new ExternalApiError('Anthropic', 'Failed to process chat message', err);
   }
+
+  return { reply, leadCaptured, appointmentRequested, actions };
 }

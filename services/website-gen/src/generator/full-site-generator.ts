@@ -76,7 +76,7 @@ export async function generateFullWebsite(params: {
   const imageList = images.map((img, i) => `  ${i + 1}. ${img.url} — "${img.alt}"`).join('\n');
 
   const response = await client.messages.create({
-    model: 'claude-opus-4-6',
+    model: 'claude-sonnet-4-6',
     max_tokens: 16000,
     messages: [{
       role: 'user',
