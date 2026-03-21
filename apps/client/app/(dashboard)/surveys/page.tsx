@@ -629,9 +629,9 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
 
       {open && (
         <div className="border-t border-slate-200 px-5 py-5">
-          <div className="flex gap-6">
+          <div className="flex gap-5">
             {/* Left: Settings */}
-            <div className="flex-1 space-y-4">
+            <div className="w-[280px] flex-shrink-0 space-y-4">
               {/* Global branding */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -666,7 +666,7 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
                           </button>
                         )}
                         {images.length === 0 ? (
-                          <p className="px-3 py-4 text-[10px] text-slate-400 text-center">No images yet — upload some in the Images tab</p>
+                          <p className="px-3 py-4 text-[10px] text-slate-400 text-center">No logos yet — tag images as "logo" in My Images</p>
                         ) : (
                           <div className="grid grid-cols-4 gap-1 p-2">
                             {images.map((img) => (
@@ -729,7 +729,7 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
             </div>
 
             {/* Right: Live email preview */}
-            <div className="w-[260px] flex-shrink-0">
+            <div className="flex-1">
               <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Preview</p>
               <div className="rounded-lg overflow-hidden border border-slate-200 shadow-sm text-[10px]" style={{ fontFamily: EMAIL_FONT_OPTIONS.find((f) => f.value === emailFont)?.stack }}>
                 {/* Header */}
