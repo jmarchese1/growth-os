@@ -9,12 +9,21 @@ type QrPurpose = 'SURVEY' | 'DISCOUNT' | 'SPIN_WHEEL' | 'SIGNUP' | 'MENU' | 'REV
 interface SpinPrize { label: string; probability: number }
 
 interface PageMeta {
+  // Legacy single color (backward compat)
   pageColor?: string;
+  // Granular colors
+  accentColor?: string;
+  bgColor?: string;
+  headingColor?: string;
+  textColor?: string;
+  buttonTextColor?: string;
+  // Other
   pageBackground?: 'gradient' | 'solid' | 'dark';
   pageHeading?: string;
   pageSubheading?: string;
   pageLogo?: string;
   pageButtonText?: string;
+  fontFamily?: string;
 }
 
 interface QrData {
@@ -40,6 +49,24 @@ interface Question {
   required: boolean;
 }
 
+/** Resolve colors from metadata with backward compat */
+function resolveColors(meta: PageMeta) {
+  const accent = meta.accentColor || meta.pageColor || '#7C3AED';
+  const bg = meta.bgColor || (meta.pageBackground === 'dark' ? '#1a1a2e' : meta.pageBackground === 'solid' ? accent : '#f8fafc');
+  const heading = meta.headingColor || (meta.pageBackground === 'dark' || meta.pageBackground === 'solid' ? '#ffffff' : '#1e293b');
+  const text = meta.textColor || (meta.pageBackground === 'dark' || meta.pageBackground === 'solid' ? 'rgba(255,255,255,0.7)' : '#64748b');
+  const btnText = meta.buttonTextColor || '#ffffff';
+  return { accent, bg, heading, text, btnText };
+}
+
+const FONT_MAP: Record<string, string> = {
+  system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  inter: '"Inter", sans-serif',
+  poppins: '"Poppins", sans-serif',
+  playfair: '"Playfair Display", serif',
+  mono: '"JetBrains Mono", "Fira Code", monospace',
+};
+
 /* ── Spin Wheel ──────────────────────────────────────────────────── */
 function pickWeightedPrize(prizes: SpinPrize[]): number {
   const total = prizes.reduce((s, p) => s + p.probability, 0);
@@ -58,7 +85,14 @@ const WHEEL_PALETTES = [
   ['#14B8A6', '#0D9488'],
 ];
 
-function SpinWheel({ prizes, onResult, brandColor = '#7C3AED', buttonText }: { prizes: SpinPrize[]; onResult: (prize: SpinPrize) => void; brandColor?: string; buttonText?: string }) {
+function SpinWheel({ prizes, onResult, accentColor = '#7C3AED', buttonText, btnTextColor = '#ffffff', interactive = true }: {
+  prizes: SpinPrize[];
+  onResult?: (prize: SpinPrize) => void;
+  accentColor?: string;
+  buttonText?: string;
+  btnTextColor?: string;
+  interactive?: boolean;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [spinning, setSpinning] = useState(false);
   const [spun, setSpun] = useState(false);
@@ -77,7 +111,7 @@ function SpinWheel({ prizes, onResult, brandColor = '#7C3AED', buttonText }: { p
     const ctx = canvas.getContext('2d');
     if (ctx) ctx.scale(DPR, DPR);
     drawWheel(rotationRef.current);
-  }, []);
+  }, [prizes, accentColor]);
 
   function drawWheel(rotation: number) {
     const canvas = canvasRef.current;
@@ -97,7 +131,7 @@ function SpinWheel({ prizes, onResult, brandColor = '#7C3AED', buttonText }: { p
     // Outer ring glow
     ctx.beginPath();
     ctx.arc(cx, cy, r + 8, 0, 2 * Math.PI);
-    ctx.strokeStyle = brandColor + '30';
+    ctx.strokeStyle = accentColor + '30';
     ctx.lineWidth = 16;
     ctx.stroke();
 
@@ -135,7 +169,6 @@ function SpinWheel({ prizes, onResult, brandColor = '#7C3AED', buttonText }: { p
       const end = start + arc;
       const [c1, c2] = WHEEL_PALETTES[i % WHEEL_PALETTES.length]!;
 
-      // Gradient fill per segment
       const midAngle = start + arc / 2;
       const gx1 = cx + Math.cos(midAngle) * r * 0.3;
       const gy1 = cy + Math.sin(midAngle) * r * 0.3;
@@ -152,19 +185,17 @@ function SpinWheel({ prizes, onResult, brandColor = '#7C3AED', buttonText }: { p
       ctx.fillStyle = grad;
       ctx.fill();
 
-      // Segment border
       ctx.strokeStyle = 'rgba(255,255,255,0.25)';
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      // Inner highlight arc
       ctx.beginPath();
       ctx.arc(cx, cy, r * 0.92, start + 0.02, end - 0.02);
       ctx.strokeStyle = 'rgba(255,255,255,0.12)';
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      // Label with text shadow
+      // Label
       ctx.save();
       ctx.translate(cx, cy);
       ctx.rotate(start + arc / 2);
@@ -172,16 +203,14 @@ function SpinWheel({ prizes, onResult, brandColor = '#7C3AED', buttonText }: { p
       ctx.textBaseline = 'middle';
       const fontSize = prizes.length > 6 ? 11 : prizes.length > 4 ? 13 : 15;
       ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
-      // Text shadow
       ctx.fillStyle = 'rgba(0,0,0,0.3)';
       ctx.fillText(prizes[i]!.label, r - 16, 1);
-      // Text
       ctx.fillStyle = '#ffffff';
       ctx.fillText(prizes[i]!.label, r - 17, 0);
       ctx.restore();
     }
 
-    // Inner shadow ring
+    // Inner shadow
     const innerShadow = ctx.createRadialGradient(cx, cy, r * 0.15, cx, cy, r * 0.4);
     innerShadow.addColorStop(0, 'rgba(0,0,0,0.15)');
     innerShadow.addColorStop(1, 'rgba(0,0,0,0)');
@@ -190,7 +219,7 @@ function SpinWheel({ prizes, onResult, brandColor = '#7C3AED', buttonText }: { p
     ctx.fillStyle = innerShadow;
     ctx.fill();
 
-    // Center hub - outer ring
+    // Center hub
     ctx.beginPath();
     ctx.arc(cx, cy, 28, 0, 2 * Math.PI);
     ctx.fillStyle = '#ffffff';
@@ -199,22 +228,20 @@ function SpinWheel({ prizes, onResult, brandColor = '#7C3AED', buttonText }: { p
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    // Center hub - brand circle
     const hubGrad = ctx.createRadialGradient(cx - 4, cy - 4, 2, cx, cy, 20);
-    hubGrad.addColorStop(0, brandColor);
-    hubGrad.addColorStop(1, brandColor + 'cc');
+    hubGrad.addColorStop(0, accentColor);
+    hubGrad.addColorStop(1, accentColor + 'cc');
     ctx.beginPath();
     ctx.arc(cx, cy, 20, 0, 2 * Math.PI);
     ctx.fillStyle = hubGrad;
     ctx.fill();
 
-    // Center hub - shine
     ctx.beginPath();
     ctx.arc(cx - 4, cy - 5, 8, 0, 2 * Math.PI);
     ctx.fillStyle = 'rgba(255,255,255,0.25)';
     ctx.fill();
 
-    // Pointer (top) — larger, with gradient
+    // Pointer
     ctx.beginPath();
     ctx.moveTo(cx, cy - r - 6);
     ctx.lineTo(cx - 14, cy - r + 18);
@@ -230,22 +257,19 @@ function SpinWheel({ prizes, onResult, brandColor = '#7C3AED', buttonText }: { p
     ctx.fill();
     ctx.shadowBlur = 0;
     ctx.shadowOffsetY = 0;
-
-    // Pointer border
     ctx.strokeStyle = '#cbd5e1';
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Pointer dot
     ctx.beginPath();
     ctx.arc(cx, cy - r + 10, 3, 0, 2 * Math.PI);
-    ctx.fillStyle = brandColor;
+    ctx.fillStyle = accentColor;
     ctx.fill();
 
     ctx.restore();
   }
 
-  // Audio context for tick sounds
+  // Audio
   const audioCtxRef = useRef<AudioContext | null>(null);
   const lastTickRef = useRef(-1);
 
@@ -257,7 +281,6 @@ function SpinWheel({ prizes, onResult, brandColor = '#7C3AED', buttonText }: { p
       const gain = ctx.createGain();
       osc.connect(gain);
       gain.connect(ctx.destination);
-      // Higher pitch when faster, lower when slow (more dramatic)
       osc.frequency.value = 600 + speed * 400;
       osc.type = 'sine';
       gain.gain.value = Math.min(0.08 + (1 - speed) * 0.12, 0.2);
@@ -271,14 +294,13 @@ function SpinWheel({ prizes, onResult, brandColor = '#7C3AED', buttonText }: { p
     try {
       if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
       const ctx = audioCtxRef.current;
-      // Play a rising arpeggio
       [0, 150, 300, 450].forEach((delay, i) => {
         setTimeout(() => {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.connect(gain);
           gain.connect(ctx.destination);
-          osc.frequency.value = [523, 659, 784, 1047][i]!; // C5, E5, G5, C6
+          osc.frequency.value = [523, 659, 784, 1047][i]!;
           osc.type = 'sine';
           gain.gain.value = 0.12;
           osc.start();
@@ -290,7 +312,7 @@ function SpinWheel({ prizes, onResult, brandColor = '#7C3AED', buttonText }: { p
   }
 
   function spin() {
-    if (spinning || spun) return;
+    if (spinning || spun || !interactive) return;
     setSpinning(true);
     lastTickRef.current = -1;
 
@@ -301,35 +323,29 @@ function SpinWheel({ prizes, onResult, brandColor = '#7C3AED', buttonText }: { p
     const totalTravel = extraSpins + ((targetAngle - rotationRef.current) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
 
     const startTime = performance.now();
-    const duration = 8000; // 8 seconds — much more dramatic
+    const duration = 8000;
     const startRotation = rotationRef.current;
 
     function animate(now: number) {
       const elapsed = now - startTime;
       const t = Math.min(elapsed / duration, 1);
 
-      // Custom easing: fast start, long dramatic slowdown at the end
-      // First 60% of time = 85% of distance (fast), last 40% = 15% (crawl)
       let eased: number;
       if (t < 0.6) {
-        // Fast phase: cubic ease-in-out for the first 60%
         const t2 = t / 0.6;
         eased = 0.85 * (t2 < 0.5 ? 4 * t2 * t2 * t2 : 1 - Math.pow(-2 * t2 + 2, 3) / 2);
       } else {
-        // Slow dramatic phase: very gradual ease-out for the last 40%
         const t2 = (t - 0.6) / 0.4;
-        eased = 0.85 + 0.15 * (1 - Math.pow(1 - t2, 5)); // quintic ease-out — super slow at end
+        eased = 0.85 + 0.15 * (1 - Math.pow(1 - t2, 5));
       }
 
       rotationRef.current = startRotation + eased * totalTravel;
       drawWheel(rotationRef.current);
 
-      // Tick sound when passing segment boundaries
       const currentSegment = Math.floor((((-rotationRef.current - Math.PI / 2) % (2 * Math.PI)) + 4 * Math.PI) % (2 * Math.PI) / arc);
       if (currentSegment !== lastTickRef.current) {
         lastTickRef.current = currentSegment;
-        const speed = 1 - t; // 1 = fast, 0 = slow
-        playTick(speed);
+        playTick(1 - t);
       }
 
       if (t < 1) {
@@ -338,7 +354,7 @@ function SpinWheel({ prizes, onResult, brandColor = '#7C3AED', buttonText }: { p
         setSpinning(false);
         setSpun(true);
         playWinSound();
-        onResult(prizes[winnerIdx]!);
+        onResult?.(prizes[winnerIdx]!);
       }
     }
 
@@ -349,23 +365,30 @@ function SpinWheel({ prizes, onResult, brandColor = '#7C3AED', buttonText }: { p
     <div className="flex flex-col items-center gap-6">
       <div className="relative" style={{ filter: spinning ? 'none' : 'drop-shadow(0 20px 40px rgba(0,0,0,0.15))' }}>
         <canvas ref={canvasRef} width={SIZE} height={SIZE} style={{ width: SIZE, height: SIZE }} />
-        {/* Ambient glow behind wheel */}
-        <div className="absolute inset-0 -z-10 rounded-full blur-3xl opacity-20" style={{ background: brandColor }} />
+        <div className="absolute inset-0 -z-10 rounded-full blur-3xl opacity-20" style={{ background: accentColor }} />
       </div>
-      <button
-        onClick={spin}
-        disabled={spinning || spun}
-        className="px-10 py-3.5 text-white text-sm font-bold rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xl active:scale-95 hover:scale-105"
-        style={{ backgroundColor: brandColor, boxShadow: `0 8px 30px ${brandColor}40` }}
-      >
-        {spinning ? 'Spinning...' : spun ? 'Done!' : (buttonText || 'Spin the Wheel!')}
-      </button>
+      {interactive && (
+        <button
+          onClick={spin}
+          disabled={spinning || spun}
+          className="px-10 py-3.5 text-sm font-bold rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xl active:scale-95 hover:scale-105"
+          style={{ backgroundColor: accentColor, color: btnTextColor, boxShadow: `0 8px 30px ${accentColor}40` }}
+        >
+          {spinning ? 'Spinning...' : spun ? 'Done!' : (buttonText || 'Spin the Wheel!')}
+        </button>
+      )}
     </div>
   );
 }
 
 /* ── Survey Form ─────────────────────────────────────────────────── */
-function SurveyForm({ survey, onSubmit, brandColor = '#7C3AED', buttonText }: { survey: QrData['survey']; onSubmit: (answers: Record<string, unknown>, name: string, email: string, phone: string) => Promise<void>; brandColor?: string; buttonText?: string }) {
+function SurveyForm({ survey, onSubmit, accentColor = '#7C3AED', btnTextColor = '#ffffff', buttonText }: {
+  survey: QrData['survey'];
+  onSubmit: (answers: Record<string, unknown>, name: string, email: string, phone: string) => Promise<void>;
+  accentColor?: string;
+  btnTextColor?: string;
+  buttonText?: string;
+}) {
   const questions = (survey?.questions ?? []) as Question[];
   const [answers, setAnswers] = useState<Record<string, unknown>>({});
   const [name, setName] = useState('');
@@ -424,15 +447,7 @@ function SurveyForm({ survey, onSubmit, brandColor = '#7C3AED', buttonText }: { 
             <div className="space-y-2">
               {(q.options ?? []).map((opt) => (
                 <label key={opt} className="flex items-center gap-3 cursor-pointer p-3 rounded-xl border border-slate-200 hover:border-violet-300 hover:bg-violet-50/50 transition-colors">
-                  <input
-                    type="radio"
-                    name={q.id}
-                    value={opt}
-                    checked={answers[q.id] === opt}
-                    onChange={() => setAnswer(q.id, opt)}
-                    className="text-violet-600"
-                    required={q.required}
-                  />
+                  <input type="radio" name={q.id} value={opt} checked={answers[q.id] === opt} onChange={() => setAnswer(q.id, opt)} className="text-violet-600" required={q.required} />
                   <span className="text-sm text-slate-700">{opt}</span>
                 </label>
               ))}
@@ -446,8 +461,8 @@ function SurveyForm({ survey, onSubmit, brandColor = '#7C3AED', buttonText }: { 
                   key={opt}
                   type="button"
                   onClick={() => setAnswer(q.id, opt)}
-                  className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition-colors ${answers[q.id] === opt ? 'text-white' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-                  style={answers[q.id] === opt ? { backgroundColor: brandColor, borderColor: brandColor } : {}}
+                  className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition-colors ${answers[q.id] === opt ? '' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                  style={answers[q.id] === opt ? { backgroundColor: accentColor, borderColor: accentColor, color: btnTextColor } : {}}
                 >
                   {opt}
                 </button>
@@ -457,7 +472,6 @@ function SurveyForm({ survey, onSubmit, brandColor = '#7C3AED', buttonText }: { 
         </div>
       ))}
 
-      {/* Contact info */}
       <div className="border-t border-slate-100 pt-5 space-y-3">
         <p className="text-xs font-medium text-slate-500">Your info (optional — to receive your reward)</p>
         <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className={inputClass} />
@@ -468,7 +482,8 @@ function SurveyForm({ survey, onSubmit, brandColor = '#7C3AED', buttonText }: { 
       <button
         type="submit"
         disabled={submitting}
-        className="w-full py-3.5 text-white text-sm font-semibold rounded-xl disabled:opacity-50 transition-colors flex items-center justify-center gap-2 shadow-lg" style={{ backgroundColor: brandColor }}
+        className="w-full py-3.5 text-sm font-semibold rounded-xl disabled:opacity-50 transition-colors flex items-center justify-center gap-2 shadow-lg"
+        style={{ backgroundColor: accentColor, color: btnTextColor }}
       >
         {submitting && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
         {submitting ? 'Submitting...' : (buttonText || 'Submit Feedback')}
@@ -478,7 +493,14 @@ function SurveyForm({ survey, onSubmit, brandColor = '#7C3AED', buttonText }: { 
 }
 
 /* ── Sign-up Form ────────────────────────────────────────────────── */
-function SignupForm({ businessName, reward, onSubmit, brandColor = '#7C3AED', buttonText }: { businessName: string; reward?: string; onSubmit: (name: string, email: string, phone: string) => Promise<void>; brandColor?: string; buttonText?: string }) {
+function SignupForm({ businessName, reward, onSubmit, accentColor = '#7C3AED', btnTextColor = '#ffffff', buttonText }: {
+  businessName: string;
+  reward?: string;
+  onSubmit: (name: string, email: string, phone: string) => Promise<void>;
+  accentColor?: string;
+  btnTextColor?: string;
+  buttonText?: string;
+}) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -508,7 +530,8 @@ function SignupForm({ businessName, reward, onSubmit, brandColor = '#7C3AED', bu
       <button
         type="submit"
         disabled={submitting || (!email && !phone)}
-        className="w-full py-3.5 text-white text-sm font-semibold rounded-xl disabled:opacity-50 transition-colors shadow-lg flex items-center justify-center gap-2" style={{ backgroundColor: brandColor }}
+        className="w-full py-3.5 text-sm font-semibold rounded-xl disabled:opacity-50 transition-colors shadow-lg flex items-center justify-center gap-2"
+        style={{ backgroundColor: accentColor, color: btnTextColor }}
       >
         {submitting && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
         {submitting ? 'Joining...' : (buttonText || `Join ${businessName}`)}
@@ -536,7 +559,6 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
           setError(data.error ?? 'QR code not found');
         } else {
           setQr(data.qr);
-          // Immediate redirects
           if (['MENU', 'REVIEW', 'CUSTOM'].includes(data.qr.purpose) && data.qr.destinationUrl && !redirected.current) {
             redirected.current = true;
             window.location.href = data.qr.destinationUrl;
@@ -585,44 +607,52 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
     setPhase('result');
   }
 
-  // Page style from metadata
+  // Resolve all colors from metadata
   const meta = (qr?.metadata ?? {}) as PageMeta;
-  const brandColor = meta.pageColor ?? '#7C3AED';
-  const bgStyle = meta.pageBackground ?? 'gradient';
-  const bgClass = bgStyle === 'dark' ? 'bg-[#1a1a2e] text-white' : bgStyle === 'solid' ? 'text-white' : 'bg-gradient-to-b from-slate-50 to-white';
-  const bgInline = bgStyle === 'solid' ? { backgroundColor: brandColor } : bgStyle === 'dark' ? {} : {};
-  const textColor = bgStyle === 'gradient' ? 'text-slate-400' : 'text-white/60';
+  const colors = resolveColors(meta);
+  const fontStack = FONT_MAP[meta.fontFamily || 'system'] || FONT_MAP.system;
+
+  // Google font link
+  const googleFont = meta.fontFamily && ['inter', 'poppins', 'playfair'].includes(meta.fontFamily)
+    ? `https://fonts.googleapis.com/css2?family=${meta.fontFamily === 'inter' ? 'Inter' : meta.fontFamily === 'poppins' ? 'Poppins' : 'Playfair+Display'}:wght@400;500;600;700&display=swap`
+    : null;
 
   // Branded wrapper
   const Wrapper = ({ children }: { children: React.ReactNode }) => (
-    <div className={`min-h-screen flex flex-col items-center px-4 py-10 ${bgClass}`} style={bgInline}>
-      <div className="w-full max-w-sm">
-        {qr && (
-          <div className="text-center mb-8">
-            {meta.pageLogo ? (
-              <img src={meta.pageLogo} alt="" className="w-14 h-14 rounded-2xl mx-auto mb-3 object-cover shadow-lg" />
-            ) : (
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg" style={{ backgroundColor: brandColor, boxShadow: `0 10px 25px ${brandColor}33` }}>
-                <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7">
-                  <polygon points="16,4 28,10 16,16 4,10" fill="#fff" fillOpacity="0.9" />
-                  <polygon points="4,10 16,16 16,28 4,22" fill="#fff" fillOpacity="0.5" />
-                  <polygon points="28,10 16,16 16,28 28,22" fill="#fff" fillOpacity="0.7" />
-                </svg>
-              </div>
-            )}
-            <p className={`text-xs font-medium ${textColor}`}>{qr.businessName}</p>
-          </div>
-        )}
-        {children}
-        <p className={`text-center text-[10px] mt-10 ${textColor}`}>Powered by Embedo</p>
+    <>
+      {googleFont && <link rel="stylesheet" href={googleFont} />}
+      <div
+        className="min-h-screen flex flex-col items-center px-4 py-10"
+        style={{ backgroundColor: colors.bg, fontFamily: fontStack }}
+      >
+        <div className="w-full max-w-sm">
+          {qr && (
+            <div className="text-center mb-8">
+              {meta.pageLogo ? (
+                <img src={meta.pageLogo} alt="" className="w-14 h-14 rounded-2xl mx-auto mb-3 object-cover shadow-lg" />
+              ) : (
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg" style={{ backgroundColor: colors.accent, boxShadow: `0 10px 25px ${colors.accent}33` }}>
+                  <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7">
+                    <polygon points="16,4 28,10 16,16 4,10" fill="#fff" fillOpacity="0.9" />
+                    <polygon points="4,10 16,16 16,28 4,22" fill="#fff" fillOpacity="0.5" />
+                    <polygon points="28,10 16,16 16,28 28,22" fill="#fff" fillOpacity="0.7" />
+                  </svg>
+                </div>
+              )}
+              <p className="text-xs font-medium" style={{ color: colors.text }}>{qr.businessName}</p>
+            </div>
+          )}
+          {children}
+          <p className="text-center text-[10px] mt-10" style={{ color: colors.text }}>Powered by Embedo</p>
+        </div>
       </div>
-    </div>
+    </>
   );
 
   if (loading) return (
     <Wrapper>
       <div className="flex justify-center py-12">
-        <div className="w-8 h-8 border-3 border-violet-300 border-t-violet-600 rounded-full animate-spin" />
+        <div className="w-8 h-8 border-3 rounded-full animate-spin" style={{ borderColor: colors.accent + '40', borderTopColor: colors.accent }} />
       </div>
     </Wrapper>
   );
@@ -633,7 +663,7 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
         <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-7 h-7 text-red-500"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
         </div>
-        <p className="text-slate-700 font-semibold">{error}</p>
+        <p className="font-semibold" style={{ color: colors.heading }}>{error}</p>
       </div>
     </Wrapper>
   );
@@ -647,14 +677,14 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
         <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-8 h-8 text-emerald-500"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
         </div>
-        <h2 className="text-xl font-bold text-slate-900 mb-2">
+        <h2 className="text-xl font-bold mb-2" style={{ color: colors.heading }}>
           {qr.purpose === 'SURVEY' ? 'Thanks for your feedback!' : qr.purpose === 'SPIN_WHEEL' ? "You're in!" : 'You\'re all set!'}
         </h2>
         {wonPrize && (
-          <div className="mt-4 bg-gradient-to-br from-violet-50 to-violet-100 border border-violet-200 rounded-2xl px-6 py-5 text-center">
-            <p className="text-xs font-medium mb-1" style={{ color: brandColor }}>You won</p>
-            <p className="text-2xl font-bold" style={{ color: brandColor }}>{wonPrize.label}</p>
-            {qr.discountCode && <p className="mt-3 text-sm" style={{ color: brandColor }}>Use code: <span className="font-mono font-bold bg-white px-2 py-0.5 rounded-lg border" style={{ borderColor: brandColor + '40' }}>{qr.discountCode}</span></p>}
+          <div className="mt-4 rounded-2xl px-6 py-5 text-center" style={{ background: `linear-gradient(135deg, ${colors.accent}15, ${colors.accent}25)`, border: `1px solid ${colors.accent}30` }}>
+            <p className="text-xs font-medium mb-1" style={{ color: colors.accent }}>You won</p>
+            <p className="text-2xl font-bold" style={{ color: colors.accent }}>{wonPrize.label}</p>
+            {qr.discountCode && <p className="mt-3 text-sm" style={{ color: colors.accent }}>Use code: <span className="font-mono font-bold bg-white px-2 py-0.5 rounded-lg border" style={{ borderColor: colors.accent + '40' }}>{qr.discountCode}</span></p>}
           </div>
         )}
         {!wonPrize && (qr.surveyReward || qr.discountValue) && (
@@ -664,31 +694,30 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
             {qr.discountCode && <p className="mt-2 text-sm text-emerald-600">Code: <span className="font-mono font-bold">{qr.discountCode}</span></p>}
           </div>
         )}
-        <p className="text-sm text-slate-400 mt-5">Show this screen to your server or cashier.</p>
+        <p className="text-sm mt-5" style={{ color: colors.text }}>Show this screen to your server or cashier.</p>
       </div>
     </Wrapper>
   );
 
-  // DISCOUNT — show code immediately
+  // DISCOUNT
   if (qr.purpose === 'DISCOUNT') return (
     <Wrapper>
       <div className="text-center space-y-5">
-        <h2 className="text-2xl font-bold text-slate-900">{meta.pageHeading || 'Your Discount'}</h2>
-        {meta.pageSubheading && <p className="text-sm text-slate-500 -mt-2">{meta.pageSubheading}</p>}
-        <div className="rounded-2xl px-8 py-8 text-white shadow-xl" style={{ background: `linear-gradient(135deg, ${brandColor}, ${brandColor}dd)`, boxShadow: `0 10px 25px ${brandColor}40` }}>
+        <h2 className="text-2xl font-bold" style={{ color: colors.heading }}>{meta.pageHeading || 'Your Discount'}</h2>
+        {meta.pageSubheading && <p className="text-sm -mt-2" style={{ color: colors.text }}>{meta.pageSubheading}</p>}
+        <div className="rounded-2xl px-8 py-8 shadow-xl" style={{ background: `linear-gradient(135deg, ${colors.accent}, ${colors.accent}dd)`, boxShadow: `0 10px 25px ${colors.accent}40`, color: colors.btnText }}>
           <p className="text-5xl font-black">{qr.discountValue}</p>
           {qr.discountCode && (
             <div className="mt-4 bg-white/20 rounded-xl px-4 py-2">
-              <p className="text-xs text-violet-200 mb-0.5">Discount Code</p>
+              <p className="text-xs opacity-70 mb-0.5">Discount Code</p>
               <p className="text-2xl font-mono font-bold">{qr.discountCode}</p>
             </div>
           )}
         </div>
-        <p className="text-sm text-slate-500">Show this screen to your server or cashier</p>
-        {/* Optionally capture info */}
+        <p className="text-sm" style={{ color: colors.text }}>Show this screen to your server or cashier</p>
         <div className="pt-4">
-          <p className="text-xs text-slate-400 mb-3">Want us to send deals directly to you?</p>
-          <SignupForm businessName={qr.businessName} brandColor={brandColor} buttonText={meta.pageButtonText} onSubmit={async (n, e, p) => { await signupViaQr(n, e, p, 'claimed_discount'); setDone(true); setPhase('result'); }} />
+          <p className="text-xs mb-3" style={{ color: colors.text }}>Want us to send deals directly to you?</p>
+          <SignupForm businessName={qr.businessName} accentColor={colors.accent} btnTextColor={colors.btnText} buttonText={meta.pageButtonText} onSubmit={async (n, e, p) => { await signupViaQr(n, e, p, 'claimed_discount'); setDone(true); setPhase('result'); }} />
         </div>
       </div>
     </Wrapper>
@@ -703,10 +732,10 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
         <div className="space-y-6">
           <div className="text-center">
             <div className="text-4xl mb-2">🎉</div>
-            <h2 className="text-xl font-bold text-slate-900">You won {wonPrize.label}!</h2>
-            <p className="text-sm text-slate-500 mt-1">Enter your info to claim your prize</p>
+            <h2 className="text-xl font-bold" style={{ color: colors.heading }}>You won {wonPrize.label}!</h2>
+            <p className="text-sm mt-1" style={{ color: colors.text }}>Enter your info to claim your prize</p>
           </div>
-          <SignupForm businessName={qr.businessName} reward={wonPrize.label} brandColor={brandColor} buttonText={meta.pageButtonText} onSubmit={handleSpinSignup} />
+          <SignupForm businessName={qr.businessName} reward={wonPrize.label} accentColor={colors.accent} btnTextColor={colors.btnText} buttonText={meta.pageButtonText} onSubmit={handleSpinSignup} />
         </div>
       </Wrapper>
     );
@@ -715,10 +744,10 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
       <Wrapper>
         <div className="space-y-6 text-center">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900">{meta.pageHeading || 'Spin to Win!'}</h2>
-            <p className="text-sm text-slate-500 mt-1">{meta.pageSubheading || 'Try your luck — what will you get?'}</p>
+            <h2 className="text-2xl font-bold" style={{ color: colors.heading }}>{meta.pageHeading || 'Spin to Win!'}</h2>
+            <p className="text-sm mt-1" style={{ color: colors.text }}>{meta.pageSubheading || 'Try your luck — what will you get?'}</p>
           </div>
-          <SpinWheel prizes={prizes} brandColor={brandColor} buttonText={meta.pageButtonText} onResult={handleSpinResult} />
+          <SpinWheel prizes={prizes} accentColor={colors.accent} btnTextColor={colors.btnText} buttonText={meta.pageButtonText} onResult={handleSpinResult} />
         </div>
       </Wrapper>
     );
@@ -728,7 +757,7 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
   if (qr.purpose === 'SURVEY') {
     if (!qr.survey) return (
       <Wrapper>
-        <div className="text-center py-10 text-slate-400">Survey not found</div>
+        <div className="text-center py-10" style={{ color: colors.text }}>Survey not found</div>
       </Wrapper>
     );
 
@@ -736,8 +765,8 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
       <Wrapper>
         <div className="space-y-6">
           <div>
-            <h2 className="text-xl font-bold text-slate-900">{qr.survey.title}</h2>
-            {qr.survey.description && <p className="text-sm text-slate-500 mt-1">{qr.survey.description}</p>}
+            <h2 className="text-xl font-bold" style={{ color: colors.heading }}>{qr.survey.title}</h2>
+            {qr.survey.description && <p className="text-sm mt-1" style={{ color: colors.text }}>{qr.survey.description}</p>}
             {qr.surveyReward && (
               <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 flex items-center gap-2">
                 <span className="text-lg">🎁</span>
@@ -745,7 +774,7 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
               </div>
             )}
           </div>
-          <SurveyForm survey={qr.survey} brandColor={brandColor} buttonText={meta.pageButtonText} onSubmit={handleSurveySubmit} />
+          <SurveyForm survey={qr.survey} accentColor={colors.accent} btnTextColor={colors.btnText} buttonText={meta.pageButtonText} onSubmit={handleSurveySubmit} />
         </div>
       </Wrapper>
     );
@@ -756,10 +785,10 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
     <Wrapper>
       <div className="space-y-6">
         <div className="text-center">
-          <h2 className="text-xl font-bold text-slate-900">{meta.pageHeading || `Join ${qr.businessName}`}</h2>
-          <p className="text-sm text-slate-500 mt-1">{meta.pageSubheading || 'Sign up to receive exclusive deals and updates'}</p>
+          <h2 className="text-xl font-bold" style={{ color: colors.heading }}>{meta.pageHeading || `Join ${qr.businessName}`}</h2>
+          <p className="text-sm mt-1" style={{ color: colors.text }}>{meta.pageSubheading || 'Sign up to receive exclusive deals and updates'}</p>
         </div>
-        <SignupForm businessName={qr.businessName} brandColor={brandColor} buttonText={meta.pageButtonText} onSubmit={handleSignup} />
+        <SignupForm businessName={qr.businessName} accentColor={colors.accent} btnTextColor={colors.btnText} buttonText={meta.pageButtonText} onSubmit={handleSignup} />
       </div>
     </Wrapper>
   );

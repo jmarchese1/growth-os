@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import KpiCard from '../../../components/ui/kpi-card';
 import { useBusiness } from '../../../components/auth/business-provider';
@@ -41,6 +41,24 @@ const PURPOSE_CONFIG: Record<QrPurpose, { label: string; icon: string; desc: str
   CUSTOM:     { label: 'Custom URL',     icon: '🔗', desc: 'Customers scan → redirected to any URL you choose',     color: 'bg-slate-100 text-slate-600' },
 };
 
+const FONT_OPTIONS = [
+  { value: 'system', label: 'System Default' },
+  { value: 'inter', label: 'Inter' },
+  { value: 'poppins', label: 'Poppins' },
+  { value: 'playfair', label: 'Playfair Display' },
+  { value: 'mono', label: 'Monospace' },
+];
+
+const FONT_MAP: Record<string, string> = {
+  system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  inter: '"Inter", sans-serif',
+  poppins: '"Poppins", sans-serif',
+  playfair: '"Playfair Display", serif',
+  mono: '"JetBrains Mono", "Fira Code", monospace',
+};
+
+const COLOR_PRESETS = ['#7C3AED', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#EC4899', '#000000', '#0EA5E9'];
+
 function qrImageUrl(data: string, size = 200): string {
   return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(data)}&format=png&margin=8`;
 }
@@ -48,6 +66,22 @@ function qrImageUrl(data: string, size = 200): string {
 function qrPublicUrl(token: string): string {
   const base = typeof window !== 'undefined' ? window.location.origin : 'https://app.embedo.io';
   return `${base}/qr/${token}`;
+}
+
+/* ── Color Picker Row ──────────────────────────────────────────── */
+function ColorPicker({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <label className="block text-[10px] font-medium text-slate-500 mb-1">{label}</label>
+      <div className="flex items-center gap-1.5">
+        <input type="color" value={value} onChange={(e) => onChange(e.target.value)} className="w-6 h-6 rounded border-0 cursor-pointer flex-shrink-0" />
+        <input type="text" value={value} onChange={(e) => onChange(e.target.value)} className="w-20 px-1.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 font-mono" />
+        {COLOR_PRESETS.slice(0, 6).map((c) => (
+          <button key={c} onClick={() => onChange(c)} className="w-3.5 h-3.5 rounded-full border transition-all hover:scale-125 flex-shrink-0" style={{ background: c, borderColor: value === c ? '#333' : 'transparent' }} />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 /* ── Spin Wheel Prize Builder ────────────────────────────────────── */
@@ -107,6 +141,188 @@ function SpinPrizeBuilder({ prizes, onChange }: { prizes: SpinPrize[]; onChange:
   );
 }
 
+/* ── Mini Spin Wheel for Preview ───────────────────────────────── */
+const WHEEL_PALETTES = [
+  ['#7C3AED', '#6D28D9'], ['#4F46E5', '#4338CA'], ['#0EA5E9', '#0284C7'],
+  ['#10B981', '#059669'], ['#F59E0B', '#D97706'], ['#EF4444', '#DC2626'],
+  ['#8B5CF6', '#7C3AED'], ['#06B6D4', '#0891B2'], ['#EC4899', '#DB2777'],
+  ['#14B8A6', '#0D9488'],
+];
+
+function MiniSpinWheel({ prizes, accentColor, size = 160 }: { prizes: SpinPrize[]; accentColor: string; size?: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const DPR = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.width = size * DPR;
+    canvas.height = size * DPR;
+    canvas.style.width = size + 'px';
+    canvas.style.height = size + 'px';
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.scale(DPR, DPR);
+
+    const cx = size / 2;
+    const cy = size / 2;
+    const r = cx - 8;
+    const arc = (2 * Math.PI) / prizes.length;
+
+    // Outer ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, r + 3, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Segments
+    for (let i = 0; i < prizes.length; i++) {
+      const start = i * arc - Math.PI / 2;
+      const end = start + arc;
+      const [c1, c2] = WHEEL_PALETTES[i % WHEEL_PALETTES.length]!;
+
+      const midAngle = start + arc / 2;
+      const gx1 = cx + Math.cos(midAngle) * r * 0.3;
+      const gy1 = cy + Math.sin(midAngle) * r * 0.3;
+      const gx2 = cx + Math.cos(midAngle) * r * 0.9;
+      const gy2 = cy + Math.sin(midAngle) * r * 0.9;
+      const grad = ctx.createLinearGradient(gx1, gy1, gx2, gy2);
+      grad.addColorStop(0, c1);
+      grad.addColorStop(1, c2);
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, start, end);
+      ctx.closePath();
+      ctx.fillStyle = grad;
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Label
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(start + arc / 2);
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      const fontSize = prizes.length > 6 ? 7 : prizes.length > 4 ? 8 : 9;
+      ctx.font = `bold ${fontSize}px sans-serif`;
+      ctx.fillStyle = '#fff';
+      ctx.fillText(prizes[i]!.label, r - 8, 0);
+      ctx.restore();
+    }
+
+    // Center hub
+    ctx.beginPath();
+    ctx.arc(cx, cy, 12, 0, 2 * Math.PI);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx, cy, 9, 0, 2 * Math.PI);
+    ctx.fillStyle = accentColor;
+    ctx.fill();
+
+    // Pointer
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - r - 2);
+    ctx.lineTo(cx - 6, cy - r + 10);
+    ctx.lineTo(cx + 6, cy - r + 10);
+    ctx.closePath();
+    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1;
+    ctx.fill();
+    ctx.stroke();
+  }, [prizes, accentColor, size]);
+
+  return <canvas ref={canvasRef} style={{ width: size, height: size }} />;
+}
+
+/* ── Live Preview ──────────────────────────────────────────────── */
+function LivePreview({ purpose, accentColor, bgColor, headingColor, textColor, btnTextColor, fontFamily, heading, subheading, buttonText, prizes, discountValue, discountCode }: {
+  purpose: QrPurpose;
+  accentColor: string;
+  bgColor: string;
+  headingColor: string;
+  textColor: string;
+  btnTextColor: string;
+  fontFamily: string;
+  heading: string;
+  subheading: string;
+  buttonText: string;
+  prizes: SpinPrize[];
+  discountValue: string;
+  discountCode: string;
+}) {
+  const fontStack = FONT_MAP[fontFamily] || FONT_MAP.system;
+  const defaultHeading = purpose === 'SURVEY' ? "We'd love your feedback!" : purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'DISCOUNT' ? 'Your Exclusive Offer' : 'Join Us!';
+  const defaultSub = purpose === 'SPIN_WHEEL' ? 'Try your luck — what will you get?' : purpose === 'SIGNUP' ? 'Sign up for exclusive deals' : '';
+  const defaultBtn = purpose === 'SURVEY' ? 'Submit Feedback' : purpose === 'SPIN_WHEEL' ? 'Spin the Wheel!' : purpose === 'SIGNUP' ? 'Sign Me Up' : 'Claim Now';
+
+  return (
+    <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+      <div className="px-3 py-1.5 bg-slate-100 border-b border-slate-200 flex items-center gap-1.5">
+        <div className="w-2 h-2 rounded-full bg-red-400" />
+        <div className="w-2 h-2 rounded-full bg-amber-400" />
+        <div className="w-2 h-2 rounded-full bg-emerald-400" />
+        <span className="text-[9px] text-slate-400 ml-2">Preview</span>
+      </div>
+      <div className="p-4 flex flex-col items-center" style={{ backgroundColor: bgColor, fontFamily: fontStack, minHeight: purpose === 'SPIN_WHEEL' ? 300 : 200 }}>
+        {/* Logo placeholder */}
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-2 shadow" style={{ backgroundColor: accentColor }}>
+          <svg viewBox="0 0 32 32" fill="none" className="w-5 h-5">
+            <polygon points="16,4 28,10 16,16 4,10" fill="#fff" fillOpacity="0.9" />
+            <polygon points="4,10 16,16 16,28 4,22" fill="#fff" fillOpacity="0.5" />
+            <polygon points="28,10 16,16 16,28 28,22" fill="#fff" fillOpacity="0.7" />
+          </svg>
+        </div>
+        <p className="text-[9px] mb-3" style={{ color: textColor }}>Business Name</p>
+
+        <p className="text-sm font-bold text-center mb-0.5" style={{ color: headingColor }}>{heading || defaultHeading}</p>
+        <p className="text-[10px] text-center mb-3" style={{ color: textColor }}>{subheading || defaultSub}</p>
+
+        {/* Purpose-specific content */}
+        {purpose === 'SPIN_WHEEL' && (
+          <div className="mb-3">
+            <MiniSpinWheel prizes={prizes} accentColor={accentColor} size={140} />
+          </div>
+        )}
+
+        {purpose === 'DISCOUNT' && (
+          <div className="rounded-xl px-4 py-3 mb-3 text-center w-full max-w-[180px]" style={{ background: `linear-gradient(135deg, ${accentColor}, ${accentColor}dd)`, color: btnTextColor }}>
+            <p className="text-lg font-black">{discountValue || '10% Off'}</p>
+            {discountCode && (
+              <div className="mt-1.5 bg-white/20 rounded-lg px-2 py-1">
+                <p className="text-[8px] opacity-70">Code</p>
+                <p className="text-xs font-mono font-bold">{discountCode}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {(purpose === 'SIGNUP' || purpose === 'SURVEY') && (
+          <div className="w-full max-w-[180px] space-y-1.5 mb-3">
+            <div className="w-full h-6 bg-white/80 rounded border border-slate-200" />
+            <div className="w-full h-6 bg-white/80 rounded border border-slate-200" />
+            <div className="w-full h-6 bg-white/80 rounded border border-slate-200" />
+          </div>
+        )}
+
+        <div
+          className="px-6 py-1.5 rounded-full text-[10px] font-semibold shadow-sm"
+          style={{ backgroundColor: accentColor, color: btnTextColor }}
+        >
+          {buttonText || defaultBtn}
+        </div>
+
+        <p className="text-[7px] mt-3" style={{ color: textColor }}>Powered by Embedo</p>
+      </div>
+    </div>
+  );
+}
+
 /* ── Create QR Modal ────────────────────────────────────────────── */
 function CreateQrModal({ onClose, onCreate, surveys }: {
   onClose: () => void;
@@ -122,9 +338,13 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
   const [spinPrizes, setSpinPrizes] = useState<SpinPrize[]>(DEFAULT_PRIZES);
   const [destinationUrl, setDestinationUrl] = useState('');
   const [expiresAt, setExpiresAt] = useState('');
-  // Page style
-  const [pageColor, setPageColor] = useState('#7C3AED');
-  const [pageBackground, setPageBackground] = useState<'gradient' | 'solid' | 'dark'>('gradient');
+  // Appearance
+  const [accentColor, setAccentColor] = useState('#7C3AED');
+  const [bgColor, setBgColor] = useState('#f8fafc');
+  const [headingColor, setHeadingColor] = useState('#1e293b');
+  const [textColor, setTextColor] = useState('#64748b');
+  const [btnTextColor, setBtnTextColor] = useState('#ffffff');
+  const [fontFamily, setFontFamily] = useState('system');
   const [pageHeading, setPageHeading] = useState('');
   const [pageSubheading, setPageSubheading] = useState('');
   const [pageLogo, setPageLogo] = useState('');
@@ -147,7 +367,7 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
     if (['MENU', 'REVIEW', 'CUSTOM'].includes(purpose)) payload['destinationUrl'] = destinationUrl.trim();
     if (expiresAt) payload['expiresAt'] = expiresAt;
     payload['metadata'] = {
-      pageColor, pageBackground,
+      accentColor, bgColor, headingColor, textColor, buttonTextColor: btnTextColor, fontFamily,
       ...(pageHeading ? { pageHeading } : {}),
       ...(pageSubheading ? { pageSubheading } : {}),
       ...(pageLogo ? { pageLogo } : {}),
@@ -175,10 +395,17 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
     (purpose !== 'SURVEY' || surveyId) &&
     (!['MENU', 'REVIEW', 'CUSTOM'].includes(purpose) || destinationUrl.trim());
 
+  // Quick theme presets
+  function applyTheme(theme: 'light' | 'dark' | 'brand') {
+    if (theme === 'light') { setBgColor('#f8fafc'); setHeadingColor('#1e293b'); setTextColor('#64748b'); setBtnTextColor('#ffffff'); }
+    if (theme === 'dark') { setBgColor('#1a1a2e'); setHeadingColor('#ffffff'); setTextColor('rgba(255,255,255,0.6)'); setBtnTextColor('#ffffff'); }
+    if (theme === 'brand') { setBgColor(accentColor); setHeadingColor('#ffffff'); setTextColor('rgba(255,255,255,0.7)'); setBtnTextColor(accentColor === '#000000' ? '#ffffff' : '#1e293b'); }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
           <h3 className="text-sm font-semibold text-slate-800">{step === 'form' ? 'Create QR Code' : 'Preview & Download'}</h3>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
@@ -186,154 +413,188 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
         </div>
 
         {step === 'form' ? (
-          <div className="px-6 py-5 space-y-5">
-            {/* Purpose */}
-            <div>
-              <label className="block text-xs font-medium text-slate-500 mb-2">QR Code Purpose</label>
-              <div className="grid grid-cols-2 gap-2">
-                {(Object.entries(PURPOSE_CONFIG) as [QrPurpose, typeof PURPOSE_CONFIG[QrPurpose]][]).map(([key, cfg]) => (
-                  <button
-                    key={key}
-                    onClick={() => setPurpose(key)}
-                    className={`text-left p-3 rounded-lg border transition-colors ${purpose === key ? 'border-violet-300 bg-violet-50' : 'border-slate-200 hover:bg-slate-50'}`}
-                  >
-                    <p className="text-xs font-semibold text-slate-800">{cfg.icon} {cfg.label}</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">{cfg.desc}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Label */}
-            <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">Internal Label</label>
-              <input type="text" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="e.g. Table Tent — Summer Promo" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
-            </div>
-
-            {/* Purpose-specific fields */}
-            {purpose === 'SURVEY' && (
-              <div className="space-y-3">
+          <div className="flex-1 overflow-y-auto">
+            <div className="flex divide-x divide-slate-200">
+              {/* Left: Settings */}
+              <div className="flex-1 px-6 py-5 space-y-5 overflow-y-auto max-h-[calc(90vh-120px)]">
+                {/* Purpose */}
                 <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Link to Survey</label>
-                  <select value={surveyId} onChange={(e) => setSurveyId(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30">
-                    <option value="">Select a survey...</option>
-                    {surveys.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}
-                  </select>
-                  {surveys.length === 0 && <p className="text-[10px] text-amber-600 mt-1">No surveys yet — create one in the Surveys section first.</p>}
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Reward After Completing (optional)</label>
-                  <input type="text" value={surveyReward} onChange={(e) => setSurveyReward(e.target.value)} placeholder="e.g. 10% off your next visit" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
-                </div>
-              </div>
-            )}
-
-            {purpose === 'DISCOUNT' && (
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Discount Value</label>
-                  <input type="text" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} placeholder='e.g. "10% off" or "$5 off"' className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Discount Code (optional)</label>
-                  <input type="text" value={discountCode} onChange={(e) => setDiscountCode(e.target.value)} placeholder="e.g. SCAN10" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
-                </div>
-              </div>
-            )}
-
-            {purpose === 'SPIN_WHEEL' && (
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-2">Prize Pool</label>
-                  <SpinPrizeBuilder prizes={spinPrizes} onChange={setSpinPrizes} />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Discount Code to Show Winners (optional)</label>
-                  <input type="text" value={discountCode} onChange={(e) => setDiscountCode(e.target.value)} placeholder="e.g. WINNER15" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
-                </div>
-              </div>
-            )}
-
-            {['MENU', 'REVIEW', 'CUSTOM'].includes(purpose) && (
-              <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1">
-                  {purpose === 'MENU' ? 'Menu URL' : purpose === 'REVIEW' ? 'Google Review URL' : 'Destination URL'}
-                </label>
-                <input type="url" value={destinationUrl} onChange={(e) => setDestinationUrl(e.target.value)} placeholder="https://" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
-              </div>
-            )}
-
-            {purpose === 'SIGNUP' && (
-              <div className="bg-sky-50 border border-sky-200 rounded-lg px-4 py-3">
-                <p className="text-xs text-sky-800 font-medium">How Sign-up works</p>
-                <p className="text-[11px] text-sky-700 mt-1">Customers scan, enter their name + email or phone number, and are automatically added to your Contacts with source "QR Code".</p>
-              </div>
-            )}
-
-            {/* Page Appearance */}
-            <div className="space-y-3 border border-slate-200 rounded-xl p-4">
-              <p className="text-xs font-semibold text-slate-700">Page Appearance</p>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[10px] font-medium text-slate-500 mb-1">Brand Color</label>
-                  <div className="flex items-center gap-2">
-                    <input type="color" value={pageColor} onChange={(e) => setPageColor(e.target.value)} className="w-7 h-7 rounded border-0 cursor-pointer" />
-                    <input type="text" value={pageColor} onChange={(e) => setPageColor(e.target.value)} className="flex-1 px-2 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-800 font-mono" />
-                  </div>
-                  <div className="flex gap-1 mt-1">
-                    {['#7C3AED', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#EC4899', '#000000', '#0EA5E9'].map((c) => (
-                      <button key={c} onClick={() => setPageColor(c)} className="w-4 h-4 rounded-full border transition-all hover:scale-125" style={{ background: c, borderColor: pageColor === c ? '#333' : 'transparent' }} />
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-medium text-slate-500 mb-1">Background Style</label>
-                  <div className="flex gap-1.5">
-                    {([{ value: 'gradient', label: 'Gradient' }, { value: 'solid', label: 'Solid' }, { value: 'dark', label: 'Dark' }] as const).map((bg) => (
-                      <button key={bg.value} onClick={() => setPageBackground(bg.value)} className={`px-2.5 py-1.5 text-[10px] font-medium rounded-lg border transition-all ${pageBackground === bg.value ? 'bg-violet-100 border-violet-300 text-violet-700' : 'border-slate-200 text-slate-500 hover:bg-slate-100'}`}>
-                        {bg.label}
+                  <label className="block text-xs font-medium text-slate-500 mb-2">QR Code Purpose</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(Object.entries(PURPOSE_CONFIG) as [QrPurpose, typeof PURPOSE_CONFIG[QrPurpose]][]).map(([key, cfg]) => (
+                      <button
+                        key={key}
+                        onClick={() => setPurpose(key)}
+                        className={`text-left p-3 rounded-lg border transition-colors ${purpose === key ? 'border-violet-300 bg-violet-50' : 'border-slate-200 hover:bg-slate-50'}`}
+                      >
+                        <p className="text-xs font-semibold text-slate-800">{cfg.icon} {cfg.label}</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">{cfg.desc}</p>
                       </button>
                     ))}
                   </div>
                 </div>
-              </div>
-              <div>
-                <label className="block text-[10px] font-medium text-slate-500 mb-1">Custom Heading (optional)</label>
-                <input type="text" value={pageHeading} onChange={(e) => setPageHeading(e.target.value)} placeholder={purpose === 'SURVEY' ? "We'd love your feedback!" : purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'DISCOUNT' ? 'Your Exclusive Offer' : 'Join Us!'} className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
-              </div>
-              <div>
-                <label className="block text-[10px] font-medium text-slate-500 mb-1">Subheading (optional)</label>
-                <input type="text" value={pageSubheading} onChange={(e) => setPageSubheading(e.target.value)} placeholder="Short description shown below the heading" className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[10px] font-medium text-slate-500 mb-1">Logo URL (optional)</label>
-                  <input type="url" value={pageLogo} onChange={(e) => setPageLogo(e.target.value)} placeholder="https://..." className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-800" />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-medium text-slate-500 mb-1">Button Text (optional)</label>
-                  <input type="text" value={pageButtonText} onChange={(e) => setPageButtonText(e.target.value)} placeholder={purpose === 'SURVEY' ? 'Submit Feedback' : purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'SIGNUP' ? 'Sign Me Up' : 'Claim Now'} className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
-                </div>
-              </div>
-            </div>
 
-            {/* Expiration */}
-            <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">Expiration Date (optional)</label>
-              <input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} min={new Date().toISOString().split('T')[0]} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
-              <p className="text-[10px] text-slate-400 mt-1">Leave blank for no expiration</p>
-            </div>
+                {/* Label */}
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Internal Label</label>
+                  <input type="text" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="e.g. Table Tent — Summer Promo" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+                </div>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <button onClick={onClose} className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
-              <button onClick={handleGenerate} disabled={saving || !canGenerate} className="px-5 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 transition-colors flex items-center gap-2">
-                {saving && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-                {saving ? 'Generating...' : 'Generate QR Code'}
-              </button>
+                {/* Purpose-specific fields */}
+                {purpose === 'SURVEY' && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-500 mb-1">Link to Survey</label>
+                      <select value={surveyId} onChange={(e) => setSurveyId(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30">
+                        <option value="">Select a survey...</option>
+                        {surveys.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}
+                      </select>
+                      {surveys.length === 0 && <p className="text-[10px] text-amber-600 mt-1">No surveys yet — create one in the Surveys section first.</p>}
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-500 mb-1">Reward After Completing (optional)</label>
+                      <input type="text" value={surveyReward} onChange={(e) => setSurveyReward(e.target.value)} placeholder="e.g. 10% off your next visit" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+                    </div>
+                  </div>
+                )}
+
+                {purpose === 'DISCOUNT' && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-500 mb-1">Discount Value</label>
+                      <input type="text" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} placeholder='e.g. "10% off" or "$5 off"' className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-500 mb-1">Discount Code (optional)</label>
+                      <input type="text" value={discountCode} onChange={(e) => setDiscountCode(e.target.value)} placeholder="e.g. SCAN10" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+                    </div>
+                  </div>
+                )}
+
+                {purpose === 'SPIN_WHEEL' && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-500 mb-2">Prize Pool</label>
+                      <SpinPrizeBuilder prizes={spinPrizes} onChange={setSpinPrizes} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-500 mb-1">Discount Code to Show Winners (optional)</label>
+                      <input type="text" value={discountCode} onChange={(e) => setDiscountCode(e.target.value)} placeholder="e.g. WINNER15" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+                    </div>
+                  </div>
+                )}
+
+                {['MENU', 'REVIEW', 'CUSTOM'].includes(purpose) && (
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">
+                      {purpose === 'MENU' ? 'Menu URL' : purpose === 'REVIEW' ? 'Google Review URL' : 'Destination URL'}
+                    </label>
+                    <input type="url" value={destinationUrl} onChange={(e) => setDestinationUrl(e.target.value)} placeholder="https://" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+                  </div>
+                )}
+
+                {purpose === 'SIGNUP' && (
+                  <div className="bg-sky-50 border border-sky-200 rounded-lg px-4 py-3">
+                    <p className="text-xs text-sky-800 font-medium">How Sign-up works</p>
+                    <p className="text-[11px] text-sky-700 mt-1">Customers scan, enter their name + email or phone number, and are automatically added to your Contacts with source "QR Code".</p>
+                  </div>
+                )}
+
+                {/* Page Appearance */}
+                <div className="space-y-3 border border-slate-200 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold text-slate-700">Page Appearance</p>
+                    <div className="flex gap-1">
+                      {[
+                        { key: 'light' as const, label: 'Light', bg: '#f8fafc', border: '#e2e8f0' },
+                        { key: 'dark' as const, label: 'Dark', bg: '#1a1a2e', border: '#334155' },
+                        { key: 'brand' as const, label: 'Brand', bg: accentColor, border: accentColor },
+                      ].map((t) => (
+                        <button key={t.key} onClick={() => applyTheme(t.key)} className="px-2 py-1 text-[9px] font-medium rounded border transition-colors hover:opacity-80" style={{ backgroundColor: t.bg, borderColor: t.border, color: t.key === 'light' ? '#475569' : '#fff' }}>
+                          {t.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <ColorPicker label="Accent / Buttons" value={accentColor} onChange={setAccentColor} />
+                    <ColorPicker label="Background" value={bgColor} onChange={setBgColor} />
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <ColorPicker label="Heading" value={headingColor} onChange={setHeadingColor} />
+                    <ColorPicker label="Body Text" value={textColor} onChange={setTextColor} />
+                    <ColorPicker label="Button Text" value={btnTextColor} onChange={setBtnTextColor} />
+                  </div>
+
+                  {/* Font */}
+                  <div>
+                    <label className="block text-[10px] font-medium text-slate-500 mb-1">Font</label>
+                    <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-800">
+                      {FONT_OPTIONS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
+                    </select>
+                  </div>
+
+                  {/* Text overrides */}
+                  <div>
+                    <label className="block text-[10px] font-medium text-slate-500 mb-1">Custom Heading (optional)</label>
+                    <input type="text" value={pageHeading} onChange={(e) => setPageHeading(e.target.value)} placeholder={purpose === 'SURVEY' ? "We'd love your feedback!" : purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'DISCOUNT' ? 'Your Exclusive Offer' : 'Join Us!'} className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-medium text-slate-500 mb-1">Subheading (optional)</label>
+                    <input type="text" value={pageSubheading} onChange={(e) => setPageSubheading(e.target.value)} placeholder="Short description below the heading" className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Logo URL (optional)</label>
+                      <input type="url" value={pageLogo} onChange={(e) => setPageLogo(e.target.value)} placeholder="https://..." className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-800" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Button Text (optional)</label>
+                      <input type="text" value={pageButtonText} onChange={(e) => setPageButtonText(e.target.value)} placeholder={purpose === 'SURVEY' ? 'Submit Feedback' : purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'SIGNUP' ? 'Sign Me Up' : 'Claim Now'} className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Expiration */}
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Expiration Date (optional)</label>
+                  <input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} min={new Date().toISOString().split('T')[0]} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+                  <p className="text-[10px] text-slate-400 mt-1">Leave blank for no expiration</p>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <button onClick={onClose} className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
+                  <button onClick={handleGenerate} disabled={saving || !canGenerate} className="px-5 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 transition-colors flex items-center gap-2">
+                    {saving && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                    {saving ? 'Generating...' : 'Generate QR Code'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Right: Live Preview */}
+              <div className="w-[280px] flex-shrink-0 px-5 py-5 bg-slate-50/50 flex flex-col">
+                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-3">Live Preview</p>
+                <LivePreview
+                  purpose={purpose}
+                  accentColor={accentColor}
+                  bgColor={bgColor}
+                  headingColor={headingColor}
+                  textColor={textColor}
+                  btnTextColor={btnTextColor}
+                  fontFamily={fontFamily}
+                  heading={pageHeading}
+                  subheading={pageSubheading}
+                  buttonText={pageButtonText}
+                  prizes={spinPrizes}
+                  discountValue={discountValue}
+                  discountCode={discountCode}
+                />
+              </div>
             </div>
           </div>
         ) : createdQr ? (
-          <div className="px-6 py-5">
+          <div className="px-6 py-5 overflow-y-auto">
             <div className="flex flex-col items-center gap-4 mb-6">
               <div className="bg-white border-2 border-slate-100 rounded-xl p-4 shadow-sm">
                 <img src={qrImageUrl(qrPublicUrl(createdQr.token), 200)} alt={createdQr.label} width={200} height={200} className="rounded" />
