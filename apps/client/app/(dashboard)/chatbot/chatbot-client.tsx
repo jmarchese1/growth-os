@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import KpiCard from '../../../components/ui/kpi-card';
 
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
@@ -15,6 +15,14 @@ interface ChatbotStatus {
     primaryColor: string | null;
     hours: Record<string, string> | null;
     cuisine: string | null;
+    chatbotSystemPrompt?: string | null;
+    chatbotKnowledgeBase?: string | null;
+    chatbotBubbleSize?: number | null;
+    chatbotBorderRadius?: number | null;
+    chatbotFontFamily?: string | null;
+    chatbotPosition?: string | null;
+    chatbotWindowWidth?: number | null;
+    chatbotWindowHeight?: number | null;
   };
 }
 
@@ -61,6 +69,34 @@ const CHANNEL_COLORS: Record<string, string> = {
   FACEBOOK: 'bg-sky-100 text-sky-700',
 };
 
+const TABS = [
+  { id: 'dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
+  { id: 'appearance', label: 'Appearance', icon: 'M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008z' },
+  { id: 'prompt', label: 'System Prompt', icon: 'M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z' },
+  { id: 'knowledge', label: 'Knowledge Base', icon: 'M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25' },
+  { id: 'test', label: 'Test Chat', icon: 'M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155' },
+  { id: 'history', label: 'History', icon: 'M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z' },
+];
+
+const FONT_OPTIONS = [
+  { label: 'System Default', value: '-apple-system, BlinkMacSystemFont, sans-serif' },
+  { label: 'Inter', value: "'Inter', sans-serif" },
+  { label: 'Poppins', value: "'Poppins', sans-serif" },
+  { label: 'DM Sans', value: "'DM Sans', sans-serif" },
+  { label: 'Nunito', value: "'Nunito', sans-serif" },
+  { label: 'Roboto', value: "'Roboto', sans-serif" },
+  { label: 'Open Sans', value: "'Open Sans', sans-serif" },
+  { label: 'Lato', value: "'Lato', sans-serif" },
+  { label: 'Montserrat', value: "'Montserrat', sans-serif" },
+];
+
+const PROMPT_TEMPLATES = [
+  { label: 'Restaurant', prompt: `You are a friendly AI assistant for {{businessName}}, a restaurant. You help customers with:\n- Menu questions (dishes, prices, ingredients, allergens)\n- Hours of operation\n- Reservations and party sizes\n- Location, parking, and directions\n- Special events, catering, and private dining\n- Dietary accommodations\n\nBe warm, helpful, and concise. If you don't know something specific, say so and offer to connect them with staff. Never make up menu items or prices.` },
+  { label: 'Bakery / Cafe', prompt: `You are a helpful AI assistant for {{businessName}}, a bakery/cafe. You help customers with:\n- Menu items, flavors, and daily specials\n- Custom orders (cakes, catering, events)\n- Hours and pickup/delivery options\n- Allergen and dietary information\n- Loyalty programs and gift cards\n\nBe cheerful and warm. Suggest popular items when asked for recommendations.` },
+  { label: 'Retail / Shop', prompt: `You are a helpful AI assistant for {{businessName}}. You help customers with:\n- Product availability and details\n- Store hours and location\n- Return and exchange policies\n- Shipping and delivery options\n- Gift recommendations\n\nBe professional and helpful. Guide customers toward what they're looking for.` },
+  { label: 'Service Business', prompt: `You are a professional AI assistant for {{businessName}}. You help potential clients with:\n- Services offered and pricing\n- Booking appointments and consultations\n- Business hours and availability\n- Answering frequently asked questions\n- Collecting contact information for follow-up\n\nBe professional, knowledgeable, and solution-oriented.` },
+];
+
 /* ── Deploy Hero ───────────────────────────────────────────────── */
 function DeployHero({ businessId, onEnabled }: { businessId: string; onEnabled: () => void }) {
   const [deploying, setDeploying] = useState(false);
@@ -71,7 +107,6 @@ function DeployHero({ businessId, onEnabled }: { businessId: string; onEnabled: 
     setDeploying(true);
     setError('');
     setStep('Enabling chatbot...');
-
     try {
       const res = await fetch(`${API_URL}/chatbot/enable`, {
         method: 'POST',
@@ -79,13 +114,7 @@ function DeployHero({ businessId, onEnabled }: { businessId: string; onEnabled: 
         body: JSON.stringify({ businessId }),
       });
       const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error ?? 'Deployment failed');
-        setDeploying(false);
-        return;
-      }
-
+      if (!res.ok) { setError(data.error ?? 'Deployment failed'); setDeploying(false); return; }
       setStep('Chatbot deployed!');
       setTimeout(onEnabled, 1200);
     } catch {
@@ -100,31 +129,17 @@ function DeployHero({ businessId, onEnabled }: { businessId: string; onEnabled: 
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Chat Widget</h1>
         <p className="text-sm text-slate-500 mt-1">AI chatbot — captures leads, answers questions, books appointments</p>
       </div>
-
-      {/* Hero CTA */}
       <div className="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-2xl p-10 text-center mb-8 shadow-lg">
         <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center mx-auto mb-5">
-          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" className="w-8 h-8">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
-          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" /></svg>
         </div>
         <p className="text-violet-200 text-xs font-semibold uppercase tracking-widest mb-3">AI Chat Widget</p>
-        <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">Turn website visitors into customers</h2>
-        <p className="text-violet-200 text-base max-w-lg mx-auto mb-8 leading-relaxed">
-          Deploy an AI chatbot that answers questions about your menu, hours, parking, and more — and automatically captures lead information when visitors are interested.
-        </p>
-
+        <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">Turn visitors into customers</h2>
+        <p className="text-violet-200 text-base max-w-lg mx-auto mb-8 leading-relaxed">Deploy an AI chatbot that answers questions, captures leads, and books appointments — automatically.</p>
         {!deploying ? (
           <div className="max-w-sm mx-auto space-y-3">
-            <button
-              onClick={handleEnable}
-              className="px-8 py-3 bg-white text-violet-700 font-semibold rounded-xl text-sm hover:bg-violet-50 transition-colors shadow-sm"
-            >
-              Deploy Chat Widget
-            </button>
-            {error && (
-              <p className="text-sm text-rose-200 bg-rose-500/20 rounded-lg px-3 py-2">{error}</p>
-            )}
+            <button onClick={handleEnable} className="px-8 py-3 bg-white text-violet-700 font-semibold rounded-xl text-sm hover:bg-violet-50 transition-colors shadow-sm">Deploy Chat Widget</button>
+            {error && <p className="text-sm text-rose-200 bg-rose-500/20 rounded-lg px-3 py-2">{error}</p>}
           </div>
         ) : (
           <div className="flex flex-col items-center gap-3">
@@ -133,52 +148,59 @@ function DeployHero({ businessId, onEnabled }: { businessId: string; onEnabled: 
           </div>
         )}
       </div>
+    </div>
+  );
+}
 
-      {/* What you get */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        {[
-          { title: 'Lead Capture', desc: 'Automatically asks for name, phone, and email when visitors show interest — leads flow to your CRM' },
-          { title: 'Business Q&A', desc: 'Answers questions about your menu, hours, parking, outdoor seating, prices, and more' },
-          { title: 'Appointment Booking', desc: 'Takes reservation details — party size, date, preferred time — and creates bookings' },
-        ].map(({ title, desc }) => (
-          <div key={title} className="bg-white border border-slate-200 rounded-xl p-5">
-            <h3 className="text-sm font-semibold text-slate-800 mb-1.5">{title}</h3>
-            <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* How it works */}
-      <div className="bg-white border border-slate-200 rounded-xl p-6">
-        <h3 className="text-sm font-semibold text-slate-700 mb-4">How it works</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          {[
-            { step: '1', title: 'Deploy', desc: 'Click "Deploy Chat Widget" and we activate your AI chatbot' },
-            { step: '2', title: 'Configure', desc: 'Set your chatbot personality, welcome message, and business details' },
-            { step: '3', title: 'Embed', desc: 'Copy the widget code into your website — or we auto-embed it on your Embedo site' },
-            { step: '4', title: 'Capture', desc: 'Visitors chat with your bot, leads are captured and sent to your dashboard' },
-          ].map(({ step, title, desc }) => (
-            <div key={step} className="text-center">
-              <div className="w-8 h-8 rounded-full bg-violet-100 text-violet-700 text-sm font-bold flex items-center justify-center mx-auto mb-2">{step}</div>
-              <h4 className="text-sm font-semibold text-slate-800 mb-1">{title}</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>
-            </div>
-          ))}
+/* ── Live Preview Widget ──────────────────────────────────────── */
+function WidgetPreview({ color, bubbleSize, borderRadius, fontFamily, welcomeMsg, businessName, windowWidth, windowHeight }: {
+  color: string; bubbleSize: number; borderRadius: number; fontFamily: string; welcomeMsg: string; businessName: string; windowWidth: number; windowHeight: number;
+}) {
+  return (
+    <div className="relative bg-slate-100 rounded-xl p-6 min-h-[400px] flex items-end justify-end">
+      <p className="absolute top-3 left-4 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Live Preview</p>
+      {/* Chat window preview */}
+      <div className="mr-2 mb-16 shadow-xl" style={{ width: Math.min(windowWidth, 320), height: Math.min(windowHeight, 380), background: '#fff', borderRadius: borderRadius, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily }}>
+        <div style={{ background: color, padding: '14px 16px', color: '#fff', borderRadius: `${borderRadius}px ${borderRadius}px 0 0` }}>
+          <div style={{ fontWeight: 600, fontSize: 14 }}>{businessName || 'Your Business'}</div>
+          <div style={{ fontSize: 11, opacity: 0.85, marginTop: 2 }}>{welcomeMsg || 'Hi! How can I help you?'}</div>
         </div>
+        <div style={{ flex: 1, padding: 12, display: 'flex', flexDirection: 'column', gap: 6, justifyContent: 'flex-end' }}>
+          <div style={{ alignSelf: 'flex-start', background: '#f0f0f0', color: '#333', padding: '6px 10px', borderRadius: 10, fontSize: 12, maxWidth: '80%' }}>
+            Welcome! How can I help you today?
+          </div>
+          <div style={{ alignSelf: 'flex-end', background: color, color: '#fff', padding: '6px 10px', borderRadius: 10, fontSize: 12 }}>
+            What are your hours?
+          </div>
+          <div style={{ alignSelf: 'flex-start', background: '#f0f0f0', color: '#333', padding: '6px 10px', borderRadius: 10, fontSize: 12, maxWidth: '80%' }}>
+            We&apos;re open Mon-Sat 11am-10pm!
+          </div>
+        </div>
+        <div style={{ padding: '8px 12px', borderTop: '1px solid #f0f0f0', display: 'flex', gap: 6 }}>
+          <div style={{ flex: 1, border: '1px solid #e0e0e0', borderRadius: borderRadius / 2, padding: '6px 10px', fontSize: 11, color: '#999' }}>Type a message...</div>
+          <div style={{ background: color, color: '#fff', border: 'none', borderRadius: borderRadius / 2, padding: '6px 12px', fontSize: 11, fontWeight: 600 }}>Send</div>
+        </div>
+      </div>
+      {/* Bubble preview */}
+      <div className="absolute bottom-6 right-6" style={{ width: bubbleSize, height: bubbleSize, borderRadius: '50%', background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 24px rgba(0,0,0,0.2)', cursor: 'pointer' }}>
+        <svg width={bubbleSize * 0.43} height={bubbleSize * 0.43} fill="white" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
       </div>
     </div>
   );
 }
 
-/* ── Settings Panel ────────────────────────────────────────────── */
-function SettingsPanel({ businessId, settings, onSaved }: {
-  businessId: string;
-  settings: ChatbotStatus['settings'];
-  onSaved: () => void;
+/* ── Appearance Tab ───────────────────────────────────────────── */
+function AppearanceTab({ businessId, settings, businessName, onSaved }: {
+  businessId: string; settings: ChatbotStatus['settings']; businessName: string; onSaved: () => void;
 }) {
-  const [persona, setPersona] = useState(settings.chatbotPersona ?? '');
-  const [welcomeMsg, setWelcomeMsg] = useState(settings.welcomeMessage ?? '');
   const [color, setColor] = useState(settings.primaryColor ?? '#a855f7');
+  const [welcomeMsg, setWelcomeMsg] = useState(settings.welcomeMessage ?? 'Hi! How can I help you today?');
+  const [bubbleSize, setBubbleSize] = useState(settings.chatbotBubbleSize ?? 56);
+  const [borderRadius, setBorderRadius] = useState(settings.chatbotBorderRadius ?? 16);
+  const [fontFamily, setFontFamily] = useState(settings.chatbotFontFamily ?? '-apple-system, BlinkMacSystemFont, sans-serif');
+  const [position, setPosition] = useState(settings.chatbotPosition ?? 'bottom-right');
+  const [windowWidth, setWindowWidth] = useState(settings.chatbotWindowWidth ?? 360);
+  const [windowHeight, setWindowHeight] = useState(settings.chatbotWindowHeight ?? 500);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -189,294 +211,386 @@ function SettingsPanel({ businessId, settings, onSaved }: {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          chatbotPersona: persona || undefined,
-          welcomeMessage: welcomeMsg || undefined,
-          primaryColor: color || undefined,
+          primaryColor: color,
+          welcomeMessage: welcomeMsg,
+          chatbotBubbleSize: bubbleSize,
+          chatbotBorderRadius: borderRadius,
+          chatbotFontFamily: fontFamily,
+          chatbotPosition: position,
+          chatbotWindowWidth: windowWidth,
+          chatbotWindowHeight: windowHeight,
         }),
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
       onSaved();
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
   }
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-6">
-      <h3 className="text-sm font-semibold text-slate-700 mb-4">Chatbot Settings</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-        <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Personality / Persona</label>
-          <input
-            type="text"
-            value={persona}
-            onChange={(e) => setPersona(e.target.value)}
-            placeholder="friendly, warm, and professional"
-            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Welcome Message</label>
-          <input
-            type="text"
-            value={welcomeMsg}
-            onChange={(e) => setWelcomeMsg(e.target.value)}
-            placeholder="Hi! How can I help you today?"
-            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Widget Color</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="color"
-              value={color}
-              onChange={(e) => setColor(e.target.value)}
-              className="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5"
-            />
-            <input
-              type="text"
-              value={color}
-              onChange={(e) => setColor(e.target.value)}
-              className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300"
-            />
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Controls */}
+      <div className="space-y-6">
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <h3 className="text-sm font-semibold text-slate-700 mb-4">Colors & Branding</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1.5">Widget Color</label>
+              <div className="flex items-center gap-3">
+                <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="w-12 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5" />
+                <input type="text" value={color} onChange={(e) => setColor(e.target.value)} className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
+              </div>
+              <div className="flex gap-2 mt-2">
+                {['#a855f7', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#6366f1', '#14b8a6', '#000000'].map((c) => (
+                  <button key={c} onClick={() => setColor(c)} className="w-6 h-6 rounded-full border-2 transition-all hover:scale-110" style={{ background: c, borderColor: color === c ? '#333' : 'transparent' }} />
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1.5">Welcome Message</label>
+              <input type="text" value={welcomeMsg} onChange={(e) => setWelcomeMsg(e.target.value)} placeholder="Hi! How can I help you today?" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1.5">Font</label>
+              <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30">
+                {FONT_OPTIONS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
+              </select>
+            </div>
           </div>
         </div>
+
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <h3 className="text-sm font-semibold text-slate-700 mb-4">Size & Position</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1.5">Bubble Size: {bubbleSize}px</label>
+              <input type="range" min={40} max={80} value={bubbleSize} onChange={(e) => setBubbleSize(Number(e.target.value))} className="w-full accent-violet-600" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1.5">Border Radius: {borderRadius}px</label>
+              <input type="range" min={0} max={24} value={borderRadius} onChange={(e) => setBorderRadius(Number(e.target.value))} className="w-full accent-violet-600" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-500 mb-1.5">Window Width: {windowWidth}px</label>
+                <input type="range" min={280} max={420} step={10} value={windowWidth} onChange={(e) => setWindowWidth(Number(e.target.value))} className="w-full accent-violet-600" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-500 mb-1.5">Window Height: {windowHeight}px</label>
+                <input type="range" min={350} max={600} step={10} value={windowHeight} onChange={(e) => setWindowHeight(Number(e.target.value))} className="w-full accent-violet-600" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1.5">Position</label>
+              <div className="grid grid-cols-2 gap-2">
+                {['bottom-right', 'bottom-left'].map((p) => (
+                  <button key={p} onClick={() => setPosition(p)} className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all ${position === p ? 'bg-violet-50 border-violet-300 text-violet-700' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                    {p === 'bottom-right' ? 'Bottom Right' : 'Bottom Left'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-500 disabled:opacity-50 transition-colors">
+            {saving ? 'Saving...' : 'Save Appearance'}
+          </button>
+          {saved && <span className="text-xs text-emerald-600 font-medium">Saved</span>}
+        </div>
       </div>
-      <div className="flex items-center gap-3">
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="px-5 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 transition-colors"
-        >
-          {saving ? 'Saving...' : 'Save Settings'}
-        </button>
-        {saved && <span className="text-xs text-emerald-600 font-medium">Settings saved</span>}
+
+      {/* Live Preview */}
+      <div className="lg:sticky lg:top-4">
+        <WidgetPreview color={color} bubbleSize={bubbleSize} borderRadius={borderRadius} fontFamily={fontFamily} welcomeMsg={welcomeMsg} businessName={businessName} windowWidth={windowWidth} windowHeight={windowHeight} />
       </div>
     </div>
   );
 }
 
-/* ── Test Chat Panel ───────────────────────────────────────────── */
-function TestChatPanel({ businessId }: { businessId: string }) {
+/* ── System Prompt Tab ────────────────────────────────────────── */
+function SystemPromptTab({ businessId, settings, businessName, onSaved }: {
+  businessId: string; settings: ChatbotStatus['settings']; businessName: string; onSaved: () => void;
+}) {
+  const [prompt, setPrompt] = useState(settings.chatbotSystemPrompt ?? '');
+  const [persona, setPersona] = useState(settings.chatbotPersona ?? '');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  function applyTemplate(template: string) {
+    setPrompt(template.replace(/\{\{businessName\}\}/g, businessName));
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      await fetch(`${API_URL}/chatbot/settings/${businessId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatbotSystemPrompt: prompt, chatbotPersona: persona }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+      onSaved();
+    } finally { setSaving(false); }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <h3 className="text-sm font-semibold text-slate-700 mb-1">System Prompt</h3>
+        <p className="text-xs text-slate-400 mb-4">This is the core instruction that tells the AI how to behave. It controls personality, knowledge boundaries, and what tools it uses.</p>
+
+        <div className="mb-4">
+          <label className="block text-xs font-medium text-slate-500 mb-1.5">Quick Templates</label>
+          <div className="flex flex-wrap gap-2">
+            {PROMPT_TEMPLATES.map((t) => (
+              <button key={t.label} onClick={() => applyTemplate(t.prompt)} className="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-violet-50 hover:border-violet-300 hover:text-violet-700 transition-all">
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <textarea
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          placeholder="You are a helpful AI assistant for our business. You help customers with..."
+          rows={12}
+          className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-800 font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 resize-y"
+        />
+        <p className="text-[10px] text-slate-400 mt-1">{prompt.length} characters</p>
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <h3 className="text-sm font-semibold text-slate-700 mb-1">Personality / Persona</h3>
+        <p className="text-xs text-slate-400 mb-3">Short description of the chatbot&apos;s tone — e.g. &quot;friendly, warm, and professional&quot;</p>
+        <input
+          type="text"
+          value={persona}
+          onChange={(e) => setPersona(e.target.value)}
+          placeholder="friendly, warm, and professional"
+          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+        />
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-500 disabled:opacity-50 transition-colors">
+          {saving ? 'Saving...' : 'Save Prompt'}
+        </button>
+        {saved && <span className="text-xs text-emerald-600 font-medium">Saved</span>}
+      </div>
+    </div>
+  );
+}
+
+/* ── Knowledge Base Tab ───────────────────────────────────────── */
+function KnowledgeBaseTab({ businessId, settings, onSaved }: {
+  businessId: string; settings: ChatbotStatus['settings']; onSaved: () => void;
+}) {
+  const [kb, setKb] = useState(settings.chatbotKnowledgeBase ?? '');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      await fetch(`${API_URL}/chatbot/settings/${businessId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatbotKnowledgeBase: kb }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+      onSaved();
+    } finally { setSaving(false); }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <h3 className="text-sm font-semibold text-slate-700 mb-1">Knowledge Base</h3>
+        <p className="text-xs text-slate-400 mb-4">
+          Paste your menu, FAQ, business details, parking info, policies — anything you want the chatbot to know. The AI will reference this when answering questions.
+        </p>
+
+        <div className="flex flex-wrap gap-2 mb-4">
+          {[
+            { label: 'Menu', placeholder: '## Menu\n\n### Appetizers\n- Bruschetta - $12\n- Calamari - $14\n\n### Entrees\n- Margherita Pizza - $18\n- Pasta Carbonara - $22' },
+            { label: 'Hours', placeholder: '## Hours\n\nMonday-Thursday: 11am-9pm\nFriday-Saturday: 11am-11pm\nSunday: 12pm-8pm\n\nHappy Hour: Mon-Fri 4-6pm' },
+            { label: 'FAQ', placeholder: '## FAQ\n\nQ: Do you take reservations?\nA: Yes! Call us or book online at...\n\nQ: Is there parking?\nA: Free parking lot behind the building, plus street parking\n\nQ: Do you offer catering?\nA: Yes, we cater events of all sizes.' },
+            { label: 'Policies', placeholder: '## Policies\n\n- Large parties (8+): please call ahead\n- Cancellation: 24 hour notice required\n- Dietary: We can accommodate most allergies, please inform your server' },
+          ].map((t) => (
+            <button key={t.label} onClick={() => setKb((prev) => prev ? prev + '\n\n' + t.placeholder : t.placeholder)} className="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-violet-50 hover:border-violet-300 hover:text-violet-700 transition-all">
+              + {t.label}
+            </button>
+          ))}
+        </div>
+
+        <textarea
+          value={kb}
+          onChange={(e) => setKb(e.target.value)}
+          placeholder="Paste your menu, FAQ, hours, parking details, policies, and anything else your chatbot should know..."
+          rows={16}
+          className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-800 font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 resize-y"
+        />
+        <p className="text-[10px] text-slate-400 mt-1">{kb.length} characters · ~{Math.ceil(kb.length / 4)} tokens</p>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-500 disabled:opacity-50 transition-colors">
+          {saving ? 'Saving...' : 'Save Knowledge Base'}
+        </button>
+        {saved && <span className="text-xs text-emerald-600 font-medium">Saved</span>}
+      </div>
+    </div>
+  );
+}
+
+/* ── Test Chat Tab ────────────────────────────────────────────── */
+function TestChatTab({ businessId }: { businessId: string }) {
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const msgsRef = useRef<HTMLDivElement>(null);
 
   async function handleSend() {
     const text = input.trim();
     if (!text || sending) return;
-
     const userMsg = { role: 'user' as const, content: text };
-    const updatedMessages = [...messages, userMsg];
-    setMessages(updatedMessages);
+    const updated = [...messages, userMsg];
+    setMessages(updated);
     setInput('');
     setSending(true);
-
     try {
-      // Send with test: true and full history so the bot has context
-      const history = updatedMessages.map((m) => ({
-        ...m,
-        timestamp: new Date().toISOString(),
-      }));
-
+      const history = updated.map((m) => ({ ...m, timestamp: new Date().toISOString() }));
       const res = await fetch(`${API_URL}/chatbot/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          businessId,
-          message: text,
-          channel: 'WEB',
-          test: true,
-          history: history.slice(0, -1), // exclude current message (processMessage adds it)
-        }),
+        body: JSON.stringify({ businessId, message: text, channel: 'WEB', test: true, history: history.slice(0, -1) }),
       });
-
       if (res.ok) {
         const data = await res.json();
         setMessages((prev) => [...prev, { role: 'assistant', content: data.reply }]);
       } else {
-        setMessages((prev) => [...prev, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }]);
+        setMessages((prev) => [...prev, { role: 'assistant', content: 'Sorry, something went wrong.' }]);
       }
     } catch {
-      setMessages((prev) => [...prev, { role: 'assistant', content: 'Could not connect to the chatbot service.' }]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: 'Could not connect to chatbot.' }]);
     } finally {
       setSending(false);
     }
   }
 
-  function handleClear() {
-    setMessages([]);
-    setInput('');
-  }
+  useEffect(() => { msgsRef.current?.scrollTo(0, msgsRef.current.scrollHeight); }, [messages]);
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-      {/* Header */}
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50/50 transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-violet-600">
-              <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7z" clipRule="evenodd" />
-            </svg>
+      <div className="bg-gradient-to-r from-violet-600 to-indigo-600 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-white font-semibold text-sm">Test Your Chatbot</h3>
+            <p className="text-violet-200 text-xs mt-0.5">Conversations here are not logged</p>
           </div>
-          <div className="text-left">
-            <h3 className="text-sm font-semibold text-slate-700">Test Your Chatbot</h3>
-            <p className="text-xs text-slate-400">Chat with your bot to test how it responds — conversations here are not logged</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700">TEST MODE</span>
-          <svg viewBox="0 0 20 20" fill="currentColor" className={`w-5 h-5 text-slate-400 transition-transform ${expanded ? 'rotate-180' : ''}`}>
-            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-          </svg>
-        </div>
-      </button>
-
-      {expanded && (
-        <div className="border-t border-slate-100">
-          {/* Messages area */}
-          <div className="h-80 overflow-y-auto p-4 bg-slate-50/50 space-y-3">
-            {messages.length === 0 && (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center mx-auto mb-2">
-                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-violet-500">
-                      <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <p className="text-xs text-slate-400">Type a message to start testing your chatbot</p>
-                  <p className="text-[10px] text-slate-300 mt-1">Try asking about the menu, hours, or give it a name and email</p>
-                </div>
-              </div>
-            )}
-            {messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                  msg.role === 'user'
-                    ? 'bg-violet-600 text-white rounded-br-md'
-                    : 'bg-white border border-slate-200 text-slate-700 rounded-bl-md shadow-sm'
-                }`}>
-                  {msg.content}
-                </div>
-              </div>
-            ))}
-            {sending && (
-              <div className="flex justify-start">
-                <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
-                  <div className="flex gap-1">
-                    <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Input area */}
-          <div className="px-4 py-3 border-t border-slate-100 flex items-center gap-2">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-              placeholder="Type a test message..."
-              disabled={sending}
-              className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 disabled:opacity-50"
-            />
-            <button
-              onClick={handleSend}
-              disabled={!input.trim() || sending}
-              className="px-4 py-2.5 bg-violet-600 text-white rounded-xl text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition-colors"
-            >
-              Send
-            </button>
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-400/20 text-amber-200">TEST MODE</span>
             {messages.length > 0 && (
-              <button
-                onClick={handleClear}
-                className="px-3 py-2.5 text-xs text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
-                title="Clear conversation"
-              >
-                Clear
-              </button>
+              <button onClick={() => setMessages([])} className="px-2.5 py-1 text-[10px] font-medium text-violet-200 hover:text-white rounded-lg hover:bg-white/10 transition-colors">Clear</button>
             )}
           </div>
         </div>
-      )}
-    </div>
-  );
-}
-
-/* ── Widget Snippet Panel ──────────────────────────────────────── */
-function WidgetSnippetPanel({ businessId }: { businessId: string }) {
-  const [snippet, setSnippet] = useState('');
-  const [copied, setCopied] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchSnippet() {
-      try {
-        const res = await fetch(`${API_URL}/chatbot/widget/snippet/${businessId}`);
-        if (res.ok) setSnippet(await res.text());
-      } catch {
-        // Service may be unavailable
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchSnippet();
-  }, [businessId]);
-
-  function handleCopy() {
-    navigator.clipboard.writeText(snippet);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
-  return (
-    <div className="bg-white border border-slate-200 rounded-xl p-6">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className="text-sm font-semibold text-slate-700">Widget Embed Code</h3>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Paste this snippet before the closing &lt;/body&gt; tag on your website
-          </p>
-        </div>
-        <button
-          onClick={handleCopy}
-          disabled={!snippet}
-          className="px-4 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors"
-        >
-          {copied ? 'Copied!' : 'Copy Code'}
-        </button>
       </div>
-      {loading ? (
-        <div className="h-20 flex items-center justify-center">
-          <div className="w-5 h-5 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" />
-        </div>
-      ) : snippet ? (
-        <pre className="bg-slate-900 text-slate-300 rounded-lg p-4 text-xs overflow-x-auto font-mono leading-relaxed">
-          {snippet}
-        </pre>
-      ) : (
-        <div className="bg-slate-50 rounded-lg p-4 text-center">
-          <p className="text-xs text-slate-400">Widget snippet will be available once the chatbot service is running</p>
-        </div>
-      )}
+      <div ref={msgsRef} className="h-96 overflow-y-auto p-4 bg-slate-50/50 space-y-3">
+        {messages.length === 0 && (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center mx-auto mb-2">
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-violet-500"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7z" clipRule="evenodd" /></svg>
+              </div>
+              <p className="text-xs text-slate-400">Type a message to test your chatbot</p>
+              <p className="text-[10px] text-slate-300 mt-1">Try: &quot;What&apos;s on the menu?&quot; or &quot;I&apos;d like to book a table&quot;</p>
+            </div>
+          </div>
+        )}
+        {messages.map((msg, i) => (
+          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${msg.role === 'user' ? 'bg-violet-600 text-white rounded-br-md' : 'bg-white border border-slate-200 text-slate-700 rounded-bl-md shadow-sm'}`}>
+              {msg.content}
+            </div>
+          </div>
+        ))}
+        {sending && (
+          <div className="flex justify-start">
+            <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+              <div className="flex gap-1">
+                <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="px-4 py-3 border-t border-slate-100 flex items-center gap-2">
+        <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }} placeholder="Type a test message..." disabled={sending} className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 disabled:opacity-50" />
+        <button onClick={handleSend} disabled={!input.trim() || sending} className="px-4 py-2.5 bg-violet-600 text-white rounded-xl text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition-colors">Send</button>
+      </div>
     </div>
   );
 }
 
-/* ── Conversation Modal ────────────────────────────────────────── */
+/* ── History Tab ──────────────────────────────────────────────── */
+function HistoryTab({ sessions, totalSessions, onSelect }: {
+  sessions: ChatSession[]; totalSessions: number; onSelect: (s: ChatSession) => void;
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-sm font-semibold text-slate-700">Conversations</h2>
+        {totalSessions > 0 && <span className="text-xs text-slate-400">{totalSessions} total</span>}
+      </div>
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-slate-100">
+              {['Date', 'Visitor', 'Channel', 'Messages', 'Status', ''].map((h) => (
+                <th key={h} className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {sessions.length === 0 ? (
+              <tr><td colSpan={6} className="px-5 py-12 text-center text-sm text-slate-400">No conversations yet.</td></tr>
+            ) : (
+              sessions.map((session) => (
+                <tr key={session.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors cursor-pointer" onClick={() => onSelect(session)}>
+                  <td className="px-5 py-3 text-sm text-slate-600">{formatDate(session.createdAt)}</td>
+                  <td className="px-5 py-3 text-sm text-slate-800 font-medium">
+                    {session.contact ? `${session.contact.firstName} ${session.contact.lastName}` : <span className="text-slate-400">Anonymous</span>}
+                  </td>
+                  <td className="px-5 py-3">
+                    <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${CHANNEL_COLORS[session.channel] ?? 'bg-slate-100 text-slate-500'}`}>{session.channel.toLowerCase()}</span>
+                  </td>
+                  <td className="px-5 py-3 text-sm text-slate-600 tabular-nums">{Array.isArray(session.messages) ? session.messages.length : 0}</td>
+                  <td className="px-5 py-3">
+                    {session.leadCaptured && <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-100 text-emerald-700">lead</span>}
+                    {session.appointmentMade && <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-violet-100 text-violet-700 ml-1">booking</span>}
+                  </td>
+                  <td className="px-5 py-3"><span className="text-xs text-violet-600 font-medium">View</span></td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/* ── Conversation Modal ───────────────────────────────────────── */
 function ConversationModal({ session, onClose }: { session: ChatSession; onClose: () => void }) {
   const messages = (session.messages ?? []) as ChatMessage[];
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
@@ -484,11 +598,8 @@ function ConversationModal({ session, onClose }: { session: ChatSession; onClose
           <div>
             <h3 className="text-sm font-semibold text-slate-800">Conversation</h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              {formatDate(session.createdAt)}
-              {' · '}
-              <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${CHANNEL_COLORS[session.channel] ?? 'bg-slate-100 text-slate-500'}`}>
-                {session.channel}
-              </span>
+              {formatDate(session.createdAt)}{' · '}
+              <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${CHANNEL_COLORS[session.channel] ?? 'bg-slate-100 text-slate-500'}`}>{session.channel}</span>
               {session.contact && ` — ${session.contact.firstName} ${session.contact.lastName}`}
             </p>
           </div>
@@ -496,75 +607,66 @@ function ConversationModal({ session, onClose }: { session: ChatSession; onClose
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
           </button>
         </div>
-
-        <div className="px-6 py-4 overflow-y-auto max-h-[60vh]">
-          {/* Lead / Appointment badges */}
+        <div className="px-6 py-4 overflow-y-auto max-h-[60vh] space-y-2">
           {(session.leadCaptured || session.appointmentMade) && (
             <div className="mb-4 flex gap-2">
-              {session.leadCaptured && (
-                <span className="inline-flex px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-100 text-emerald-700">
-                  Lead Captured
-                </span>
-              )}
-              {session.appointmentMade && (
-                <span className="inline-flex px-2.5 py-1 rounded-full text-[11px] font-medium bg-violet-100 text-violet-700">
-                  Appointment Made
-                </span>
-              )}
+              {session.leadCaptured && <span className="inline-flex px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-100 text-emerald-700">Lead Captured</span>}
+              {session.appointmentMade && <span className="inline-flex px-2.5 py-1 rounded-full text-[11px] font-medium bg-violet-100 text-violet-700">Appointment Made</span>}
             </div>
           )}
-
-          {/* Contact info if captured */}
           {session.contact && (
             <div className="mb-4 p-3 bg-emerald-50 border border-emerald-100 rounded-lg">
-              <p className="text-xs font-semibold text-emerald-700 mb-1">Contact Information</p>
-              <div className="grid grid-cols-2 gap-1">
-                <p className="text-xs text-slate-600">
-                  <span className="font-medium text-slate-700">Name:</span> {session.contact.firstName} {session.contact.lastName}
-                </p>
-                {session.contact.email && (
-                  <p className="text-xs text-slate-600">
-                    <span className="font-medium text-slate-700">Email:</span> {session.contact.email}
-                  </p>
-                )}
-                {session.contact.phone && (
-                  <p className="text-xs text-slate-600">
-                    <span className="font-medium text-slate-700">Phone:</span> {session.contact.phone}
-                  </p>
-                )}
-              </div>
+              <p className="text-xs font-semibold text-emerald-700 mb-1">Contact</p>
+              <p className="text-xs text-slate-600">{session.contact.firstName} {session.contact.lastName} {session.contact.email && `· ${session.contact.email}`} {session.contact.phone && `· ${session.contact.phone}`}</p>
             </div>
           )}
-
-          {/* Messages */}
-          {messages.length > 0 ? (
-            <div className="space-y-2">
-              {messages.map((msg, i) => {
-                const isUser = msg.role === 'user';
-                return (
-                  <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] px-3 py-2 rounded-xl text-sm ${
-                      isUser
-                        ? 'bg-violet-600 text-white'
-                        : 'bg-slate-100 text-slate-700'
-                    }`}>
-                      {msg.content}
-                    </div>
-                  </div>
-                );
-              })}
+          {messages.map((msg, i) => (
+            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[80%] px-3 py-2 rounded-xl text-sm ${msg.role === 'user' ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-700'}`}>{msg.content}</div>
             </div>
-          ) : (
-            <p className="text-sm text-slate-400 text-center py-8">No messages in this conversation</p>
-          )}
+          ))}
+          {messages.length === 0 && <p className="text-sm text-slate-400 text-center py-8">No messages</p>}
         </div>
       </div>
     </div>
   );
 }
 
-/* ── Main Chatbot Dashboard ────────────────────────────────────── */
+/* ── Widget Snippet Panel ─────────────────────────────────────── */
+function EmbedSnippet({ businessId }: { businessId: string }) {
+  const [snippet, setSnippet] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${API_URL}/chatbot/widget/snippet/${businessId}`).then((r) => r.ok ? r.text() : '').then(setSnippet).catch(() => {}).finally(() => setLoading(false));
+  }, [businessId]);
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="text-sm font-semibold text-slate-700">Embed Code</h3>
+          <p className="text-xs text-slate-400 mt-0.5">Paste before &lt;/body&gt; on your website</p>
+        </div>
+        <button onClick={() => { navigator.clipboard.writeText(snippet); setCopied(true); setTimeout(() => setCopied(false), 2000); }} disabled={!snippet} className="px-4 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors">
+          {copied ? 'Copied!' : 'Copy Code'}
+        </button>
+      </div>
+      {loading ? (
+        <div className="h-20 flex items-center justify-center"><div className="w-5 h-5 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" /></div>
+      ) : snippet ? (
+        <pre className="bg-slate-900 text-slate-300 rounded-lg p-4 text-xs overflow-x-auto font-mono leading-relaxed">{snippet}</pre>
+      ) : (
+        <div className="bg-slate-50 rounded-lg p-4 text-center"><p className="text-xs text-slate-400">Snippet unavailable</p></div>
+      )}
+    </div>
+  );
+}
+
+/* ── Main Chatbot Dashboard ───────────────────────────────────── */
 export default function ChatbotClient({ businessId }: { businessId: string }) {
+  const [tab, setTab] = useState('dashboard');
   const [status, setStatus] = useState<ChatbotStatus | null>(null);
   const [stats, setStats] = useState<ChatbotStats | null>(null);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
@@ -579,44 +681,31 @@ export default function ChatbotClient({ businessId }: { businessId: string }) {
         fetch(`${API_URL}/chatbot/stats/${businessId}`),
         fetch(`${API_URL}/chatbot/sessions/${businessId}`),
       ]);
-
       if (statusRes.ok) setStatus(await statusRes.json());
       if (statsRes.ok) setStats(await statsRes.json());
-      if (sessionsRes.ok) {
-        const data = await sessionsRes.json();
-        setSessions(data.items);
-        setTotalSessions(data.total);
-      }
-    } catch {
-      // API may not be available in dev
-    } finally {
-      setLoading(false);
-    }
+      if (sessionsRes.ok) { const data = await sessionsRes.json(); setSessions(data.items); setTotalSessions(data.total); }
+    } catch {} finally { setLoading(false); }
   }, [businessId]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  if (loading) {
-    return (
-      <div className="p-8 flex items-center justify-center min-h-[400px]">
-        <div className="w-8 h-8 border-3 border-violet-300 border-t-violet-600 rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  // Show deploy hero if chatbot not enabled
-  if (!status?.isEnabled) {
-    return <DeployHero businessId={businessId} onEnabled={fetchAll} />;
-  }
+  if (loading) return <div className="p-8 flex items-center justify-center min-h-[400px]"><div className="w-8 h-8 border-3 border-violet-300 border-t-violet-600 rounded-full animate-spin" /></div>;
+  if (!status?.isEnabled) return <DeployHero businessId={businessId} onEnabled={fetchAll} />;
 
   const s = stats ?? { totalSessions: 0, leadsCapture: 0, appointmentsMade: 0, totalMessages: 0, channelBreakdown: {} };
 
   return (
     <div className="p-8 animate-fade-up">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Chat Widget</h1>
-          <p className="text-sm text-slate-500 mt-1">AI chatbot — conversations, leads & analytics</p>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" /></svg>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Chat Widget</h1>
+            <p className="text-sm text-slate-500">AI chatbot — configure, customize, and monitor</p>
+          </div>
         </div>
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200/60 rounded-full">
           <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -624,118 +713,60 @@ export default function ChatbotClient({ businessId }: { businessId: string }) {
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <KpiCard label="Total Conversations" value={s.totalSessions} color="violet"
-          icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7z" clipRule="evenodd" /></svg>} />
-        <KpiCard label="Leads Captured" value={s.leadsCapture} color="emerald"
-          icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>} />
-        <KpiCard label="Appointments Made" value={s.appointmentsMade} color="amber"
-          icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1z" clipRule="evenodd" /></svg>} />
-        <KpiCard label="Total Messages" value={s.totalMessages} color="sky"
-          icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2z" clipRule="evenodd" /></svg>} />
-      </div>
-
-      {/* Channel breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
-        {[
-          { channel: 'Web Widget', key: 'WEB', color: 'violet' },
-          { channel: 'Instagram DMs', key: 'INSTAGRAM', color: 'rose' },
-          { channel: 'Facebook Messenger', key: 'FACEBOOK', color: 'sky' },
-        ].map(({ channel, key, color }) => (
-          <div key={channel} className={`bg-${color}-50 border border-${color}-200/60 rounded-xl p-5`}>
-            <p className="text-xs text-slate-500">{channel}</p>
-            <p className={`text-xl font-bold text-${color}-600 mt-1`}>{s.channelBreakdown[key] ?? 0}</p>
-            <p className="text-[10px] text-slate-400 mt-1">conversations</p>
-          </div>
+      {/* Tabs */}
+      <div className="flex items-center gap-1 mb-8 border-b border-slate-200 overflow-x-auto">
+        {TABS.map((t) => (
+          <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-all ${tab === t.id ? 'border-violet-600 text-violet-700' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}`}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d={t.icon} /></svg>
+            {t.label}
+          </button>
         ))}
       </div>
 
-      {/* Settings */}
-      <div className="mb-8">
-        <SettingsPanel businessId={businessId} settings={status.settings} onSaved={fetchAll} />
-      </div>
+      {/* Dashboard Tab */}
+      {tab === 'dashboard' && (
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <KpiCard label="Conversations" value={s.totalSessions} color="violet" icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7z" clipRule="evenodd" /></svg>} />
+            <KpiCard label="Leads Captured" value={s.leadsCapture} color="emerald" icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>} />
+            <KpiCard label="Appointments" value={s.appointmentsMade} color="amber" icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1z" clipRule="evenodd" /></svg>} />
+            <KpiCard label="Messages" value={s.totalMessages} color="sky" icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2z" clipRule="evenodd" /></svg>} />
+          </div>
 
-      {/* Test chat */}
-      <div className="mb-8">
-        <TestChatPanel businessId={businessId} />
-      </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {[{ channel: 'Web Widget', key: 'WEB', color: 'violet' }, { channel: 'Instagram DMs', key: 'INSTAGRAM', color: 'rose' }, { channel: 'Facebook Messenger', key: 'FACEBOOK', color: 'sky' }].map(({ channel, key, color }) => (
+              <div key={channel} className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-md transition-shadow">
+                <p className="text-xs text-slate-500">{channel}</p>
+                <p className="text-xl font-bold text-slate-800 mt-1">{s.channelBreakdown[key] ?? 0}</p>
+                <p className="text-[10px] text-slate-400 mt-1">conversations</p>
+              </div>
+            ))}
+          </div>
 
-      {/* Widget snippet */}
-      <div className="mb-8">
-        <WidgetSnippetPanel businessId={businessId} />
-      </div>
-
-      {/* Conversations table */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-slate-700">Recent Conversations</h2>
-          {totalSessions > 0 && <span className="text-xs text-slate-400">{totalSessions} total</span>}
+          <EmbedSnippet businessId={businessId} />
         </div>
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-100">
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Date</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Visitor</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Channel</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Messages</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Status</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {sessions.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-5 py-12 text-center text-sm text-slate-400">
-                    No conversations yet. Your chatbot will log conversations here once visitors start chatting.
-                  </td>
-                </tr>
-              ) : (
-                sessions.map((session) => {
-                  const msgCount = Array.isArray(session.messages) ? session.messages.length : 0;
-                  return (
-                    <tr key={session.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                      <td className="px-5 py-3 text-sm text-slate-600">{formatDate(session.createdAt)}</td>
-                      <td className="px-5 py-3 text-sm text-slate-800 font-medium">
-                        {session.contact
-                          ? `${session.contact.firstName} ${session.contact.lastName}`
-                          : <span className="text-slate-400">Anonymous</span>}
-                      </td>
-                      <td className="px-5 py-3">
-                        <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${CHANNEL_COLORS[session.channel] ?? 'bg-slate-100 text-slate-500'}`}>
-                          {session.channel.toLowerCase()}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 text-sm text-slate-600 tabular-nums">{msgCount}</td>
-                      <td className="px-5 py-3">
-                        {session.leadCaptured && (
-                          <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-100 text-emerald-700">
-                            lead
-                          </span>
-                        )}
-                        {session.appointmentMade && (
-                          <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-violet-100 text-violet-700 ml-1">
-                            booking
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-5 py-3">
-                        <button
-                          onClick={() => setSelectedSession(session)}
-                          className="text-xs text-violet-600 hover:text-violet-800 font-medium transition-colors"
-                        >
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      )}
+
+      {/* Appearance Tab */}
+      {tab === 'appearance' && (
+        <AppearanceTab businessId={businessId} settings={status.settings} businessName={status.businessName} onSaved={fetchAll} />
+      )}
+
+      {/* System Prompt Tab */}
+      {tab === 'prompt' && (
+        <SystemPromptTab businessId={businessId} settings={status.settings} businessName={status.businessName} onSaved={fetchAll} />
+      )}
+
+      {/* Knowledge Base Tab */}
+      {tab === 'knowledge' && (
+        <KnowledgeBaseTab businessId={businessId} settings={status.settings} onSaved={fetchAll} />
+      )}
+
+      {/* Test Chat Tab */}
+      {tab === 'test' && <TestChatTab businessId={businessId} />}
+
+      {/* History Tab */}
+      {tab === 'history' && <HistoryTab sessions={sessions} totalSessions={totalSessions} onSelect={setSelectedSession} />}
 
       {/* Conversation modal */}
       {selectedSession && <ConversationModal session={selectedSession} onClose={() => setSelectedSession(null)} />}
