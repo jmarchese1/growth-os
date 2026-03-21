@@ -183,9 +183,10 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
       return reply.code(410).send({ success: false, error: 'This QR code has expired' });
     }
 
-    // Cooldown check — find last claimed scan from this device
+    // Cooldown check — find last scan from this device (any scan counts, not just claims)
     let cooldownUntil: string | null = null;
-    if (qrCode.cooldownPeriod) {
+    const isCooldownPurpose = ['SPIN_WHEEL', 'DISCOUNT'].includes(qrCode.purpose);
+    if (qrCode.cooldownPeriod && isCooldownPurpose) {
       const cooldownMs: Record<string, number> = {
         ONCE: Infinity,
         DAILY: 24 * 60 * 60 * 1000,
@@ -195,12 +196,13 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
       const window = cooldownMs[qrCode.cooldownPeriod];
 
       if (window !== undefined) {
-        // Find last scan from same IP AND fingerprint (both must match to avoid shared-WiFi false positives)
+        // Check by fingerprint first (more specific), fall back to IP
         const lastScan = await db.qrCodeScan.findFirst({
           where: {
             qrCodeId: qrCode.id,
-            outcome: { not: null }, // only count claimed scans, not passive views
-            ...(fp ? { ipAddress: ip, deviceFingerprint: fp } : { ipAddress: ip }),
+            ...(fp
+              ? { OR: [{ deviceFingerprint: fp }, { ipAddress: ip }] }
+              : { ipAddress: ip }),
           },
           orderBy: { createdAt: 'desc' },
         });
@@ -218,14 +220,16 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
       }
     }
 
-    // Record scan (fire-and-forget, don't block the response)
-    db.qrCode.update({
-      where: { token },
-      data: {
-        scanCount: { increment: 1 },
-        scans: { create: { ipAddress: ip, ...(fp ? { deviceFingerprint: fp } : {}) } },
-      },
-    }).catch(() => {});
+    // Record scan (fire-and-forget) — only if NOT in cooldown (avoid inflating scan count on blocked revisits)
+    if (!cooldownUntil) {
+      db.qrCode.update({
+        where: { token },
+        data: {
+          scanCount: { increment: 1 },
+          scans: { create: { ipAddress: ip, ...(fp ? { deviceFingerprint: fp } : {}) } },
+        },
+      }).catch(() => {});
+    }
 
     return {
       success: true,

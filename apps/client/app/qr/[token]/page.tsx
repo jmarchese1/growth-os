@@ -612,7 +612,12 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
         } else {
           setQr(data.qr);
           // Server cooldown takes priority over local
-          if (data.qr.cooldownUntil) setCooldownUntil(data.qr.cooldownUntil);
+          if (data.qr.cooldownUntil) {
+            setCooldownUntil(data.qr.cooldownUntil);
+          } else if (data.qr.cooldownPeriod && ['SPIN_WHEEL', 'DISCOUNT'].includes(data.qr.purpose)) {
+            // First visit — mark localStorage so refresh triggers cooldown locally
+            setLocalCooldown(token, data.qr.cooldownPeriod);
+          }
           if (['MENU', 'REVIEW', 'CUSTOM'].includes(data.qr.purpose) && data.qr.destinationUrl && !redirected.current) {
             redirected.current = true;
             window.location.href = data.qr.destinationUrl;
