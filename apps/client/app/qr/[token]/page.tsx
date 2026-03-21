@@ -245,33 +245,99 @@ function SpinWheel({ prizes, onResult, brandColor = '#7C3AED' }: { prizes: SpinP
     ctx.restore();
   }
 
+  // Audio context for tick sounds
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const lastTickRef = useRef(-1);
+
+  function playTick(speed: number) {
+    try {
+      if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const ctx = audioCtxRef.current;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      // Higher pitch when faster, lower when slow (more dramatic)
+      osc.frequency.value = 600 + speed * 400;
+      osc.type = 'sine';
+      gain.gain.value = Math.min(0.08 + (1 - speed) * 0.12, 0.2);
+      osc.start();
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+      osc.stop(ctx.currentTime + 0.06);
+    } catch {}
+  }
+
+  function playWinSound() {
+    try {
+      if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const ctx = audioCtxRef.current;
+      // Play a rising arpeggio
+      [0, 150, 300, 450].forEach((delay, i) => {
+        setTimeout(() => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.frequency.value = [523, 659, 784, 1047][i]!; // C5, E5, G5, C6
+          osc.type = 'sine';
+          gain.gain.value = 0.12;
+          osc.start();
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+          osc.stop(ctx.currentTime + 0.3);
+        }, delay);
+      });
+    } catch {}
+  }
+
   function spin() {
     if (spinning || spun) return;
     setSpinning(true);
+    lastTickRef.current = -1;
 
     const winnerIdx = pickWeightedPrize(prizes);
     const arc = (2 * Math.PI) / prizes.length;
-    const extraSpins = 6 * 2 * Math.PI;
+    const extraSpins = 8 * 2 * Math.PI;
     const targetAngle = -Math.PI / 2 - winnerIdx * arc - arc / 2;
-    const fullTarget = rotationRef.current + extraSpins + ((targetAngle - rotationRef.current) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+    const totalTravel = extraSpins + ((targetAngle - rotationRef.current) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
 
     const startTime = performance.now();
-    const duration = 5000;
+    const duration = 8000; // 8 seconds — much more dramatic
     const startRotation = rotationRef.current;
 
     function animate(now: number) {
       const elapsed = now - startTime;
       const t = Math.min(elapsed / duration, 1);
-      // Smooth ease-out with bounce feel
-      const eased = 1 - Math.pow(1 - t, 4);
-      rotationRef.current = startRotation + eased * (fullTarget - startRotation + extraSpins);
+
+      // Custom easing: fast start, long dramatic slowdown at the end
+      // First 60% of time = 85% of distance (fast), last 40% = 15% (crawl)
+      let eased: number;
+      if (t < 0.6) {
+        // Fast phase: cubic ease-in-out for the first 60%
+        const t2 = t / 0.6;
+        eased = 0.85 * (t2 < 0.5 ? 4 * t2 * t2 * t2 : 1 - Math.pow(-2 * t2 + 2, 3) / 2);
+      } else {
+        // Slow dramatic phase: very gradual ease-out for the last 40%
+        const t2 = (t - 0.6) / 0.4;
+        eased = 0.85 + 0.15 * (1 - Math.pow(1 - t2, 5)); // quintic ease-out — super slow at end
+      }
+
+      rotationRef.current = startRotation + eased * totalTravel;
       drawWheel(rotationRef.current);
+
+      // Tick sound when passing segment boundaries
+      const currentSegment = Math.floor((((-rotationRef.current - Math.PI / 2) % (2 * Math.PI)) + 4 * Math.PI) % (2 * Math.PI) / arc);
+      if (currentSegment !== lastTickRef.current) {
+        lastTickRef.current = currentSegment;
+        const speed = 1 - t; // 1 = fast, 0 = slow
+        playTick(speed);
+      }
 
       if (t < 1) {
         animRef.current = requestAnimationFrame(animate);
       } else {
         setSpinning(false);
         setSpun(true);
+        playWinSound();
         onResult(prizes[winnerIdx]!);
       }
     }
@@ -380,7 +446,8 @@ function SurveyForm({ survey, onSubmit, brandColor = '#7C3AED' }: { survey: QrDa
                   key={opt}
                   type="button"
                   onClick={() => setAnswer(q.id, opt)}
-                  className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition-colors ${answers[q.id] === opt ? 'border-violet-300 bg-violet-600 text-white' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                  className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition-colors ${answers[q.id] === opt ? 'text-white' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                  style={answers[q.id] === opt ? { backgroundColor: brandColor, borderColor: brandColor } : {}}
                 >
                   {opt}
                 </button>
@@ -585,9 +652,9 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
         </h2>
         {wonPrize && (
           <div className="mt-4 bg-gradient-to-br from-violet-50 to-violet-100 border border-violet-200 rounded-2xl px-6 py-5 text-center">
-            <p className="text-xs text-violet-600 font-medium mb-1">You won</p>
-            <p className="text-2xl font-bold text-violet-700">{wonPrize.label}</p>
-            {qr.discountCode && <p className="mt-3 text-sm text-violet-600">Use code: <span className="font-mono font-bold bg-white px-2 py-0.5 rounded-lg border border-violet-200">{qr.discountCode}</span></p>}
+            <p className="text-xs font-medium mb-1" style={{ color: brandColor }}>You won</p>
+            <p className="text-2xl font-bold" style={{ color: brandColor }}>{wonPrize.label}</p>
+            {qr.discountCode && <p className="mt-3 text-sm" style={{ color: brandColor }}>Use code: <span className="font-mono font-bold bg-white px-2 py-0.5 rounded-lg border" style={{ borderColor: brandColor + '40' }}>{qr.discountCode}</span></p>}
           </div>
         )}
         {!wonPrize && (qr.surveyReward || qr.discountValue) && (
@@ -607,7 +674,7 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
     <Wrapper>
       <div className="text-center space-y-5">
         <h2 className="text-2xl font-bold text-slate-900">Your Discount</h2>
-        <div className="bg-gradient-to-br from-violet-600 to-violet-700 rounded-2xl px-8 py-8 text-white shadow-xl shadow-violet-600/25">
+        <div className="rounded-2xl px-8 py-8 text-white shadow-xl" style={{ background: `linear-gradient(135deg, ${brandColor}, ${brandColor}dd)`, boxShadow: `0 10px 25px ${brandColor}40` }}>
           <p className="text-5xl font-black">{qr.discountValue}</p>
           {qr.discountCode && (
             <div className="mt-4 bg-white/20 rounded-xl px-4 py-2">
