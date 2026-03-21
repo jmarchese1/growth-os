@@ -104,6 +104,7 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
       surveyReward?: string;
       destinationUrl?: string;
       expiresAt?: string;
+      metadata?: Record<string, unknown>;
     };
 
     if (!body.businessId) return reply.code(400).send({ success: false, error: 'businessId is required' });
@@ -131,6 +132,7 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
         surveyReward: body.surveyReward ?? null,
         destinationUrl: body.destinationUrl ?? null,
         ...(body.expiresAt ? { expiresAt: new Date(body.expiresAt) } : {}),
+        ...(body.metadata ? { metadata: body.metadata } : {}),
         active: true,
       },
       include: {
@@ -209,6 +211,8 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
         spinPrizes: qrCode.spinPrizes,
         // Redirect
         destinationUrl: qrCode.destinationUrl,
+        // Page style metadata
+        metadata: qrCode.metadata ?? null,
       },
     };
   });

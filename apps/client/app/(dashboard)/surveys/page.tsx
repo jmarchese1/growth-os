@@ -50,6 +50,13 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
   // Discount fields
   const [discountValue, setDiscountValue] = useState('');
   const [discountCode, setDiscountCode] = useState('');
+  // Page style fields
+  const [pageColor, setPageColor] = useState('#7C3AED');
+  const [pageHeading, setPageHeading] = useState('');
+  const [pageSubheading, setPageSubheading] = useState('');
+  const [pageLogo, setPageLogo] = useState('');
+  const [pageBackground, setPageBackground] = useState<'gradient' | 'solid' | 'dark'>('gradient');
+  const [pageButtonText, setPageButtonText] = useState('');
   // Spin wheel
   const [spinPrizes, setSpinPrizes] = useState([
     { label: '10% Off', probability: 35 }, { label: 'Free Dessert', probability: 20 },
@@ -105,6 +112,14 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
       if (purpose === 'SPIN_WHEEL') body['spinPrizes'] = spinPrizes;
       if (destinationUrl) body['destinationUrl'] = destinationUrl;
       if (expiresAt) body['expiresAt'] = new Date(expiresAt).toISOString();
+      // Page style stored in metadata JSON
+      body['metadata'] = {
+        pageColor, pageBackground,
+        ...(pageHeading ? { pageHeading } : {}),
+        ...(pageSubheading ? { pageSubheading } : {}),
+        ...(pageLogo ? { pageLogo } : {}),
+        ...(pageButtonText ? { pageButtonText } : {}),
+      };
 
       const res = await fetch(`${API_URL}/qr-codes`, {
         method: 'POST',
@@ -279,6 +294,82 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
               {purpose === 'SIGNUP' && (
                 <div className="bg-sky-50 border border-sky-200/60 rounded-lg px-4 py-3">
                   <p className="text-xs text-sky-700">Customers scan \u2192 enter name + email/phone \u2192 automatically added to your Contacts list</p>
+                </div>
+              )}
+
+              {/* Page Style */}
+              {['SURVEY', 'SPIN_WHEEL', 'DISCOUNT', 'SIGNUP'].includes(purpose) && (
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Page Appearance</p>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Brand Color</label>
+                      <div className="flex items-center gap-2">
+                        <input type="color" value={pageColor} onChange={(e) => setPageColor(e.target.value)} className="w-8 h-8 rounded-lg border border-slate-200 cursor-pointer p-0.5" />
+                        <input type="text" value={pageColor} onChange={(e) => setPageColor(e.target.value)} className="flex-1 px-2 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-800 font-mono" />
+                      </div>
+                      <div className="flex gap-1 mt-1">
+                        {['#7C3AED', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#EC4899', '#000000', '#0EA5E9'].map((c) => (
+                          <button key={c} onClick={() => setPageColor(c)} className="w-4 h-4 rounded-full border transition-all hover:scale-125" style={{ background: c, borderColor: pageColor === c ? '#333' : 'transparent' }} />
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Background Style</label>
+                      <div className="flex gap-1.5">
+                        {[
+                          { value: 'gradient', label: 'Gradient' },
+                          { value: 'solid', label: 'Solid' },
+                          { value: 'dark', label: 'Dark' },
+                        ].map((bg) => (
+                          <button key={bg.value} onClick={() => setPageBackground(bg.value as typeof pageBackground)} className={`px-2.5 py-1.5 text-[10px] font-medium rounded-lg border transition-all ${pageBackground === bg.value ? 'bg-violet-100 border-violet-300 text-violet-700' : 'border-slate-200 text-slate-500 hover:bg-slate-100'}`}>
+                            {bg.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-medium text-slate-500 mb-1">Custom Heading (optional)</label>
+                    <input type="text" value={pageHeading} onChange={(e) => setPageHeading(e.target.value)} placeholder={purpose === 'SURVEY' ? 'We\'d love your feedback!' : purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'DISCOUNT' ? 'Your Exclusive Offer' : 'Join Us!'} className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-medium text-slate-500 mb-1">Subheading (optional)</label>
+                    <input type="text" value={pageSubheading} onChange={(e) => setPageSubheading(e.target.value)} placeholder="Short description shown below the heading" className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Logo URL (optional)</label>
+                      <input type="url" value={pageLogo} onChange={(e) => setPageLogo(e.target.value)} placeholder="https://..." className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-800" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Button Text (optional)</label>
+                      <input type="text" value={pageButtonText} onChange={(e) => setPageButtonText(e.target.value)} placeholder={purpose === 'SURVEY' ? 'Submit Feedback' : purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'SIGNUP' ? 'Sign Me Up' : 'Claim Now'} className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
+                    </div>
+                  </div>
+
+                  {/* Mini preview */}
+                  <div className="rounded-lg overflow-hidden border border-slate-200">
+                    <div className="h-24 flex items-center justify-center text-white text-xs font-semibold" style={{
+                      background: pageBackground === 'dark' ? '#1e1e2e' : pageBackground === 'solid' ? pageColor : `linear-gradient(135deg, ${pageColor}22 0%, white 50%, ${pageColor}11 100%)`,
+                      color: pageBackground === 'dark' ? '#fff' : pageBackground === 'solid' ? '#fff' : '#333',
+                    }}>
+                      <div className="text-center">
+                        {pageLogo && <img src={pageLogo} alt="" className="w-8 h-8 rounded-lg mx-auto mb-1 object-cover" />}
+                        <p className="text-sm font-bold">{pageHeading || 'Your Heading'}</p>
+                        <p className="text-[10px] opacity-70">{pageSubheading || 'Your subheading'}</p>
+                      </div>
+                    </div>
+                    <div className="p-2 flex justify-center">
+                      <div className="px-4 py-1.5 rounded-lg text-[10px] font-semibold text-white" style={{ background: pageColor }}>
+                        {pageButtonText || 'Submit'}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 

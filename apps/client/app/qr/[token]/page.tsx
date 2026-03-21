@@ -8,6 +8,15 @@ type QrPurpose = 'SURVEY' | 'DISCOUNT' | 'SPIN_WHEEL' | 'SIGNUP' | 'MENU' | 'REV
 
 interface SpinPrize { label: string; probability: number }
 
+interface PageMeta {
+  pageColor?: string;
+  pageBackground?: 'gradient' | 'solid' | 'dark';
+  pageHeading?: string;
+  pageSubheading?: string;
+  pageLogo?: string;
+  pageButtonText?: string;
+}
+
 interface QrData {
   id: string;
   label: string;
@@ -20,6 +29,7 @@ interface QrData {
   discountCode: string | null;
   spinPrizes: SpinPrize[] | null;
   destinationUrl: string | null;
+  metadata: PageMeta | null;
 }
 
 interface Question {
@@ -162,7 +172,7 @@ function SpinWheel({ prizes, onResult }: { prizes: SpinPrize[]; onResult: (prize
       <button
         onClick={spin}
         disabled={spinning || spun}
-        className="px-8 py-3 bg-violet-600 text-white text-sm font-bold rounded-full hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-violet-600/30 active:scale-95"
+        className="px-8 py-3 text-white text-sm font-bold rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg active:scale-95" style={{ backgroundColor: brandColor }}
       >
         {spinning ? 'Spinning...' : spun ? 'Spun!' : 'Spin to Win!'}
       </button>
@@ -273,7 +283,7 @@ function SurveyForm({ survey, onSubmit }: { survey: QrData['survey']; onSubmit: 
       <button
         type="submit"
         disabled={submitting}
-        className="w-full py-3.5 bg-violet-600 text-white text-sm font-semibold rounded-xl hover:bg-violet-500 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-violet-600/20"
+        className="w-full py-3.5 text-white text-sm font-semibold rounded-xl disabled:opacity-50 transition-colors flex items-center justify-center gap-2 shadow-lg" style={{ backgroundColor: brandColor }}
       >
         {submitting && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
         {submitting ? 'Submitting...' : 'Submit Feedback'}
@@ -390,24 +400,36 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
     setPhase('result');
   }
 
+  // Page style from metadata
+  const meta = (qr?.metadata ?? {}) as PageMeta;
+  const brandColor = meta.pageColor ?? '#7C3AED';
+  const bgStyle = meta.pageBackground ?? 'gradient';
+  const bgClass = bgStyle === 'dark' ? 'bg-[#1a1a2e] text-white' : bgStyle === 'solid' ? 'text-white' : 'bg-gradient-to-b from-slate-50 to-white';
+  const bgInline = bgStyle === 'solid' ? { backgroundColor: brandColor } : bgStyle === 'dark' ? {} : {};
+  const textColor = bgStyle === 'gradient' ? 'text-slate-400' : 'text-white/60';
+
   // Branded wrapper
   const Wrapper = ({ children }: { children: React.ReactNode }) => (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex flex-col items-center px-4 py-10">
+    <div className={`min-h-screen flex flex-col items-center px-4 py-10 ${bgClass}`} style={bgInline}>
       <div className="w-full max-w-sm">
         {qr && (
           <div className="text-center mb-8">
-            <div className="w-12 h-12 rounded-2xl bg-violet-600 flex items-center justify-center mx-auto mb-3 shadow-lg shadow-violet-600/20">
-              <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7">
-                <polygon points="16,4 28,10 16,16 4,10" fill="#fff" fillOpacity="0.9" />
-                <polygon points="4,10 16,16 16,28 4,22" fill="#fff" fillOpacity="0.5" />
-                <polygon points="28,10 16,16 16,28 28,22" fill="#fff" fillOpacity="0.7" />
-              </svg>
-            </div>
-            <p className="text-xs text-slate-400 font-medium">{qr.businessName}</p>
+            {meta.pageLogo ? (
+              <img src={meta.pageLogo} alt="" className="w-14 h-14 rounded-2xl mx-auto mb-3 object-cover shadow-lg" />
+            ) : (
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg" style={{ backgroundColor: brandColor, boxShadow: `0 10px 25px ${brandColor}33` }}>
+                <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7">
+                  <polygon points="16,4 28,10 16,16 4,10" fill="#fff" fillOpacity="0.9" />
+                  <polygon points="4,10 16,16 16,28 4,22" fill="#fff" fillOpacity="0.5" />
+                  <polygon points="28,10 16,16 16,28 28,22" fill="#fff" fillOpacity="0.7" />
+                </svg>
+              </div>
+            )}
+            <p className={`text-xs font-medium ${textColor}`}>{qr.businessName}</p>
           </div>
         )}
         {children}
-        <p className="text-center text-[10px] text-slate-300 mt-10">Powered by Embedo</p>
+        <p className={`text-center text-[10px] mt-10 ${textColor}`}>Powered by Embedo</p>
       </div>
     </div>
   );

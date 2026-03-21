@@ -811,6 +811,9 @@ model QrCode {
   // For MENU / REVIEW / CUSTOM
   destinationUrl String?
 
+  // Page appearance customization (JSON)
+  metadata Json?  // { pageColor, pageBackground, pageHeading, pageSubheading, pageLogo, pageButtonText }
+
   expiresAt DateTime?
   active    Boolean   @default(true)
   scanCount Int       @default(0)
