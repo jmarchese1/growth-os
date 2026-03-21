@@ -173,15 +173,26 @@ function buildWidgetJs(): string {
     if (document.getElementById('ec-bubble')) return;
 
     var pc = C.primaryColor || '#a855f7';
+    var sc = C.secondaryColor || C.chatbotSecondaryColor || '#f0f0f0';
     var bs = C.bubbleSize || 56;
     var br = C.borderRadius != null ? C.borderRadius : 16;
-    var ff = C.fontFamily || '-apple-system,BlinkMacSystemFont,sans-serif';
-    var ww = C.windowWidth || 360;
-    var wh = C.windowHeight || 500;
-    var pos = C.position || 'bottom-right';
+    var ff = C.fontFamily || C.chatbotFontFamily || '-apple-system,BlinkMacSystemFont,sans-serif';
+    var ww = C.windowWidth || C.chatbotWindowWidth || 360;
+    var wh = C.windowHeight || C.chatbotWindowHeight || 500;
+    var pos = C.position || C.chatbotPosition || 'bottom-right';
+    var wm = C.welcomeMessage || 'Hi! How can I help you today?';
     var sk = null;
     var busy = false;
     var isOpen = false;
+
+    // Load Google Font if not system default
+    if (ff.indexOf('apple-system') === -1) {
+      var fontName = ff.replace(/'/g,'').split(',')[0].trim();
+      var link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(fontName).replace(/%20/g,'+') + ':wght@400;500;600&display=swap';
+      document.head.appendChild(link);
+    }
 
     // ── Bubble ──
     var bub = document.createElement('div');
@@ -197,7 +208,8 @@ function buildWidgetJs(): string {
 
     var headerBr = br + 'px ' + br + 'px 0 0';
     var inputBr = Math.max(br/2, 6);
-    win.innerHTML='<div style="background:'+pc+';padding:16px;color:#fff;border-radius:'+headerBr+'"><div style="font-weight:600;font-size:16px">'+(C.businessName||'Chat')+'</div><div style="font-size:13px;opacity:.85">'+(C.welcomeMessage||'Hi! How can I help you?')+'</div></div><div id="ec-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px"></div><div style="padding:12px;border-top:1px solid #f0f0f0;display:flex;gap:8px"><input id="ec-in" type="text" placeholder="Type a message..." style="flex:1;border:1px solid #e0e0e0;border-radius:'+inputBr+'px;padding:8px 12px;outline:none;font-size:14px;font-family:'+ff+'"><button id="ec-btn" style="background:'+pc+';color:#fff;border:none;border-radius:'+inputBr+'px;padding:8px 16px;cursor:pointer;font-size:14px;font-family:'+ff+'">Send</button></div>';
+    var msgBr = Math.max(br*0.75, 8);
+    win.innerHTML='<div style="background:'+pc+';padding:16px;color:#fff;border-radius:'+headerBr+'"><div style="font-weight:600;font-size:16px">'+(C.businessName||'Chat')+'</div></div><div id="ec-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px"></div><div style="padding:12px;border-top:1px solid #f0f0f0;display:flex;gap:8px"><input id="ec-in" type="text" placeholder="Type a message..." style="flex:1;border:1px solid #e0e0e0;border-radius:'+inputBr+'px;padding:8px 12px;outline:none;font-size:14px;font-family:'+ff+'"><button id="ec-btn" style="background:'+pc+';color:#fff;border:none;border-radius:'+inputBr+'px;padding:8px 16px;cursor:pointer;font-size:14px;font-family:'+ff+'">Send</button></div>';
 
     document.body.appendChild(bub);
     document.body.appendChild(win);
@@ -205,6 +217,12 @@ function buildWidgetJs(): string {
     var msgs = document.getElementById('ec-msgs');
     var inp = document.getElementById('ec-in');
     var btn = document.getElementById('ec-btn');
+
+    // Show welcome message as first bot message in the conversation
+    var wmDiv = document.createElement('div');
+    wmDiv.setAttribute('style','max-width:80%;padding:8px 12px;border-radius:'+msgBr+'px;font-size:14px;line-height:1.4;word-wrap:break-word;align-self:flex-start;background:'+sc+';color:#333');
+    wmDiv.textContent = wm;
+    msgs.appendChild(wmDiv);
 
     bub.onclick = function() {
       isOpen = !isOpen;
@@ -215,7 +233,7 @@ function buildWidgetJs(): string {
 
     function addMsg(txt, isUser) {
       var d = document.createElement('div');
-      d.setAttribute('style','max-width:80%;padding:8px 12px;border-radius:'+Math.max(br*0.75,8)+'px;font-size:14px;line-height:1.4;word-wrap:break-word;'+(isUser?'align-self:flex-end;background:'+pc+';color:#fff':'align-self:flex-start;background:#f0f0f0;color:#333'));
+      d.setAttribute('style','max-width:80%;padding:8px 12px;border-radius:'+msgBr+'px;font-size:14px;line-height:1.4;word-wrap:break-word;'+(isUser?'align-self:flex-end;background:'+pc+';color:#fff':'align-self:flex-start;background:'+sc+';color:#333'));
       d.textContent = txt;
       msgs.appendChild(d);
       msgs.scrollTop = msgs.scrollHeight;
