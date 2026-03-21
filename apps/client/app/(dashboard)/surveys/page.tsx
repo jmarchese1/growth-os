@@ -32,6 +32,27 @@ const Q_TYPES = [
 function qrImageUrl(data: string, size = 200) { return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(data)}`; }
 function qrPublicUrl(token: string) { return `${typeof window !== 'undefined' ? window.location.origin : 'https://app.embedo.io'}/qr/${token}`; }
 
+const FONT_MAP: Record<string, string> = {
+  system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  inter: '"Inter", sans-serif',
+  poppins: '"Poppins", sans-serif',
+  playfair: '"Playfair Display", serif',
+  mono: '"JetBrains Mono", "Fira Code", monospace',
+};
+
+function useGoogleFont(fontFamily: string) {
+  useEffect(() => {
+    if (!fontFamily || !['inter', 'poppins', 'playfair'].includes(fontFamily)) return;
+    const family = fontFamily === 'inter' ? 'Inter' : fontFamily === 'poppins' ? 'Poppins' : 'Playfair+Display';
+    const href = `https://fonts.googleapis.com/css2?family=${family}:wght@400;500;600;700&display=swap`;
+    if (document.querySelector(`link[href="${href}"]`)) return;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    document.head.appendChild(link);
+  }, [fontFamily]);
+}
+
 /* ── Mini Spin Wheel Preview ──────────────────────────────────── */
 const PREVIEW_PALETTES = [
   ['#7C3AED', '#6D28D9'], ['#4F46E5', '#4338CA'], ['#0EA5E9', '#0284C7'],
@@ -118,6 +139,8 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
   const [creating, setCreating] = useState(false);
   const [created, setCreated] = useState<QrCode | null>(null);
   const [error, setError] = useState('');
+  useGoogleFont(fontFamily);
+  const fontStack = FONT_MAP[fontFamily] || FONT_MAP.system;
 
   function addQuestion() {
     setQuestions([...questions, { id: `q_${Date.now()}`, type: 'text', label: '', required: false }]);
@@ -421,7 +444,7 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                       <span className="text-[8px] text-slate-400 ml-1">Preview</span>
                     </div>
-                    <div className="p-3 flex flex-col items-center" style={{ backgroundColor: bgColor, minHeight: purpose === 'SPIN_WHEEL' ? 220 : 140 }}>
+                    <div className="p-3 flex flex-col items-center" style={{ backgroundColor: bgColor, fontFamily: fontStack, minHeight: purpose === 'SPIN_WHEEL' ? 220 : 140 }}>
                       <p className="text-xs font-bold text-center mb-0.5" style={{ color: accentColor }}>{pageHeading || (purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'DISCOUNT' ? 'Your Discount' : 'Join Us!')}</p>
                       <p className="text-[9px] text-center mb-2" style={{ color: bgColor < '#444444' && bgColor !== '#ffffff' && bgColor !== '#f8fafc' && bgColor !== '#eff6ff' && bgColor !== '#ecfdf5' ? 'rgba(255,255,255,0.6)' : '#64748b' }}>{pageSubheading || 'Your subheading here'}</p>
                       {purpose === 'SPIN_WHEEL' && (

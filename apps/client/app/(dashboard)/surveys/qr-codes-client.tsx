@@ -59,6 +59,19 @@ const FONT_MAP: Record<string, string> = {
 
 const COLOR_PRESETS = ['#7C3AED', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#EC4899', '#000000', '#0EA5E9'];
 
+function useGoogleFont(fontFamily: string) {
+  useEffect(() => {
+    if (!fontFamily || !['inter', 'poppins', 'playfair'].includes(fontFamily)) return;
+    const family = fontFamily === 'inter' ? 'Inter' : fontFamily === 'poppins' ? 'Poppins' : 'Playfair+Display';
+    const href = `https://fonts.googleapis.com/css2?family=${family}:wght@400;500;600;700&display=swap`;
+    if (document.querySelector(`link[href="${href}"]`)) return;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    document.head.appendChild(link);
+  }, [fontFamily]);
+}
+
 function qrImageUrl(data: string, size = 200): string {
   return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(data)}&format=png&margin=8`;
 }
@@ -253,6 +266,7 @@ function LivePreview({ purpose, accentColor, bgColor, fontFamily, heading, subhe
   discountValue: string;
   discountCode: string;
 }) {
+  useGoogleFont(fontFamily);
   const fontStack = FONT_MAP[fontFamily] || FONT_MAP.system;
   const isDark = bgColor === '#1a1a2e' || bgColor === '#0f172a' || bgColor < '#444444';
   const textColor = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
