@@ -53,7 +53,7 @@ interface Question {
 function resolveColors(meta: PageMeta) {
   const accent = meta.accentColor || meta.pageColor || '#7C3AED';
   const bg = meta.bgColor || (meta.pageBackground === 'dark' ? '#1a1a2e' : meta.pageBackground === 'solid' ? accent : '#f8fafc');
-  const heading = meta.headingColor || (meta.pageBackground === 'dark' || meta.pageBackground === 'solid' ? '#ffffff' : '#1e293b');
+  const heading = meta.headingColor || accent;
   const text = meta.textColor || (meta.pageBackground === 'dark' || meta.pageBackground === 'solid' ? 'rgba(255,255,255,0.7)' : '#64748b');
   const btnText = meta.buttonTextColor || '#ffffff';
   return { accent, bg, heading, text, btnText };
@@ -606,33 +606,29 @@ export default function QrLandingPage({ params }: { params: Promise<{ token: str
   const colors = resolveColors(meta);
   const fontStack = FONT_MAP[meta.fontFamily || 'system'] || FONT_MAP.system;
 
-  // Google font link
-  const googleFont = meta.fontFamily && ['inter', 'poppins', 'playfair'].includes(meta.fontFamily)
-    ? `https://fonts.googleapis.com/css2?family=${meta.fontFamily === 'inter' ? 'Inter' : meta.fontFamily === 'poppins' ? 'Poppins' : 'Playfair+Display'}:wght@400;500;600;700&display=swap`
-    : null;
+  // Load Google font into <head>
+  useEffect(() => {
+    if (!meta.fontFamily || !['inter', 'poppins', 'playfair'].includes(meta.fontFamily)) return;
+    const family = meta.fontFamily === 'inter' ? 'Inter' : meta.fontFamily === 'poppins' ? 'Poppins' : 'Playfair+Display';
+    const href = `https://fonts.googleapis.com/css2?family=${family}:wght@400;500;600;700&display=swap`;
+    if (document.querySelector(`link[href="${href}"]`)) return;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    document.head.appendChild(link);
+  }, [meta.fontFamily]);
 
   // Branded wrapper
   const Wrapper = ({ children }: { children: React.ReactNode }) => (
     <>
-      {googleFont && <link rel="stylesheet" href={googleFont} />}
       <div
         className="min-h-screen flex flex-col items-center px-4 py-10"
         style={{ backgroundColor: colors.bg, fontFamily: fontStack }}
       >
         <div className="w-full max-w-sm">
-          {qr && (
+          {qr && meta.pageLogo && (
             <div className="text-center mb-8">
-              {meta.pageLogo ? (
-                <img src={meta.pageLogo} alt="" className="w-14 h-14 rounded-2xl mx-auto mb-3 object-cover shadow-lg" />
-              ) : (
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg" style={{ backgroundColor: colors.accent, boxShadow: `0 10px 25px ${colors.accent}33` }}>
-                  <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7">
-                    <polygon points="16,4 28,10 16,16 4,10" fill="#fff" fillOpacity="0.9" />
-                    <polygon points="4,10 16,16 16,28 4,22" fill="#fff" fillOpacity="0.5" />
-                    <polygon points="28,10 16,16 16,28 28,22" fill="#fff" fillOpacity="0.7" />
-                  </svg>
-                </div>
-              )}
+              <img src={meta.pageLogo} alt="" className="w-14 h-14 rounded-2xl mx-auto mb-3 object-cover shadow-lg" />
               <p className="text-xs font-medium" style={{ color: colors.text }}>{qr.businessName}</p>
             </div>
           )}

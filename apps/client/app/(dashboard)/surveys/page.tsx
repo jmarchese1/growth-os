@@ -102,7 +102,7 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
   const [discountCode, setDiscountCode] = useState('');
   // Page style fields
   const [accentColor, setAccentColor] = useState('#7C3AED');
-  const [bgColor, setBgColor] = useState('#f8fafc');
+  const [bgColor, setBgColor] = useState('#ffffff');
   const [fontFamily, setFontFamily] = useState('system');
   const [pageHeading, setPageHeading] = useState('');
   const [pageSubheading, setPageSubheading] = useState('');
@@ -167,7 +167,7 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
       const isDark = bgColor === '#1a1a2e' || bgColor === '#0f172a' || bgColor < '#444444';
       body['metadata'] = {
         accentColor, bgColor, fontFamily,
-        headingColor: isDark ? '#ffffff' : '#1e293b',
+        headingColor: accentColor,
         textColor: isDark ? 'rgba(255,255,255,0.6)' : '#64748b',
         buttonTextColor: '#ffffff',
         ...(pageHeading ? { pageHeading } : {}),
@@ -374,8 +374,8 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
                       <div className="flex items-center gap-1.5">
                         <input type="color" value={bgColor.startsWith('#') ? bgColor : '#f8fafc'} onChange={(e) => setBgColor(e.target.value)} className="w-6 h-6 rounded border-0 cursor-pointer flex-shrink-0" />
                         <input type="text" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="flex-1 px-1.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 font-mono" />
-                        {['#f8fafc', '#ffffff', '#1a1a2e', '#0f172a'].map((c) => (
-                          <button key={c} onClick={() => setBgColor(c)} className="w-3.5 h-3.5 rounded-full border transition-all hover:scale-125 flex-shrink-0" style={{ background: c, borderColor: bgColor === c ? '#333' : c === '#ffffff' ? '#e2e8f0' : 'transparent' }} />
+                        {['#ffffff', '#0f172a', '#eff6ff', '#ecfdf5'].map((c) => (
+                          <button key={c} onClick={() => setBgColor(c)} className="w-3.5 h-3.5 rounded-full border transition-all hover:scale-125 flex-shrink-0" style={{ background: c, borderColor: bgColor === c ? '#333' : c === '#ffffff' || c === '#eff6ff' || c === '#ecfdf5' ? '#e2e8f0' : 'transparent' }} />
                         ))}
                       </div>
                     </div>
@@ -422,11 +422,8 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
                       <span className="text-[8px] text-slate-400 ml-1">Preview</span>
                     </div>
                     <div className="p-3 flex flex-col items-center" style={{ backgroundColor: bgColor, minHeight: purpose === 'SPIN_WHEEL' ? 220 : 140 }}>
-                      <div className="w-6 h-6 rounded-md flex items-center justify-center mb-1.5 shadow-sm" style={{ backgroundColor: accentColor }}>
-                        <svg viewBox="0 0 32 32" fill="none" className="w-4 h-4"><polygon points="16,4 28,10 16,16 4,10" fill="#fff" fillOpacity="0.9" /><polygon points="4,10 16,16 16,28 4,22" fill="#fff" fillOpacity="0.5" /><polygon points="28,10 16,16 16,28 28,22" fill="#fff" fillOpacity="0.7" /></svg>
-                      </div>
-                      <p className="text-xs font-bold text-center mb-0.5" style={{ color: bgColor === '#f8fafc' || bgColor === '#ffffff' ? '#1e293b' : '#ffffff' }}>{pageHeading || (purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'DISCOUNT' ? 'Your Discount' : 'Join Us!')}</p>
-                      <p className="text-[9px] text-center mb-2" style={{ color: bgColor === '#f8fafc' || bgColor === '#ffffff' ? '#64748b' : 'rgba(255,255,255,0.6)' }}>{pageSubheading || 'Your subheading here'}</p>
+                      <p className="text-xs font-bold text-center mb-0.5" style={{ color: accentColor }}>{pageHeading || (purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'DISCOUNT' ? 'Your Discount' : 'Join Us!')}</p>
+                      <p className="text-[9px] text-center mb-2" style={{ color: bgColor < '#444444' && bgColor !== '#ffffff' && bgColor !== '#f8fafc' && bgColor !== '#eff6ff' && bgColor !== '#ecfdf5' ? 'rgba(255,255,255,0.6)' : '#64748b' }}>{pageSubheading || 'Your subheading here'}</p>
                       {purpose === 'SPIN_WHEEL' && (
                         <div className="mb-2">
                           <MiniSpinPreview prizes={spinPrizes} accentColor={accentColor} />

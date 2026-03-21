@@ -255,7 +255,6 @@ function LivePreview({ purpose, accentColor, bgColor, fontFamily, heading, subhe
 }) {
   const fontStack = FONT_MAP[fontFamily] || FONT_MAP.system;
   const isDark = bgColor === '#1a1a2e' || bgColor === '#0f172a' || bgColor < '#444444';
-  const headingColor = isDark ? '#ffffff' : '#1e293b';
   const textColor = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
   const defaultHeading = purpose === 'SURVEY' ? "We'd love your feedback!" : purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'DISCOUNT' ? 'Your Exclusive Offer' : 'Join Us!';
   const defaultSub = purpose === 'SPIN_WHEEL' ? 'Try your luck — what will you get?' : purpose === 'SIGNUP' ? 'Sign up for exclusive deals' : '';
@@ -270,15 +269,7 @@ function LivePreview({ purpose, accentColor, bgColor, fontFamily, heading, subhe
         <span className="text-[9px] text-slate-400 ml-2">Preview</span>
       </div>
       <div className="p-4 flex flex-col items-center" style={{ backgroundColor: bgColor, fontFamily: fontStack, minHeight: purpose === 'SPIN_WHEEL' ? 300 : 200 }}>
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-2 shadow" style={{ backgroundColor: accentColor }}>
-          <svg viewBox="0 0 32 32" fill="none" className="w-5 h-5">
-            <polygon points="16,4 28,10 16,16 4,10" fill="#fff" fillOpacity="0.9" />
-            <polygon points="4,10 16,16 16,28 4,22" fill="#fff" fillOpacity="0.5" />
-            <polygon points="28,10 16,16 16,28 28,22" fill="#fff" fillOpacity="0.7" />
-          </svg>
-        </div>
-
-        <p className="text-sm font-bold text-center mb-0.5" style={{ color: headingColor }}>{heading || defaultHeading}</p>
+        <p className="text-sm font-bold text-center mb-0.5" style={{ color: accentColor }}>{heading || defaultHeading}</p>
         <p className="text-[10px] text-center mb-3" style={{ color: textColor }}>{subheading || defaultSub}</p>
 
         {purpose === 'SPIN_WHEEL' && (
@@ -334,7 +325,7 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
   const [expiresAt, setExpiresAt] = useState('');
   // Appearance
   const [accentColor, setAccentColor] = useState('#7C3AED');
-  const [bgColor, setBgColor] = useState('#f8fafc');
+  const [bgColor, setBgColor] = useState('#ffffff');
   const [fontFamily, setFontFamily] = useState('system');
   const [pageHeading, setPageHeading] = useState('');
   const [pageSubheading, setPageSubheading] = useState('');
@@ -360,7 +351,7 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
     const isDark = bgColor === '#1a1a2e' || bgColor === '#0f172a' || bgColor < '#444444';
     payload['metadata'] = {
       accentColor, bgColor, fontFamily,
-      headingColor: isDark ? '#ffffff' : '#1e293b',
+      headingColor: accentColor,
       textColor: isDark ? 'rgba(255,255,255,0.6)' : '#64748b',
       buttonTextColor: '#ffffff',
       ...(pageHeading ? { pageHeading } : {}),
@@ -499,8 +490,8 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
                       <div className="flex items-center gap-1.5">
                         <input type="color" value={bgColor.startsWith('#') ? bgColor : '#f8fafc'} onChange={(e) => setBgColor(e.target.value)} className="w-6 h-6 rounded border-0 cursor-pointer flex-shrink-0" />
                         <input type="text" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="w-20 px-1.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 font-mono" />
-                        {['#f8fafc', '#ffffff', '#1a1a2e', '#0f172a'].map((c) => (
-                          <button key={c} onClick={() => setBgColor(c)} className="w-3.5 h-3.5 rounded-full border transition-all hover:scale-125 flex-shrink-0" style={{ background: c, borderColor: bgColor === c ? '#333' : c === '#ffffff' ? '#e2e8f0' : 'transparent' }} />
+                        {['#ffffff', '#0f172a', '#eff6ff', '#ecfdf5'].map((c) => (
+                          <button key={c} onClick={() => setBgColor(c)} className="w-3.5 h-3.5 rounded-full border transition-all hover:scale-125 flex-shrink-0" style={{ background: c, borderColor: bgColor === c ? '#333' : c === '#ffffff' || c === '#eff6ff' || c === '#ecfdf5' ? '#e2e8f0' : 'transparent' }} />
                         ))}
                       </div>
                     </div>
