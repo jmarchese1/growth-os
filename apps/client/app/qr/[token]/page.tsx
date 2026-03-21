@@ -51,7 +51,12 @@ function pickWeightedPrize(prizes: SpinPrize[]): number {
   return 0;
 }
 
-const WHEEL_COLORS = ['#7C3AED', '#4F46E5', '#0EA5E9', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
+const WHEEL_PALETTES = [
+  ['#7C3AED', '#6D28D9'], ['#4F46E5', '#4338CA'], ['#0EA5E9', '#0284C7'],
+  ['#10B981', '#059669'], ['#F59E0B', '#D97706'], ['#EF4444', '#DC2626'],
+  ['#8B5CF6', '#7C3AED'], ['#06B6D4', '#0891B2'], ['#EC4899', '#DB2777'],
+  ['#14B8A6', '#0D9488'],
+];
 
 function SpinWheel({ prizes, onResult, brandColor = '#7C3AED' }: { prizes: SpinPrize[]; onResult: (prize: SpinPrize) => void; brandColor?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -59,8 +64,18 @@ function SpinWheel({ prizes, onResult, brandColor = '#7C3AED' }: { prizes: SpinP
   const [spun, setSpun] = useState(false);
   const rotationRef = useRef(0);
   const animRef = useRef<number>(0);
+  const DPR = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
+  const SIZE = 320;
 
   useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.width = SIZE * DPR;
+    canvas.height = SIZE * DPR;
+    canvas.style.width = SIZE + 'px';
+    canvas.style.height = SIZE + 'px';
+    const ctx = canvas.getContext('2d');
+    if (ctx) ctx.scale(DPR, DPR);
     drawWheel(rotationRef.current);
   }, []);
 
@@ -70,60 +85,164 @@ function SpinWheel({ prizes, onResult, brandColor = '#7C3AED' }: { prizes: SpinP
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const W = canvas.width;
-    const H = canvas.height;
-    const cx = W / 2;
-    const cy = H / 2;
-    const r = Math.min(cx, cy) - 8;
+    const cx = SIZE / 2;
+    const cy = SIZE / 2;
+    const r = cx - 16;
     const arc = (2 * Math.PI) / prizes.length;
 
-    ctx.clearRect(0, 0, W, H);
+    ctx.save();
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.clearRect(0, 0, SIZE, SIZE);
 
+    // Outer ring glow
+    ctx.beginPath();
+    ctx.arc(cx, cy, r + 8, 0, 2 * Math.PI);
+    ctx.strokeStyle = brandColor + '30';
+    ctx.lineWidth = 16;
+    ctx.stroke();
+
+    // Outer metallic ring
+    const ringGrad = ctx.createLinearGradient(0, 0, SIZE, SIZE);
+    ringGrad.addColorStop(0, '#e2e8f0');
+    ringGrad.addColorStop(0.3, '#ffffff');
+    ringGrad.addColorStop(0.5, '#cbd5e1');
+    ringGrad.addColorStop(0.7, '#ffffff');
+    ringGrad.addColorStop(1, '#e2e8f0');
+    ctx.beginPath();
+    ctx.arc(cx, cy, r + 4, 0, 2 * Math.PI);
+    ctx.strokeStyle = ringGrad;
+    ctx.lineWidth = 6;
+    ctx.stroke();
+
+    // Tick marks on outer ring
+    for (let i = 0; i < prizes.length; i++) {
+      const angle = rotation + i * arc;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(r - 2, 0);
+      ctx.lineTo(r + 6, 0);
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Segments
     for (let i = 0; i < prizes.length; i++) {
       const start = rotation + i * arc;
       const end = start + arc;
+      const [c1, c2] = WHEEL_PALETTES[i % WHEEL_PALETTES.length]!;
+
+      // Gradient fill per segment
+      const midAngle = start + arc / 2;
+      const gx1 = cx + Math.cos(midAngle) * r * 0.3;
+      const gy1 = cy + Math.sin(midAngle) * r * 0.3;
+      const gx2 = cx + Math.cos(midAngle) * r * 0.9;
+      const gy2 = cy + Math.sin(midAngle) * r * 0.9;
+      const grad = ctx.createLinearGradient(gx1, gy1, gx2, gy2);
+      grad.addColorStop(0, c1);
+      grad.addColorStop(1, c2);
+
       ctx.beginPath();
       ctx.moveTo(cx, cy);
       ctx.arc(cx, cy, r, start, end);
       ctx.closePath();
-      ctx.fillStyle = WHEEL_COLORS[i % WHEEL_COLORS.length]!;
+      ctx.fillStyle = grad;
       ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+
+      // Segment border
+      ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Inner highlight arc
+      ctx.beginPath();
+      ctx.arc(cx, cy, r * 0.92, start + 0.02, end - 0.02);
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      // Label
+      // Label with text shadow
       ctx.save();
       ctx.translate(cx, cy);
       ctx.rotate(start + arc / 2);
       ctx.textAlign = 'right';
-      ctx.fillStyle = '#fff';
-      ctx.font = `bold ${prizes.length > 6 ? 10 : 12}px sans-serif`;
-      ctx.fillText(prizes[i]!.label, r - 10, 4);
+      ctx.textBaseline = 'middle';
+      const fontSize = prizes.length > 6 ? 11 : prizes.length > 4 ? 13 : 15;
+      ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+      // Text shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fillText(prizes[i]!.label, r - 16, 1);
+      // Text
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(prizes[i]!.label, r - 17, 0);
       ctx.restore();
     }
 
-    // Center circle
+    // Inner shadow ring
+    const innerShadow = ctx.createRadialGradient(cx, cy, r * 0.15, cx, cy, r * 0.4);
+    innerShadow.addColorStop(0, 'rgba(0,0,0,0.15)');
+    innerShadow.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.beginPath();
-    ctx.arc(cx, cy, 18, 0, 2 * Math.PI);
-    ctx.fillStyle = '#fff';
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(cx, cy, 12, 0, 2 * Math.PI);
-    ctx.fillStyle = '#7C3AED';
+    ctx.arc(cx, cy, r * 0.4, 0, 2 * Math.PI);
+    ctx.fillStyle = innerShadow;
     ctx.fill();
 
-    // Pointer (top)
+    // Center hub - outer ring
     ctx.beginPath();
-    ctx.moveTo(cx, cy - r - 2);
-    ctx.lineTo(cx - 10, cy - r + 14);
-    ctx.lineTo(cx + 10, cy - r + 14);
-    ctx.closePath();
-    ctx.fillStyle = '#fff';
-    ctx.shadowColor = 'rgba(0,0,0,0.3)';
-    ctx.shadowBlur = 4;
+    ctx.arc(cx, cy, 28, 0, 2 * Math.PI);
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = 'rgba(0,0,0,0.2)';
+    ctx.shadowBlur = 12;
     ctx.fill();
     ctx.shadowBlur = 0;
+
+    // Center hub - brand circle
+    const hubGrad = ctx.createRadialGradient(cx - 4, cy - 4, 2, cx, cy, 20);
+    hubGrad.addColorStop(0, brandColor);
+    hubGrad.addColorStop(1, brandColor + 'cc');
+    ctx.beginPath();
+    ctx.arc(cx, cy, 20, 0, 2 * Math.PI);
+    ctx.fillStyle = hubGrad;
+    ctx.fill();
+
+    // Center hub - shine
+    ctx.beginPath();
+    ctx.arc(cx - 4, cy - 5, 8, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.fill();
+
+    // Pointer (top) — larger, with gradient
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - r - 6);
+    ctx.lineTo(cx - 14, cy - r + 18);
+    ctx.lineTo(cx + 14, cy - r + 18);
+    ctx.closePath();
+    const ptrGrad = ctx.createLinearGradient(cx, cy - r - 6, cx, cy - r + 18);
+    ptrGrad.addColorStop(0, '#ffffff');
+    ptrGrad.addColorStop(1, '#e2e8f0');
+    ctx.fillStyle = ptrGrad;
+    ctx.shadowColor = 'rgba(0,0,0,0.35)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetY = 2;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    // Pointer border
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Pointer dot
+    ctx.beginPath();
+    ctx.arc(cx, cy - r + 10, 3, 0, 2 * Math.PI);
+    ctx.fillStyle = brandColor;
+    ctx.fill();
+
+    ctx.restore();
   }
 
   function spin() {
@@ -132,23 +251,19 @@ function SpinWheel({ prizes, onResult, brandColor = '#7C3AED' }: { prizes: SpinP
 
     const winnerIdx = pickWeightedPrize(prizes);
     const arc = (2 * Math.PI) / prizes.length;
-    // Pointer is at top (−π/2). The winner segment center should end at top.
-    // Segment i spans from rotation + i*arc to rotation + (i+1)*arc.
-    // We want: rotation + i*arc + arc/2 = -π/2 + 2πn
-    // targetRotation = -π/2 - winnerIdx*arc - arc/2 (plus extra full spins)
-    const extraSpins = 5 * 2 * Math.PI;
+    const extraSpins = 6 * 2 * Math.PI;
     const targetAngle = -Math.PI / 2 - winnerIdx * arc - arc / 2;
     const fullTarget = rotationRef.current + extraSpins + ((targetAngle - rotationRef.current) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
 
     const startTime = performance.now();
-    const duration = 4000;
+    const duration = 5000;
     const startRotation = rotationRef.current;
 
     function animate(now: number) {
       const elapsed = now - startTime;
       const t = Math.min(elapsed / duration, 1);
-      // Ease-out cubic
-      const eased = 1 - Math.pow(1 - t, 3);
+      // Smooth ease-out with bounce feel
+      const eased = 1 - Math.pow(1 - t, 4);
       rotationRef.current = startRotation + eased * (fullTarget - startRotation + extraSpins);
       drawWheel(rotationRef.current);
 
@@ -165,16 +280,19 @@ function SpinWheel({ prizes, onResult, brandColor = '#7C3AED' }: { prizes: SpinP
   }
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="relative">
-        <canvas ref={canvasRef} width={280} height={280} className="drop-shadow-xl" />
+    <div className="flex flex-col items-center gap-6">
+      <div className="relative" style={{ filter: spinning ? 'none' : 'drop-shadow(0 20px 40px rgba(0,0,0,0.15))' }}>
+        <canvas ref={canvasRef} width={SIZE} height={SIZE} style={{ width: SIZE, height: SIZE }} />
+        {/* Ambient glow behind wheel */}
+        <div className="absolute inset-0 -z-10 rounded-full blur-3xl opacity-20" style={{ background: brandColor }} />
       </div>
       <button
         onClick={spin}
         disabled={spinning || spun}
-        className="px-8 py-3 text-white text-sm font-bold rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg active:scale-95" style={{ backgroundColor: brandColor }}
+        className="px-10 py-3.5 text-white text-sm font-bold rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xl active:scale-95 hover:scale-105"
+        style={{ backgroundColor: brandColor, boxShadow: `0 8px 30px ${brandColor}40` }}
       >
-        {spinning ? 'Spinning...' : spun ? 'Spun!' : 'Spin to Win!'}
+        {spinning ? 'Spinning...' : spun ? 'Done!' : 'Spin the Wheel!'}
       </button>
     </div>
   );
