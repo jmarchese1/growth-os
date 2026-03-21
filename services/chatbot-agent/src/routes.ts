@@ -230,12 +230,30 @@ function buildWidgetJs(): string {
     msgs.scrollTop = msgs.scrollHeight;
   }
 
+  var isSending = false;
+
   async function sendMessage() {
     var input = document.getElementById('embedo-input');
+    var sendBtn = document.getElementById('embedo-send');
     var message = input.value.trim();
-    if (!message) return;
+    if (!message || isSending) return;
+
+    isSending = true;
     input.value = '';
+    input.disabled = true;
+    sendBtn.disabled = true;
+    sendBtn.textContent = '...';
+    sendBtn.style.opacity = '0.5';
     addMessage(message, true);
+
+    // Show typing indicator
+    var typing = document.createElement('div');
+    typing.id = 'embedo-typing';
+    typing.style.cssText = 'align-self:flex-start;background:#f0f0f0;color:#999;padding:8px 16px;border-radius:16px;font-size:13px;';
+    typing.textContent = 'Typing...';
+    var msgs = document.getElementById('embedo-messages');
+    msgs.appendChild(typing);
+    msgs.scrollTop = msgs.scrollHeight;
 
     try {
       var res = await fetch(config.apiUrl + '/chat', {
@@ -250,10 +268,21 @@ function buildWidgetJs(): string {
       });
       var data = await res.json();
       sessionKey = data.sessionKey;
+      var t = document.getElementById('embedo-typing');
+      if (t) t.remove();
       addMessage(data.reply, false);
     } catch(e) {
+      var t2 = document.getElementById('embedo-typing');
+      if (t2) t2.remove();
       addMessage('Sorry, I had trouble connecting. Please try again.', false);
     }
+
+    isSending = false;
+    input.disabled = false;
+    sendBtn.disabled = false;
+    sendBtn.textContent = 'Send';
+    sendBtn.style.opacity = '1';
+    input.focus();
   }
 
   document.getElementById('embedo-send').addEventListener('click', sendMessage);
