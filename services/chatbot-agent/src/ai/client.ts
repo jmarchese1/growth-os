@@ -47,11 +47,15 @@ export async function processMessage(params: {
   let appointmentRequested = false;
 
   try {
+    // Only include tools when message might contain lead/booking intent (saves ~500ms)
+    const lowerMsg = message.toLowerCase();
+    const needsTools = /\b(book|reserv|appointment|name is|my name|email|phone|call me|contact)\b/.test(lowerMsg);
+
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 500,
+      max_tokens: 200,
       system: systemPrompt,
-      tools: chatbotTools,
+      ...(needsTools ? { tools: chatbotTools } : {}),
       messages,
     });
 

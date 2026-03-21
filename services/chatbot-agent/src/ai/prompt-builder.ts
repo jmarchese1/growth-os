@@ -1,9 +1,15 @@
 import { db } from '@embedo/db';
 
+// Cache prompts for 5 minutes to avoid DB query on every message
+const promptCache = new Map<string, { prompt: string; expiry: number }>();
+
 /**
  * Build the system prompt for the chatbot based on business settings.
  */
 export async function buildChatbotSystemPrompt(businessId: string): Promise<string> {
+  const cached = promptCache.get(businessId);
+  if (cached && cached.expiry > Date.now()) return cached.prompt;
+
   const business = await db.business.findUniqueOrThrow({ where: { id: businessId } });
   const settings = (business.settings as Record<string, unknown>) ?? {};
 
@@ -17,37 +23,14 @@ export async function buildChatbotSystemPrompt(businessId: string): Promise<stri
         .join('\n')
     : 'Contact us for current hours';
 
-  return `You are the AI assistant for ${business.name}${cuisine ? `, a ${cuisine} restaurant` : ''}.
-
+  const prompt = `You are the AI assistant for ${business.name}${cuisine ? `, a ${cuisine} restaurant` : ''}.
 Your personality: ${persona ?? 'friendly, helpful, and professional'}
+BUSINESS: ${business.name} | Phone: ${business.phone ?? 'N/A'} | ${formatAddress(business.address)}
+HOURS: ${hoursText}
+RULES: Be concise (1-2 sentences). Be warm. Capture leads when visitors share contact info. Help book reservations. Say you don't know if unsure.`;
 
-BUSINESS DETAILS:
-Name: ${business.name}
-Phone: ${business.phone ?? 'Please contact us via the form'}
-Email: ${business.email ?? 'Please contact us via the form'}
-Address: ${formatAddress(business.address)}
-
-HOURS:
-${hoursText}
-
-YOUR ROLE:
-- Answer questions about the business warmly and helpfully
-- Capture lead information when visitors share contact details
-- Help visitors book reservations or appointments
-- Suggest calling or visiting for complex requests
-
-LEAD CAPTURE GUIDANCE:
-- When a visitor provides their name, email, or phone — use the capture_lead tool immediately
-- When a visitor wants to make a reservation — use the book_appointment tool
-- When a visitor seems like a business owner interested in AI services — use the trigger_proposal tool
-
-TONE:
-- Conversational and warm, not robotic
-- Keep responses concise (2-3 sentences when possible)
-- Use the visitor's name when you know it
-- Always offer a next step or call to action
-
-If you don't know the answer to something, say so honestly and offer to connect them with the team.`;
+  promptCache.set(businessId, { prompt, expiry: Date.now() + 5 * 60 * 1000 });
+  return prompt;
 }
 
 function capitalize(str: string): string {
