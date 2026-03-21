@@ -323,21 +323,15 @@ function SpinWheel({ prizes, onResult, accentColor = '#7C3AED', buttonText, btnT
     const totalTravel = extraSpins + ((targetAngle - rotationRef.current) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
 
     const startTime = performance.now();
-    const duration = 8000;
+    const duration = 5000;
     const startRotation = rotationRef.current;
 
     function animate(now: number) {
       const elapsed = now - startTime;
       const t = Math.min(elapsed / duration, 1);
 
-      let eased: number;
-      if (t < 0.6) {
-        const t2 = t / 0.6;
-        eased = 0.85 * (t2 < 0.5 ? 4 * t2 * t2 * t2 : 1 - Math.pow(-2 * t2 + 2, 3) / 2);
-      } else {
-        const t2 = (t - 0.6) / 0.4;
-        eased = 0.85 + 0.15 * (1 - Math.pow(1 - t2, 5));
-      }
+      // Cubic ease-out — smooth deceleration, no stalling tail
+      const eased = 1 - Math.pow(1 - t, 3);
 
       rotationRef.current = startRotation + eased * totalTravel;
       drawWheel(rotationRef.current);

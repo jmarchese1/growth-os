@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import KpiCard from '../../../components/ui/kpi-card';
 import { useBusiness } from '../../../components/auth/business-provider';
@@ -32,6 +32,56 @@ const Q_TYPES = [
 function qrImageUrl(data: string, size = 200) { return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(data)}`; }
 function qrPublicUrl(token: string) { return `${typeof window !== 'undefined' ? window.location.origin : 'https://app.embedo.io'}/qr/${token}`; }
 
+/* ── Mini Spin Wheel Preview ──────────────────────────────────── */
+const PREVIEW_PALETTES = [
+  ['#7C3AED', '#6D28D9'], ['#4F46E5', '#4338CA'], ['#0EA5E9', '#0284C7'],
+  ['#10B981', '#059669'], ['#F59E0B', '#D97706'], ['#EF4444', '#DC2626'],
+  ['#8B5CF6', '#7C3AED'], ['#06B6D4', '#0891B2'],
+];
+
+function MiniSpinPreview({ prizes, accentColor }: { prizes: { label: string; probability: number }[]; accentColor: string }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const size = 120;
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    canvas.style.width = size + 'px';
+    canvas.style.height = size + 'px';
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.scale(dpr, dpr);
+
+    const cx = size / 2, cy = size / 2, r = cx - 6;
+    const arc = (2 * Math.PI) / prizes.length;
+
+    ctx.beginPath(); ctx.arc(cx, cy, r + 2, 0, 2 * Math.PI); ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 2; ctx.stroke();
+
+    for (let i = 0; i < prizes.length; i++) {
+      const start = i * arc - Math.PI / 2, end = start + arc;
+      const [c1, c2] = PREVIEW_PALETTES[i % PREVIEW_PALETTES.length]!;
+      const mid = start + arc / 2;
+      const grad = ctx.createLinearGradient(cx + Math.cos(mid) * r * 0.3, cy + Math.sin(mid) * r * 0.3, cx + Math.cos(mid) * r * 0.9, cy + Math.sin(mid) * r * 0.9);
+      grad.addColorStop(0, c1); grad.addColorStop(1, c2);
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, r, start, end); ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(mid);
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      ctx.font = `bold ${prizes.length > 5 ? 6 : 7}px sans-serif`; ctx.fillStyle = '#fff';
+      ctx.fillText(prizes[i]!.label, r - 6, 0); ctx.restore();
+    }
+    ctx.beginPath(); ctx.arc(cx, cy, 10, 0, 2 * Math.PI); ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx, cy, 7, 0, 2 * Math.PI); ctx.fillStyle = accentColor; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(cx, cy - r - 1); ctx.lineTo(cx - 5, cy - r + 8); ctx.lineTo(cx + 5, cy - r + 8); ctx.closePath();
+    ctx.fillStyle = '#fff'; ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 0.5; ctx.fill(); ctx.stroke();
+  }, [prizes, accentColor]);
+
+  return <canvas ref={canvasRef} style={{ width: size, height: size }} />;
+}
+
 /* ── Create QR Modal ──────────────────────────────────────────── */
 function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
   businessId: string; surveys: Survey[]; onCreated: (qr: QrCode) => void; onClose: () => void;
@@ -50,12 +100,16 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
   // Discount fields
   const [discountValue, setDiscountValue] = useState('');
   const [discountCode, setDiscountCode] = useState('');
-  // Page style fields
-  const [pageColor, setPageColor] = useState('#7C3AED');
+  // Page style fields — granular colors
+  const [accentColor, setAccentColor] = useState('#7C3AED');
+  const [bgColor, setBgColor] = useState('#f8fafc');
+  const [headingColor, setHeadingColor] = useState('#1e293b');
+  const [textColor, setTextColor] = useState('#64748b');
+  const [btnTextColor, setBtnTextColor] = useState('#ffffff');
+  const [fontFamily, setFontFamily] = useState('system');
   const [pageHeading, setPageHeading] = useState('');
   const [pageSubheading, setPageSubheading] = useState('');
   const [pageLogo, setPageLogo] = useState('');
-  const [pageBackground, setPageBackground] = useState<'gradient' | 'solid' | 'dark'>('gradient');
   const [pageButtonText, setPageButtonText] = useState('');
   // Spin wheel
   const [spinPrizes, setSpinPrizes] = useState([
@@ -114,7 +168,7 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
       if (expiresAt) body['expiresAt'] = new Date(expiresAt).toISOString();
       // Page style stored in metadata JSON
       body['metadata'] = {
-        pageColor, pageBackground,
+        accentColor, bgColor, headingColor, textColor, buttonTextColor: btnTextColor, fontFamily,
         ...(pageHeading ? { pageHeading } : {}),
         ...(pageSubheading ? { pageSubheading } : {}),
         ...(pageLogo ? { pageLogo } : {}),
@@ -300,47 +354,80 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
               {/* Page Style */}
               {['SURVEY', 'SPIN_WHEEL', 'DISCOUNT', 'SIGNUP'].includes(purpose) && (
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Page Appearance</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Page Appearance</p>
+                    <div className="flex gap-1">
+                      <button onClick={() => { setBgColor('#f8fafc'); setHeadingColor('#1e293b'); setTextColor('#64748b'); setBtnTextColor('#ffffff'); }} className="px-2 py-1 text-[9px] font-medium rounded border border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100">Light</button>
+                      <button onClick={() => { setBgColor('#1a1a2e'); setHeadingColor('#ffffff'); setTextColor('rgba(255,255,255,0.6)'); setBtnTextColor('#ffffff'); }} className="px-2 py-1 text-[9px] font-medium rounded border border-slate-600 bg-slate-800 text-white hover:bg-slate-700">Dark</button>
+                      <button onClick={() => { setBgColor(accentColor); setHeadingColor('#ffffff'); setTextColor('rgba(255,255,255,0.7)'); setBtnTextColor('#1e293b'); }} className="px-2 py-1 text-[9px] font-medium rounded border text-white" style={{ backgroundColor: accentColor, borderColor: accentColor }}>Brand</button>
+                    </div>
+                  </div>
 
+                  {/* Color pickers */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Brand Color</label>
-                      <div className="flex items-center gap-2">
-                        <input type="color" value={pageColor} onChange={(e) => setPageColor(e.target.value)} className="w-8 h-8 rounded-lg border border-slate-200 cursor-pointer p-0.5" />
-                        <input type="text" value={pageColor} onChange={(e) => setPageColor(e.target.value)} className="flex-1 px-2 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-800 font-mono" />
-                      </div>
-                      <div className="flex gap-1 mt-1">
-                        {['#7C3AED', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#EC4899', '#000000', '#0EA5E9'].map((c) => (
-                          <button key={c} onClick={() => setPageColor(c)} className="w-4 h-4 rounded-full border transition-all hover:scale-125" style={{ background: c, borderColor: pageColor === c ? '#333' : 'transparent' }} />
+                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Accent / Buttons</label>
+                      <div className="flex items-center gap-1.5">
+                        <input type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="w-6 h-6 rounded border-0 cursor-pointer flex-shrink-0" />
+                        <input type="text" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="w-20 px-1.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 font-mono" />
+                        {['#7C3AED', '#3B82F6', '#10B981', '#EF4444', '#EC4899', '#0EA5E9'].map((c) => (
+                          <button key={c} onClick={() => setAccentColor(c)} className="w-3.5 h-3.5 rounded-full border transition-all hover:scale-125 flex-shrink-0" style={{ background: c, borderColor: accentColor === c ? '#333' : 'transparent' }} />
                         ))}
                       </div>
                     </div>
                     <div>
-                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Background Style</label>
-                      <div className="flex gap-1.5">
-                        {[
-                          { value: 'gradient', label: 'Gradient' },
-                          { value: 'solid', label: 'Solid' },
-                          { value: 'dark', label: 'Dark' },
-                        ].map((bg) => (
-                          <button key={bg.value} onClick={() => setPageBackground(bg.value as typeof pageBackground)} className={`px-2.5 py-1.5 text-[10px] font-medium rounded-lg border transition-all ${pageBackground === bg.value ? 'bg-violet-100 border-violet-300 text-violet-700' : 'border-slate-200 text-slate-500 hover:bg-slate-100'}`}>
-                            {bg.label}
-                          </button>
-                        ))}
+                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Background</label>
+                      <div className="flex items-center gap-1.5">
+                        <input type="color" value={bgColor.startsWith('#') ? bgColor : '#f8fafc'} onChange={(e) => setBgColor(e.target.value)} className="w-6 h-6 rounded border-0 cursor-pointer flex-shrink-0" />
+                        <input type="text" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="flex-1 px-1.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 font-mono" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Heading</label>
+                      <div className="flex items-center gap-1.5">
+                        <input type="color" value={headingColor.startsWith('#') ? headingColor : '#1e293b'} onChange={(e) => setHeadingColor(e.target.value)} className="w-6 h-6 rounded border-0 cursor-pointer flex-shrink-0" />
+                        <input type="text" value={headingColor} onChange={(e) => setHeadingColor(e.target.value)} className="flex-1 px-1.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 font-mono" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Body Text</label>
+                      <div className="flex items-center gap-1.5">
+                        <input type="color" value={textColor.startsWith('#') ? textColor : '#64748b'} onChange={(e) => setTextColor(e.target.value)} className="w-6 h-6 rounded border-0 cursor-pointer flex-shrink-0" />
+                        <input type="text" value={textColor} onChange={(e) => setTextColor(e.target.value)} className="flex-1 px-1.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 font-mono" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Button Text</label>
+                      <div className="flex items-center gap-1.5">
+                        <input type="color" value={btnTextColor.startsWith('#') ? btnTextColor : '#ffffff'} onChange={(e) => setBtnTextColor(e.target.value)} className="w-6 h-6 rounded border-0 cursor-pointer flex-shrink-0" />
+                        <input type="text" value={btnTextColor} onChange={(e) => setBtnTextColor(e.target.value)} className="flex-1 px-1.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 font-mono" />
                       </div>
                     </div>
                   </div>
 
+                  {/* Font */}
+                  <div>
+                    <label className="block text-[10px] font-medium text-slate-500 mb-1">Font</label>
+                    <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-800">
+                      <option value="system">System Default</option>
+                      <option value="inter">Inter</option>
+                      <option value="poppins">Poppins</option>
+                      <option value="playfair">Playfair Display</option>
+                      <option value="mono">Monospace</option>
+                    </select>
+                  </div>
+
+                  {/* Text overrides */}
                   <div>
                     <label className="block text-[10px] font-medium text-slate-500 mb-1">Custom Heading (optional)</label>
                     <input type="text" value={pageHeading} onChange={(e) => setPageHeading(e.target.value)} placeholder={purpose === 'SURVEY' ? 'We\'d love your feedback!' : purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'DISCOUNT' ? 'Your Exclusive Offer' : 'Join Us!'} className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
                   </div>
-
                   <div>
                     <label className="block text-[10px] font-medium text-slate-500 mb-1">Subheading (optional)</label>
                     <input type="text" value={pageSubheading} onChange={(e) => setPageSubheading(e.target.value)} placeholder="Short description shown below the heading" className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
                   </div>
-
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[10px] font-medium text-slate-500 mb-1">Logo URL (optional)</label>
@@ -352,20 +439,39 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
                     </div>
                   </div>
 
-                  {/* Mini preview */}
+                  {/* Live preview */}
                   <div className="rounded-lg overflow-hidden border border-slate-200">
-                    <div className="h-24 flex items-center justify-center text-white text-xs font-semibold" style={{
-                      background: pageBackground === 'dark' ? '#1e1e2e' : pageBackground === 'solid' ? pageColor : `linear-gradient(135deg, ${pageColor}22 0%, white 50%, ${pageColor}11 100%)`,
-                      color: pageBackground === 'dark' ? '#fff' : pageBackground === 'solid' ? '#fff' : '#333',
-                    }}>
-                      <div className="text-center">
-                        {pageLogo && <img src={pageLogo} alt="" className="w-8 h-8 rounded-lg mx-auto mb-1 object-cover" />}
-                        <p className="text-sm font-bold">{pageHeading || 'Your Heading'}</p>
-                        <p className="text-[10px] opacity-70">{pageSubheading || 'Your subheading'}</p>
-                      </div>
+                    <div className="px-2 py-1 bg-slate-100 border-b border-slate-200 flex items-center gap-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      <span className="text-[8px] text-slate-400 ml-1">Preview</span>
                     </div>
-                    <div className="p-2 flex justify-center">
-                      <div className="px-4 py-1.5 rounded-lg text-[10px] font-semibold text-white" style={{ background: pageColor }}>
+                    <div className="p-3 flex flex-col items-center" style={{ backgroundColor: bgColor, minHeight: purpose === 'SPIN_WHEEL' ? 220 : 140 }}>
+                      <div className="w-6 h-6 rounded-md flex items-center justify-center mb-1.5 shadow-sm" style={{ backgroundColor: accentColor }}>
+                        <svg viewBox="0 0 32 32" fill="none" className="w-4 h-4"><polygon points="16,4 28,10 16,16 4,10" fill="#fff" fillOpacity="0.9" /><polygon points="4,10 16,16 16,28 4,22" fill="#fff" fillOpacity="0.5" /><polygon points="28,10 16,16 16,28 28,22" fill="#fff" fillOpacity="0.7" /></svg>
+                      </div>
+                      <p className="text-[9px] mb-2" style={{ color: textColor }}>Business Name</p>
+                      <p className="text-xs font-bold text-center mb-0.5" style={{ color: headingColor }}>{pageHeading || (purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'DISCOUNT' ? 'Your Discount' : 'Join Us!')}</p>
+                      <p className="text-[9px] text-center mb-2" style={{ color: textColor }}>{pageSubheading || 'Your subheading here'}</p>
+                      {purpose === 'SPIN_WHEEL' && (
+                        <div className="mb-2">
+                          <MiniSpinPreview prizes={spinPrizes} accentColor={accentColor} />
+                        </div>
+                      )}
+                      {purpose === 'DISCOUNT' && (
+                        <div className="rounded-lg px-3 py-2 mb-2 text-center w-full max-w-[140px]" style={{ background: `linear-gradient(135deg, ${accentColor}, ${accentColor}dd)`, color: btnTextColor }}>
+                          <p className="text-sm font-black">{discountValue || '10% Off'}</p>
+                          {discountCode && <p className="text-[8px] font-mono mt-0.5 opacity-80">Code: {discountCode}</p>}
+                        </div>
+                      )}
+                      {(purpose === 'SIGNUP' || purpose === 'SURVEY') && (
+                        <div className="w-full max-w-[140px] space-y-1 mb-2">
+                          <div className="w-full h-4 bg-white/80 rounded border border-slate-200" />
+                          <div className="w-full h-4 bg-white/80 rounded border border-slate-200" />
+                        </div>
+                      )}
+                      <div className="px-4 py-1 rounded-full text-[9px] font-semibold" style={{ backgroundColor: accentColor, color: btnTextColor }}>
                         {pageButtonText || 'Submit'}
                       </div>
                     </div>
