@@ -368,6 +368,7 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
         customSubject: typeConfig['subject'],
         customHeading: typeConfig['heading'],
         customBodyText: typeConfig['bodyText'],
+        fontFamily: emailSettings['fontFamily'] as string | undefined,
       }).catch(() => {});
     }
 

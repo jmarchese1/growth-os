@@ -18,12 +18,22 @@ interface RewardEmailParams {
   customSubject?: string | undefined;
   customHeading?: string | undefined;
   customBodyText?: string | undefined;
+  fontFamily?: string | undefined;
 }
+
+const FONT_STACKS: Record<string, string> = {
+  helvetica: "'Helvetica Neue', Arial, sans-serif",
+  georgia: "Georgia, 'Times New Roman', serif",
+  verdana: "Verdana, Geneva, sans-serif",
+  trebuchet: "'Trebuchet MS', Helvetica, sans-serif",
+  courier: "'Courier New', Courier, monospace",
+};
 
 function buildRewardHtml(params: RewardEmailParams): string {
   const accent = params.accentColor || '#7C3AED';
   const name = params.recipientName?.split(' ')[0] || 'there';
   const logo = params.logoUrl;
+  const fontStack = FONT_STACKS[params.fontFamily || 'helvetica'] || FONT_STACKS.helvetica;
 
   const defaultHeadline: Record<string, string> = {
     spin_prize: 'You won a prize!',
@@ -50,7 +60,7 @@ function buildRewardHtml(params: RewardEmailParams): string {
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f4f2ee;font-family:'Helvetica Neue',Arial,sans-serif;">
+<body style="margin:0;padding:0;background:#f4f2ee;font-family:${fontStack};">
   <div style="background:#f4f2ee;padding:40px 20px;">
     <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e0ddd6;">
 
@@ -60,13 +70,13 @@ function buildRewardHtml(params: RewardEmailParams): string {
           ? `<img src="${logo}" width="40" height="40" alt="${params.businessName}" style="display:inline-block;vertical-align:middle;margin-right:12px;border-radius:8px;" />`
           : ''
         }
-        <span style="color:#fff;font-size:20px;font-weight:700;font-family:Georgia,serif;letter-spacing:-0.3px;vertical-align:middle;">${params.businessName}</span>
+        <span style="color:#fff;font-size:20px;font-weight:700;font-family:${fontStack};letter-spacing:-0.3px;vertical-align:middle;">${params.businessName}</span>
       </div>
 
       <!-- Body -->
       <div style="padding:40px 36px;">
         <p style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:${accent};margin:0 0 12px;">Your Reward</p>
-        <h1 style="font-size:26px;font-weight:700;color:#1a1a1a;margin:0 0 16px;line-height:1.25;font-family:Georgia,serif;">Hey ${name}, ${headline.toLowerCase()}</h1>
+        <h1 style="font-size:26px;font-weight:700;color:#1a1a1a;margin:0 0 16px;line-height:1.25;font-family:${fontStack};">Hey ${name}, ${headline.toLowerCase()}</h1>
         <p style="font-size:15px;color:#555;line-height:1.65;margin:0 0 28px;">${subtext}</p>
 
         <!-- Reward Card -->

@@ -522,14 +522,24 @@ interface EmailConfig {
 interface RewardEmailSettings {
   accentColor: string;
   logoUrl: string;
+  fontFamily: string;
   spin_prize: EmailConfig;
   discount: EmailConfig;
   survey_reward: EmailConfig;
 }
 
+const EMAIL_FONT_OPTIONS = [
+  { value: 'helvetica', label: 'Helvetica / Arial', stack: "'Helvetica Neue', Arial, sans-serif" },
+  { value: 'georgia', label: 'Georgia (Serif)', stack: "Georgia, 'Times New Roman', serif" },
+  { value: 'verdana', label: 'Verdana', stack: "Verdana, Geneva, sans-serif" },
+  { value: 'trebuchet', label: 'Trebuchet MS', stack: "'Trebuchet MS', Helvetica, sans-serif" },
+  { value: 'courier', label: 'Courier (Mono)', stack: "'Courier New', Courier, monospace" },
+];
+
 const DEFAULT_EMAIL_SETTINGS: RewardEmailSettings = {
   accentColor: '#7C3AED',
   logoUrl: '',
+  fontFamily: 'helvetica',
   spin_prize: {
     subject: 'You won {{reward}}! 🎉',
     heading: 'You won a prize!',
@@ -562,7 +572,7 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
   useEffect(() => {
     if (open && !imagesFetched.current) {
       imagesFetched.current = true;
-      fetch(`${API_URL}/images?businessId=${businessId}`)
+      fetch(`${API_URL}/images?businessId=${businessId}&category=logo`)
         .then((r) => r.json())
         .then((data: { success: boolean; images: ImageAsset[] }) => {
           if (data.success) setImages(data.images);
@@ -574,6 +584,7 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
   const existing = (settings?.['rewardEmails'] ?? {}) as Partial<RewardEmailSettings>;
   const [accentColor, setAccentColor] = useState(existing.accentColor || DEFAULT_EMAIL_SETTINGS.accentColor);
   const [logoUrl, setLogoUrl] = useState(existing.logoUrl || '');
+  const [emailFont, setEmailFont] = useState(existing.fontFamily || DEFAULT_EMAIL_SETTINGS.fontFamily);
   const [configs, setConfigs] = useState<Record<string, EmailConfig>>({
     spin_prize: { ...DEFAULT_EMAIL_SETTINGS.spin_prize, ...existing.spin_prize },
     discount: { ...DEFAULT_EMAIL_SETTINGS.discount, ...existing.discount },
@@ -586,7 +597,7 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
 
   async function handleSave() {
     setSaving(true);
-    const rewardEmails: RewardEmailSettings = { accentColor, logoUrl, ...configs as Record<string, EmailConfig> } as RewardEmailSettings;
+    const rewardEmails: RewardEmailSettings = { accentColor, logoUrl, fontFamily: emailFont, ...configs as Record<string, EmailConfig> } as RewardEmailSettings;
     await fetch(`${API_URL}/businesses/${businessId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -675,6 +686,14 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
                 </div>
               </div>
 
+              {/* Font */}
+              <div>
+                <label className="block text-[10px] font-medium text-slate-500 mb-1">Email Font</label>
+                <select value={emailFont} onChange={(e) => setEmailFont(e.target.value)} className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-800">
+                  {EMAIL_FONT_OPTIONS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
+                </select>
+              </div>
+
               {/* Type tabs */}
               <div className="flex gap-1 bg-slate-100 rounded-lg p-0.5">
                 {(Object.entries(tabLabels) as [typeof tab, string][]).map(([key, label]) => (
@@ -712,7 +731,7 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
             {/* Right: Live email preview */}
             <div className="w-[260px] flex-shrink-0">
               <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Preview</p>
-              <div className="rounded-lg overflow-hidden border border-slate-200 shadow-sm text-[10px]">
+              <div className="rounded-lg overflow-hidden border border-slate-200 shadow-sm text-[10px]" style={{ fontFamily: EMAIL_FONT_OPTIONS.find((f) => f.value === emailFont)?.stack }}>
                 {/* Header */}
                 <div style={{ backgroundColor: accentColor, padding: '14px 18px' }} className="flex items-center gap-2">
                   {logoUrl && <img src={logoUrl} alt="" className="w-6 h-6 rounded object-cover" />}
