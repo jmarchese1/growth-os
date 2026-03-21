@@ -285,7 +285,7 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
       select: {
         id: true, businessId: true, active: true, expiresAt: true, purpose: true,
         discountValue: true, discountCode: true, surveyReward: true, metadata: true,
-        business: { select: { name: true } },
+        business: { select: { name: true, settings: true } },
       },
     });
     if (!qrCode) return reply.code(404).send({ success: false, error: 'QR code not found' });
@@ -340,15 +340,21 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
     // Send reward email (fire-and-forget)
     if (body.email && body.outcome && body.outcome !== 'signup') {
       const meta = (qrCode.metadata ?? {}) as Record<string, string>;
+      const bizSettings = (qrCode.business.settings ?? {}) as Record<string, unknown>;
+      const emailSettings = (bizSettings['rewardEmails'] ?? {}) as Record<string, unknown>;
+
+      const rewardType = body.outcome === 'won_prize' ? 'spin_prize'
+        : body.outcome === 'claimed_discount' ? 'discount'
+        : 'survey_reward';
+
       const rewardTitle = body.outcome === 'won_prize'
         ? body.prizeName || qrCode.surveyReward || 'Your Prize'
         : body.outcome === 'claimed_discount'
           ? qrCode.discountValue || 'Your Discount'
           : qrCode.surveyReward || 'Your Reward';
 
-      const rewardType = body.outcome === 'won_prize' ? 'spin_prize'
-        : body.outcome === 'claimed_discount' ? 'discount'
-        : 'survey_reward';
+      // Pull custom text from business settings if configured
+      const typeConfig = (emailSettings[rewardType] ?? {}) as Record<string, string>;
 
       sendRewardEmail({
         to: body.email,
@@ -357,8 +363,11 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
         rewardTitle,
         rewardType: rewardType as 'spin_prize' | 'discount' | 'survey_reward',
         discountCode: qrCode.discountCode ?? undefined,
-        accentColor: meta['accentColor'] ?? meta['pageColor'],
-        logoUrl: meta['pageLogo'],
+        accentColor: (emailSettings['accentColor'] as string) ?? meta['accentColor'] ?? meta['pageColor'],
+        logoUrl: (emailSettings['logoUrl'] as string) ?? meta['pageLogo'],
+        customSubject: typeConfig['subject'],
+        customHeading: typeConfig['heading'],
+        customBodyText: typeConfig['bodyText'],
       }).catch(() => {});
     }
 

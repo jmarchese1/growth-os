@@ -512,6 +512,183 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
   );
 }
 
+/* ── Reward Email Settings ────────────────────────────────────── */
+interface EmailConfig {
+  subject: string;
+  heading: string;
+  bodyText: string;
+}
+
+interface RewardEmailSettings {
+  accentColor: string;
+  logoUrl: string;
+  spin_prize: EmailConfig;
+  discount: EmailConfig;
+  survey_reward: EmailConfig;
+}
+
+const DEFAULT_EMAIL_SETTINGS: RewardEmailSettings = {
+  accentColor: '#7C3AED',
+  logoUrl: '',
+  spin_prize: {
+    subject: 'You won {{reward}}! 🎉',
+    heading: 'You won a prize!',
+    bodyText: 'Congratulations! You spun the wheel and won:',
+  },
+  discount: {
+    subject: 'Your discount from {{business}}',
+    heading: 'Your exclusive discount',
+    bodyText: "Here's your exclusive discount:",
+  },
+  survey_reward: {
+    subject: 'Your reward from {{business}}',
+    heading: 'Thanks for your feedback!',
+    bodyText: "Thanks for sharing your feedback! Here's your reward:",
+  },
+};
+
+function RewardEmailPanel({ businessId, businessName, settings }: { businessId: string; businessName: string; settings: Record<string, unknown> | null }) {
+  const [open, setOpen] = useState(false);
+  const [tab, setTab] = useState<'spin_prize' | 'discount' | 'survey_reward'>('spin_prize');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const existing = (settings?.['rewardEmails'] ?? {}) as Partial<RewardEmailSettings>;
+  const [accentColor, setAccentColor] = useState(existing.accentColor || DEFAULT_EMAIL_SETTINGS.accentColor);
+  const [logoUrl, setLogoUrl] = useState(existing.logoUrl || '');
+  const [configs, setConfigs] = useState<Record<string, EmailConfig>>({
+    spin_prize: { ...DEFAULT_EMAIL_SETTINGS.spin_prize, ...existing.spin_prize },
+    discount: { ...DEFAULT_EMAIL_SETTINGS.discount, ...existing.discount },
+    survey_reward: { ...DEFAULT_EMAIL_SETTINGS.survey_reward, ...existing.survey_reward },
+  });
+
+  function updateConfig(field: keyof EmailConfig, value: string) {
+    setConfigs({ ...configs, [tab]: { ...configs[tab], [field]: value } });
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    const rewardEmails: RewardEmailSettings = { accentColor, logoUrl, ...configs as Record<string, EmailConfig> } as RewardEmailSettings;
+    await fetch(`${API_URL}/businesses/${businessId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ settings: { ...(settings ?? {}), rewardEmails } }),
+    });
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  const cfg = configs[tab]!;
+  const tabLabels = { spin_prize: '🎡 Spin Prize', discount: '🏷️ Discount', survey_reward: '📋 Survey' };
+  const previewReward = tab === 'spin_prize' ? '10% Off' : tab === 'discount' ? '$5 Off' : 'Free Dessert';
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden mb-6">
+      <button onClick={() => setOpen(!open)} className="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-violet-600"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg>
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-semibold text-slate-800">Reward Emails</p>
+            <p className="text-[11px] text-slate-400">Customize emails sent when customers claim rewards</p>
+          </div>
+        </div>
+        <svg viewBox="0 0 20 20" fill="currentColor" className={`w-5 h-5 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+      </button>
+
+      {open && (
+        <div className="border-t border-slate-200 px-5 py-5">
+          <div className="flex gap-6">
+            {/* Left: Settings */}
+            <div className="flex-1 space-y-4">
+              {/* Global branding */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-medium text-slate-500 mb-1">Accent Color</label>
+                  <div className="flex items-center gap-1.5">
+                    <input type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="w-6 h-6 rounded border-0 cursor-pointer flex-shrink-0" />
+                    <input type="text" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="flex-1 px-1.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 font-mono" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-medium text-slate-500 mb-1">Logo URL (optional)</label>
+                  <input type="url" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://..." className="w-full px-2.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700" />
+                </div>
+              </div>
+
+              {/* Type tabs */}
+              <div className="flex gap-1 bg-slate-100 rounded-lg p-0.5">
+                {(Object.entries(tabLabels) as [typeof tab, string][]).map(([key, label]) => (
+                  <button key={key} onClick={() => setTab(key)} className={`flex-1 px-3 py-1.5 text-[11px] font-medium rounded-md transition-all ${tab === key ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Per-type fields */}
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-[10px] font-medium text-slate-500 mb-1">Email Subject</label>
+                  <input type="text" value={cfg.subject} onChange={(e) => updateConfig('subject', e.target.value)} className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
+                  <p className="text-[9px] text-slate-400 mt-0.5">Use {'{{reward}}'} for reward name, {'{{business}}'} for business name</p>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-medium text-slate-500 mb-1">Heading</label>
+                  <input type="text" value={cfg.heading} onChange={(e) => updateConfig('heading', e.target.value)} className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-medium text-slate-500 mb-1">Body Text</label>
+                  <textarea value={cfg.bodyText} onChange={(e) => updateConfig('bodyText', e.target.value)} rows={2} className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800 resize-none" />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button onClick={handleSave} disabled={saving} className="px-4 py-2 bg-violet-600 text-white text-xs font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 transition-colors">
+                  {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Email Settings'}
+                </button>
+                {saved && <span className="text-xs text-emerald-600">Settings saved</span>}
+              </div>
+            </div>
+
+            {/* Right: Live email preview */}
+            <div className="w-[260px] flex-shrink-0">
+              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Preview</p>
+              <div className="rounded-lg overflow-hidden border border-slate-200 shadow-sm text-[10px]">
+                {/* Header */}
+                <div style={{ backgroundColor: accentColor, padding: '14px 18px' }} className="flex items-center gap-2">
+                  {logoUrl && <img src={logoUrl} alt="" className="w-6 h-6 rounded object-cover" />}
+                  <span className="text-white font-bold text-xs">{businessName}</span>
+                </div>
+                {/* Body */}
+                <div className="bg-white p-4 space-y-2.5">
+                  <p className="font-semibold uppercase tracking-widest" style={{ color: accentColor, fontSize: 8 }}>Your Reward</p>
+                  <p className="font-bold text-slate-900 text-xs leading-tight">{cfg.heading.replace('{{business}}', businessName).replace('{{reward}}', previewReward)}</p>
+                  <p className="text-slate-500 leading-relaxed">{cfg.bodyText.replace('{{business}}', businessName).replace('{{reward}}', previewReward)}</p>
+                  {/* Reward card */}
+                  <div className="rounded-lg p-3 text-center text-white" style={{ background: `linear-gradient(135deg, ${accentColor}, ${accentColor}dd)` }}>
+                    <p className="font-extrabold text-sm">{previewReward}</p>
+                    <div className="mt-1.5 bg-white/20 rounded px-2 py-1 inline-block">
+                      <p style={{ fontSize: 7 }} className="opacity-70 uppercase">Code</p>
+                      <p className="font-mono font-bold text-[10px]">SAVE10</p>
+                    </div>
+                  </div>
+                  <p className="text-slate-500">Show this email to redeem.</p>
+                </div>
+                {/* Footer */}
+                <div className="bg-slate-50 border-t border-slate-100 px-4 py-2">
+                  <p className="text-slate-400" style={{ fontSize: 8 }}>&copy; 2026 {businessName} &middot; Powered by Embedo</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── QR Code Card ─────────────────────────────────────────────── */
 function QrCard({ qr, onDelete }: { qr: QrCode; onDelete: () => void }) {
   const [copied, setCopied] = useState(false);
@@ -627,6 +804,9 @@ export default function QrCodesPage() {
           );
         })}
       </div>
+
+      {/* Reward Email Settings */}
+      <RewardEmailPanel businessId={business.id} businessName={business.name} settings={business.settings} />
 
       {/* QR Code Grid */}
       {loading ? (

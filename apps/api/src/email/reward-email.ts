@@ -14,6 +14,10 @@ interface RewardEmailParams {
   // Branding
   accentColor?: string | undefined;
   logoUrl?: string | undefined;
+  // Custom text overrides (from business settings)
+  customSubject?: string | undefined;
+  customHeading?: string | undefined;
+  customBodyText?: string | undefined;
 }
 
 function buildRewardHtml(params: RewardEmailParams): string {
@@ -21,23 +25,27 @@ function buildRewardHtml(params: RewardEmailParams): string {
   const name = params.recipientName?.split(' ')[0] || 'there';
   const logo = params.logoUrl;
 
-  const typeLabel: Record<string, string> = {
+  const defaultHeadline: Record<string, string> = {
     spin_prize: 'You won a prize!',
     discount: 'Your exclusive discount',
     survey_reward: 'Thanks for your feedback!',
     signup: 'Welcome aboard!',
   };
 
-  const headline = typeLabel[params.rewardType] || 'Your reward';
+  const headline = (params.customHeading || defaultHeadline[params.rewardType] || 'Your reward')
+    .replace(/\{\{business\}\}/g, params.businessName)
+    .replace(/\{\{reward\}\}/g, params.rewardTitle);
 
-  const subtextMap: Record<string, string> = {
+  const defaultBody: Record<string, string> = {
     spin_prize: `Congratulations! You spun the wheel at <strong>${params.businessName}</strong> and won:`,
     discount: `Here&rsquo;s your exclusive discount from <strong>${params.businessName}</strong>:`,
     survey_reward: `Thanks for sharing your feedback with <strong>${params.businessName}</strong>! Here&rsquo;s your reward:`,
     signup: `Welcome to <strong>${params.businessName}</strong>! Here&rsquo;s a little something for joining:`,
   };
 
-  const subtext = subtextMap[params.rewardType] || `Here's your reward from <strong>${params.businessName}</strong>:`;
+  const subtext = (params.customBodyText || defaultBody[params.rewardType] || `Here's your reward from <strong>${params.businessName}</strong>:`)
+    .replace(/\{\{business\}\}/g, params.businessName)
+    .replace(/\{\{reward\}\}/g, params.rewardTitle);
 
   return `<!DOCTYPE html>
 <html>
@@ -99,19 +107,23 @@ export async function sendRewardEmail(params: RewardEmailParams): Promise<boolea
     return false;
   }
 
-  const subjectMap: Record<string, string> = {
+  const defaultSubject: Record<string, string> = {
     spin_prize: `You won ${params.rewardTitle}! 🎉`,
     discount: `Your discount from ${params.businessName}`,
     survey_reward: `Your reward from ${params.businessName}`,
     signup: `Welcome to ${params.businessName}!`,
   };
 
+  const subject = (params.customSubject || defaultSubject[params.rewardType] || `Your reward from ${params.businessName}`)
+    .replace(/\{\{business\}\}/g, params.businessName)
+    .replace(/\{\{reward\}\}/g, params.rewardTitle);
+
   try {
     sgMail.setApiKey(apiKey);
     await sgMail.send({
       to: params.to,
       from: { email: fromEmail, name: params.businessName },
-      subject: subjectMap[params.rewardType] || `Your reward from ${params.businessName}`,
+      subject,
       html: buildRewardHtml(params),
     });
     log.info({ to: params.to, businessName: params.businessName, rewardType: params.rewardType }, 'Reward email sent');
