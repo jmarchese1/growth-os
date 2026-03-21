@@ -15,7 +15,11 @@ async function start() {
     credentials: false,
   });
 
-  await app.register(helmet, { contentSecurityPolicy: false });
+  await app.register(helmet, {
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: false,
+    crossOriginEmbedderPolicy: false,
+  });
 
   app.setErrorHandler((error, _request, reply) => {
     if (isEmbedoError(error)) {
