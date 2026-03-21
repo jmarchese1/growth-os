@@ -145,9 +145,13 @@ function buildWidgetJs(): string {
 (function() {
   var config = window.EmbledoChatConfig;
   if (!config) return;
+  if (window.__embedoChatLoaded) return;
+  window.__embedoChatLoaded = true;
+  console.log('[Embedo Chat] Widget v2 loaded');
 
   function init() {
     if (!document.body) { setTimeout(init, 50); return; }
+    if (document.getElementById('embedo-chat-bubble')) return;
 
   // Create chat bubble
   var bubble = document.createElement('div');
