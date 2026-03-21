@@ -196,13 +196,12 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
       const window = cooldownMs[qrCode.cooldownPeriod];
 
       if (window !== undefined) {
-        // Check by fingerprint first (more specific), fall back to IP
+        // Match by fingerprint (per-device). Only fall back to IP if no fingerprint provided.
+        // Using OR would block all devices on the same WiFi (shared IP).
         const lastScan = await db.qrCodeScan.findFirst({
           where: {
             qrCodeId: qrCode.id,
-            ...(fp
-              ? { OR: [{ deviceFingerprint: fp }, { ipAddress: ip }] }
-              : { ipAddress: ip }),
+            ...(fp ? { deviceFingerprint: fp } : { ipAddress: ip }),
           },
           orderBy: { createdAt: 'desc' },
         });
