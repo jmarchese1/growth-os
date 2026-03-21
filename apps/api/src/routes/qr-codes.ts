@@ -132,7 +132,7 @@ export async function qrCodeRoutes(app: FastifyInstance): Promise<void> {
         surveyReward: body.surveyReward ?? null,
         destinationUrl: body.destinationUrl ?? null,
         ...(body.expiresAt ? { expiresAt: new Date(body.expiresAt) } : {}),
-        ...(body.metadata ? { metadata: body.metadata } : {}),
+        ...(body.metadata ? { metadata: body.metadata as object } : {}),
         active: true,
       },
       include: {
