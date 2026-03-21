@@ -629,9 +629,9 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
 
       {open && (
         <div className="border-t border-slate-200 px-5 py-5">
-          <div className="flex gap-5">
+          <div className="flex gap-6">
             {/* Left: Settings */}
-            <div className="w-[280px] flex-shrink-0 space-y-4">
+            <div className="flex-1 space-y-4">
               {/* Global branding */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -729,7 +729,7 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
             </div>
 
             {/* Right: Live email preview */}
-            <div className="flex-1">
+            <div className="w-[260px] flex-shrink-0">
               <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Preview</p>
               <div className="rounded-lg overflow-hidden border border-slate-200 shadow-sm text-[10px]" style={{ fontFamily: EMAIL_FONT_OPTIONS.find((f) => f.value === emailFont)?.stack }}>
                 {/* Header */}
