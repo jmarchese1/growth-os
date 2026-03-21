@@ -146,6 +146,9 @@ function buildWidgetJs(): string {
   var config = window.EmbledoChatConfig;
   if (!config) return;
 
+  function init() {
+    if (!document.body) { setTimeout(init, 50); return; }
+
   // Create chat bubble
   var bubble = document.createElement('div');
   bubble.id = 'embedo-chat-bubble';
@@ -257,6 +260,13 @@ function buildWidgetJs(): string {
   document.getElementById('embedo-input').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') sendMessage();
   });
+  } // end init
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();
 `.trim();
 }
