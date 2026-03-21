@@ -174,7 +174,13 @@ Output ONLY the HTML. No markdown fences. Start with <!DOCTYPE html>.`,
   const chatbotBusinessId = siteData.chatbotBusinessId;
   if (chatbotBusinessId) {
     const chatbotUrl = process.env['CHATBOT_API_URL'] ?? 'https://chatbot-agent-production-e735.up.railway.app';
-    const script = `\n<!-- Embedo Chat Widget -->\n<script>window.EmbledoChatConfig={businessId:"${chatbotBusinessId}",apiUrl:"${chatbotUrl}",businessName:"${siteData.businessName.replace(/"/g, '\\"')}",welcomeMessage:"Hi! How can I help you today?",primaryColor:"#7c3aed",position:"bottom-right"};</script>\n<script src="${chatbotUrl}/widget.js" async></script>\n`;
+    // Try to extract the site's accent/primary color from the generated HTML
+    const colorMatch = html.match(/(?:--primary|--accent|accent|primary)[\s]*[:\s]+[\s]*(['"]?)(#[0-9a-fA-F]{3,8})\1/);
+    const btnColorMatch = html.match(/(?:bg-|background[:\s]+[\s]*)(\[#[0-9a-fA-F]{3,8}\]|#[0-9a-fA-F]{3,8})/);
+    let widgetColor = '#7c3aed'; // default violet
+    if (colorMatch?.[2]) widgetColor = colorMatch[2];
+    else if (btnColorMatch?.[1]) widgetColor = btnColorMatch[1].replace(/[\[\]]/g, '');
+    const script = `\n<!-- Embedo Chat Widget -->\n<script>window.EmbledoChatConfig={businessId:"${chatbotBusinessId}",apiUrl:"${chatbotUrl}",businessName:"${siteData.businessName.replace(/"/g, '\\"')}",welcomeMessage:"Hi! How can I help you today?",primaryColor:"${widgetColor}",position:"bottom-right"};</script>\n<script src="${chatbotUrl}/widget.js" async></script>\n`;
     // Try multiple injection points (case-insensitive)
     if (html.match(/<\/body>/i)) {
       html = html.replace(/<\/body>/i, `${script}</body>`);
