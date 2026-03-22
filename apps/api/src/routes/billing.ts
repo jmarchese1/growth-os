@@ -170,6 +170,7 @@ export async function billingRoutes(app: FastifyInstance): Promise<void> {
       consent_collection: {
         terms_of_service: 'none',
       },
+      customer_update: { name: 'auto', address: 'auto' },
       tax_id_collection: { enabled: true },
       metadata: { businessId, tier: tier.toUpperCase() },
     });
