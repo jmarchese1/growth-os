@@ -26,6 +26,7 @@ import { stripeWebhookRoutes } from './routes/webhooks/stripe.js';
 import { surveyRoutes } from './routes/surveys.js';
 import { campaignRoutes } from './routes/campaigns.js';
 import { qrCodeRoutes } from './routes/qr-codes.js';
+import { socialMediaRoutes } from './routes/social-media.js';
 
 const log = createLogger('api:gateway');
 
@@ -113,6 +114,7 @@ export async function buildApp() {
   await app.register(surveyRoutes);
   await app.register(campaignRoutes);
   await app.register(qrCodeRoutes);
+  await app.register(socialMediaRoutes);
 
   log.info('API Gateway configured');
   return app;

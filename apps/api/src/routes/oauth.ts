@@ -237,6 +237,80 @@ export async function oauthRoutes(app: FastifyInstance): Promise<void> {
         });
 
         log.info({ provider, businessId: stateData.businessId }, 'OAuth token stored on business');
+
+        // Fetch and store platform page IDs for Instagram/Facebook publishing
+        const accessToken = tokenData['access_token'] as string;
+
+        if (provider === 'facebook' || provider === 'instagram') {
+          try {
+            // Get user's Facebook Pages
+            const pagesRes = await fetch(
+              `https://graph.facebook.com/v21.0/me/accounts?access_token=${encodeURIComponent(accessToken)}`,
+            );
+            const pagesData = (await pagesRes.json()) as { data?: Array<{ id: string; name: string; access_token: string }> };
+            const pages = pagesData.data ?? [];
+
+            if (pages.length > 0) {
+              const page = pages[0]!;
+              const pageUpdateData: Record<string, unknown> = {};
+
+              if (provider === 'facebook') {
+                pageUpdateData['facebookPageId'] = page.id;
+                log.info({ businessId: stateData.businessId, pageId: page.id, pageName: page.name }, 'Facebook page ID stored');
+
+                // Exchange for long-lived page access token
+                const llRes = await fetch(
+                  `https://graph.facebook.com/v21.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${clientId}&client_secret=${clientSecret}&fb_exchange_token=${encodeURIComponent(accessToken)}`,
+                );
+                const llData = (await llRes.json()) as { access_token?: string };
+                if (llData.access_token) {
+                  // Update the stored token with the long-lived one
+                  oauthTokens[provider] = {
+                    ...(oauthTokens[provider] as object),
+                    accessToken: llData.access_token,
+                    longLived: true,
+                  };
+                  await db.business.update({
+                    where: { id: stateData.businessId },
+                    data: {
+                      facebookPageId: page.id,
+                      settings: { ...currentSettings, oauthTokens } as object,
+                    },
+                  });
+                  log.info({ businessId: stateData.businessId }, 'Long-lived Facebook token stored');
+                } else {
+                  await db.business.update({
+                    where: { id: stateData.businessId },
+                    data: { facebookPageId: page.id },
+                  });
+                }
+              }
+
+              if (provider === 'instagram') {
+                // Get Instagram Business Account linked to this Facebook Page
+                const igRes = await fetch(
+                  `https://graph.facebook.com/v21.0/${page.id}?fields=instagram_business_account&access_token=${encodeURIComponent(accessToken)}`,
+                );
+                const igData = (await igRes.json()) as { instagram_business_account?: { id: string } };
+
+                if (igData.instagram_business_account?.id) {
+                  await db.business.update({
+                    where: { id: stateData.businessId },
+                    data: { instagramPageId: igData.instagram_business_account.id },
+                  });
+                  log.info({ businessId: stateData.businessId, igUserId: igData.instagram_business_account.id }, 'Instagram page ID stored');
+                } else {
+                  log.warn({ businessId: stateData.businessId }, 'No Instagram Business Account found on the connected Facebook Page');
+                }
+              }
+            } else {
+              log.warn({ businessId: stateData.businessId, provider }, 'No Facebook Pages found for user');
+            }
+          } catch (pageErr) {
+            // Non-fatal: token is stored, page ID fetching failed
+            log.error({ provider, businessId: stateData.businessId, err: pageErr }, 'Failed to fetch page IDs — token stored but publishing may not work');
+          }
+        }
       }
 
       const clientUrl = process.env['CLIENT_APP_URL'] ?? 'http://localhost:3012';
