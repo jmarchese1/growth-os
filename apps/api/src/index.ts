@@ -1,4 +1,3 @@
-// Redeploy trigger — 2026-03-22
 import { createLogger } from '@embedo/utils';
 import { db } from '@embedo/db';
 import { env } from './config.js';
