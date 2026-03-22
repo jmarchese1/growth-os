@@ -19,32 +19,40 @@ interface SubscriptionData {
 
 const TIERS = [
   {
+    key: 'FREE',
+    name: 'Free',
+    price: 0,
+    desc: 'Get started',
+    features: ['Basic Dashboard', 'QR Code Tools', '1 Chatbot Widget', 'Community Support'],
+    free: true,
+  },
+  {
     key: 'SOLO',
     name: 'Solo',
-    price: 497,
+    price: 249.99,
     desc: 'For solo operators',
-    features: ['AI Voice Agent', 'Website Chatbot', 'Lead Capture', 'Custom Website'],
+    features: ['Everything in Free', 'AI Voice Agent', 'Website Chatbot', 'Lead Capture', 'Custom Website'],
   },
   {
     key: 'SMALL',
     name: 'Small',
-    price: 797,
-    desc: 'For teams of 2–10',
+    price: 399.99,
+    desc: 'For small teams',
     features: ['Everything in Solo', 'Social Media Automation', 'Survey Engine', 'Email Sequences'],
     popular: true,
   },
   {
     key: 'MEDIUM',
     name: 'Medium',
-    price: 1297,
-    desc: 'For teams of 11–50',
+    price: 549.99,
+    desc: 'For growing businesses',
     features: ['Everything in Small', 'Priority Support', 'Custom Integrations', 'Advanced Analytics'],
   },
   {
     key: 'LARGE',
     name: 'Large',
-    price: 2497,
-    desc: 'For 50+ employees',
+    price: 999.99,
+    desc: 'For enterprises',
     features: ['Everything in Medium', 'Dedicated Account Manager', 'White-label Options', 'SLA Guarantee'],
   },
 ];
@@ -202,6 +210,12 @@ export default function BillingPage() {
 
   const hasActiveSub = subscription && (subscription.status === 'ACTIVE' || subscription.status === 'TRIALING');
   const currentTier = TIERS.find((t) => t.key === subscription?.pricingTier);
+  const isOnFree = !subscription || subscription.pricingTier === 'FREE';
+
+  function formatPrice(price: number): string {
+    if (price === 0) return 'Free';
+    return price % 1 === 0 ? `$${price}` : `$${price.toFixed(2)}`;
+  }
 
   return (
     <div className="p-8 animate-fade-up">
@@ -227,8 +241,8 @@ export default function BillingPage() {
         </div>
       )}
 
-      {/* Current subscription card */}
-      {subscription && (
+      {/* Current subscription card (non-free paid plans) */}
+      {subscription && !isOnFree && (
         <div className="bg-white border border-slate-200 rounded-xl p-6 mb-8">
           <div className="flex items-start justify-between">
             <div>
@@ -247,7 +261,7 @@ export default function BillingPage() {
               </div>
               {currentTier && (
                 <p className="text-3xl font-bold text-slate-900">
-                  ${currentTier.price}<span className="text-base font-normal text-slate-400">/mo</span>
+                  {formatPrice(currentTier.price)}<span className="text-base font-normal text-slate-400">/mo</span>
                 </p>
               )}
               <div className="flex gap-6 mt-3 text-xs text-slate-500">
@@ -295,72 +309,110 @@ export default function BillingPage() {
         </div>
       )}
 
-      {/* Pricing tiers */}
-      {!hasActiveSub && (
+      {/* Current plan badge for free users */}
+      {isOnFree && (
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-slate-200 flex items-center justify-center">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-slate-500">
+                <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-bold text-slate-900">Free Plan</p>
+              <p className="text-xs text-slate-500">Upgrade to unlock all features</p>
+            </div>
+          </div>
+          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-600">Current plan</span>
+        </div>
+      )}
+
+      {/* Pricing tiers — show for free users or users without active paid sub */}
+      {(isOnFree || !hasActiveSub) && (
         <>
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-slate-800">Choose a plan</h2>
-            <p className="text-sm text-slate-500 mt-1">All plans include a 14-day free trial. No credit card required to start.</p>
+            <p className="text-sm text-slate-500 mt-1">All paid plans include a 14-day free trial. No credit card required to start.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {TIERS.map((tier) => (
-              <div
-                key={tier.key}
-                className={`relative bg-white border rounded-xl p-6 flex flex-col ${
-                  tier.popular
-                    ? 'border-violet-300 ring-2 ring-violet-100'
-                    : 'border-slate-200'
-                }`}
-              >
-                {tier.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-violet-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-full">
-                    Most Popular
-                  </div>
-                )}
-                <div className="mb-4">
-                  <h3 className="text-base font-bold text-slate-900">{tier.name}</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">{tier.desc}</p>
-                </div>
-                <p className="text-3xl font-bold text-slate-900 mb-4">
-                  ${tier.price}<span className="text-sm font-normal text-slate-400">/mo</span>
-                </p>
-                <ul className="space-y-2 mb-6 flex-1">
-                  {tier.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-xs text-slate-600">
-                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-violet-500 flex-shrink-0 mt-0.5">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  onClick={() => handleSubscribe(tier.key)}
-                  disabled={actionLoading}
-                  className={`w-full py-2.5 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 ${
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+            {TIERS.map((tier) => {
+              const isFree = 'free' in tier && tier.free;
+              const isCurrentFree = isFree && isOnFree;
+              return (
+                <div
+                  key={tier.key}
+                  className={`relative bg-white border rounded-xl p-6 flex flex-col ${
                     tier.popular
-                      ? 'bg-violet-600 text-white hover:bg-violet-500'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      ? 'border-violet-300 ring-2 ring-violet-100'
+                      : isCurrentFree
+                        ? 'border-emerald-300 bg-emerald-50/30'
+                        : 'border-slate-200'
                   }`}
                 >
-                  Start Free Trial
-                </button>
-              </div>
-            ))}
+                  {tier.popular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-violet-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-full">
+                      Most Popular
+                    </div>
+                  )}
+                  {isCurrentFree && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-full">
+                      Current
+                    </div>
+                  )}
+                  <div className="mb-4">
+                    <h3 className="text-base font-bold text-slate-900">{tier.name}</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">{tier.desc}</p>
+                  </div>
+                  <p className="text-3xl font-bold text-slate-900 mb-4">
+                    {formatPrice(tier.price)}{tier.price > 0 && <span className="text-sm font-normal text-slate-400">/mo</span>}
+                  </p>
+                  <ul className="space-y-2 mb-6 flex-1">
+                    {tier.features.map((f) => (
+                      <li key={f} className="flex items-start gap-2 text-xs text-slate-600">
+                        <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-violet-500 flex-shrink-0 mt-0.5">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  {isFree ? (
+                    <button
+                      disabled
+                      className="w-full py-2.5 text-sm font-semibold rounded-lg bg-slate-100 text-slate-400 cursor-default"
+                    >
+                      {isCurrentFree ? 'Current Plan' : 'Free'}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleSubscribe(tier.key)}
+                      disabled={actionLoading}
+                      className={`w-full py-2.5 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 ${
+                        tier.popular
+                          ? 'bg-violet-600 text-white hover:bg-violet-500'
+                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      }`}
+                    >
+                      Start Free Trial
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </>
       )}
 
-      {/* If active, show upgrade options */}
-      {hasActiveSub && (
+      {/* If active paid sub, show upgrade options */}
+      {hasActiveSub && !isOnFree && (
         <div className="bg-white border border-slate-200 rounded-xl p-6">
           <h3 className="text-sm font-semibold text-slate-700 mb-4">Change Plan</h3>
           <p className="text-xs text-slate-500 mb-4">
             Upgrade or downgrade your plan. Changes take effect at the next billing cycle.
           </p>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {TIERS.map((tier) => {
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+            {TIERS.filter((t) => !('free' in t && t.free)).map((tier) => {
               const isCurrent = tier.key === subscription?.pricingTier;
               return (
                 <button
@@ -374,7 +426,7 @@ export default function BillingPage() {
                   } disabled:cursor-default`}
                 >
                   <p className="text-sm font-semibold text-slate-800">{tier.name}</p>
-                  <p className="text-lg font-bold text-slate-900 mt-1">${tier.price}<span className="text-xs font-normal text-slate-400">/mo</span></p>
+                  <p className="text-lg font-bold text-slate-900 mt-1">{formatPrice(tier.price)}<span className="text-xs font-normal text-slate-400">/mo</span></p>
                   {isCurrent && (
                     <p className="text-[10px] text-violet-600 font-medium mt-1">Current plan</p>
                   )}

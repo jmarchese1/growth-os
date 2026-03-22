@@ -12,9 +12,9 @@ function getStripe(): Stripe | null {
   return new Stripe(key, { apiVersion: '2026-02-25.clover' });
 }
 
-function tierFromMetadata(metadata: Record<string, string>): 'SOLO' | 'SMALL' | 'MEDIUM' | 'LARGE' {
+function tierFromMetadata(metadata: Record<string, string>): 'FREE' | 'SOLO' | 'SMALL' | 'MEDIUM' | 'LARGE' {
   const raw = (metadata['tier'] ?? 'SOLO').toUpperCase();
-  if (['SOLO', 'SMALL', 'MEDIUM', 'LARGE'].includes(raw)) return raw as 'SOLO' | 'SMALL' | 'MEDIUM' | 'LARGE';
+  if (['FREE', 'SOLO', 'SMALL', 'MEDIUM', 'LARGE'].includes(raw)) return raw as 'FREE' | 'SOLO' | 'SMALL' | 'MEDIUM' | 'LARGE';
   return 'SOLO';
 }
 

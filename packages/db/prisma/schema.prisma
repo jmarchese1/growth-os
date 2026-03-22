@@ -876,6 +876,7 @@ enum SubscriptionStatus {
 }
 
 enum PricingTier {
+  FREE
   SOLO
   SMALL
   MEDIUM
@@ -888,7 +889,7 @@ model Subscription {
   business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
   stripeSubscriptionId String? @unique
-  pricingTier          PricingTier @default(SOLO)
+  pricingTier          PricingTier @default(FREE)
   status               SubscriptionStatus @default(TRIALING)
 
   currentPeriodStart DateTime?
