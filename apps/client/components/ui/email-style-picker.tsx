@@ -22,35 +22,55 @@ interface Survey {
   slug: string;
 }
 
+interface ImageAsset {
+  id: string;
+  url: string;
+  alt: string | null;
+  category: string | null;
+  source: string;
+}
+
 interface Props {
   selectedStyle: string;
   onStyleChange: (styleId: string) => void;
   options: EmailStyleOptions;
   onOptionsChange: (opts: EmailStyleOptions) => void;
   businessId?: string;
+  businessName?: string;
   attachments: EmailAttachment[];
   onAttachmentsChange: (attachments: EmailAttachment[]) => void;
 }
 
-export function EmailStylePicker({ selectedStyle, onStyleChange, options, onOptionsChange, businessId, attachments, onAttachmentsChange }: Props) {
+export function EmailStylePicker({ selectedStyle, onStyleChange, options, onOptionsChange, businessId, businessName, attachments, onAttachmentsChange }: Props) {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [qrCodes, setQrCodes] = useState<QrCode[]>([]);
   const [surveys, setSurveys] = useState<Survey[]>([]);
+  const [images, setImages] = useState<ImageAsset[]>([]);
   const [loadedData, setLoadedData] = useState(false);
-  const [showImageInput, setShowImageInput] = useState(false);
-  const [imageUrl, setImageUrl] = useState('');
+  const [showImagePicker, setShowImagePicker] = useState(false);
   const [showCtaInput, setShowCtaInput] = useState(false);
   const [ctaText, setCtaText] = useState('Learn More');
   const [ctaUrl, setCtaUrl] = useState('');
 
-  // Fetch QR codes and surveys when businessId is available
+  // Fetch QR codes, surveys, and images when businessId is available
   useEffect(() => {
     if (!businessId || loadedData) return;
     Promise.all([
       fetch(`${API_URL}/qr-codes?businessId=${businessId}`).then((r) => r.json()).then((d: { success: boolean; qrCodes?: QrCode[] }) => d.qrCodes ?? []),
       fetch(`${API_URL}/surveys?businessId=${businessId}`).then((r) => r.json()).then((d: { success: boolean; surveys?: Survey[] }) => d.surveys ?? []),
-    ]).then(([qr, sv]) => { setQrCodes(qr); setSurveys(sv); setLoadedData(true); }).catch(() => {});
+      fetch(`${API_URL}/images?businessId=${businessId}`).then((r) => r.json()).then((d: { success: boolean; images?: ImageAsset[] }) => d.images ?? []),
+    ]).then(([qr, sv, imgs]) => { setQrCodes(qr); setSurveys(sv); setImages(imgs); setLoadedData(true); }).catch(() => {});
   }, [businessId, loadedData]);
+
+  // Auto-set businessName in options when available
+  useEffect(() => {
+    if (businessName && !options.businessName) {
+      onOptionsChange({ ...options, businessName });
+    }
+  }, [businessName]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const logoImages = images.filter((img) => img.category === 'logo');
+  const allImages = images;
 
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://app.embedo.io';
   const spinWheels = qrCodes.filter((q) => q.purpose === 'SPIN_WHEEL');
@@ -65,13 +85,6 @@ export function EmailStylePicker({ selectedStyle, onStyleChange, options, onOpti
 
   function removeAttachment(id: string) {
     onAttachmentsChange(attachments.filter((a) => a.id !== id));
-  }
-
-  function addImage() {
-    if (!imageUrl.trim()) return;
-    addAttachment({ id: `img-${Date.now()}`, type: 'image', label: 'Image', url: imageUrl.trim() });
-    setImageUrl('');
-    setShowImageInput(false);
   }
 
   function addCta() {
@@ -154,9 +167,17 @@ export function EmailStylePicker({ selectedStyle, onStyleChange, options, onOpti
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1.5">Logo URL</label>
-          <input type="text" value={options.logoUrl ?? ''} onChange={(e) => onOptionsChange({ ...options, logoUrl: e.target.value || undefined })} placeholder="https://logo.png"
-            className="w-full px-2.5 py-2 border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400/30" />
+          <label className="block text-xs font-medium text-slate-500 mb-1.5">Logo</label>
+          <select
+            value={options.logoUrl ?? ''}
+            onChange={(e) => onOptionsChange({ ...options, logoUrl: e.target.value || undefined })}
+            className="w-full px-2.5 py-2 border border-slate-200 rounded-lg text-xs text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-violet-400/30"
+          >
+            <option value="">{logoImages.length === 0 ? 'No logos uploaded' : 'None'}</option>
+            {logoImages.map((img) => (
+              <option key={img.id} value={img.url}>{img.alt || `Logo ${img.id.slice(-4)}`}</option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -226,29 +247,32 @@ export function EmailStylePicker({ selectedStyle, onStyleChange, options, onOpti
       )}
 
       {/* ─── Insert Image / CTA Button ─────────────────────────────── */}
-      <div className="flex gap-2 flex-wrap">
-        <button type="button" onClick={() => { setShowImageInput(!showImageInput); setShowCtaInput(false); }}
-          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showImageInput ? 'text-violet-700 bg-violet-50 border-violet-300' : 'text-slate-600 bg-white border-slate-200 hover:bg-slate-50'}`}>
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M1 5.25A2.25 2.25 0 013.25 3h13.5A2.25 2.25 0 0119 5.25v9.5A2.25 2.25 0 0116.75 17H3.25A2.25 2.25 0 011 14.75v-9.5zm1.5 5.81V14.75c0 .414.336.75.75.75h13.5a.75.75 0 00.75-.75v-2.06l-2.22-2.22a.75.75 0 00-1.06 0L8.56 12.08 6.28 9.81a.75.75 0 00-1.06 0L2.5 11.06z" clipRule="evenodd" /></svg>
-          Image
-        </button>
-        <button type="button" onClick={() => { setShowCtaInput(!showCtaInput); setShowImageInput(false); }}
-          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showCtaInput ? 'text-violet-700 bg-violet-50 border-violet-300' : 'text-slate-600 bg-white border-slate-200 hover:bg-slate-50'}`}>
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M4.25 5.5a.75.75 0 000 1.5h8.5a.75.75 0 000-1.5h-8.5zM4.25 9a.75.75 0 000 1.5h5.5a.75.75 0 000-1.5h-5.5zM3.5 13.25a.75.75 0 01.75-.75h3.5a.75.75 0 010 1.5h-3.5a.75.75 0 01-.75-.75zM14 10a1 1 0 011-1h1a1 1 0 011 1v5a1 1 0 01-1 1h-1a1 1 0 01-1-1v-5z" clipRule="evenodd" /></svg>
-          CTA Button
-        </button>
-      </div>
-
-      {/* Image input */}
-      {showImageInput && (
-        <div className="flex gap-2">
-          <input type="text" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="Paste image URL..."
-            className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400/30"
-            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addImage(); } }} />
-          <button type="button" onClick={addImage} disabled={!imageUrl.trim()}
-            className="px-3 py-2 text-xs font-medium bg-violet-600 text-white rounded-lg hover:bg-violet-500 disabled:opacity-40 transition-colors">Add</button>
+      <div className="grid grid-cols-2 gap-2.5">
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1.5">Insert Image</label>
+          <select
+            value=""
+            onChange={(e) => {
+              const img = allImages.find((i) => i.id === e.target.value);
+              if (img) addAttachment({ id: `img-${img.id}`, type: 'image', label: img.alt || `Image ${img.id.slice(-4)}`, url: img.url });
+            }}
+            className="w-full px-2.5 py-2 border border-slate-200 rounded-lg text-xs text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-violet-400/30"
+          >
+            <option value="">{allImages.length === 0 ? 'No images' : `Select image (${allImages.length})`}</option>
+            {allImages.map((img) => (
+              <option key={img.id} value={img.id}>{img.alt || `${img.category ?? 'Image'} — ${img.source}`} </option>
+            ))}
+          </select>
         </div>
-      )}
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1.5">CTA Button</label>
+          <button type="button" onClick={() => setShowCtaInput(!showCtaInput)}
+            className={`w-full flex items-center justify-center gap-1.5 px-2.5 py-2 text-xs font-medium rounded-lg border transition-colors ${showCtaInput ? 'text-violet-700 bg-violet-50 border-violet-300' : 'text-slate-600 bg-white border-slate-200 hover:bg-slate-50'}`}>
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M4.25 5.5a.75.75 0 000 1.5h8.5a.75.75 0 000-1.5h-8.5zM4.25 9a.75.75 0 000 1.5h5.5a.75.75 0 000-1.5h-5.5zM3.5 13.25a.75.75 0 01.75-.75h3.5a.75.75 0 010 1.5h-3.5a.75.75 0 01-.75-.75zM14 10a1 1 0 011-1h1a1 1 0 011 1v5a1 1 0 01-1 1h-1a1 1 0 01-1-1v-5z" clipRule="evenodd" /></svg>
+            {showCtaInput ? 'Cancel' : 'Add CTA Button'}
+          </button>
+        </div>
+      </div>
 
       {/* CTA input */}
       {showCtaInput && (

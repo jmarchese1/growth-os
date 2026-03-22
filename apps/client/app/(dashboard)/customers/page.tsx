@@ -159,6 +159,7 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
   onDone: () => void;
   onClose: () => void;
 }) {
+  const { business: biz } = useBusiness();
   type CampaignMode = 'single' | 'sequence';
 
   const [campaignMode, setCampaignMode] = useState<CampaignMode>('single');
@@ -480,6 +481,7 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
           options={styleOptions}
           onOptionsChange={setStyleOptions}
           businessId={businessId}
+          businessName={biz?.name}
           attachments={attachments}
           onAttachmentsChange={setAttachments}
         />

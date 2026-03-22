@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { EmailStylePicker } from '@/components/ui/email-style-picker';
 import { getStyleById, buildAttachmentsHtml } from '@/lib/email-styles';
 import type { EmailStyleOptions, EmailAttachment } from '@/lib/email-styles';
+import { useBusiness } from '../../../../components/auth/business-provider';
 
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 const CLIENT_URL = typeof window !== 'undefined' ? window.location.origin : 'https://app.embedo.io';
@@ -93,6 +94,7 @@ function ModalBackdrop({ children, onClose }: { children: React.ReactNode; onClo
 /* ─── Compose Email Modal ────────────────────────────────────────────────── */
 
 function ComposeEmailModal({ contact, onDone, onClose }: { contact: ContactDetail; onDone: () => void; onClose: () => void }) {
+  const { business } = useBusiness();
   const [subject, setSubject] = useState('');
   const [emailBody, setEmailBody] = useState('');
   const [sending, setSending] = useState(false);
@@ -197,6 +199,7 @@ function ComposeEmailModal({ contact, onDone, onClose }: { contact: ContactDetai
           options={styleOptions}
           onOptionsChange={setStyleOptions}
           businessId={contact.businessId}
+          businessName={business?.name}
           attachments={attachments}
           onAttachmentsChange={setAttachments}
         />

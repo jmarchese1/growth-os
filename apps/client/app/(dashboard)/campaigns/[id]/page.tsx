@@ -244,6 +244,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
                 options={styleOptions}
                 onOptionsChange={setStyleOptions}
                 businessId={business?.id}
+                businessName={business?.name}
                 attachments={attachments}
                 onAttachmentsChange={setAttachments}
               />
