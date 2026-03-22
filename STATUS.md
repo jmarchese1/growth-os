@@ -1,6 +1,6 @@
 # Embedo Platform — Current Status
 
-> Last updated: 2026-03-21. Update this file at the end of any session that changes deployment state, implements a new feature, or discovers a broken integration.
+> Last updated: 2026-03-22. Update this file at the end of any session that changes deployment state, implements a new feature, or discovers a broken integration.
 
 ---
 
@@ -114,7 +114,7 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 - **Lead detail page**: View lead info, reply history, convert-to-business action
 
 **Client Dashboard**
-- **QR codes**: Full CRUD, all 7 purposes, public `/qr/[token]` page, scan tracking, contact capture
+- **QR codes**: Full CRUD, all 7 purposes, public `/qr/[token]` page, scan tracking, contact capture, cooldown enforcement (fingerprint + IP AND logic), page customization (accent/background colors, fonts, headings)
 - **Surveys**: Full CRUD, public `/s/[slug]` page, response collection, contact capture, question builder
 - **Social media AI generation**: On-demand post generation via Claude Haiku, optional scheduling
 - **Contacts/CRM**: List, view, paginate, manually add, edit, send survey via SMS or email
@@ -133,11 +133,12 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
   - **Live widget settings**: Widget fetches `/widget/config/:businessId` on every page load — appearance changes take effect immediately without regenerating the site
   - **Settings persistence**: Status endpoint returns all 20+ chatbot settings fields
 - **Image Library**: Full `/images` page — DALL-E 3 generation, save URLs, category filters (food/interior/team/logo/product/lifestyle), favorites, detail modal. Images persisted to Supabase Storage (permanent URLs).
-- **Billing/Subscriptions**: Stripe checkout → webhook → Subscription record; billing dashboard
+- **Billing/Subscriptions**: Stripe integration — 5 tiers (Free, Solo $249.99, Small $399.99, Medium $549.99, Large $999.99). Checkout with 14-day free trial, billing portal, cancel/resume. Webhook handles checkout.completed, subscription.updated/deleted, invoice.payment_failed. Feature comparison page at `/billing/compare` with collapsible categories. Rich checkout descriptions per tier. FREE tier is default on signup.
 - **Integrations page**: OAuth param cleanup
 - **Public routes**: `/qr/` and `/s/` middleware-exempted (no auth required)
+- **Reward emails**: SendGrid-powered reward emails for spin wheel/discount/survey prizes, branded per business ("Business Name" <rewards@embedo.io>), configurable logo/font/accent color in QR codes settings
 
-**Website Generator (major overhaul this session)**
+**Website Generator (major overhaul)**
 - **AI-generated websites**: When inspiration URLs provided, Claude generates COMPLETE custom HTML using Tailwind CSS CDN — unique layout, colors, typography per site
 - **Inspiration site analysis**: Fetches raw CSS/HTML source of inspiration URLs, passes to Claude for visual DNA matching
 - **Pexels image sourcing**: 60+ curated industry/cuisine-specific image URLs (italian, cookies, sushi, etc.) guaranteed to load. Optional Pexels API key for fresh searches.
@@ -176,23 +177,52 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 
 ---
 
+## Next Steps — Prioritized Roadmap
+
+### Must-Build (high-impact gaps)
+
+| # | Feature | What's Needed | Notes |
+|---|---|---|---|
+| 1 | **Sequences / Follow-Up UI** | Build `/billing/sequences` (or `/sequences`) page — list, create, edit, delete email/SMS sequences | API is 100% done (CRUD, AI generation, triggers). Just needs a client page. |
+| 2 | **Onboarding Wizard** | Guided setup flow after first signup — connect phone, set up chatbot, build website, create first QR code | Directly impacts whether new signups activate. Step-by-step checklist or wizard overlay. |
+| 3 | **Dashboard Charts & Trends** | Line charts for contacts/calls/chats over time, time-range selector (7d/30d/90d) | Dashboard currently shows counts only — no trends or visual analytics. |
+
+### Should-Build (polish gaps)
+
+| # | Feature | What's Needed | Notes |
+|---|---|---|---|
+| 4 | **In-App Notifications** | Bell icon + dropdown. Notify on: new lead, call completed, survey response, payment failed | No notification system exists. Users have no way to know things happened. |
+| 5 | **Settings Hardcoded Statuses** | Query real service config for "Email Delivery" and "Booking Calendar" instead of hardcoded "Not configured" | Minor but makes settings page feel broken. |
+| 6 | **Chatbot Embed Code Display** | Make embed snippet more prominent in chatbot UI — copy button, instructions for external sites | API returns snippet but it's not obvious how to grab it. |
+| 7 | **Proposals Management Page** | Build `/proposals` list page — view generated proposals, share links, track views | API supports it, just no dedicated client page. |
+| 8 | **Website Custom Domain UI** | Surface the existing API route (`POST /websites/:id/domain`) in the editor — domain input + DNS instructions | API works, needs client UI. |
+
+### Nice-to-Have (future)
+
+| # | Feature | What's Needed | Notes |
+|---|---|---|---|
+| 9 | **Activity / Audit Log Page** | Unified timeline across all channels (calls, chats, scans, emails, etc.) | Would be a great single-pane-of-glass view. |
+| 10 | **Analytics Page** | Deeper reporting: email open rates, QR scan heatmaps, social engagement, chatbot quality | Beyond dashboard KPIs — dedicated analytics section. |
+| 11 | **Multi-User / Team Support** | Roles, permissions, inviting team members per business | Currently 1 user per business. |
+| 12 | **Mobile Responsiveness** | Audit billing compare, campaign tables, website editor for smaller screens | Several pages assume wide desktop screens. |
+
+---
+
 ## Known Missing Wiring (Action Items)
 
 | Item | What's needed | Priority |
 |---|---|---|
-| Contacts search + bulk actions | Add search bar, bulk tag/status update, CSV export | High |
-| Campaign targeting + templates | Recipient filtering, scheduling picker, email/SMS templates | High |
-| Survey response analytics | Aggregate results dashboard (avg rating, response charts) | Medium |
-| Social media account connect UI | Show connected accounts, connect/disconnect buttons | Medium |
 | Apollo.io API key | Set `APOLLO_API_KEY` in prospector Railway env to enable email enrichment | Medium |
 | Meta/Google/TikTok OAuth apps | Create developer apps, set client IDs/secrets in API env | Low |
+| Stripe webhook (production) | Add `https://embedoapi-production.up.railway.app/webhooks/stripe` in Stripe Dashboard, subscribe to events | High |
+| Stripe branding | Upload Embedo logo + set violet brand color in Stripe Dashboard > Settings > Branding | Medium |
 
 ---
 
 ## Schema State
 
 The Prisma schema has been pushed to Supabase (`prisma db push`) and includes all models.
-Last schema change: Added `WebsiteVersion` model for version history/undo on website edits.
+Last schema change: Added `FREE` to `PricingTier` enum, changed Subscription default from `SOLO` to `FREE`.
 Migration method: `prisma db push` (non-interactive — use this for local dev; proper migrations TBD).
 
 ---
