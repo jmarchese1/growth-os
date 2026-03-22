@@ -405,15 +405,17 @@ Return just the SMS text, nothing else.`;
 
     const sid = process.env['TWILIO_ACCOUNT_SID'];
     const token = process.env['TWILIO_AUTH_TOKEN'];
-    const from = process.env['TWILIO_FROM_NUMBER'];
-    if (!sid || !token || !from) return reply.code(500).send({ success: false, error: 'SMS not configured' });
+    if (!sid || !token) return reply.code(500).send({ success: false, error: 'Twilio credentials not configured' });
 
     const contact = await db.contact.findUnique({
       where: { id },
-      include: { business: { select: { name: true } } },
+      include: { business: { select: { name: true, twilioPhoneNumber: true } } },
     });
     if (!contact) throw new NotFoundError('Contact', id);
     if (!contact.phone) return reply.code(400).send({ success: false, error: 'Contact has no phone number' });
+
+    const from = contact.business.twilioPhoneNumber;
+    if (!from) return reply.code(400).send({ success: false, error: 'No Twilio phone number provisioned for this business. Set up a voice agent first.' });
 
     const smsText = body.message
       .replace(/\{\{firstName\}\}/g, contact.firstName ?? 'there')
