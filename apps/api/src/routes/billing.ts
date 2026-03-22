@@ -13,14 +13,68 @@ function getStripe(): Stripe | null {
   return new Stripe(key, { apiVersion: '2026-02-25.clover' });
 }
 
+interface TierConfig {
+  priceEnv: string;
+  name: string;
+  description: string;
+  features: string[];
+}
+
+const TIER_CONFIG: Record<string, TierConfig> = {
+  SOLO: {
+    priceEnv: 'STRIPE_PRICE_SOLO',
+    name: 'Embedo Solo',
+    description: 'AI-powered tools for solo business operators',
+    features: [
+      '500 contacts',
+      'AI Voice Agent + dedicated phone number',
+      'Custom AI website',
+      '10 QR codes, 5 surveys',
+      '100 emails/mo, 50 AI images/mo',
+    ],
+  },
+  SMALL: {
+    priceEnv: 'STRIPE_PRICE_SMALL',
+    name: 'Embedo Small',
+    description: 'Everything a small team needs to grow',
+    features: [
+      '2,000 contacts, 3 chatbot widgets',
+      'Social media automation (30 posts/mo)',
+      'Email sequences & 1,000 emails/mo',
+      'Unlimited surveys',
+      '200 AI images/mo',
+    ],
+  },
+  MEDIUM: {
+    priceEnv: 'STRIPE_PRICE_MEDIUM',
+    name: 'Embedo Medium',
+    description: 'Advanced tools for growing businesses',
+    features: [
+      '10,000 contacts, 10 chatbot widgets',
+      '3 phone numbers, 100 social posts/mo',
+      'Unlimited email sequences',
+      '10,000 emails/mo, 500 AI images/mo',
+      'Priority support',
+    ],
+  },
+  LARGE: {
+    priceEnv: 'STRIPE_PRICE_LARGE',
+    name: 'Embedo Large',
+    description: 'Enterprise-grade with unlimited everything',
+    features: [
+      'Unlimited contacts, widgets & phone numbers',
+      'Unlimited emails, images & social posts',
+      'White-label branding',
+      'Dedicated account manager',
+      'SLA guarantee',
+    ],
+  },
+};
+
 function getPriceId(tier: string): string | null {
-  const map: Record<string, string | undefined> = {
-    SOLO: process.env['STRIPE_PRICE_SOLO'],
-    SMALL: process.env['STRIPE_PRICE_SMALL'],
-    MEDIUM: process.env['STRIPE_PRICE_MEDIUM'],
-    LARGE: process.env['STRIPE_PRICE_LARGE'],
-  };
-  return map[tier] ?? null;
+  const config = TIER_CONFIG[tier];
+  if (!config) return null;
+  return process.env[config.priceEnv] ?? null;
 }
 
 export async function billingRoutes(app: FastifyInstance): Promise<void> {
@@ -92,6 +146,11 @@ export async function billingRoutes(app: FastifyInstance): Promise<void> {
       });
     }
 
+    const tierConfig = TIER_CONFIG[tier.toUpperCase()];
+    const featuresText = tierConfig
+      ? tierConfig.features.join(' · ')
+      : undefined;
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
@@ -101,7 +160,17 @@ export async function billingRoutes(app: FastifyInstance): Promise<void> {
       subscription_data: {
         trial_period_days: 14,
         metadata: { businessId, tier: tier.toUpperCase() },
+        description: featuresText,
       },
+      custom_text: {
+        submit: {
+          message: 'Your 14-day free trial starts now. You won\'t be charged until the trial ends, and you can cancel anytime.',
+        },
+      },
+      consent_collection: {
+        terms_of_service: 'none',
+      },
+      tax_id_collection: { enabled: true },
       metadata: { businessId, tier: tier.toUpperCase() },
     });
 
