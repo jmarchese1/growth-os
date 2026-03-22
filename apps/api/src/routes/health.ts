@@ -12,4 +12,14 @@ export async function healthRoutes(app: FastifyInstance): Promise<void> {
     // Could check DB connectivity here
     return reply.code(200).send({ ready: true });
   });
+
+  // Temporary debug: check which Stripe env vars are set (no values exposed)
+  app.get('/health/stripe', async () => ({
+    STRIPE_SECRET_KEY: !!process.env['STRIPE_SECRET_KEY'],
+    STRIPE_WEBHOOK_SECRET: !!process.env['STRIPE_WEBHOOK_SECRET'],
+    STRIPE_PRICE_SOLO: !!process.env['STRIPE_PRICE_SOLO'],
+    STRIPE_PRICE_SMALL: !!process.env['STRIPE_PRICE_SMALL'],
+    STRIPE_PRICE_MEDIUM: !!process.env['STRIPE_PRICE_MEDIUM'],
+    STRIPE_PRICE_LARGE: !!process.env['STRIPE_PRICE_LARGE'],
+  }));
 }
