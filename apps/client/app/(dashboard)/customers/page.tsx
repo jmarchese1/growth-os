@@ -156,13 +156,12 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
   onDone: () => void;
   onClose: () => void;
 }) {
-  type TargetMode = 'selected' | 'all' | 'status' | 'tag';
   type CampaignMode = 'single' | 'sequence';
 
   const [campaignMode, setCampaignMode] = useState<CampaignMode>('single');
-  const [targetMode, setTargetMode] = useState<TargetMode>(selectedIds.size > 0 ? 'selected' : 'all');
-  const [targetStatus, setTargetStatus] = useState('CUSTOMER');
-  const [targetTag, setTargetTag] = useState('');
+  const [sendToAll, setSendToAll] = useState(selectedIds.size === 0);
+  const [pickedIds, setPickedIds] = useState<Set<string>>(new Set(selectedIds));
+  const [recipientSearch, setRecipientSearch] = useState('');
 
   // Single email state
   const [subject, setSubject] = useState('');
@@ -186,20 +185,25 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
   // Collect all unique tags
   const allTags = Array.from(new Set(allContacts.flatMap((c) => c.tags))).sort();
 
-  function getRecipients(): Contact[] {
-    switch (targetMode) {
-      case 'selected':
-        return contacts.filter((c) => selectedIds.has(c.id) && c.email);
-      case 'all':
-        return allContacts.filter((c) => c.email);
-      case 'status':
-        return allContacts.filter((c) => c.status === targetStatus && c.email);
-      case 'tag':
-        return allContacts.filter((c) => targetTag && c.tags.includes(targetTag) && c.email);
-    }
-  }
+  const recipients = sendToAll
+    ? allContacts.filter((c) => c.email)
+    : allContacts.filter((c) => pickedIds.has(c.id) && c.email);
 
-  const recipients = getRecipients();
+  const filteredContacts = recipientSearch
+    ? allContacts.filter((c) => {
+        const q = recipientSearch.toLowerCase();
+        return (c.firstName?.toLowerCase().includes(q) || c.lastName?.toLowerCase().includes(q) || c.email?.toLowerCase().includes(q));
+      })
+    : allContacts;
+
+  function togglePick(id: string) {
+    setPickedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   // Step management
   function addStep() {
@@ -407,50 +411,54 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
         {/* ─── Recipients ──────────────────────────────────────────── */}
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-2">Recipients</label>
-          <div className="grid grid-cols-2 gap-2">
-            {selectedIds.size > 0 && (
-              <button onClick={() => setTargetMode('selected')}
-                className={`p-3 rounded-xl border text-left transition-colors ${targetMode === 'selected' ? 'border-violet-300 bg-violet-50' : 'border-slate-200 hover:bg-slate-50'}`}>
-                <p className={`text-xs font-medium ${targetMode === 'selected' ? 'text-violet-700' : 'text-slate-600'}`}>Selected</p>
-                <p className="text-lg font-bold text-slate-900 mt-0.5">{contacts.filter((c) => selectedIds.has(c.id) && c.email).length}</p>
-                <p className="text-[10px] text-slate-400">manually selected</p>
-              </button>
-            )}
-            <button onClick={() => setTargetMode('all')}
-              className={`p-3 rounded-xl border text-left transition-colors ${targetMode === 'all' ? 'border-violet-300 bg-violet-50' : 'border-slate-200 hover:bg-slate-50'}`}>
-              <p className={`text-xs font-medium ${targetMode === 'all' ? 'text-violet-700' : 'text-slate-600'}`}>All with email</p>
+
+          {/* Toggle: All vs Select individually */}
+          <div className="flex gap-2 mb-3">
+            <button onClick={() => setSendToAll(true)}
+              className={`flex-1 p-3 rounded-xl border text-left transition-colors ${sendToAll ? 'border-violet-300 bg-violet-50' : 'border-slate-200 hover:bg-slate-50'}`}>
+              <p className={`text-xs font-medium ${sendToAll ? 'text-violet-700' : 'text-slate-600'}`}>All with email</p>
               <p className="text-lg font-bold text-slate-900 mt-0.5">{allContacts.filter((c) => c.email).length}</p>
-              <p className="text-[10px] text-slate-400">every contact</p>
             </button>
-            <button onClick={() => setTargetMode('status')}
-              className={`p-3 rounded-xl border text-left transition-colors ${targetMode === 'status' ? 'border-violet-300 bg-violet-50' : 'border-slate-200 hover:bg-slate-50'}`}>
-              <p className={`text-xs font-medium ${targetMode === 'status' ? 'text-violet-700' : 'text-slate-600'}`}>By status</p>
-              <p className="text-lg font-bold text-slate-900 mt-0.5">{allContacts.filter((c) => c.status === targetStatus && c.email).length}</p>
-              <p className="text-[10px] text-slate-400">filter by status</p>
+            <button onClick={() => setSendToAll(false)}
+              className={`flex-1 p-3 rounded-xl border text-left transition-colors ${!sendToAll ? 'border-violet-300 bg-violet-50' : 'border-slate-200 hover:bg-slate-50'}`}>
+              <p className={`text-xs font-medium ${!sendToAll ? 'text-violet-700' : 'text-slate-600'}`}>Select individually</p>
+              <p className="text-lg font-bold text-slate-900 mt-0.5">{pickedIds.size > 0 ? allContacts.filter((c) => pickedIds.has(c.id) && c.email).length : '—'}</p>
             </button>
-            {allTags.length > 0 && (
-              <button onClick={() => setTargetMode('tag')}
-                className={`p-3 rounded-xl border text-left transition-colors ${targetMode === 'tag' ? 'border-violet-300 bg-violet-50' : 'border-slate-200 hover:bg-slate-50'}`}>
-                <p className={`text-xs font-medium ${targetMode === 'tag' ? 'text-violet-700' : 'text-slate-600'}`}>By tag</p>
-                <p className="text-lg font-bold text-slate-900 mt-0.5">{targetTag ? allContacts.filter((c) => c.tags.includes(targetTag) && c.email).length : '—'}</p>
-                <p className="text-[10px] text-slate-400">filter by tag</p>
-              </button>
-            )}
           </div>
 
-          {targetMode === 'status' && (
-            <select value={targetStatus} onChange={(e) => setTargetStatus(e.target.value)} className={`mt-2 ${inputClass}`}>
-              <option value="LEAD">Leads</option>
-              <option value="PROSPECT">Prospects</option>
-              <option value="CUSTOMER">Customers</option>
-              <option value="CHURNED">Churned</option>
-            </select>
-          )}
-          {targetMode === 'tag' && (
-            <select value={targetTag} onChange={(e) => setTargetTag(e.target.value)} className={`mt-2 ${inputClass}`}>
-              <option value="">Select a tag...</option>
-              {allTags.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
+          {/* Individual picker */}
+          {!sendToAll && (
+            <div className="border border-slate-200 rounded-xl overflow-hidden">
+              <div className="px-3 py-2 bg-slate-50 border-b border-slate-100">
+                <input value={recipientSearch} onChange={(e) => setRecipientSearch(e.target.value)} placeholder="Search contacts..."
+                  className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-violet-400/30 bg-white" />
+              </div>
+              <div className="max-h-[180px] overflow-y-auto divide-y divide-slate-50">
+                {filteredContacts.map((c) => (
+                  <label key={c.id} className={`flex items-center gap-2.5 px-3 py-2 hover:bg-slate-50 cursor-pointer transition-colors ${!c.email ? 'opacity-40' : ''}`}>
+                    <input type="checkbox" checked={pickedIds.has(c.id)} onChange={() => togglePick(c.id)} disabled={!c.email}
+                      className="w-3.5 h-3.5 rounded border-slate-300 text-violet-600 focus:ring-violet-500 shrink-0" />
+                    <div className="w-6 h-6 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 text-[9px] font-bold shrink-0">
+                      {(c.firstName?.[0] ?? c.email?.[0] ?? '?').toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-slate-700 truncate">{[c.firstName, c.lastName].filter(Boolean).join(' ') || 'Unknown'}</p>
+                      <p className="text-[10px] text-slate-400 truncate">{c.email ?? 'no email'}</p>
+                    </div>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium shrink-0 ${STATUS_LABELS[c.status]?.color ?? 'bg-slate-100 text-slate-500'}`}>{STATUS_LABELS[c.status]?.label ?? c.status}</span>
+                  </label>
+                ))}
+                {filteredContacts.length === 0 && (
+                  <div className="px-3 py-4 text-center text-xs text-slate-400">No contacts found</div>
+                )}
+              </div>
+              {pickedIds.size > 0 && (
+                <div className="px-3 py-2 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                  <span className="text-[10px] text-slate-500">{pickedIds.size} selected</span>
+                  <button onClick={() => setPickedIds(new Set())} className="text-[10px] text-violet-500 hover:text-violet-700">Clear all</button>
+                </div>
+              )}
+            </div>
           )}
 
           <p className="text-xs text-slate-500 mt-2">
@@ -643,6 +651,8 @@ export default function CustomersPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [sourceFilter, setSourceFilter] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [sequences, setSequences] = useState<{ id: string; name: string; stepCount: number; active: boolean; triggerLabel: string; createdAt: string }[]>([]);
+  const [seqLoading, setSeqLoading] = useState(false);
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pageSize = 20;
 
@@ -673,9 +683,20 @@ export default function CustomersPage() {
     }
   }, [business?.id]);
 
+  const fetchSequences = useCallback(async () => {
+    if (!business?.id) return;
+    setSeqLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/businesses/${business.id}/sequences?type=EMAIL`);
+      const data = (await res.json()) as { success: boolean; sequences?: typeof sequences };
+      if (data.sequences) setSequences(data.sequences);
+    } catch { /* ignore */ } finally { setSeqLoading(false); }
+  }, [business?.id]);
+
   useEffect(() => {
     fetchContacts(search, statusFilter, sourceFilter, page);
-  }, [fetchContacts, statusFilter, sourceFilter, page]);
+    fetchSequences();
+  }, [fetchContacts, fetchSequences, statusFilter, sourceFilter, page]);
 
   function handleSearchChange(val: string) {
     setSearch(val);
@@ -738,6 +759,20 @@ export default function CustomersPage() {
 
   const selectedWithEmail = contacts.filter((c) => selectedIds.has(c.id) && c.email).length;
 
+  async function handleToggleSeq(seq: typeof sequences[0]) {
+    await fetch(`${API_BASE}/sequences/${seq.id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'EMAIL', active: !seq.active }),
+    });
+    await fetchSequences();
+  }
+
+  async function handleDeleteSeq(seq: typeof sequences[0]) {
+    if (!confirm(`Delete "${seq.name}"?`)) return;
+    await fetch(`${API_BASE}/sequences/${seq.id}?type=EMAIL`, { method: 'DELETE' });
+    await fetchSequences();
+  }
+
   return (
     <div className="p-8 animate-fade-up">
       {showAdd && business && (
@@ -753,7 +788,7 @@ export default function CustomersPage() {
           contacts={contacts}
           selectedIds={selectedIds}
           allContacts={contacts}
-          onDone={() => { setSelectedIds(new Set()); void fetchContacts(search, statusFilter, sourceFilter, page); }}
+          onDone={() => { setSelectedIds(new Set()); void fetchContacts(search, statusFilter, sourceFilter, page); void fetchSequences(); }}
           onClose={() => setShowCampaign(false)}
         />
       )}
@@ -830,6 +865,51 @@ export default function CustomersPage() {
           </div>
         </div>
       </div>
+
+      {/* ─── Active Campaigns ─────────────────────────────────────────── */}
+      {(sequences.length > 0 || seqLoading) && (
+        <div className="bg-white border border-slate-200 rounded-xl p-5 mb-8">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-700">Active Campaigns</h3>
+              <p className="text-[10px] text-slate-400 mt-0.5">Email sequences running across your contacts</p>
+            </div>
+            <span className="text-xs text-slate-400">{sequences.filter((s) => s.active).length} active</span>
+          </div>
+
+          {seqLoading ? (
+            <div className="flex justify-center py-4"><div className="w-4 h-4 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" /></div>
+          ) : (
+            <div className="space-y-2">
+              {sequences.map((seq) => (
+                <div key={seq.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition-colors">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-violet-100 text-violet-600">
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-slate-800 truncate">{seq.name}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[10px] text-slate-400">{seq.stepCount} step{seq.stepCount !== 1 ? 's' : ''}</span>
+                        <span className="text-[10px] text-slate-400">{seq.triggerLabel}</span>
+                        <span className="text-[10px] text-slate-400">{new Date(seq.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button onClick={() => void handleToggleSeq(seq)}
+                      className={`px-2.5 py-1 text-[10px] font-medium rounded-lg transition-colors ${seq.active ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
+                      {seq.active ? 'Active' : 'Paused'}
+                    </button>
+                    <button onClick={() => void handleDeleteSeq(seq)}
+                      className="px-2 py-1 text-[10px] font-medium text-red-400 hover:text-red-600 rounded-lg hover:bg-red-50">Delete</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ─── Bulk action bar ──────────────────────────────────────────── */}
       {selectedIds.size > 0 && (
