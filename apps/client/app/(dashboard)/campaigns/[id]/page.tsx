@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { EmailStylePicker } from '@/components/ui/email-style-picker';
 import { getStyleById } from '@/lib/email-styles';
 import type { EmailStyleOptions } from '@/lib/email-styles';
+import { useBusiness } from '../../../../components/auth/business-provider';
 
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 
@@ -48,6 +49,7 @@ const STATUS_TARGET_OPTIONS = [
 export default function CampaignDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
+  const { business } = useBusiness();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -240,6 +242,8 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
                 onStyleChange={setSelectedStyle}
                 options={styleOptions}
                 onOptionsChange={setStyleOptions}
+                businessId={business?.id}
+                onInsertHtml={(html) => setEditBody((prev) => prev + html)}
               />
               <div>
                 <label className="text-xs text-slate-500 font-medium">Subject line</label>

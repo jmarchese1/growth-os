@@ -2,9 +2,10 @@
 // Color and logo are configurable per-business — not hardcoded
 
 export interface EmailStyleOptions {
-  color?: string;      // hex color, e.g. '#4f46e5'
-  logoUrl?: string;    // optional logo image URL
+  color?: string;
+  logoUrl?: string;
   businessName?: string;
+  font?: string;
 }
 
 export interface EmailStyle {

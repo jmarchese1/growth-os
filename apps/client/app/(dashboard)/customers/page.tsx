@@ -476,6 +476,14 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
           onStyleChange={setSelectedStyle}
           options={styleOptions}
           onOptionsChange={setStyleOptions}
+          businessId={businessId}
+          onInsertHtml={(html) => {
+            if (campaignMode === 'single') {
+              setEmailBody((prev) => prev + html);
+            } else if (steps[activeStep]) {
+              updateStep(activeStep, 'body', (steps[activeStep]?.body ?? '') + html);
+            }
+          }}
         />
 
         {/* ─── Single Email Content ────────────────────────────────── */}

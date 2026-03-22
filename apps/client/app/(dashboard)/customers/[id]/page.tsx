@@ -195,6 +195,8 @@ function ComposeEmailModal({ contact, onDone, onClose }: { contact: ContactDetai
           onStyleChange={setSelectedStyle}
           options={styleOptions}
           onOptionsChange={setStyleOptions}
+          businessId={contact.businessId}
+          onInsertHtml={(html) => setEmailBody((prev) => prev + html)}
         />
         <div>
           <label className="block text-xs font-medium text-slate-500 mb-1">Subject</label>
