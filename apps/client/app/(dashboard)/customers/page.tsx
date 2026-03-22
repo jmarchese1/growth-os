@@ -147,7 +147,15 @@ function AddContactModal({ businessId, onDone, onClose }: { businessId: string; 
 
 /* ─── Campaign Email Modal ──────────────────────────────────────────────── */
 
-interface EmailStep { stepNumber: number; delayHours: number; subject: string; body: string; }
+interface EmailStep {
+  stepNumber: number;
+  delayHours: number;
+  subject: string;
+  body: string;
+  styleId: string;
+  styleOptions: EmailStyleOptions;
+  attachments: EmailAttachment[];
+}
 
 function delayLabel(h: number) { if (h === 0) return 'Immediately'; if (h < 24) return `${h}h later`; const d = Math.round(h / 24); return `${d} day${d > 1 ? 's' : ''} later`; }
 
@@ -173,11 +181,14 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
 
   // Sequence state
   const [seqName, setSeqName] = useState('');
-  const [steps, setSteps] = useState<EmailStep[]>([{ stepNumber: 1, delayHours: 0, subject: '', body: '' }]);
+  const defaultStepStyle = (): Pick<EmailStep, 'styleId' | 'styleOptions' | 'attachments'> => ({
+    styleId: 'clean', styleOptions: { color: '#7c3aed', businessName: biz?.name }, attachments: [],
+  });
+  const [steps, setSteps] = useState<EmailStep[]>([{ stepNumber: 1, delayHours: 0, subject: '', body: '', ...defaultStepStyle() }]);
   const [activeStep, setActiveStep] = useState(0);
 
-  // Email style
-  const [selectedStyle, setSelectedStyle] = useState('classic');
+  // Email style (used for single email mode only)
+  const [selectedStyle, setSelectedStyle] = useState('clean');
   const [styleOptions, setStyleOptions] = useState<EmailStyleOptions>({ color: '#7c3aed' });
   const [attachments, setAttachments] = useState<EmailAttachment[]>([]);
 
@@ -217,7 +228,7 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
   // Step management
   function addStep() {
     const lastDelay = steps.length > 0 ? steps[steps.length - 1]!.delayHours : 0;
-    setSteps([...steps, { stepNumber: steps.length + 1, delayHours: lastDelay + 48, subject: '', body: '' }]);
+    setSteps([...steps, { stepNumber: steps.length + 1, delayHours: lastDelay + 48, subject: '', body: '', ...defaultStepStyle() }]);
     setActiveStep(steps.length);
   }
 
@@ -227,7 +238,7 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
     setActiveStep(Math.max(0, activeStep - 1));
   }
 
-  function updateStep(idx: number, field: keyof EmailStep, value: string | number) {
+  function updateStep(idx: number, field: keyof EmailStep, value: string | number | EmailStyleOptions | EmailAttachment[]) {
     setSteps(steps.map((s, i) => i === idx ? { ...s, [field]: value } : s));
   }
 
@@ -257,11 +268,18 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
   }
 
   function handlePreview(stepIdx?: number) {
-    const body = campaignMode === 'single' ? emailBody : (stepIdx !== undefined ? steps[stepIdx]?.body ?? '' : '');
-    if (!body) return;
-    const style = getStyleById(selectedStyle);
-    const html = style.wrap(body + buildAttachmentsHtml(attachments, styleOptions), styleOptions);
-    setPreviewHtml(html);
+    if (campaignMode === 'single') {
+      if (!emailBody) return;
+      const style = getStyleById(selectedStyle);
+      const html = style.wrap(emailBody + buildAttachmentsHtml(attachments, styleOptions), styleOptions);
+      setPreviewHtml(html);
+    } else {
+      const step = stepIdx !== undefined ? steps[stepIdx] : undefined;
+      if (!step?.body) return;
+      const style = getStyleById(step.styleId);
+      const html = style.wrap(step.body + buildAttachmentsHtml(step.attachments, step.styleOptions), step.styleOptions);
+      setPreviewHtml(html);
+    }
     setShowPreview(true);
   }
 
@@ -328,8 +346,8 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
       setProgress({ current: 0, total: recipients.length });
 
       const step1 = steps[0]!;
-      const step1Style = getStyleById(selectedStyle);
-      const step1Styled = step1Style.wrap(step1.body + buildAttachmentsHtml(attachments, styleOptions), styleOptions);
+      const step1Style = getStyleById(step1.styleId);
+      const step1Styled = step1Style.wrap(step1.body + buildAttachmentsHtml(step1.attachments, step1.styleOptions), step1.styleOptions);
       for (const contact of recipients) {
         try {
           const res = await fetch(`${API_BASE}/contacts/${contact.id}/send-email`, {
@@ -474,21 +492,20 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
           </p>
         </div>
 
-        {/* ─── Email Style (shared by both modes) ────────────────── */}
-        <EmailStylePicker
-          selectedStyle={selectedStyle}
-          onStyleChange={setSelectedStyle}
-          options={styleOptions}
-          onOptionsChange={setStyleOptions}
-          businessId={businessId}
-          businessName={biz?.name}
-          attachments={attachments}
-          onAttachmentsChange={setAttachments}
-        />
-
         {/* ─── Single Email Content ────────────────────────────────── */}
         {campaignMode === 'single' && (
           <>
+            {/* Email Style — single mode */}
+            <EmailStylePicker
+              selectedStyle={selectedStyle}
+              onStyleChange={setSelectedStyle}
+              options={styleOptions}
+              onOptionsChange={setStyleOptions}
+              businessId={businessId}
+              businessName={biz?.name}
+              attachments={attachments}
+              onAttachmentsChange={setAttachments}
+            />
             <div className="bg-violet-50 border border-violet-200 rounded-xl p-3">
               <label className="block text-xs font-medium text-violet-700 mb-1.5">AI Draft</label>
               <div className="flex gap-2">
@@ -579,6 +596,17 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
                     <textarea value={steps[activeStep]!.body} onChange={(e) => updateStep(activeStep, 'body', e.target.value)} rows={5} placeholder="<p>Hi {{firstName}},</p>..." className={inputClass} />
                     <p className="text-[10px] text-slate-400 mt-1">Use {'{{firstName}}'} and {'{{business}}'} as variables</p>
                   </div>
+                  {/* Per-step style & attachments */}
+                  <EmailStylePicker
+                    selectedStyle={steps[activeStep]!.styleId}
+                    onStyleChange={(id) => updateStep(activeStep, 'styleId', id)}
+                    options={steps[activeStep]!.styleOptions}
+                    onOptionsChange={(opts) => updateStep(activeStep, 'styleOptions', opts)}
+                    businessId={businessId}
+                    businessName={biz?.name}
+                    attachments={steps[activeStep]!.attachments}
+                    onAttachmentsChange={(atts) => updateStep(activeStep, 'attachments', atts)}
+                  />
                 </div>
               )}
             </div>
