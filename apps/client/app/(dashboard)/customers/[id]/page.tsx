@@ -741,11 +741,6 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             <h2 className="text-sm font-semibold text-slate-700">Email Sequences</h2>
             <p className="text-[10px] text-slate-400 mt-0.5">Automated multi-step email campaigns to keep customers engaged</p>
           </div>
-          <button onClick={() => { setEditingSequence(null); setShowSequenceBuilder(true); }}
-            className="px-3 py-1.5 text-xs font-medium text-violet-600 bg-violet-50 border border-violet-200 rounded-lg hover:bg-violet-100 transition-colors flex items-center gap-1">
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" /></svg>
-            New Sequence
-          </button>
         </div>
 
         {sequencesLoading ? (

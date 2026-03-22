@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { STEP2_SUBJECT, STEP2_BODY, STEP3_SUBJECT, STEP3_BODY } from './templates';
+import { EMAIL_STYLES, getStyleById } from './email-styles';
 
 interface SequenceStep {
   stepNumber: number;
@@ -31,6 +32,21 @@ function applyPreviewVars(html: string) {
   return Object.entries(PREVIEW_VARS).reduce((s, [k, v]) => s.replaceAll(k, v), html);
 }
 
+/** Extract the inner content from a styled wrapper, or return as-is */
+function extractContent(html: string): string {
+  // Try to find the innermost content div — rough heuristic
+  // If it contains a signature table, strip it and the unsubscribe
+  let content = html;
+  // Remove signature block
+  content = content.replace(/<table[^>]*>[\s\S]*?<\/table>/gi, '');
+  // Remove unsubscribe
+  content = content.replace(/<p[^>]*>[\s\S]*?Unsubscribe[\s\S]*?<\/p>/gi, '');
+  // Remove outer wrappers — keep only paragraph/text content
+  const innerMatch = content.match(/<p[\s\S]*$/i);
+  if (innerMatch) content = innerMatch[0];
+  return content.trim();
+}
+
 export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, sequenceSteps, prospectorUrl }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -38,6 +54,7 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState(0);
   const [mounted, setMounted] = useState(false);
+  const [selectedStyle, setSelectedStyle] = useState('classic');
   useEffect(() => { setMounted(true); }, []);
 
   // Step 1 state
@@ -57,6 +74,22 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
   const step3Data = followUps[1];
   const [step3Subject, setStep3Subject] = useState(step3Data?.subject ?? STEP3_SUBJECT);
   const [step3Body, setStep3Body] = useState(step3Data?.bodyHtml ?? STEP3_BODY);
+
+  function applyStyle(styleId: string) {
+    setSelectedStyle(styleId);
+    const style = getStyleById(styleId);
+
+    // Re-wrap each step's content in the new style
+    const bodies = [step1Body, step2Body, step3Body];
+    const setters = [setStep1Body, setStep2Body, setStep3Body];
+
+    bodies.forEach((body, i) => {
+      const inner = extractContent(body);
+      if (inner) {
+        setters[i](style.wrap(inner, ''));
+      }
+    });
+  }
 
   async function handleSave() {
     setLoading(true);
@@ -125,7 +158,7 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
       {mounted && open && createPortal(
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <div className="relative bg-[#0f1117] border border-white/10 rounded-2xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl">
+          <div className="relative bg-[#0f1117] border border-white/10 rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl">
 
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 flex-shrink-0">
@@ -137,7 +170,7 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
                   {totalSteps === 3 && '3-email sequence — cold email + 2 follow-ups'}
                 </p>
               </div>
-              <button onClick={() => setOpen(false)} className="text-slate-500 hover:text-white transition-colors text-xl leading-none">✕</button>
+              <button onClick={() => setOpen(false)} className="text-slate-500 hover:text-white transition-colors text-xl leading-none">&times;</button>
             </div>
 
             {/* Tabs */}
@@ -164,6 +197,41 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
 
             {/* Body */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4 border-t border-white/10">
+
+              {/* Email Style Picker */}
+              <div>
+                <label className={labelCls}>Email Style</label>
+                <div className="flex gap-2">
+                  {EMAIL_STYLES.map((style) => (
+                    <button
+                      key={style.id}
+                      onClick={() => applyStyle(style.id)}
+                      className={`flex-1 group relative px-3 py-2.5 rounded-xl border text-left transition-all ${
+                        selectedStyle === style.id
+                          ? 'bg-violet-600/15 border-violet-500/40 ring-1 ring-violet-500/30'
+                          : 'bg-white/[0.03] border-white/10 hover:bg-white/[0.06] hover:border-white/20'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold ${
+                          selectedStyle === style.id
+                            ? 'bg-violet-500/25 text-violet-300'
+                            : 'bg-white/5 text-slate-500 group-hover:text-slate-400'
+                        }`}>
+                          {style.preview}
+                        </span>
+                        <div>
+                          <p className={`text-xs font-semibold ${selectedStyle === style.id ? 'text-violet-300' : 'text-slate-300'}`}>
+                            {style.name}
+                          </p>
+                          <p className="text-[10px] text-slate-600 mt-0.5 leading-tight">{style.description}</p>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div>
                 <label className={labelCls}>
                   Subject
@@ -200,7 +268,7 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
                     <iframe
                       srcDoc={applyPreviewVars(currentBodyValue)}
                       className="w-full border-0"
-                      style={{ height: '300px' }}
+                      style={{ height: '360px' }}
                       title="Email preview"
                       sandbox="allow-same-origin"
                     />
@@ -220,7 +288,7 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
                 disabled={loading}
                 className="px-5 py-2 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-500 transition-colors disabled:opacity-50"
               >
-                {loading ? 'Saving…' : 'Save All Emails'}
+                {loading ? 'Saving...' : 'Save All Emails'}
               </button>
               <button
                 onClick={() => setOpen(false)}

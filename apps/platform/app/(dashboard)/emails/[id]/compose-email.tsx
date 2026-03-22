@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { EMAIL_STYLES, getStyleById } from '../../campaigns/[id]/email-styles';
 
 export function ComposeEmail({ prospectId, prospectName, prospectEmail, prospectorUrl }: {
   prospectId: string;
@@ -13,12 +14,23 @@ export function ComposeEmail({ prospectId, prospectName, prospectEmail, prospect
   const [expanded, setExpanded] = useState(false);
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
+  const [selectedStyle, setSelectedStyle] = useState('classic');
   const [sending, setSending] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [showAiPrompt, setShowAiPrompt] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+
+  function buildHtml(text: string): string {
+    const style = getStyleById(selectedStyle);
+    const paragraphs = text
+      .split('\n')
+      .map((line) => (line.trim() === '' ? '<br>' : `<p style="margin:0 0 8px 0;font-size:15px;color:#1a1a1a;">${line}</p>`))
+      .join('\n');
+    return style.wrap(paragraphs, '');
+  }
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
@@ -28,10 +40,7 @@ export function ComposeEmail({ prospectId, prospectName, prospectEmail, prospect
     setResult(null);
 
     try {
-      const htmlBody = body
-        .split('\n')
-        .map((line) => (line.trim() === '' ? '<br>' : `<p style="margin:0 0 8px 0;font-family:sans-serif;font-size:14px;color:#333;">${line}</p>`))
-        .join('\n');
+      const htmlBody = buildHtml(body);
 
       const res = await fetch(`${prospectorUrl}/prospects/${prospectId}/compose`, {
         method: 'POST',
@@ -170,6 +179,29 @@ export function ComposeEmail({ prospectId, prospectName, prospectEmail, prospect
           )}
         </div>
 
+        {/* Email Style Picker */}
+        <div>
+          <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Email Style</p>
+          <div className="flex gap-1.5">
+            {EMAIL_STYLES.map((style) => (
+              <button
+                key={style.id}
+                type="button"
+                onClick={() => setSelectedStyle(style.id)}
+                className={`flex-1 px-2 py-2 rounded-lg border text-center transition-all ${
+                  selectedStyle === style.id
+                    ? 'bg-violet-600/15 border-violet-500/40 ring-1 ring-violet-500/30'
+                    : 'bg-white/[0.03] border-white/10 hover:bg-white/[0.06] hover:border-white/20'
+                }`}
+              >
+                <span className={`block text-[10px] font-semibold ${selectedStyle === style.id ? 'text-violet-300' : 'text-slate-400'}`}>
+                  {style.name}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* To */}
         <div className="flex items-center gap-2 text-xs">
           <span className="text-slate-500 font-medium w-12">To:</span>
@@ -198,6 +230,34 @@ export function ComposeEmail({ prospectId, prospectName, prospectEmail, prospect
           className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-violet-500 resize-y"
           required
         />
+
+        {/* Preview toggle */}
+        {body.trim() && (
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowPreview(!showPreview)}
+              className="text-xs text-violet-400 hover:text-violet-300 font-medium transition-colors flex items-center gap-1"
+            >
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+              </svg>
+              {showPreview ? 'Hide Preview' : 'Show Preview'}
+            </button>
+            {showPreview && (
+              <div className="mt-2 bg-white rounded-xl overflow-hidden border border-white/10">
+                <iframe
+                  srcDoc={buildHtml(body)}
+                  className="w-full border-0"
+                  style={{ height: '300px' }}
+                  title="Email preview"
+                  sandbox="allow-same-origin"
+                />
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex items-center justify-between">
