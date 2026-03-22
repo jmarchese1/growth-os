@@ -5,6 +5,9 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import KpiCard from '../../../components/ui/kpi-card';
 import { useBusiness } from '../../../components/auth/business-provider';
+import { EmailStylePicker } from '@/components/ui/email-style-picker';
+import { getStyleById } from '@/lib/email-styles';
+import type { EmailStyleOptions } from '@/lib/email-styles';
 
 const API_BASE = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 
@@ -172,6 +175,10 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
   const [steps, setSteps] = useState<EmailStep[]>([{ stepNumber: 1, delayHours: 0, subject: '', body: '' }]);
   const [activeStep, setActiveStep] = useState(0);
 
+  // Email style
+  const [selectedStyle, setSelectedStyle] = useState('classic');
+  const [styleOptions, setStyleOptions] = useState<EmailStyleOptions>({ color: '#7c3aed' });
+
   // Shared state
   const [generating, setGenerating] = useState<number | null>(null);
   const [sending, setSending] = useState(false);
@@ -247,19 +254,13 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
     } catch { setError('AI generation failed'); } finally { setGenerating(null); }
   }
 
-  async function handlePreview(stepIdx?: number) {
-    const subj = campaignMode === 'single' ? subject : (stepIdx !== undefined ? steps[stepIdx]?.subject ?? '' : '');
+  function handlePreview(stepIdx?: number) {
     const body = campaignMode === 'single' ? emailBody : (stepIdx !== undefined ? steps[stepIdx]?.body ?? '' : '');
     if (!body) return;
-    try {
-      const res = await fetch(`${API_BASE}/sequences/preview-email`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ businessId, subject: subj, emailBody: body, recipientName: 'John' }),
-      });
-      const data = (await res.json()) as { success: boolean; html?: string };
-      if (data.html) { setPreviewHtml(data.html); setShowPreview(true); }
-    } catch { /* ignore */ }
+    const style = getStyleById(selectedStyle);
+    const html = style.wrap(body, styleOptions);
+    setPreviewHtml(html);
+    setShowPreview(true);
   }
 
   async function handleSend() {
@@ -276,12 +277,15 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
       let skipped = 0;
       setProgress({ current: 0, total: recipients.length });
 
+      const style = getStyleById(selectedStyle);
+      const styledBody = style.wrap(emailBody, styleOptions);
+
       for (const contact of recipients) {
         try {
           const res = await fetch(`${API_BASE}/contacts/${contact.id}/send-email`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ subject, emailBody }),
+            body: JSON.stringify({ subject, emailBody: styledBody }),
           });
           const data = (await res.json()) as { success: boolean };
           if (data.success) sent++;
@@ -465,6 +469,14 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
             <span className="font-medium text-violet-600">{recipients.length}</span> recipient{recipients.length !== 1 ? 's' : ''} will receive this {campaignMode === 'sequence' ? 'sequence' : 'email'}
           </p>
         </div>
+
+        {/* ─── Email Style (shared by both modes) ────────────────── */}
+        <EmailStylePicker
+          selectedStyle={selectedStyle}
+          onStyleChange={setSelectedStyle}
+          options={styleOptions}
+          onOptionsChange={setStyleOptions}
+        />
 
         {/* ─── Single Email Content ────────────────────────────────── */}
         {campaignMode === 'single' && (
