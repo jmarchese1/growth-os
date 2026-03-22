@@ -318,6 +318,7 @@ export async function voiceAgentRoutes(app: FastifyInstance): Promise<void> {
         const available = await tc.availablePhoneNumbers('US').local.list({
           ...(body.areaCode ? { areaCode: parseInt(body.areaCode) } : {}),
           voiceEnabled: true,
+          smsEnabled: true,
           limit: 5,
         });
         if (available.length === 0) throw new ExternalApiError('Twilio', 'No available phone numbers', null);
