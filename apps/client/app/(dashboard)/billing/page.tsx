@@ -67,6 +67,7 @@ export default function BillingPage() {
   const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchSubscription = useCallback(async () => {
     if (!business?.id) return;
@@ -88,6 +89,7 @@ export default function BillingPage() {
   const handleSubscribe = async (tier: string) => {
     if (!business?.id) return;
     setActionLoading(true);
+    setError(null);
     try {
       const res = await fetch(`${API_BASE}/billing/checkout`, {
         method: 'POST',
@@ -100,11 +102,17 @@ export default function BillingPage() {
         }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? 'Failed to create checkout session');
+        return;
+      }
       if (data.url) {
         window.location.href = data.url;
+      } else {
+        setError('No checkout URL returned from Stripe');
       }
-    } catch {
-      // handle error
+    } catch (err) {
+      setError(`Could not reach billing API: ${err instanceof Error ? err.message : 'Network error'}`);
     } finally {
       setActionLoading(false);
     }
@@ -113,6 +121,7 @@ export default function BillingPage() {
   const handleManage = async () => {
     if (!business?.id) return;
     setActionLoading(true);
+    setError(null);
     try {
       const res = await fetch(`${API_BASE}/billing/portal`, {
         method: 'POST',
@@ -123,11 +132,15 @@ export default function BillingPage() {
         }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? 'Failed to open billing portal');
+        return;
+      }
       if (data.url) {
         window.location.href = data.url;
       }
-    } catch {
-      // handle error
+    } catch (err) {
+      setError(`Could not reach billing API: ${err instanceof Error ? err.message : 'Network error'}`);
     } finally {
       setActionLoading(false);
     }
@@ -136,13 +149,21 @@ export default function BillingPage() {
   const handleCancel = async () => {
     if (!business?.id) return;
     setActionLoading(true);
+    setError(null);
     try {
-      await fetch(`${API_BASE}/billing/cancel`, {
+      const res = await fetch(`${API_BASE}/billing/cancel`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ businessId: business.id }),
       });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error ?? 'Failed to cancel subscription');
+        return;
+      }
       await fetchSubscription();
+    } catch (err) {
+      setError(`Could not reach billing API: ${err instanceof Error ? err.message : 'Network error'}`);
     } finally {
       setActionLoading(false);
     }
@@ -151,13 +172,21 @@ export default function BillingPage() {
   const handleResume = async () => {
     if (!business?.id) return;
     setActionLoading(true);
+    setError(null);
     try {
-      await fetch(`${API_BASE}/billing/resume`, {
+      const res = await fetch(`${API_BASE}/billing/resume`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ businessId: business.id }),
       });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error ?? 'Failed to resume subscription');
+        return;
+      }
       await fetchSubscription();
+    } catch (err) {
+      setError(`Could not reach billing API: ${err instanceof Error ? err.message : 'Network error'}`);
     } finally {
       setActionLoading(false);
     }
@@ -180,6 +209,23 @@ export default function BillingPage() {
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Billing</h1>
         <p className="text-sm text-slate-500 mt-1">Manage your subscription and billing</p>
       </div>
+
+      {/* Error banner */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+          </svg>
+          <div className="flex-1">
+            <p className="text-sm font-medium text-red-800">{error}</p>
+          </div>
+          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+              <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+            </svg>
+          </button>
+        </div>
+      )}
 
       {/* Current subscription card */}
       {subscription && (
