@@ -2,24 +2,23 @@ import type { FastifyInstance } from 'fastify';
 import Stripe from 'stripe';
 import { createLogger } from '@embedo/utils';
 import { db } from '@embedo/db';
-import { env } from '../config.js';
+
 
 const log = createLogger('api:billing');
 
 
 function getStripe(): Stripe | null {
-  const key = (env as Record<string, unknown>)['STRIPE_SECRET_KEY'] as string | undefined;
+  const key = process.env['STRIPE_SECRET_KEY'];
   if (!key) return null;
   return new Stripe(key, { apiVersion: '2026-02-25.clover' });
 }
 
 function getPriceId(tier: string): string | null {
-  const e = env as Record<string, unknown>;
   const map: Record<string, string | undefined> = {
-    SOLO: e['STRIPE_PRICE_SOLO'] as string | undefined,
-    SMALL: e['STRIPE_PRICE_SMALL'] as string | undefined,
-    MEDIUM: e['STRIPE_PRICE_MEDIUM'] as string | undefined,
-    LARGE: e['STRIPE_PRICE_LARGE'] as string | undefined,
+    SOLO: process.env['STRIPE_PRICE_SOLO'],
+    SMALL: process.env['STRIPE_PRICE_SMALL'],
+    MEDIUM: process.env['STRIPE_PRICE_MEDIUM'],
+    LARGE: process.env['STRIPE_PRICE_LARGE'],
   };
   return map[tier] ?? null;
 }

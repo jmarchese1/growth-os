@@ -2,12 +2,12 @@ import type { FastifyInstance } from 'fastify';
 import Stripe from 'stripe';
 import { createLogger } from '@embedo/utils';
 import { db } from '@embedo/db';
-import { env } from '../../config.js';
+
 
 const log = createLogger('api:stripe-webhook');
 
 function getStripe(): Stripe | null {
-  const key = (env as Record<string, unknown>)['STRIPE_SECRET_KEY'] as string | undefined;
+  const key = process.env['STRIPE_SECRET_KEY'];
   if (!key) return null;
   return new Stripe(key, { apiVersion: '2026-02-25.clover' });
 }
@@ -39,7 +39,7 @@ export async function stripeWebhookRoutes(app: FastifyInstance): Promise<void> {
 
   app.post('/webhooks/stripe', async (request, reply) => {
     const stripe = getStripe();
-    const webhookSecret = (env as Record<string, unknown>)['STRIPE_WEBHOOK_SECRET'] as string | undefined;
+    const webhookSecret = process.env['STRIPE_WEBHOOK_SECRET'];
 
     if (!stripe || !webhookSecret) {
       log.warn('Stripe not configured — ignoring webhook');
