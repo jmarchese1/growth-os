@@ -11,7 +11,6 @@ type LeadSource = 'VOICE' | 'CHATBOT' | 'SURVEY' | 'SOCIAL' | 'WEBSITE' | 'MANUA
 type ContactStatus = 'LEAD' | 'PROSPECT' | 'CUSTOMER' | 'CHURNED';
 type ActivityType = 'CALL' | 'CHAT' | 'EMAIL' | 'SMS' | 'APPOINTMENT' | 'SURVEY_RESPONSE' | 'NOTE' | 'LEAD_CREATED' | 'STATUS_CHANGE';
 type QrPurpose = 'SURVEY' | 'DISCOUNT' | 'SPIN_WHEEL' | 'SIGNUP' | 'MENU' | 'REVIEW' | 'CUSTOM';
-type SequenceType = 'EMAIL' | 'SMS';
 
 interface Activity { id: string; type: ActivityType; title: string; description: string | null; createdAt: string; }
 interface SurveyResponse { id: string; score: number | null; createdAt: string; survey: { id: string; title: string } | null; }
@@ -22,11 +21,10 @@ interface CallLog { id: string; direction: string; duration: number | null; inte
 interface SurveyOption { id: string; title: string; slug: string; }
 
 interface EmailStep { stepNumber: number; delayHours: number; subject: string; body: string; }
-interface SmsStep { stepNumber: number; delayHours: number; message: string; }
 interface Sequence {
-  id: string; name: string; type: SequenceType; trigger: string; triggerLabel: string;
+  id: string; name: string; type: 'EMAIL'; trigger: string; triggerLabel: string;
   stepCount: number; active: boolean; createdAt: string;
-  steps?: EmailStep[] | SmsStep[];
+  steps?: EmailStep[];
 }
 
 interface ContactDetail {
@@ -215,98 +213,7 @@ function ComposeEmailModal({ contact, onDone, onClose }: { contact: ContactDetai
   );
 }
 
-/* ─── Compose SMS Modal ──────────────────────────────────────────────────── */
-
-function ComposeSmsModal({ contact, onDone, onClose }: { contact: ContactDetail; onDone: () => void; onClose: () => void }) {
-  const [message, setMessage] = useState('');
-  const [sending, setSending] = useState(false);
-  const [generating, setGenerating] = useState(false);
-  const [error, setError] = useState('');
-  const [purpose, setPurpose] = useState('follow-up to keep them coming back');
-
-  async function handleAiGenerate() {
-    setGenerating(true);
-    try {
-      const res = await fetch(`${API_URL}/sequences/generate-sms`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ businessId: contact.businessId, purpose }),
-      });
-      const data = (await res.json()) as { success: boolean; message?: string };
-      if (data.message) setMessage(data.message);
-    } catch { /* ignore */ } finally { setGenerating(false); }
-  }
-
-  async function handleSend() {
-    if (!message.trim()) return;
-    setSending(true);
-    setError('');
-    try {
-      const res = await fetch(`${API_URL}/contacts/${contact.id}/send-sms`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message }),
-      });
-      const data = (await res.json()) as { success: boolean; error?: string };
-      if (!data.success) { setError(data.error ?? 'Send failed'); return; }
-      onDone();
-      onClose();
-    } catch { setError('Send failed'); } finally { setSending(false); }
-  }
-
-  return (
-    <ModalBackdrop onClose={onClose}>
-      <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-semibold text-slate-800">Send SMS</h3>
-          <p className="text-xs text-slate-400 mt-0.5">To: {contact.phone ?? 'no phone'}</p>
-        </div>
-        <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400"><svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
-      </div>
-      <div className="px-5 py-4 space-y-3">
-        <div className="bg-violet-50 border border-violet-200 rounded-xl p-3">
-          <label className="block text-xs font-medium text-violet-700 mb-1.5">AI Draft</label>
-          <div className="flex gap-2">
-            <input value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder="e.g. win-back, new special, thank you..."
-              className="flex-1 px-3 py-1.5 border border-violet-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400/40 bg-white" />
-            <button onClick={handleAiGenerate} disabled={generating}
-              className="px-3 py-1.5 bg-violet-600 text-white text-xs font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 flex items-center gap-1">
-              {generating ? <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>}
-              Generate
-            </button>
-          </div>
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Message</label>
-          <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={4} placeholder="Hey {{firstName}}! ..." className={inputClass} />
-          <div className="flex justify-between mt-1">
-            <p className="text-[10px] text-slate-400">Use {'{{firstName}}'} and {'{{business}}'} as variables</p>
-            <p className={`text-[10px] ${message.length > 160 ? 'text-amber-500' : 'text-slate-400'}`}>{message.length}/160</p>
-          </div>
-        </div>
-        {/* Phone preview */}
-        {message && (
-          <div className="bg-slate-100 rounded-2xl p-4 max-w-[260px] mx-auto">
-            <div className="bg-emerald-500 text-white text-xs rounded-2xl rounded-bl-sm px-3 py-2 leading-relaxed">
-              {message.replace(/\{\{firstName\}\}/g, contact.firstName ?? 'there').replace(/\{\{business\}\}/g, 'Your Business')}
-            </div>
-          </div>
-        )}
-        {error && <p className="text-xs text-red-500">{error}</p>}
-      </div>
-      <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex gap-2 justify-end">
-        <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700">Cancel</button>
-        <button onClick={handleSend} disabled={sending || !contact.phone || !message.trim()}
-          className="px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 flex items-center gap-2">
-          {sending && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-          {sending ? 'Sending...' : 'Send SMS'}
-        </button>
-      </div>
-    </ModalBackdrop>
-  );
-}
-
-/* ─── Sequence Builder Modal ─────────────────────────────────────────────── */
+/* ─── Sequence Builder Modal (Email only) ──────────────────────────────── */
 
 function SequenceBuilderModal({ businessId, existingSequence, onDone, onClose }: {
   businessId: string;
@@ -316,17 +223,11 @@ function SequenceBuilderModal({ businessId, existingSequence, onDone, onClose }:
 }) {
   const isEdit = !!existingSequence;
   const [name, setName] = useState(existingSequence?.name ?? '');
-  const [type, setType] = useState<SequenceType>(existingSequence?.type ?? 'EMAIL');
   const [trigger, setTrigger] = useState(existingSequence?.trigger ?? 'CUSTOM');
   const [emailSteps, setEmailSteps] = useState<EmailStep[]>(
-    isEdit && existingSequence?.type === 'EMAIL' && Array.isArray(existingSequence.steps)
+    isEdit && Array.isArray(existingSequence?.steps)
       ? existingSequence.steps as EmailStep[]
       : [{ stepNumber: 1, delayHours: 0, subject: '', body: '' }],
-  );
-  const [smsSteps, setSmsSteps] = useState<SmsStep[]>(
-    isEdit && existingSequence?.type === 'SMS' && Array.isArray(existingSequence.steps)
-      ? existingSequence.steps as SmsStep[]
-      : [{ stepNumber: 1, delayHours: 0, message: '' }],
   );
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState<number | null>(null);
@@ -335,61 +236,34 @@ function SequenceBuilderModal({ businessId, existingSequence, onDone, onClose }:
   const [error, setError] = useState('');
   const [activeStep, setActiveStep] = useState(0);
 
-  const steps = type === 'EMAIL' ? emailSteps : smsSteps;
-
-  function addEmailStep() {
+  function addStep() {
     const lastDelay = emailSteps.length > 0 ? emailSteps[emailSteps.length - 1]!.delayHours : 0;
     setEmailSteps([...emailSteps, { stepNumber: emailSteps.length + 1, delayHours: lastDelay + 48, subject: '', body: '' }]);
     setActiveStep(emailSteps.length);
   }
 
-  function addSmsStep() {
-    const lastDelay = smsSteps.length > 0 ? smsSteps[smsSteps.length - 1]!.delayHours : 0;
-    setSmsSteps([...smsSteps, { stepNumber: smsSteps.length + 1, delayHours: lastDelay + 48, message: '' }]);
-    setActiveStep(smsSteps.length);
-  }
-
   function removeStep(idx: number) {
-    if (type === 'EMAIL') {
-      const updated = emailSteps.filter((_, i) => i !== idx).map((s, i) => ({ ...s, stepNumber: i + 1 }));
-      setEmailSteps(updated);
-    } else {
-      const updated = smsSteps.filter((_, i) => i !== idx).map((s, i) => ({ ...s, stepNumber: i + 1 }));
-      setSmsSteps(updated);
-    }
+    const updated = emailSteps.filter((_, i) => i !== idx).map((s, i) => ({ ...s, stepNumber: i + 1 }));
+    setEmailSteps(updated);
     setActiveStep(Math.max(0, activeStep - 1));
   }
 
-  function updateEmailStep(idx: number, field: keyof EmailStep, value: string | number) {
+  function updateStep(idx: number, field: keyof EmailStep, value: string | number) {
     setEmailSteps(emailSteps.map((s, i) => i === idx ? { ...s, [field]: value } : s));
-  }
-
-  function updateSmsStep(idx: number, field: keyof SmsStep, value: string | number) {
-    setSmsSteps(smsSteps.map((s, i) => i === idx ? { ...s, [field]: value } : s));
   }
 
   async function handleAiGenerate(idx: number) {
     setGenerating(idx);
     try {
-      if (type === 'EMAIL') {
-        const res = await fetch(`${API_URL}/sequences/generate-email`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ businessId, purpose: name || 'customer retention', stepNumber: idx + 1 }),
-        });
-        const data = (await res.json()) as { success: boolean; subject?: string; body?: string };
-        if (data.subject && data.body) {
-          updateEmailStep(idx, 'subject', data.subject);
-          updateEmailStep(idx, 'body', data.body);
-        }
-      } else {
-        const res = await fetch(`${API_URL}/sequences/generate-sms`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ businessId, purpose: name || 'customer retention', stepNumber: idx + 1 }),
-        });
-        const data = (await res.json()) as { success: boolean; message?: string };
-        if (data.message) updateSmsStep(idx, 'message', data.message);
+      const res = await fetch(`${API_URL}/sequences/generate-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ businessId, purpose: name || 'customer retention', stepNumber: idx + 1 }),
+      });
+      const data = (await res.json()) as { success: boolean; subject?: string; body?: string };
+      if (data.subject && data.body) {
+        updateStep(idx, 'subject', data.subject);
+        updateStep(idx, 'body', data.body);
       }
     } catch { /* ignore */ } finally { setGenerating(null); }
   }
@@ -413,7 +287,6 @@ function SequenceBuilderModal({ businessId, existingSequence, onDone, onClose }:
     setSaving(true);
     setError('');
     try {
-      const seqSteps = type === 'EMAIL' ? emailSteps : smsSteps;
       const url = isEdit
         ? `${API_URL}/sequences/${existingSequence!.id}`
         : `${API_URL}/businesses/${businessId}/sequences`;
@@ -422,7 +295,7 @@ function SequenceBuilderModal({ businessId, existingSequence, onDone, onClose }:
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, type, trigger, steps: seqSteps }),
+        body: JSON.stringify({ name, type: 'EMAIL', trigger, steps: emailSteps }),
       });
       const data = (await res.json()) as { success: boolean; error?: string };
       if (!data.success) { setError(data.error ?? 'Save failed'); return; }
@@ -450,30 +323,16 @@ function SequenceBuilderModal({ businessId, existingSequence, onDone, onClose }:
   return (
     <ModalBackdrop onClose={onClose}>
       <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-800">{isEdit ? 'Edit' : 'Create'} Sequence</h3>
+        <h3 className="text-sm font-semibold text-slate-800">{isEdit ? 'Edit' : 'Create'} Email Sequence</h3>
         <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400"><svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
       </div>
       <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1">
-        {/* Sequence meta */}
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2">
             <label className="block text-xs font-medium text-slate-500 mb-1">Sequence Name</label>
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Welcome series, Win-back, Post-visit..." className={inputClass} />
           </div>
-          {!isEdit && (
-            <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">Type</label>
-              <div className="flex gap-2">
-                {(['EMAIL', 'SMS'] as const).map((t) => (
-                  <button key={t} onClick={() => setType(t)}
-                    className={`flex-1 py-2 rounded-lg border text-xs font-medium transition-colors ${type === t ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          <div className={isEdit ? 'col-span-2' : ''}>
+          <div className="col-span-2">
             <label className="block text-xs font-medium text-slate-500 mb-1">Trigger</label>
             <select value={trigger} onChange={(e) => setTrigger(e.target.value)} className={inputClass}>
               {TRIGGERS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
@@ -485,26 +344,25 @@ function SequenceBuilderModal({ businessId, existingSequence, onDone, onClose }:
         <div>
           <div className="flex items-center gap-2 mb-2">
             <label className="text-xs font-medium text-slate-500">Steps</label>
-            <button onClick={type === 'EMAIL' ? addEmailStep : addSmsStep}
+            <button onClick={addStep}
               className="px-2 py-0.5 text-[10px] font-medium text-violet-600 bg-violet-50 border border-violet-200 rounded-lg hover:bg-violet-100">+ Add Step</button>
           </div>
           <div className="flex gap-1 mb-3 overflow-x-auto">
-            {steps.map((_, idx) => (
+            {emailSteps.map((_, idx) => (
               <button key={idx} onClick={() => setActiveStep(idx)}
                 className={`px-3 py-1.5 text-xs font-medium rounded-lg shrink-0 transition-colors ${activeStep === idx ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
                 Step {idx + 1}
-                <span className="ml-1 text-[10px] opacity-70">{delayLabel((type === 'EMAIL' ? emailSteps[idx]?.delayHours : smsSteps[idx]?.delayHours) ?? 0)}</span>
+                <span className="ml-1 text-[10px] opacity-70">{delayLabel(emailSteps[idx]?.delayHours ?? 0)}</span>
               </button>
             ))}
           </div>
 
-          {/* Active step editor */}
-          {type === 'EMAIL' && emailSteps[activeStep] && (
+          {emailSteps[activeStep] && (
             <div className="border border-slate-200 rounded-xl p-3 space-y-2.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <label className="text-xs font-medium text-slate-500">Delay</label>
-                  <select value={emailSteps[activeStep]!.delayHours} onChange={(e) => updateEmailStep(activeStep, 'delayHours', Number(e.target.value))}
+                  <select value={emailSteps[activeStep]!.delayHours} onChange={(e) => updateStep(activeStep, 'delayHours', Number(e.target.value))}
                     className="px-2 py-1 border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none">
                     <option value={0}>Immediately</option>
                     <option value={1}>1 hour</option>
@@ -532,57 +390,12 @@ function SequenceBuilderModal({ businessId, existingSequence, onDone, onClose }:
               </div>
               <div>
                 <label className="block text-[10px] font-medium text-slate-400 mb-0.5">Subject</label>
-                <input value={emailSteps[activeStep]!.subject} onChange={(e) => updateEmailStep(activeStep, 'subject', e.target.value)} placeholder="Email subject..." className={inputClass} />
+                <input value={emailSteps[activeStep]!.subject} onChange={(e) => updateStep(activeStep, 'subject', e.target.value)} placeholder="Email subject..." className={inputClass} />
               </div>
               <div>
                 <label className="block text-[10px] font-medium text-slate-400 mb-0.5">Body (HTML)</label>
-                <textarea value={emailSteps[activeStep]!.body} onChange={(e) => updateEmailStep(activeStep, 'body', e.target.value)} rows={5} placeholder="<p>Hi {{firstName}},</p>..." className={inputClass} />
+                <textarea value={emailSteps[activeStep]!.body} onChange={(e) => updateStep(activeStep, 'body', e.target.value)} rows={5} placeholder="<p>Hi {{firstName}},</p>..." className={inputClass} />
               </div>
-            </div>
-          )}
-
-          {type === 'SMS' && smsSteps[activeStep] && (
-            <div className="border border-slate-200 rounded-xl p-3 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <label className="text-xs font-medium text-slate-500">Delay</label>
-                  <select value={smsSteps[activeStep]!.delayHours} onChange={(e) => updateSmsStep(activeStep, 'delayHours', Number(e.target.value))}
-                    className="px-2 py-1 border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none">
-                    <option value={0}>Immediately</option>
-                    <option value={1}>1 hour</option>
-                    <option value={4}>4 hours</option>
-                    <option value={24}>1 day</option>
-                    <option value={48}>2 days</option>
-                    <option value={72}>3 days</option>
-                    <option value={120}>5 days</option>
-                    <option value={168}>1 week</option>
-                    <option value={336}>2 weeks</option>
-                  </select>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button onClick={() => handleAiGenerate(activeStep)} disabled={generating === activeStep}
-                    className="px-2 py-1 text-[10px] font-medium text-violet-600 bg-violet-50 border border-violet-200 rounded-lg hover:bg-violet-100 flex items-center gap-1">
-                    {generating === activeStep ? <div className="w-2.5 h-2.5 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" /> : null}
-                    AI Write
-                  </button>
-                  {smsSteps.length > 1 && (
-                    <button onClick={() => removeStep(activeStep)} className="px-2 py-1 text-[10px] font-medium text-red-400 hover:text-red-600 rounded-lg hover:bg-red-50">Remove</button>
-                  )}
-                </div>
-              </div>
-              <div>
-                <label className="block text-[10px] font-medium text-slate-400 mb-0.5">Message</label>
-                <textarea value={smsSteps[activeStep]!.message} onChange={(e) => updateSmsStep(activeStep, 'message', e.target.value)} rows={3} placeholder="Hey {{firstName}}! ..." className={inputClass} />
-                <p className={`text-[10px] mt-0.5 ${(smsSteps[activeStep]?.message.length ?? 0) > 160 ? 'text-amber-500' : 'text-slate-400'}`}>{smsSteps[activeStep]?.message.length ?? 0}/160</p>
-              </div>
-              {/* SMS preview bubble */}
-              {smsSteps[activeStep]?.message && (
-                <div className="bg-slate-100 rounded-2xl p-3 max-w-[240px] mx-auto">
-                  <div className="bg-emerald-500 text-white text-[11px] rounded-2xl rounded-bl-sm px-3 py-2 leading-relaxed">
-                    {smsSteps[activeStep]!.message.replace(/\{\{firstName\}\}/g, 'John').replace(/\{\{business\}\}/g, 'Your Business')}
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>
@@ -637,7 +450,6 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
   // Outreach modals
   const [showComposeEmail, setShowComposeEmail] = useState(false);
-  const [showComposeSms, setShowComposeSms] = useState(false);
   const [showSequenceBuilder, setShowSequenceBuilder] = useState(false);
   const [editingSequence, setEditingSequence] = useState<Sequence | null>(null);
 
@@ -666,7 +478,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     if (!contact?.businessId) return;
     setSequencesLoading(true);
     try {
-      const res = await fetch(`${API_URL}/businesses/${contact.businessId}/sequences`);
+      const res = await fetch(`${API_URL}/businesses/${contact.businessId}/sequences?type=EMAIL`);
       const data = (await res.json()) as { success: boolean; sequences?: Sequence[] };
       if (data.sequences) setSequences(data.sequences);
     } catch { /* ignore */ } finally { setSequencesLoading(false); }
@@ -764,23 +576,22 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   async function handleToggleSequence(seq: Sequence) {
     await fetch(`${API_URL}/sequences/${seq.id}`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: seq.type, active: !seq.active }),
+      body: JSON.stringify({ type: 'EMAIL', active: !seq.active }),
     });
     await fetchSequences();
   }
 
   async function handleDeleteSequence(seq: Sequence) {
     if (!confirm(`Delete "${seq.name}"?`)) return;
-    await fetch(`${API_URL}/sequences/${seq.id}?type=${seq.type}`, { method: 'DELETE' });
+    await fetch(`${API_URL}/sequences/${seq.id}?type=EMAIL`, { method: 'DELETE' });
     await fetchSequences();
   }
 
   async function handleEditSequence(seq: Sequence) {
-    // Fetch full sequence with steps
     try {
-      const res = await fetch(`${API_URL}/sequences/${seq.id}?type=${seq.type}`);
+      const res = await fetch(`${API_URL}/sequences/${seq.id}?type=EMAIL`);
       const data = (await res.json()) as { success: boolean; sequence?: Sequence };
-      if (data.sequence) { setEditingSequence({ ...data.sequence, type: seq.type }); setShowSequenceBuilder(true); }
+      if (data.sequence) { setEditingSequence({ ...data.sequence, type: 'EMAIL' }); setShowSequenceBuilder(true); }
     } catch { /* ignore */ }
   }
 
@@ -833,16 +644,10 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
               </div>
               <div>
                 <label className="text-xs text-slate-500 font-medium">Send via</label>
-                <div className="mt-1 flex gap-2">
-                  {(['email', 'sms'] as const).map((ch) => (
-                    <button key={ch} onClick={() => setSurveyChannel(ch)}
-                      className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${surveyChannel === ch ? 'border-violet-500 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
-                      {ch === 'email' ? 'Email' : 'SMS'}
-                    </button>
-                  ))}
+                <div className="mt-1">
+                  <button className="w-full py-2 rounded-lg border border-violet-500 bg-violet-50 text-violet-700 text-sm font-medium">Email</button>
                 </div>
-                {surveyChannel === 'email' && !contact?.email && <p className="text-xs text-amber-600 mt-1">Contact has no email address</p>}
-                {surveyChannel === 'sms' && !contact?.phone && <p className="text-xs text-amber-600 mt-1">Contact has no phone number</p>}
+                {!contact?.email && <p className="text-xs text-amber-600 mt-1">Contact has no email address</p>}
               </div>
               {surveyError && <p className="text-sm text-red-500">{surveyError}</p>}
             </>)}
@@ -850,7 +655,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           {!surveySuccess && (
             <div className="px-5 py-3 bg-slate-50 border-t flex gap-3">
               <button onClick={() => setShowSurvey(false)} className="flex-1 px-4 py-2 rounded-xl border border-slate-200 text-sm text-slate-600 hover:bg-slate-50">Cancel</button>
-              <button onClick={() => void handleSendSurvey()} disabled={surveySending || surveys.length === 0 || (surveyChannel === 'email' && !contact?.email) || (surveyChannel === 'sms' && !contact?.phone)}
+              <button onClick={() => void handleSendSurvey()} disabled={surveySending || surveys.length === 0 || !contact?.email}
                 className="flex-1 px-4 py-2 rounded-xl bg-violet-600 text-white text-sm font-medium hover:bg-violet-700 disabled:opacity-60">{surveySending ? 'Sending...' : 'Send Survey'}</button>
             </div>
           )}
@@ -858,7 +663,6 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       )}
 
       {showComposeEmail && contact && <ComposeEmailModal contact={contact} onDone={refreshContact} onClose={() => setShowComposeEmail(false)} />}
-      {showComposeSms && contact && <ComposeSmsModal contact={contact} onDone={refreshContact} onClose={() => setShowComposeSms(false)} />}
       {showSequenceBuilder && contact && (
         <SequenceBuilderModal businessId={contact.businessId} existingSequence={editingSequence} onDone={fetchSequences} onClose={() => { setShowSequenceBuilder(false); setEditingSequence(null); }} />
       )}
@@ -890,7 +694,6 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs text-slate-400">Added {formatDate(contact.createdAt)}</span>
               <button onClick={() => setShowComposeEmail(true)} disabled={!contact.email} className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors">Send Email</button>
-              <button onClick={() => setShowComposeSms(true)} disabled={!contact.phone} className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors">Send SMS</button>
               <button onClick={openSurveyModal} className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">Send Survey</button>
               <button onClick={() => setShowEdit(true)} className="px-3 py-1.5 rounded-lg bg-violet-600 text-white text-xs font-medium hover:bg-violet-700 transition-colors">Edit</button>
             </div>
@@ -931,12 +734,12 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         ))}
       </div>
 
-      {/* ─── Sequences & Outreach ─────────────────────────────────────────────── */}
+      {/* ─── Email Sequences ─────────────────────────────────────────────── */}
       <div className="bg-white rounded-2xl border border-slate-200 p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-sm font-semibold text-slate-700">Email & SMS Sequences</h2>
-            <p className="text-[10px] text-slate-400 mt-0.5">Automated multi-step outreach to keep customers engaged</p>
+            <h2 className="text-sm font-semibold text-slate-700">Email Sequences</h2>
+            <p className="text-[10px] text-slate-400 mt-0.5">Automated multi-step email campaigns to keep customers engaged</p>
           </div>
           <button onClick={() => { setEditingSequence(null); setShowSequenceBuilder(true); }}
             className="px-3 py-1.5 text-xs font-medium text-violet-600 bg-violet-50 border border-violet-200 rounded-lg hover:bg-violet-100 transition-colors flex items-center gap-1">
@@ -950,20 +753,19 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         ) : sequences.length === 0 ? (
           <div className="text-center py-6">
             <p className="text-sm text-slate-400 mb-1">No sequences yet</p>
-            <p className="text-xs text-slate-400">Create automated email or SMS sequences to re-engage customers</p>
+            <p className="text-xs text-slate-400">Create automated email sequences to re-engage customers</p>
           </div>
         ) : (
           <div className="space-y-2">
             {sequences.map((seq) => (
               <div key={seq.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition-colors">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${seq.type === 'EMAIL' ? 'bg-violet-100 text-violet-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                    {seq.type === 'EMAIL' ? '✉️' : '📱'}
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold bg-violet-100 text-violet-600">
+                    ✉️
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-slate-800 truncate">{seq.name}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${seq.type === 'EMAIL' ? 'bg-violet-50 text-violet-600' : 'bg-emerald-50 text-emerald-600'}`}>{seq.type}</span>
                       <span className="text-[10px] text-slate-400">{seq.stepCount} step{seq.stepCount !== 1 ? 's' : ''}</span>
                       <span className="text-[10px] text-slate-400">{seq.triggerLabel}</span>
                     </div>
