@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation';
 import KpiCard from '../../../components/ui/kpi-card';
 import { useBusiness } from '../../../components/auth/business-provider';
 import { EmailStylePicker } from '@/components/ui/email-style-picker';
-import { getStyleById } from '@/lib/email-styles';
-import type { EmailStyleOptions } from '@/lib/email-styles';
+import { getStyleById, buildAttachmentsHtml } from '@/lib/email-styles';
+import type { EmailStyleOptions, EmailAttachment } from '@/lib/email-styles';
 
 const API_BASE = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 
@@ -178,6 +178,7 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
   // Email style
   const [selectedStyle, setSelectedStyle] = useState('classic');
   const [styleOptions, setStyleOptions] = useState<EmailStyleOptions>({ color: '#7c3aed' });
+  const [attachments, setAttachments] = useState<EmailAttachment[]>([]);
 
   // Shared state
   const [generating, setGenerating] = useState<number | null>(null);
@@ -258,7 +259,7 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
     const body = campaignMode === 'single' ? emailBody : (stepIdx !== undefined ? steps[stepIdx]?.body ?? '' : '');
     if (!body) return;
     const style = getStyleById(selectedStyle);
-    const html = style.wrap(body, styleOptions);
+    const html = style.wrap(body + buildAttachmentsHtml(attachments, styleOptions), styleOptions);
     setPreviewHtml(html);
     setShowPreview(true);
   }
@@ -278,7 +279,7 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
       setProgress({ current: 0, total: recipients.length });
 
       const style = getStyleById(selectedStyle);
-      const styledBody = style.wrap(emailBody, styleOptions);
+      const styledBody = style.wrap(emailBody + buildAttachmentsHtml(attachments, styleOptions), styleOptions);
 
       for (const contact of recipients) {
         try {
@@ -326,12 +327,14 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
       setProgress({ current: 0, total: recipients.length });
 
       const step1 = steps[0]!;
+      const step1Style = getStyleById(selectedStyle);
+      const step1Styled = step1Style.wrap(step1.body + buildAttachmentsHtml(attachments, styleOptions), styleOptions);
       for (const contact of recipients) {
         try {
           const res = await fetch(`${API_BASE}/contacts/${contact.id}/send-email`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ subject: step1.subject, emailBody: step1.body }),
+            body: JSON.stringify({ subject: step1.subject, emailBody: step1Styled }),
           });
           const data = (await res.json()) as { success: boolean };
           if (data.success) sent++;
@@ -477,13 +480,8 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
           options={styleOptions}
           onOptionsChange={setStyleOptions}
           businessId={businessId}
-          onInsertHtml={(html) => {
-            if (campaignMode === 'single') {
-              setEmailBody((prev) => prev + html);
-            } else if (steps[activeStep]) {
-              updateStep(activeStep, 'body', (steps[activeStep]?.body ?? '') + html);
-            }
-          }}
+          attachments={attachments}
+          onAttachmentsChange={setAttachments}
         />
 
         {/* ─── Single Email Content ────────────────────────────────── */}

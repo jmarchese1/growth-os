@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { EmailStylePicker } from '@/components/ui/email-style-picker';
-import { getStyleById } from '@/lib/email-styles';
-import type { EmailStyleOptions } from '@/lib/email-styles';
+import { getStyleById, buildAttachmentsHtml } from '@/lib/email-styles';
+import type { EmailStyleOptions, EmailAttachment } from '@/lib/email-styles';
 import { useBusiness } from '../../../../components/auth/business-provider';
 
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
@@ -65,6 +65,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
   // Email style
   const [selectedStyle, setSelectedStyle] = useState('classic');
   const [styleOptions, setStyleOptions] = useState<EmailStyleOptions>({ color: '#7c3aed' });
+  const [attachments, setAttachments] = useState<EmailAttachment[]>([]);
 
   // Send targeting
   const [statusFilter, setStatusFilter] = useState('');
@@ -110,7 +111,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
     setSaving(true);
     setSaveError('');
     try {
-      const styledBody = campaign?.type === 'EMAIL' ? getStyleById(selectedStyle).wrap(editBody, styleOptions) : editBody;
+      const styledBody = campaign?.type === 'EMAIL' ? getStyleById(selectedStyle).wrap(editBody + buildAttachmentsHtml(attachments, styleOptions), styleOptions) : editBody;
       const res = await fetch(`${API_URL}/campaigns/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -243,7 +244,8 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
                 options={styleOptions}
                 onOptionsChange={setStyleOptions}
                 businessId={business?.id}
-                onInsertHtml={(html) => setEditBody((prev) => prev + html)}
+                attachments={attachments}
+                onAttachmentsChange={setAttachments}
               />
               <div>
                 <label className="text-xs text-slate-500 font-medium">Subject line</label>
@@ -261,7 +263,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
               <label className="text-xs text-slate-500 font-medium">Preview</label>
               <div className="mt-1 bg-white border border-slate-200 rounded-xl overflow-hidden">
                 <iframe
-                  srcDoc={getStyleById(selectedStyle).wrap(editBody, styleOptions)}
+                  srcDoc={getStyleById(selectedStyle).wrap(editBody + buildAttachmentsHtml(attachments, styleOptions), styleOptions)}
                   className="w-full border-0"
                   style={{ height: '300px' }}
                   title="Email preview"

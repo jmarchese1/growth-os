@@ -142,6 +142,33 @@ export const FONT_OPTIONS = [
   { id: 'courier', label: 'Courier', value: "'Courier New', Courier, monospace" },
 ];
 
+/** Tracked attachment that can be added/removed from an email */
+export interface EmailAttachment {
+  id: string;
+  type: 'spin_wheel' | 'survey' | 'discount' | 'image' | 'cta';
+  label: string;
+  url: string;
+  buttonText?: string;
+}
+
+/** Build combined HTML for all attachments */
+export function buildAttachmentsHtml(attachments: EmailAttachment[], opts: EmailStyleOptions): string {
+  if (attachments.length === 0) return '';
+  return attachments.map((att) => {
+    if (att.type === 'image') return buildImageHtml(att.url);
+    if (att.type === 'cta') return buildCtaHtml(att.label, att.url, opts);
+    return buildEmbedHtml({ type: att.type, label: att.label, url: att.url, buttonText: att.buttonText ?? 'Click Here' }, opts);
+  }).join('\n');
+}
+
+/** Generate a CTA button block */
+export function buildCtaHtml(text: string, url: string, opts: EmailStyleOptions): string {
+  const c = opts.color ?? '#4f46e5';
+  return `<div style="margin: 24px 0; text-align: center;">
+  <a href="${url}" style="display: inline-block; background: ${c}; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 10px; font-size: 15px; font-weight: 700; font-family: ${ff(opts)};">${text}</a>
+</div>`;
+}
+
 /** Generate an embed block for a QR code / spin wheel / survey / discount */
 export interface EmbedBlock {
   type: 'spin_wheel' | 'survey' | 'discount';

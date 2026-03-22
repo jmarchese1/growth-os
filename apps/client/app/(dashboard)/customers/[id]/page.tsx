@@ -4,8 +4,8 @@ import { useState, useEffect, use, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { EmailStylePicker } from '@/components/ui/email-style-picker';
-import { getStyleById } from '@/lib/email-styles';
-import type { EmailStyleOptions } from '@/lib/email-styles';
+import { getStyleById, buildAttachmentsHtml } from '@/lib/email-styles';
+import type { EmailStyleOptions, EmailAttachment } from '@/lib/email-styles';
 
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 const CLIENT_URL = typeof window !== 'undefined' ? window.location.origin : 'https://app.embedo.io';
@@ -103,6 +103,7 @@ function ComposeEmailModal({ contact, onDone, onClose }: { contact: ContactDetai
   const [purpose, setPurpose] = useState('follow-up to keep them coming back');
   const [selectedStyle, setSelectedStyle] = useState('classic');
   const [styleOptions, setStyleOptions] = useState<EmailStyleOptions>({ color: '#7c3aed' });
+  const [attachments, setAttachments] = useState<EmailAttachment[]>([]);
 
   async function handleAiGenerate() {
     setGenerating(true);
@@ -125,7 +126,7 @@ function ComposeEmailModal({ contact, onDone, onClose }: { contact: ContactDetai
 
   function handlePreview() {
     const style = getStyleById(selectedStyle);
-    const html = style.wrap(emailBody, styleOptions);
+    const html = style.wrap(emailBody + buildAttachmentsHtml(attachments, styleOptions), styleOptions);
     setPreviewHtml(html);
     setShowPreview(true);
   }
@@ -136,7 +137,7 @@ function ComposeEmailModal({ contact, onDone, onClose }: { contact: ContactDetai
     setError('');
     try {
       const style = getStyleById(selectedStyle);
-      const styledBody = style.wrap(emailBody, styleOptions);
+      const styledBody = style.wrap(emailBody + buildAttachmentsHtml(attachments, styleOptions), styleOptions);
       const res = await fetch(`${API_URL}/contacts/${contact.id}/send-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -196,7 +197,8 @@ function ComposeEmailModal({ contact, onDone, onClose }: { contact: ContactDetai
           options={styleOptions}
           onOptionsChange={setStyleOptions}
           businessId={contact.businessId}
-          onInsertHtml={(html) => setEmailBody((prev) => prev + html)}
+          attachments={attachments}
+          onAttachmentsChange={setAttachments}
         />
         <div>
           <label className="block text-xs font-medium text-slate-500 mb-1">Subject</label>
