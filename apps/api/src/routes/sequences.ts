@@ -376,14 +376,18 @@ Return just the SMS text, nothing else.`;
         html,
       });
 
+      const resolvedSubject = body.subject
+        .replace(/\{\{firstName\}\}/g, contact.firstName ?? 'there')
+        .replace(/\{\{business\}\}/g, contact.business.name);
+
       // Log activity
       await db.contactActivity.create({
         data: {
           contactId: id,
           businessId: contact.businessId,
           type: 'EMAIL',
-          title: `Email sent: ${body.subject}`,
-          description: body.subject,
+          title: `Email sent: ${resolvedSubject}`,
+          description: resolvedSubject,
         },
       });
 
