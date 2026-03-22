@@ -160,7 +160,7 @@ export async function billingRoutes(app: FastifyInstance): Promise<void> {
       subscription_data: {
         trial_period_days: 14,
         metadata: { businessId, tier: tier.toUpperCase() },
-        description: featuresText,
+        ...(featuresText ? { description: featuresText } : {}),
       },
       custom_text: {
         submit: {
