@@ -4,10 +4,11 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { TIER_KEYS, TIERS, FEATURES, CATEGORIES } from '../billing-data';
 import type { FeatureValue, TierKey } from '../billing-data';
+import type { ReactNode } from 'react';
 
 // ─── Icons ──────────────────────────────────────────────────────────────────────
 
-const CATEGORY_ICONS: Record<string, JSX.Element> = {
+const CATEGORY_ICONS: Record<string, ReactNode> = {
   'AI Tools': (
     <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
       <path d="M13 7H7v6h6V7z" />
