@@ -144,6 +144,10 @@ function AddContactModal({ businessId, onDone, onClose }: { businessId: string; 
 
 /* ─── Campaign Email Modal ──────────────────────────────────────────────── */
 
+interface EmailStep { stepNumber: number; delayHours: number; subject: string; body: string; }
+
+function delayLabel(h: number) { if (h === 0) return 'Immediately'; if (h < 24) return `${h}h later`; const d = Math.round(h / 24); return `${d} day${d > 1 ? 's' : ''} later`; }
+
 function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone, onClose }: {
   businessId: string;
   contacts: Contact[];
@@ -153,25 +157,35 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
   onClose: () => void;
 }) {
   type TargetMode = 'selected' | 'all' | 'status' | 'tag';
+  type CampaignMode = 'single' | 'sequence';
 
+  const [campaignMode, setCampaignMode] = useState<CampaignMode>('single');
   const [targetMode, setTargetMode] = useState<TargetMode>(selectedIds.size > 0 ? 'selected' : 'all');
   const [targetStatus, setTargetStatus] = useState('CUSTOMER');
   const [targetTag, setTargetTag] = useState('');
+
+  // Single email state
   const [subject, setSubject] = useState('');
   const [emailBody, setEmailBody] = useState('');
-  const [generating, setGenerating] = useState(false);
+
+  // Sequence state
+  const [seqName, setSeqName] = useState('');
+  const [steps, setSteps] = useState<EmailStep[]>([{ stepNumber: 1, delayHours: 0, subject: '', body: '' }]);
+  const [activeStep, setActiveStep] = useState(0);
+
+  // Shared state
+  const [generating, setGenerating] = useState<number | null>(null);
   const [sending, setSending] = useState(false);
   const [previewHtml, setPreviewHtml] = useState('');
   const [showPreview, setShowPreview] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState<{ sent: number; skipped: number } | null>(null);
+  const [success, setSuccess] = useState<{ sent: number; skipped: number; mode: CampaignMode } | null>(null);
   const [purpose, setPurpose] = useState('bring customers back with a special offer');
   const [progress, setProgress] = useState<{ current: number; total: number } | null>(null);
 
   // Collect all unique tags
   const allTags = Array.from(new Set(allContacts.flatMap((c) => c.tags))).sort();
 
-  // Compute recipients
   function getRecipients(): Contact[] {
     switch (targetMode) {
       case 'selected':
@@ -187,31 +201,57 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
 
   const recipients = getRecipients();
 
-  async function handleAiGenerate() {
-    setGenerating(true);
+  // Step management
+  function addStep() {
+    const lastDelay = steps.length > 0 ? steps[steps.length - 1]!.delayHours : 0;
+    setSteps([...steps, { stepNumber: steps.length + 1, delayHours: lastDelay + 48, subject: '', body: '' }]);
+    setActiveStep(steps.length);
+  }
+
+  function removeStep(idx: number) {
+    const updated = steps.filter((_, i) => i !== idx).map((s, i) => ({ ...s, stepNumber: i + 1 }));
+    setSteps(updated);
+    setActiveStep(Math.max(0, activeStep - 1));
+  }
+
+  function updateStep(idx: number, field: keyof EmailStep, value: string | number) {
+    setSteps(steps.map((s, i) => i === idx ? { ...s, [field]: value } : s));
+  }
+
+  async function handleAiGenerate(stepIdx?: number) {
+    const idx = stepIdx ?? -1;
+    setGenerating(idx);
     setError('');
     try {
       const res = await fetch(`${API_BASE}/sequences/generate-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ businessId, purpose }),
+        body: JSON.stringify({ businessId, purpose, stepNumber: idx >= 0 ? idx + 1 : undefined }),
       });
       const data = (await res.json()) as { success: boolean; subject?: string; body?: string; error?: string };
       if (data.success && data.subject && data.body) {
-        setSubject(data.subject);
-        setEmailBody(data.body);
+        if (campaignMode === 'single') {
+          setSubject(data.subject);
+          setEmailBody(data.body);
+        } else if (idx >= 0) {
+          updateStep(idx, 'subject', data.subject);
+          updateStep(idx, 'body', data.body);
+        }
       } else {
         setError(data.error ?? 'AI generation failed');
       }
-    } catch { setError('AI generation failed'); } finally { setGenerating(false); }
+    } catch { setError('AI generation failed'); } finally { setGenerating(null); }
   }
 
-  async function handlePreview() {
+  async function handlePreview(stepIdx?: number) {
+    const subj = campaignMode === 'single' ? subject : (stepIdx !== undefined ? steps[stepIdx]?.subject ?? '' : '');
+    const body = campaignMode === 'single' ? emailBody : (stepIdx !== undefined ? steps[stepIdx]?.body ?? '' : '');
+    if (!body) return;
     try {
       const res = await fetch(`${API_BASE}/sequences/preview-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ businessId, subject, emailBody, recipientName: 'John' }),
+        body: JSON.stringify({ businessId, subject: subj, emailBody: body, recipientName: 'John' }),
       });
       const data = (await res.json()) as { success: boolean; html?: string };
       if (data.html) { setPreviewHtml(data.html); setShowPreview(true); }
@@ -219,37 +259,83 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
   }
 
   async function handleSend() {
-    if (!subject.trim() || !emailBody.trim()) { setError('Subject and body are required'); return; }
     if (recipients.length === 0) { setError('No recipients with email addresses'); return; }
 
-    const confirmed = confirm(`Send this email to ${recipients.length} recipient${recipients.length !== 1 ? 's' : ''}?`);
-    if (!confirmed) return;
+    if (campaignMode === 'single') {
+      if (!subject.trim() || !emailBody.trim()) { setError('Subject and body are required'); return; }
+      const confirmed = confirm(`Send this email to ${recipients.length} recipient${recipients.length !== 1 ? 's' : ''}?`);
+      if (!confirmed) return;
 
-    setSending(true);
-    setError('');
-    let sent = 0;
-    let skipped = 0;
-    setProgress({ current: 0, total: recipients.length });
+      setSending(true);
+      setError('');
+      let sent = 0;
+      let skipped = 0;
+      setProgress({ current: 0, total: recipients.length });
 
-    for (const contact of recipients) {
+      for (const contact of recipients) {
+        try {
+          const res = await fetch(`${API_BASE}/contacts/${contact.id}/send-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ subject, emailBody }),
+          });
+          const data = (await res.json()) as { success: boolean };
+          if (data.success) sent++;
+          else skipped++;
+        } catch { skipped++; }
+        setProgress({ current: sent + skipped, total: recipients.length });
+      }
+
+      setProgress(null);
+      setSending(false);
+      setSuccess({ sent, skipped, mode: 'single' });
+    } else {
+      // Sequence mode — send step 1 now, save sequence for follow-ups
+      if (!seqName.trim()) { setError('Sequence name is required'); return; }
+      const hasContent = steps.every((s) => s.subject.trim() && s.body.trim());
+      if (!hasContent) { setError('All steps need a subject and body'); return; }
+
+      const confirmed = confirm(`Send Step 1 now to ${recipients.length} recipient${recipients.length !== 1 ? 's' : ''}, then auto-send ${steps.length - 1} follow-up${steps.length > 2 ? 's' : ''} on schedule?`);
+      if (!confirmed) return;
+
+      setSending(true);
+      setError('');
+
+      // Save the sequence first
       try {
-        const res = await fetch(`${API_BASE}/contacts/${contact.id}/send-email`, {
+        const seqRes = await fetch(`${API_BASE}/businesses/${businessId}/sequences`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ subject, emailBody }),
+          body: JSON.stringify({ name: seqName, type: 'EMAIL', trigger: 'CUSTOM', steps }),
         });
-        const data = (await res.json()) as { success: boolean };
-        if (data.success) sent++;
-        else skipped++;
-      } catch {
-        skipped++;
-      }
-      setProgress({ current: sent + skipped, total: recipients.length });
-    }
+        const seqData = (await seqRes.json()) as { success: boolean; error?: string };
+        if (!seqData.success) { setError(seqData.error ?? 'Failed to save sequence'); setSending(false); return; }
+      } catch { setError('Failed to save sequence'); setSending(false); return; }
 
-    setProgress(null);
-    setSending(false);
-    setSuccess({ sent, skipped });
+      // Send step 1 to all recipients now
+      let sent = 0;
+      let skipped = 0;
+      setProgress({ current: 0, total: recipients.length });
+
+      const step1 = steps[0]!;
+      for (const contact of recipients) {
+        try {
+          const res = await fetch(`${API_BASE}/contacts/${contact.id}/send-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ subject: step1.subject, emailBody: step1.body }),
+          });
+          const data = (await res.json()) as { success: boolean };
+          if (data.success) sent++;
+          else skipped++;
+        } catch { skipped++; }
+        setProgress({ current: sent + skipped, total: recipients.length });
+      }
+
+      setProgress(null);
+      setSending(false);
+      setSuccess({ sent, skipped, mode: 'sequence' });
+    }
   }
 
   if (success) {
@@ -259,12 +345,17 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
           <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-7 h-7 text-emerald-600"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
           </div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-1">Campaign Sent</h3>
-          <p className="text-sm text-slate-500 mb-4">
+          <h3 className="text-lg font-semibold text-slate-900 mb-1">
+            {success.mode === 'single' ? 'Campaign Sent' : 'Sequence Launched'}
+          </h3>
+          <p className="text-sm text-slate-500 mb-1">
             {success.sent} email{success.sent !== 1 ? 's' : ''} sent successfully
             {success.skipped > 0 && <>, {success.skipped} skipped</>}
           </p>
-          <button onClick={() => { onDone(); onClose(); }} className="px-6 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-500 transition-colors">Done</button>
+          {success.mode === 'sequence' && steps.length > 1 && (
+            <p className="text-xs text-slate-400 mb-4">{steps.length - 1} follow-up{steps.length > 2 ? 's' : ''} scheduled. Manage in any contact&apos;s Email Sequences section.</p>
+          )}
+          <button onClick={() => { onDone(); onClose(); }} className="px-6 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-500 transition-colors mt-2">Done</button>
         </div>
       </ModalBackdrop>
     );
@@ -274,13 +365,13 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
     return (
       <ModalBackdrop onClose={() => setShowPreview(false)} wide>
         <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-800">Campaign Preview</h3>
+          <h3 className="text-sm font-semibold text-slate-800">Email Preview</h3>
           <button onClick={() => setShowPreview(false)} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
           </button>
         </div>
         <div className="flex-1 overflow-auto">
-          <iframe srcDoc={previewHtml} className="w-full h-[500px] border-0" title="Campaign preview" />
+          <iframe srcDoc={previewHtml} className="w-full h-[500px] border-0" title="Email preview" />
         </div>
         <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex justify-end">
           <button onClick={() => setShowPreview(false)} className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800">Back to editor</button>
@@ -294,13 +385,25 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
       <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
         <div>
           <h3 className="text-sm font-semibold text-slate-800">Email Campaign</h3>
-          <p className="text-xs text-slate-400 mt-0.5">Send a branded email to multiple customers at once</p>
+          <p className="text-xs text-slate-400 mt-0.5">Send a one-off email or build a multi-step sequence</p>
         </div>
         <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400">
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
         </button>
       </div>
       <div className="px-5 py-4 space-y-4 overflow-y-auto flex-1">
+        {/* ─── Campaign Mode Toggle ────────────────────────────────── */}
+        <div className="flex gap-2">
+          <button onClick={() => setCampaignMode('single')}
+            className={`flex-1 py-2.5 rounded-xl border text-xs font-semibold transition-colors ${campaignMode === 'single' ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+            Single Email
+          </button>
+          <button onClick={() => setCampaignMode('sequence')}
+            className={`flex-1 py-2.5 rounded-xl border text-xs font-semibold transition-colors ${campaignMode === 'sequence' ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+            Email Sequence
+          </button>
+        </div>
+
         {/* ─── Recipients ──────────────────────────────────────────── */}
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-2">Recipients</label>
@@ -351,40 +454,132 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
           )}
 
           <p className="text-xs text-slate-500 mt-2">
-            <span className="font-medium text-violet-600">{recipients.length}</span> recipient{recipients.length !== 1 ? 's' : ''} will receive this email
+            <span className="font-medium text-violet-600">{recipients.length}</span> recipient{recipients.length !== 1 ? 's' : ''} will receive this {campaignMode === 'sequence' ? 'sequence' : 'email'}
           </p>
         </div>
 
-        {/* ─── AI Generate ─────────────────────────────────────────── */}
-        <div className="bg-violet-50 border border-violet-200 rounded-xl p-3">
-          <label className="block text-xs font-medium text-violet-700 mb-1.5">AI Draft</label>
-          <div className="flex gap-2">
-            <input value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder="e.g. win-back offer, new menu item, thank you..."
-              className="flex-1 px-3 py-1.5 border border-violet-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400/40 bg-white" />
-            <button onClick={handleAiGenerate} disabled={generating}
-              className="px-3 py-1.5 bg-violet-600 text-white text-xs font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 flex items-center gap-1.5">
-              {generating ? <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>}
-              Generate
-            </button>
-          </div>
-        </div>
+        {/* ─── Single Email Content ────────────────────────────────── */}
+        {campaignMode === 'single' && (
+          <>
+            <div className="bg-violet-50 border border-violet-200 rounded-xl p-3">
+              <label className="block text-xs font-medium text-violet-700 mb-1.5">AI Draft</label>
+              <div className="flex gap-2">
+                <input value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder="e.g. win-back offer, new menu item, thank you..."
+                  className="flex-1 px-3 py-1.5 border border-violet-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400/40 bg-white" />
+                <button onClick={() => handleAiGenerate()} disabled={generating !== null}
+                  className="px-3 py-1.5 bg-violet-600 text-white text-xs font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 flex items-center gap-1.5">
+                  {generating === -1 ? <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>}
+                  Generate
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1">Subject</label>
+              <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Email subject line..." className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1">Body</label>
+              <textarea value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={6} placeholder="<p>Hi {{firstName}},</p><p>Your email content here...</p>" className={inputClass} />
+              <p className="text-[10px] text-slate-400 mt-1">Use {'{{firstName}}'} and {'{{business}}'} as variables. HTML supported.</p>
+            </div>
+          </>
+        )}
 
-        {/* ─── Email Content ───────────────────────────────────────── */}
-        <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Subject</label>
-          <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Email subject line..." className={inputClass} />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Body</label>
-          <textarea value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={6} placeholder="<p>Hi {{firstName}},</p><p>Your email content here...</p>" className={inputClass} />
-          <p className="text-[10px] text-slate-400 mt-1">Use {'{{firstName}}'} and {'{{business}}'} as variables. HTML supported.</p>
-        </div>
+        {/* ─── Sequence Content ────────────────────────────────────── */}
+        {campaignMode === 'sequence' && (
+          <>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1">Sequence Name</label>
+              <input value={seqName} onChange={(e) => setSeqName(e.target.value)} placeholder="e.g. Win-back series, Post-visit follow-up..." className={inputClass} />
+            </div>
+
+            {/* Step tabs */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-xs font-semibold text-slate-700">Steps</label>
+                <button onClick={addStep}
+                  className="px-2 py-0.5 text-[10px] font-medium text-violet-600 bg-violet-50 border border-violet-200 rounded-lg hover:bg-violet-100">+ Add Step</button>
+                <span className="text-[10px] text-slate-400 ml-auto">Step 1 sends immediately, follow-ups auto-send on schedule</span>
+              </div>
+              <div className="flex gap-1 mb-3 overflow-x-auto">
+                {steps.map((_, idx) => (
+                  <button key={idx} onClick={() => setActiveStep(idx)}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-lg shrink-0 transition-colors ${activeStep === idx ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+                    Step {idx + 1}
+                    <span className="ml-1 text-[10px] opacity-70">{delayLabel(steps[idx]?.delayHours ?? 0)}</span>
+                  </button>
+                ))}
+              </div>
+
+              {steps[activeStep] && (
+                <div className="border border-slate-200 rounded-xl p-3 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs font-medium text-slate-500">Delay</label>
+                      <select value={steps[activeStep]!.delayHours} onChange={(e) => updateStep(activeStep, 'delayHours', Number(e.target.value))}
+                        className="px-2 py-1 border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none">
+                        <option value={0}>Immediately</option>
+                        <option value={1}>1 hour</option>
+                        <option value={4}>4 hours</option>
+                        <option value={24}>1 day</option>
+                        <option value={48}>2 days</option>
+                        <option value={72}>3 days</option>
+                        <option value={120}>5 days</option>
+                        <option value={168}>1 week</option>
+                        <option value={336}>2 weeks</option>
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => handleAiGenerate(activeStep)} disabled={generating !== null}
+                        className="px-2 py-1 text-[10px] font-medium text-violet-600 bg-violet-50 border border-violet-200 rounded-lg hover:bg-violet-100 flex items-center gap-1">
+                        {generating === activeStep ? <div className="w-2.5 h-2.5 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" /> : null}
+                        AI Write
+                      </button>
+                      <button onClick={() => handlePreview(activeStep)} disabled={!steps[activeStep]?.body}
+                        className="px-2 py-1 text-[10px] font-medium text-slate-500 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40">Preview</button>
+                      {steps.length > 1 && (
+                        <button onClick={() => removeStep(activeStep)} className="px-2 py-1 text-[10px] font-medium text-red-400 hover:text-red-600 rounded-lg hover:bg-red-50">Remove</button>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-medium text-slate-400 mb-0.5">Subject</label>
+                    <input value={steps[activeStep]!.subject} onChange={(e) => updateStep(activeStep, 'subject', e.target.value)} placeholder="Email subject..." className={inputClass} />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-medium text-slate-400 mb-0.5">Body (HTML)</label>
+                    <textarea value={steps[activeStep]!.body} onChange={(e) => updateStep(activeStep, 'body', e.target.value)} rows={5} placeholder="<p>Hi {{firstName}},</p>..." className={inputClass} />
+                    <p className="text-[10px] text-slate-400 mt-1">Use {'{{firstName}}'} and {'{{business}}'} as variables</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Sequence timeline preview */}
+            {steps.length > 1 && (
+              <div className="bg-slate-50 rounded-xl p-3">
+                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">Sequence Timeline</p>
+                <div className="space-y-1.5">
+                  {steps.map((step, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${idx === 0 ? 'bg-violet-600 text-white' : 'bg-slate-200 text-slate-500'}`}>{idx + 1}</div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-slate-700 truncate">{step.subject || '(no subject)'}</p>
+                      </div>
+                      <span className="text-[10px] text-slate-400 shrink-0">{delayLabel(step.delayHours)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
 
         {/* ─── Progress bar ───────────────────────────────────────── */}
         {progress && (
           <div>
             <div className="flex justify-between text-xs text-slate-500 mb-1">
-              <span>Sending...</span>
+              <span>Sending step 1...</span>
               <span>{progress.current} / {progress.total}</span>
             </div>
             <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -397,13 +592,15 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
       </div>
 
       <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex gap-2 justify-between">
-        <button onClick={handlePreview} disabled={!emailBody.trim()} className="px-3 py-2 text-xs font-medium text-slate-500 border border-slate-200 rounded-lg hover:bg-white disabled:opacity-40 transition-colors">Preview</button>
+        <button onClick={() => campaignMode === 'single' ? handlePreview() : handlePreview(activeStep)}
+          disabled={campaignMode === 'single' ? !emailBody.trim() : !steps[activeStep]?.body}
+          className="px-3 py-2 text-xs font-medium text-slate-500 border border-slate-200 rounded-lg hover:bg-white disabled:opacity-40 transition-colors">Preview</button>
         <div className="flex gap-2">
           <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700">Cancel</button>
-          <button onClick={handleSend} disabled={sending || recipients.length === 0 || !subject.trim() || !emailBody.trim()}
+          <button onClick={handleSend} disabled={sending || recipients.length === 0 || (campaignMode === 'single' ? (!subject.trim() || !emailBody.trim()) : (!seqName.trim() || steps.some((s) => !s.subject.trim() || !s.body.trim())))}
             className="px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 flex items-center gap-2 transition-colors">
             {sending && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-            {sending ? 'Sending...' : `Send to ${recipients.length}`}
+            {sending ? 'Sending...' : campaignMode === 'single' ? `Send to ${recipients.length}` : `Launch Sequence (${recipients.length})`}
           </button>
         </div>
       </div>
