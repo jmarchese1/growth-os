@@ -3,6 +3,9 @@
 import { useState, useEffect, use, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
+import { EmailStylePicker } from '@/components/ui/email-style-picker';
+import { getStyleById } from '@/lib/email-styles';
+import type { EmailStyleOptions } from '@/lib/email-styles';
 
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 const CLIENT_URL = typeof window !== 'undefined' ? window.location.origin : 'https://app.embedo.io';
@@ -98,6 +101,8 @@ function ComposeEmailModal({ contact, onDone, onClose }: { contact: ContactDetai
   const [showPreview, setShowPreview] = useState(false);
   const [error, setError] = useState('');
   const [purpose, setPurpose] = useState('follow-up to keep them coming back');
+  const [selectedStyle, setSelectedStyle] = useState('classic');
+  const [styleOptions, setStyleOptions] = useState<EmailStyleOptions>({ color: '#7c3aed' });
 
   async function handleAiGenerate() {
     setGenerating(true);
@@ -118,16 +123,11 @@ function ComposeEmailModal({ contact, onDone, onClose }: { contact: ContactDetai
     } catch { setError('AI generation failed'); } finally { setGenerating(false); }
   }
 
-  async function handlePreview() {
-    try {
-      const res = await fetch(`${API_URL}/sequences/preview-email`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ businessId: contact.businessId, subject, emailBody, recipientName: contact.firstName ?? 'John' }),
-      });
-      const data = (await res.json()) as { success: boolean; html?: string };
-      if (data.html) { setPreviewHtml(data.html); setShowPreview(true); }
-    } catch { /* ignore */ }
+  function handlePreview() {
+    const style = getStyleById(selectedStyle);
+    const html = style.wrap(emailBody, styleOptions);
+    setPreviewHtml(html);
+    setShowPreview(true);
   }
 
   async function handleSend() {
@@ -135,10 +135,12 @@ function ComposeEmailModal({ contact, onDone, onClose }: { contact: ContactDetai
     setSending(true);
     setError('');
     try {
+      const style = getStyleById(selectedStyle);
+      const styledBody = style.wrap(emailBody, styleOptions);
       const res = await fetch(`${API_URL}/contacts/${contact.id}/send-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subject, emailBody }),
+        body: JSON.stringify({ subject, emailBody: styledBody }),
       });
       const data = (await res.json()) as { success: boolean; error?: string };
       if (!data.success) { setError(data.error ?? 'Send failed'); return; }
@@ -187,6 +189,13 @@ function ComposeEmailModal({ contact, onDone, onClose }: { contact: ContactDetai
             </button>
           </div>
         </div>
+        {/* Email Style */}
+        <EmailStylePicker
+          selectedStyle={selectedStyle}
+          onStyleChange={setSelectedStyle}
+          options={styleOptions}
+          onOptionsChange={setStyleOptions}
+        />
         <div>
           <label className="block text-xs font-medium text-slate-500 mb-1">Subject</label>
           <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Email subject line..." className={inputClass} />

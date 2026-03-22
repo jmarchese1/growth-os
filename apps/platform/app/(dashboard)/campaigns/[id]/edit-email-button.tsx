@@ -86,7 +86,7 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
     bodies.forEach((body, i) => {
       const inner = extractContent(body);
       if (inner) {
-        setters[i](style.wrap(inner, ''));
+        setters[i](style.wrap(inner, {}));
       }
     });
   }
@@ -218,7 +218,7 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
                             ? 'bg-violet-500/25 text-violet-300'
                             : 'bg-white/5 text-slate-500 group-hover:text-slate-400'
                         }`}>
-                          {style.preview}
+                          {style.name.charAt(0)}
                         </span>
                         <div>
                           <p className={`text-xs font-semibold ${selectedStyle === style.id ? 'text-violet-300' : 'text-slate-300'}`}>

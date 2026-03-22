@@ -29,7 +29,7 @@ export function ComposeEmail({ prospectId, prospectName, prospectEmail, prospect
       .split('\n')
       .map((line) => (line.trim() === '' ? '<br>' : `<p style="margin:0 0 8px 0;font-size:15px;color:#1a1a1a;">${line}</p>`))
       .join('\n');
-    return style.wrap(paragraphs, '');
+    return style.wrap(paragraphs, {});
   }
 
   async function handleSend(e: React.FormEvent) {

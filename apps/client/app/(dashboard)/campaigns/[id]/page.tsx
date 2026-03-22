@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
+import { EmailStylePicker } from '@/components/ui/email-style-picker';
+import { getStyleById } from '@/lib/email-styles';
+import type { EmailStyleOptions } from '@/lib/email-styles';
 
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 
@@ -57,6 +60,10 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
 
+  // Email style
+  const [selectedStyle, setSelectedStyle] = useState('classic');
+  const [styleOptions, setStyleOptions] = useState<EmailStyleOptions>({ color: '#7c3aed' });
+
   // Send targeting
   const [statusFilter, setStatusFilter] = useState('');
   const [sourceFilter, setSourceFilter] = useState('');
@@ -101,10 +108,11 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
     setSaving(true);
     setSaveError('');
     try {
+      const styledBody = campaign?.type === 'EMAIL' ? getStyleById(selectedStyle).wrap(editBody, styleOptions) : editBody;
       const res = await fetch(`${API_URL}/campaigns/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: editName, subject: editSubject || undefined, body: editBody }),
+        body: JSON.stringify({ name: editName, subject: editSubject || undefined, body: styledBody }),
       });
       const data = await res.json() as { success: boolean; campaign?: Campaign; error?: string };
       if (!data.success) { setSaveError(data.error ?? 'Failed to save'); return; }
@@ -226,16 +234,38 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
             <input value={editName} onChange={(e) => setEditName(e.target.value)} className={`mt-1 ${inputClass}`} />
           </div>
           {campaign.type === 'EMAIL' && (
-            <div>
-              <label className="text-xs text-slate-500 font-medium">Subject line</label>
-              <input value={editSubject} onChange={(e) => setEditSubject(e.target.value)} className={`mt-1 ${inputClass}`} />
-            </div>
+            <>
+              <EmailStylePicker
+                selectedStyle={selectedStyle}
+                onStyleChange={setSelectedStyle}
+                options={styleOptions}
+                onOptionsChange={setStyleOptions}
+              />
+              <div>
+                <label className="text-xs text-slate-500 font-medium">Subject line</label>
+                <input value={editSubject} onChange={(e) => setEditSubject(e.target.value)} className={`mt-1 ${inputClass}`} />
+              </div>
+            </>
           )}
           <div>
             <label className="text-xs text-slate-500 font-medium">{campaign.type === 'EMAIL' ? 'Email body (HTML)' : 'Message'}</label>
             <textarea value={editBody} onChange={(e) => setEditBody(e.target.value)} rows={8} className={`mt-1 ${inputClass} resize-none font-mono text-xs`} />
             {campaign.type === 'SMS' && <p className="text-[10px] text-slate-400 mt-1">{editBody.length}/160 characters</p>}
           </div>
+          {campaign.type === 'EMAIL' && editBody.trim() && (
+            <div>
+              <label className="text-xs text-slate-500 font-medium">Preview</label>
+              <div className="mt-1 bg-white border border-slate-200 rounded-xl overflow-hidden">
+                <iframe
+                  srcDoc={getStyleById(selectedStyle).wrap(editBody, styleOptions)}
+                  className="w-full border-0"
+                  style={{ height: '300px' }}
+                  title="Email preview"
+                  sandbox="allow-same-origin"
+                />
+              </div>
+            </div>
+          )}
           {saveError && <p className="text-sm text-red-500">{saveError}</p>}
           <div className="flex justify-end gap-2">
             <button onClick={() => setEditing(false)} className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700">Cancel</button>
@@ -254,7 +284,9 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
             <p className="text-xs text-slate-500 mb-3 pb-3 border-b border-slate-100">Subject: <span className="font-medium text-slate-700">{campaign.subject}</span></p>
           )}
           {campaign.type === 'EMAIL' ? (
-            <div className="border border-slate-100 rounded-xl p-4 text-sm text-slate-700 bg-slate-50 max-h-72 overflow-auto" dangerouslySetInnerHTML={{ __html: campaign.body }} />
+            <div className="border border-slate-100 rounded-xl overflow-hidden bg-white">
+              <iframe srcDoc={campaign.body} className="w-full border-0" style={{ height: '360px' }} title="Email preview" sandbox="allow-same-origin" />
+            </div>
           ) : (
             <div className="max-w-xs">
               <div className="bg-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 text-sm text-slate-700">{campaign.body}</div>
