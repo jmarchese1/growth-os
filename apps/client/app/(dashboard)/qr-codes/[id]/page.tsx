@@ -254,13 +254,13 @@ export default function QrCodeDetailPage({ params }: { params: Promise<{ id: str
           <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">Contacts Captured ({uniqueContacts.size})</h2>
           <div className="space-y-2">
             {[...uniqueContacts.values()].map((c) => (
-              <div key={c.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50">
-                <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 font-semibold text-sm shrink-0">
+              <div key={c.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-white/[0.06]">
+                <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-500/15 flex items-center justify-center text-violet-600 font-semibold text-sm shrink-0">
                   {(c.firstName?.[0] ?? c.email?.[0] ?? '?').toUpperCase()}
                 </div>
                 <div className="min-w-0">
-                  <div className="text-sm font-medium text-slate-800">{contactName(c)}</div>
-                  <div className="text-xs text-slate-400">{[c.email, c.phone].filter(Boolean).join(' · ')}</div>
+                  <div className="text-sm font-medium text-slate-800 dark:text-white">{contactName(c)}</div>
+                  <div className="text-xs text-slate-400 dark:text-slate-500">{[c.email, c.phone].filter(Boolean).join(' · ')}</div>
                 </div>
               </div>
             ))}
@@ -272,21 +272,21 @@ export default function QrCodeDetailPage({ params }: { params: Promise<{ id: str
       <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5">
         <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">Scan History {qr.scans.length > 0 ? `(last ${qr.scans.length})` : ''}</h2>
         {qr.scans.length === 0 ? (
-          <p className="text-sm text-slate-400 py-4 text-center">No scans yet. Share your QR code to start collecting data.</p>
+          <p className="text-sm text-slate-400 dark:text-slate-500 py-4 text-center">No scans yet. Share your QR code to start collecting data.</p>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-slate-100 dark:divide-white/[0.06]">
             {qr.scans.map((scan) => (
               <div key={scan.id} className="flex items-center justify-between py-2.5 text-sm">
                 <div className="flex items-center gap-3">
-                  <div className={`w-2 h-2 rounded-full shrink-0 ${scan.contact ? 'bg-emerald-400' : 'bg-slate-300'}`} />
-                  <span className="text-slate-700 font-medium">
+                  <div className={`w-2 h-2 rounded-full shrink-0 ${scan.contact ? 'bg-emerald-400' : 'bg-slate-300 dark:bg-slate-600'}`} />
+                  <span className="text-slate-700 dark:text-slate-200 font-medium">
                     {scan.contact ? contactName(scan.contact) : 'Anonymous'}
                   </span>
                   {scan.outcome && (
-                    <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{scan.outcome}</span>
+                    <span className="text-xs text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-white/[0.06] px-2 py-0.5 rounded-full">{scan.outcome}</span>
                   )}
                 </div>
-                <div className="flex items-center gap-4 text-slate-400 text-xs">
+                <div className="flex items-center gap-4 text-slate-400 dark:text-slate-500 text-xs">
                   {scan.ipAddress && <span>{scan.ipAddress}</span>}
                   <span>{formatDateTime(scan.createdAt)}</span>
                 </div>
