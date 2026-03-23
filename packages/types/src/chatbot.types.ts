@@ -45,7 +45,18 @@ export type ChatbotAction =
   | { type: 'capture_lead'; data: LeadCaptureData }
   | { type: 'book_appointment'; data: BookingData }
   | { type: 'trigger_survey'; data: { surveyId: string } }
-  | { type: 'trigger_proposal'; data: ProposalTriggerData };
+  | { type: 'trigger_proposal'; data: ProposalTriggerData }
+  | { type: 'make_reservation'; data: MakeReservationData };
+
+export interface MakeReservationData {
+  guestName: string;
+  guestPhone?: string;
+  guestEmail?: string;
+  partySize: number;
+  date: string;
+  time: string;
+  specialRequests?: string;
+}
 
 export interface LeadCaptureData {
   name?: string;

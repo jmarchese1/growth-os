@@ -224,7 +224,7 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
           <img src={qrImageUrl(url)} alt="QR Code" className="w-48 h-48 mx-auto mb-4 rounded-lg" />
           <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">{created.label}</h3>
           <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300 mb-3">{created.purpose}</span>
-          <p className="text-xs text-slate-400 dark:text-slate-500 font-mono bg-slate-50 dark:bg-white/[0.06] rounded-lg px-3 py-2 mb-4 break-all">{url}</p>
+          <p className="text-xs text-slate-400 dark:text-slate-400 font-mono bg-slate-50 dark:bg-white/[0.06] rounded-lg px-3 py-2 mb-4 break-all">{url}</p>
           <div className="flex gap-3 justify-center">
             <button onClick={onClose} className="px-5 py-2 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-500 transition-colors">Done</button>
             <a href={qrImageUrl(url)} download={`${created.label.replace(/\s+/g, '-').toLowerCase()}-qr.png`} className="px-5 py-2 border border-slate-200 dark:border-white/[0.08] text-slate-700 dark:text-slate-200 text-sm font-medium rounded-xl hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors">Download PNG</a>
@@ -239,7 +239,7 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
       <div className="bg-white dark:bg-[#1a1730] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="px-6 py-5 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between flex-shrink-0">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white">Create QR Code</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-500"><svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-400"><svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
         </div>
         <div className="p-6 space-y-5 overflow-y-auto flex-1">
           {/* Purpose selector */}
@@ -250,7 +250,7 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
                 <button key={p.value} onClick={() => setPurpose(p.value)} className={`p-3 rounded-xl border text-left transition-all ${purpose === p.value ? 'border-violet-400 bg-violet-50 dark:bg-violet-500/10 dark:border-violet-500/30 shadow-sm' : 'border-slate-200 dark:border-white/[0.08] hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04]'}`}>
                   <span className="text-xl">{p.icon}</span>
                   <p className="text-xs font-semibold text-slate-800 dark:text-white mt-1">{p.label}</p>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 leading-tight">{p.desc}</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5 leading-tight">{p.desc}</p>
                 </button>
               ))}
             </div>
@@ -289,8 +289,8 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
                         {questions.map((q, qi) => (
                           <div key={q.id} className="bg-white dark:bg-white/[0.06] rounded-lg border border-slate-200 dark:border-white/[0.08] p-3">
                             <div className="flex items-center justify-between mb-2">
-                              <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">Question {qi + 1}</span>
-                              {questions.length > 1 && <button onClick={() => removeQuestion(q.id)} className="text-xs text-slate-400 dark:text-slate-500 hover:text-rose-500">Remove</button>}
+                              <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase">Question {qi + 1}</span>
+                              {questions.length > 1 && <button onClick={() => removeQuestion(q.id)} className="text-xs text-slate-400 dark:text-slate-400 hover:text-rose-500">Remove</button>}
                             </div>
                             <div className="flex gap-1.5 mb-2">
                               {Q_TYPES.map((t) => (
@@ -306,7 +306,7 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
                                   <div key={oi} className="flex items-center gap-1.5">
                                     <span className="text-slate-300 dark:text-slate-600 text-xs">\u25CB</span>
                                     <span className="text-xs text-slate-600 dark:text-slate-300">{opt}</span>
-                                    <button onClick={() => updateQuestion(q.id, { options: (q.options ?? []).filter((_, i) => i !== oi) })} className="text-[10px] text-slate-400 dark:text-slate-500 hover:text-rose-500">x</button>
+                                    <button onClick={() => updateQuestion(q.id, { options: (q.options ?? []).filter((_, i) => i !== oi) })} className="text-[10px] text-slate-400 dark:text-slate-400 hover:text-rose-500">x</button>
                                   </div>
                                 ))}
                                 <input type="text" placeholder="Add option (Enter)" className="text-xs px-2 py-1 border border-dashed border-slate-300 dark:border-white/[0.08] rounded text-slate-600 dark:text-slate-300 dark:bg-white/[0.06] w-full" onKeyDown={(e) => { if (e.key === 'Enter') { const v = (e.target as HTMLInputElement).value.trim(); if (v) { updateQuestion(q.id, { options: [...(q.options ?? []), v] }); (e.target as HTMLInputElement).value = ''; } } }} />
@@ -621,7 +621,7 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
           </div>
           <div className="text-left">
             <p className="text-sm font-semibold text-slate-800 dark:text-white">Reward Emails</p>
-            <p className="text-[11px] text-slate-400 dark:text-slate-500">Customize emails sent when customers claim rewards</p>
+            <p className="text-[11px] text-slate-400 dark:text-slate-400">Customize emails sent when customers claim rewards</p>
           </div>
         </div>
         <svg viewBox="0 0 20 20" fill="currentColor" className={`w-5 h-5 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
@@ -654,14 +654,14 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
                           <span className="truncate flex-1">Selected</span>
                         </>
                       ) : (
-                        <span className="text-slate-400 dark:text-slate-500">Choose from My Images...</span>
+                        <span className="text-slate-400 dark:text-slate-400">Choose from My Images...</span>
                       )}
                       <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-slate-400 flex-shrink-0"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
                     </button>
                     {showImagePicker && (
                       <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white dark:bg-[#1a1730] border border-slate-200 dark:border-white/[0.08] rounded-lg shadow-lg max-h-48 overflow-y-auto">
                         {logoUrl && (
-                          <button onClick={() => { setLogoUrl(''); setShowImagePicker(false); }} className="w-full px-3 py-2 text-left text-[10px] text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-white/[0.04] border-b border-slate-100 dark:border-white/[0.06]">
+                          <button onClick={() => { setLogoUrl(''); setShowImagePicker(false); }} className="w-full px-3 py-2 text-left text-[10px] text-slate-400 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/[0.04] border-b border-slate-100 dark:border-white/[0.06]">
                             Remove logo
                           </button>
                         )}
@@ -708,7 +708,7 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
                 <div>
                   <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Email Subject</label>
                   <input type="text" value={cfg.subject} onChange={(e) => updateConfig('subject', e.target.value)} className="w-full px-3 py-1.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06]" />
-                  <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">Use {'{{reward}}'} for reward name, {'{{business}}'} for business name</p>
+                  <p className="text-[9px] text-slate-400 dark:text-slate-400 mt-0.5">Use {'{{reward}}'} for reward name, {'{{business}}'} for business name</p>
                 </div>
                 <div>
                   <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Heading</label>
@@ -786,7 +786,7 @@ function QrCard({ qr, onDelete }: { qr: QrCode; onDelete: () => void }) {
           </div>
           {qr.survey && <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Survey: {qr.survey.title}</p>}
           {qr.discountValue && <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Discount: {qr.discountValue}</p>}
-          <div className="flex items-center gap-3 text-[10px] text-slate-400 dark:text-slate-500">
+          <div className="flex items-center gap-3 text-[10px] text-slate-400 dark:text-slate-400">
             <span>{qr.scanCount} scans</span>
             <span>{new Date(qr.createdAt).toLocaleDateString()}</span>
           </div>

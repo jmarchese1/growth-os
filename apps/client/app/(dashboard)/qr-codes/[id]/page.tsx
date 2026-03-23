@@ -260,7 +260,7 @@ export default function QrCodeDetailPage({ params }: { params: Promise<{ id: str
                 </div>
                 <div className="min-w-0">
                   <div className="text-sm font-medium text-slate-800 dark:text-white">{contactName(c)}</div>
-                  <div className="text-xs text-slate-400 dark:text-slate-500">{[c.email, c.phone].filter(Boolean).join(' · ')}</div>
+                  <div className="text-xs text-slate-400 dark:text-slate-400">{[c.email, c.phone].filter(Boolean).join(' · ')}</div>
                 </div>
               </div>
             ))}
@@ -272,7 +272,7 @@ export default function QrCodeDetailPage({ params }: { params: Promise<{ id: str
       <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5">
         <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">Scan History {qr.scans.length > 0 ? `(last ${qr.scans.length})` : ''}</h2>
         {qr.scans.length === 0 ? (
-          <p className="text-sm text-slate-400 dark:text-slate-500 py-4 text-center">No scans yet. Share your QR code to start collecting data.</p>
+          <p className="text-sm text-slate-400 dark:text-slate-400 py-4 text-center">No scans yet. Share your QR code to start collecting data.</p>
         ) : (
           <div className="divide-y divide-slate-100 dark:divide-white/[0.06]">
             {qr.scans.map((scan) => (
@@ -283,10 +283,10 @@ export default function QrCodeDetailPage({ params }: { params: Promise<{ id: str
                     {scan.contact ? contactName(scan.contact) : 'Anonymous'}
                   </span>
                   {scan.outcome && (
-                    <span className="text-xs text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-white/[0.06] px-2 py-0.5 rounded-full">{scan.outcome}</span>
+                    <span className="text-xs text-slate-400 dark:text-slate-400 bg-slate-100 dark:bg-white/[0.06] px-2 py-0.5 rounded-full">{scan.outcome}</span>
                   )}
                 </div>
-                <div className="flex items-center gap-4 text-slate-400 dark:text-slate-500 text-xs">
+                <div className="flex items-center gap-4 text-slate-400 dark:text-slate-400 text-xs">
                   {scan.ipAddress && <span>{scan.ipAddress}</span>}
                   <span>{formatDateTime(scan.createdAt)}</span>
                 </div>

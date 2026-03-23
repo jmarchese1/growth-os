@@ -140,6 +140,21 @@ enum AppointmentStatus {
   NO_SHOW
 }
 
+enum ReservationSource {
+  VOICE_AGENT
+  CHATBOT
+  MANUAL
+  WEBSITE
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  NO_SHOW
+  COMPLETED
+}
+
 enum SequenceTrigger {
   LEAD_CREATED
   SURVEY_COMPLETE
@@ -231,6 +246,7 @@ model Business {
   emailSequences  EmailSequence[]
   smsSequences    SmsSequence[]
   appointments    Appointment[]
+  reservations    Reservation[]
   onboardingLog   OnboardingLog[]
   subscription    Subscription?
 
@@ -265,6 +281,7 @@ model Contact {
   activities      ContactActivity[]
   surveyResponses SurveyResponse[]
   appointments    Appointment[]
+  reservations    Reservation[]
   chatSessions    ChatSession[]
   callLogs        VoiceCallLog[]
   qrScans         QrCodeScan[]
@@ -901,5 +918,48 @@ model Subscription {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([status])
+}
+
+// ─── Reservations (OpenTable Integration) ────────────────────────────────────
+
+model Reservation {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  contactId  String?
+  contact    Contact? @relation(fields: [contactId], references: [id])
+
+  // Guest info
+  guestName  String
+  guestPhone String?
+  guestEmail String?
+  partySize  Int
+
+  // Reservation details
+  date       DateTime
+  time       String     // e.g. "19:00"
+  timezone   String?
+  specialRequests String?
+
+  // OpenTable integration
+  openTableConfirmation String?  // confirmation number from OpenTable
+  openTableRestaurantId String?  // OpenTable restaurant ID
+
+  // Source tracking
+  source     ReservationSource @default(MANUAL)
+
+  // Status
+  status     ReservationStatus @default(PENDING)
+
+  // Linking back to voice/chat
+  voiceCallLogId String?
+  chatSessionId  String?
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([date])
   @@index([status])
 }

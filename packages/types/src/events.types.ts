@@ -116,6 +116,18 @@ export interface SequenceStepJobPayload {
   channel: 'sms' | 'email';
 }
 
+// Reservation Events
+export interface ReservationCreatedPayload {
+  businessId: string;
+  reservationId: string;
+  contactId?: string;
+  guestName: string;
+  partySize: number;
+  date: string;
+  time: string;
+  source: string;
+}
+
 // Outbound Prospecting Jobs
 export interface ProspectDiscoveredPayload {
   campaignId: string;

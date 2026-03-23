@@ -157,7 +157,7 @@ function ComposeEmailModal({ contact, onDone, onClose }: { contact: ContactDetai
       <ModalBackdrop onClose={() => setShowPreview(false)}>
         <div className="px-5 py-3 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between">
           <h3 className="text-sm font-semibold text-slate-800 dark:text-white">Email Preview</h3>
-          <button onClick={() => setShowPreview(false)} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-500"><svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
+          <button onClick={() => setShowPreview(false)} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-400"><svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
         </div>
         <div className="flex-1 overflow-auto">
           <iframe srcDoc={previewHtml} className="w-full h-[500px] border-0" title="Email preview" />
@@ -174,9 +174,9 @@ function ComposeEmailModal({ contact, onDone, onClose }: { contact: ContactDetai
       <div className="px-5 py-3 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between">
         <div>
           <h3 className="text-sm font-semibold text-slate-800 dark:text-white">Send Email</h3>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">To: {contact.email ?? 'no email'}</p>
+          <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">To: {contact.email ?? 'no email'}</p>
         </div>
-        <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-500"><svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
+        <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-400"><svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
       </div>
       <div className="px-5 py-4 space-y-3 overflow-y-auto">
         {/* AI Generate */}
@@ -199,7 +199,7 @@ function ComposeEmailModal({ contact, onDone, onClose }: { contact: ContactDetai
         <div>
           <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Body</label>
           <textarea value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={6} placeholder="<p>Hi {{firstName}},</p><p>Your email content here...</p>" className={inputClass} />
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Use {'{{firstName}}'} and {'{{business}}'} as variables. HTML supported.</p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-1">Use {'{{firstName}}'} and {'{{business}}'} as variables. HTML supported.</p>
         </div>
         {/* Email Style — below body so dropdowns open downward */}
         <EmailStylePicker
@@ -326,7 +326,7 @@ function SequenceBuilderModal({ businessId, existingSequence, onDone, onClose }:
       <ModalBackdrop onClose={() => setPreviewStep(null)}>
         <div className="px-5 py-3 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between">
           <h3 className="text-sm font-semibold text-slate-800 dark:text-white">Step {previewStep + 1} Preview</h3>
-          <button onClick={() => setPreviewStep(null)} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-500"><svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
+          <button onClick={() => setPreviewStep(null)} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-400"><svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
         </div>
         <div className="flex-1 overflow-auto"><iframe srcDoc={previewHtml} className="w-full h-[500px] border-0" title="Email preview" /></div>
         <div className="px-5 py-3 bg-slate-50 dark:bg-white/[0.04] border-t dark:border-white/[0.08] flex justify-end">
@@ -340,7 +340,7 @@ function SequenceBuilderModal({ businessId, existingSequence, onDone, onClose }:
     <ModalBackdrop onClose={onClose}>
       <div className="px-5 py-3 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between">
         <h3 className="text-sm font-semibold text-slate-800 dark:text-white">{isEdit ? 'Edit' : 'Create'} Email Sequence</h3>
-        <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-500"><svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
+        <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-400"><svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
       </div>
       <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1">
         <div className="grid grid-cols-2 gap-3">
@@ -405,11 +405,11 @@ function SequenceBuilderModal({ businessId, existingSequence, onDone, onClose }:
                 </div>
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5">Subject</label>
+                <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-400 mb-0.5">Subject</label>
                 <input value={emailSteps[activeStep]!.subject} onChange={(e) => updateStep(activeStep, 'subject', e.target.value)} placeholder="Email subject..." className={inputClass} />
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5">Body (HTML)</label>
+                <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-400 mb-0.5">Body (HTML)</label>
                 <textarea value={emailSteps[activeStep]!.body} onChange={(e) => updateStep(activeStep, 'body', e.target.value)} rows={5} placeholder="<p>Hi {{firstName}},</p>..." className={inputClass} />
               </div>
             </div>
@@ -652,7 +652,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             ) : (<>
               <div>
                 <label className="text-xs text-slate-500 dark:text-slate-400 font-medium">Survey</label>
-                {surveys.length === 0 ? <p className="mt-2 text-sm text-slate-400 dark:text-slate-500">Loading surveys...</p> : (
+                {surveys.length === 0 ? <p className="mt-2 text-sm text-slate-400 dark:text-slate-400">Loading surveys...</p> : (
                   <select value={selectedSurveyId} onChange={(e) => setSelectedSurveyId(e.target.value)} className={`mt-1 ${inputClass}`}>
                     {surveys.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}
                   </select>
@@ -703,12 +703,12 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   className={`text-xs font-medium px-2.5 py-1 rounded-full border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-violet-400 disabled:opacity-60 ${statusCfg.color}`}>
                   <option value="LEAD">Lead</option><option value="PROSPECT">Prospect</option><option value="CUSTOMER">Customer</option><option value="CHURNED">Churned</option>
                 </select>
-                <span className="text-xs text-slate-400 dark:text-slate-500">{SOURCE_LABELS[contact.source]}</span>
-                {contact.leadScore !== null && <span className="text-xs text-slate-400 dark:text-slate-500">Score: <span className="font-medium text-slate-700 dark:text-slate-200">{contact.leadScore}</span></span>}
+                <span className="text-xs text-slate-400 dark:text-slate-400">{SOURCE_LABELS[contact.source]}</span>
+                {contact.leadScore !== null && <span className="text-xs text-slate-400 dark:text-slate-400">Score: <span className="font-medium text-slate-700 dark:text-slate-200">{contact.leadScore}</span></span>}
               </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs text-slate-400 dark:text-slate-500">Added {formatDate(contact.createdAt)}</span>
+              <span className="text-xs text-slate-400 dark:text-slate-400">Added {formatDate(contact.createdAt)}</span>
               <button onClick={() => setShowComposeEmail(true)} disabled={!contact.email} className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/[0.08] text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04] disabled:opacity-40 transition-colors">Send Email</button>
               <button onClick={openSurveyModal} className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/[0.08] text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors">Send Survey</button>
               <button onClick={() => setShowEdit(true)} className="px-3 py-1.5 rounded-lg bg-violet-600 text-white text-xs font-medium hover:bg-violet-700 transition-colors">Edit</button>
@@ -755,7 +755,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Email Sequences</h2>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Automated multi-step email campaigns to keep customers engaged</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5">Automated multi-step email campaigns to keep customers engaged</p>
           </div>
         </div>
 
@@ -763,8 +763,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           <div className="flex justify-center py-6"><div className="w-5 h-5 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" /></div>
         ) : sequences.length === 0 ? (
           <div className="text-center py-6">
-            <p className="text-sm text-slate-400 dark:text-slate-500 mb-1">No sequences yet</p>
-            <p className="text-xs text-slate-400 dark:text-slate-500">Create automated email sequences to re-engage customers</p>
+            <p className="text-sm text-slate-400 dark:text-slate-400 mb-1">No sequences yet</p>
+            <p className="text-xs text-slate-400 dark:text-slate-400">Create automated email sequences to re-engage customers</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -777,8 +777,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-slate-800 dark:text-white truncate">{seq.name}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500">{seq.stepCount} step{seq.stepCount !== 1 ? 's' : ''}</span>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500">{seq.triggerLabel}</span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-400">{seq.stepCount} step{seq.stepCount !== 1 ? 's' : ''}</span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-400">{seq.triggerLabel}</span>
                     </div>
                   </div>
                 </div>
@@ -810,7 +810,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
               className="px-3 py-1.5 bg-violet-600 text-white text-xs font-medium rounded-lg hover:bg-violet-700 disabled:opacity-50 transition-colors">{noteSaving ? '...' : 'Add'}</button>
           </div>
           {contact.activities.length === 0 ? (
-            <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-6">No activity recorded yet</p>
+            <p className="text-sm text-slate-400 dark:text-slate-400 text-center py-6">No activity recorded yet</p>
           ) : (
             <div className="space-y-3">
               {contact.activities.map((a) => (
@@ -818,7 +818,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   <div className="text-base shrink-0 mt-0.5">{ACTIVITY_ICONS[a.type] ?? '•'}</div>
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-slate-800 dark:text-white">{a.type === 'NOTE' ? a.description : a.title}</p>
-                    {a.type !== 'NOTE' && a.description && <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate">{a.description}</p>}
+                    {a.type !== 'NOTE' && a.description && <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5 truncate">{a.description}</p>}
                     <p className="text-[10px] text-slate-300 dark:text-slate-600 mt-0.5">{formatDateTime(a.createdAt)}</p>
                   </div>
                 </div>
@@ -831,7 +831,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5">
           <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">Appointments</h2>
           {contact.appointments.length === 0 ? (
-            <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-6">No appointments</p>
+            <p className="text-sm text-slate-400 dark:text-slate-400 text-center py-6">No appointments</p>
           ) : (
             <div className="space-y-2">
               {contact.appointments.map((a) => (
@@ -854,7 +854,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 <div key={r.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-white/[0.06] border border-slate-100 dark:border-white/[0.06]">
                   <div>
                     <p className="text-sm font-medium text-slate-800 dark:text-white">{r.survey?.title ?? 'Survey'}</p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">{formatDateTime(r.createdAt)}</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5">{formatDateTime(r.createdAt)}</p>
                   </div>
                   {r.score !== null && (
                     <div className="flex gap-0.5">{[1, 2, 3, 4, 5].map((s) => <span key={s} className={`text-sm ${s <= r.score! ? 'text-amber-400' : 'text-slate-200 dark:text-slate-600'}`}>★</span>)}</div>
@@ -874,7 +874,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 <div key={s.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-white/[0.06] border border-slate-100 dark:border-white/[0.06]">
                   <div>
                     <p className="text-sm font-medium text-slate-800 dark:text-white">{s.qrCode?.label ?? 'QR Code'}</p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">{s.qrCode ? QR_PURPOSE_LABELS[s.qrCode.purpose] : ''} · {formatDateTime(s.createdAt)}</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5">{s.qrCode ? QR_PURPOSE_LABELS[s.qrCode.purpose] : ''} · {formatDateTime(s.createdAt)}</p>
                   </div>
                   {s.outcome && <span className="text-[11px] px-2 py-0.5 bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-300 rounded-full">{s.outcome}</span>}
                 </div>
@@ -892,7 +892,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 <div key={c.id} className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.06] border border-slate-100 dark:border-white/[0.06]">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-slate-800 capitalize">{c.direction.toLowerCase()} · {c.intent.toLowerCase()}</span>
-                    {c.duration && <span className="text-xs text-slate-400 dark:text-slate-500">{Math.round(c.duration / 60)}m</span>}
+                    {c.duration && <span className="text-xs text-slate-400 dark:text-slate-400">{Math.round(c.duration / 60)}m</span>}
                   </div>
                   {c.summary && <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{c.summary}</p>}
                   {c.sentiment && <span className={`inline-block mt-1 text-[11px] px-2 py-0.5 rounded-full ${c.sentiment === 'POSITIVE' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400' : c.sentiment === 'NEGATIVE' ? 'bg-red-100 text-red-600 dark:bg-red-500/15 dark:text-red-400' : 'bg-slate-100 text-slate-500 dark:bg-white/[0.06] dark:text-slate-400'}`}>{c.sentiment.toLowerCase()}</span>}
@@ -912,7 +912,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 <div key={s.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-white/[0.06] border border-slate-100 dark:border-white/[0.06]">
                   <div>
                     <p className="text-sm font-medium text-slate-800 capitalize">{s.channel.toLowerCase()} chat</p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">{formatDateTime(s.createdAt)}</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5">{formatDateTime(s.createdAt)}</p>
                   </div>
                   {s.leadCaptured && <span className="text-[11px] px-2 py-0.5 bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 rounded-full">Lead captured</span>}
                 </div>

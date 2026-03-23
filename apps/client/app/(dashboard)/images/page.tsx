@@ -252,7 +252,7 @@ export default function ImagesPage() {
           </button>
         ))}
         <div className="flex-1" />
-        <span className="text-xs text-slate-400 dark:text-slate-500 self-center">{images.length} image{images.length !== 1 ? 's' : ''}</span>
+        <span className="text-xs text-slate-400 dark:text-slate-400 self-center">{images.length} image{images.length !== 1 ? 's' : ''}</span>
       </div>
 
       {/* Image grid */}
@@ -282,7 +282,7 @@ export default function ImagesPage() {
               </div>
               <div className="p-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{img.source === 'dalle' ? 'AI Generated' : img.source}</span>
+                  <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider">{img.source === 'dalle' ? 'AI Generated' : img.source}</span>
                   <button
                     onClick={(e) => { e.stopPropagation(); void handleToggleFavorite(img.id, img.favorite); }}
                     className={`p-1 rounded transition-colors ${img.favorite ? 'text-amber-500' : 'text-slate-300 hover:text-amber-400'}`}
@@ -314,7 +314,7 @@ export default function ImagesPage() {
             <div className="p-6 space-y-4">
               {selectedImage.prompt && (
                 <div>
-                  <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Prompt</p>
+                  <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1">Prompt</p>
                   <p className="text-sm text-slate-700 dark:text-slate-200">{selectedImage.prompt}</p>
                 </div>
               )}

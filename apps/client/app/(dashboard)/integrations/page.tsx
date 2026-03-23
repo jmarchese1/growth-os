@@ -264,7 +264,7 @@ function ManagedServiceCard({ service }: { service: ManagedService }) {
       <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-3 flex-1">{service.description}</p>
 
       <div className="mb-4">
-        <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">Powers</p>
+        <p className="text-[10px] text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1.5">Powers</p>
         <div className="flex flex-wrap gap-1">
           {service.powersModules.map((mod) => (
             <span key={mod} className="inline-block px-2 py-0.5 rounded text-[10px] font-medium bg-violet-50 text-violet-600 border border-violet-100">
@@ -280,7 +280,7 @@ function ManagedServiceCard({ service }: { service: ManagedService }) {
         </div>
       )}
 
-      <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 mt-auto pt-2 border-t border-slate-100 dark:border-white/[0.06]">
+      <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-400 mt-auto pt-2 border-t border-slate-100 dark:border-white/[0.06]">
         <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-violet-400">
           <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
         </svg>
@@ -313,13 +313,13 @@ function SocialAccountCard({ account, onConnect }: { account: SocialAccount; onC
 
       {account.accountName && (
         <div className="bg-slate-50 dark:bg-white/[0.06] border border-slate-200/60 dark:border-white/[0.06] rounded-lg px-3 py-2 mb-3">
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider">Account</p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-400 uppercase tracking-wider">Account</p>
           <p className="text-xs text-slate-700 dark:text-slate-200 font-medium">{account.accountName}</p>
         </div>
       )}
 
       <div className="mb-4">
-        <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">Powers</p>
+        <p className="text-[10px] text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1.5">Powers</p>
         <div className="flex flex-wrap gap-1">
           {account.powersModules.map((mod) => (
             <span key={mod} className="inline-block px-2 py-0.5 rounded text-[10px] font-medium bg-violet-50 text-violet-600 border border-violet-100">

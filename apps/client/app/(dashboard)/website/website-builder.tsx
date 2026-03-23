@@ -486,10 +486,10 @@ export default function WebsiteBuilder({
             return (
               <div key={label} className="flex items-center flex-1 last:flex-none">
                 <div className="flex items-center gap-2">
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-colors ${done ? 'bg-violet-600 text-white' : active ? 'bg-violet-600 text-white' : 'bg-slate-200 dark:bg-white/[0.06] text-slate-400 dark:text-slate-500'}`}>
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-colors ${done ? 'bg-violet-600 text-white' : active ? 'bg-violet-600 text-white' : 'bg-slate-200 dark:bg-white/[0.06] text-slate-400 dark:text-slate-400'}`}>
                     {done ? <svg viewBox="0 0 12 12" fill="none" className="w-3.5 h-3.5"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> : n}
                   </div>
-                  <span className={`text-xs font-medium ${active ? 'text-slate-900 dark:text-white' : done ? 'text-violet-600' : 'text-slate-400 dark:text-slate-500'}`}>{label}</span>
+                  <span className={`text-xs font-medium ${active ? 'text-slate-900 dark:text-white' : done ? 'text-violet-600' : 'text-slate-400 dark:text-slate-400'}`}>{label}</span>
                 </div>
                 {i < allStepLabels.length - 1 && <div className={`flex-1 h-px mx-2 ${done ? 'bg-violet-300' : 'bg-slate-200 dark:bg-white/[0.08]'}`} />}
               </div>
@@ -565,7 +565,7 @@ export default function WebsiteBuilder({
             {/* Existing website — collapsible if not needed */}
             <details className="mb-6" open={!!form.existingWebsiteUrl}>
               <summary className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider cursor-pointer select-none mb-2">
-                Import from existing website <span className="font-normal text-slate-400 dark:text-slate-500">(optional)</span>
+                Import from existing website <span className="font-normal text-slate-400 dark:text-slate-400">(optional)</span>
               </summary>
               <input
                 type="url"
@@ -574,7 +574,7 @@ export default function WebsiteBuilder({
                 onChange={(e) => setForm_('existingWebsiteUrl', e.target.value)}
                 className="w-full px-4 py-3 border border-slate-200 dark:border-white/[0.08] rounded-xl text-sm text-slate-900 dark:text-white dark:bg-white/[0.06] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 mt-2"
               />
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">We&apos;ll pull hours, menu, photos, and contact info automatically.</p>
+              <p className="text-xs text-slate-400 dark:text-slate-400 mt-2">We&apos;ll pull hours, menu, photos, and contact info automatically.</p>
             </details>
 
             {/* Inspiration websites — prominently displayed */}
@@ -583,7 +583,7 @@ export default function WebsiteBuilder({
                 <p className="text-sm font-bold text-slate-800 dark:text-white">Style Inspiration</p>
                 <span className="px-2 py-0.5 bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400 text-[10px] font-bold rounded-full">Recommended</span>
               </div>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">Paste URLs of websites whose look and feel you love. Our AI will screenshot them, extract their design DNA (colors, typography, spacing, layout), and apply that aesthetic to your site. <strong className="text-slate-500 dark:text-slate-400">This is what makes each site unique.</strong></p>
+              <p className="text-xs text-slate-400 dark:text-slate-400 mb-4">Paste URLs of websites whose look and feel you love. Our AI will screenshot them, extract their design DNA (colors, typography, spacing, layout), and apply that aesthetic to your site. <strong className="text-slate-500 dark:text-slate-400">This is what makes each site unique.</strong></p>
               <div className="space-y-2">
                 {inspirationUrls.map((url, i) => (
                   <div key={i} className="flex gap-2">
@@ -620,7 +620,7 @@ export default function WebsiteBuilder({
                 <p className="text-sm font-bold text-slate-800 dark:text-white">Or Describe Your Dream Site</p>
                 <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-400 text-[10px] font-bold rounded-full">Alternative</span>
               </div>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">No inspiration URL? Just describe the look and feel you want. The AI will design from your description.</p>
+              <p className="text-xs text-slate-400 dark:text-slate-400 mb-3">No inspiration URL? Just describe the look and feel you want. The AI will design from your description.</p>
               <textarea
                 value={dreamPrompt}
                 onChange={(e) => setDreamPrompt(e.target.value)}
@@ -681,13 +681,13 @@ export default function WebsiteBuilder({
               <div>
                 <Field label={industry.bookingLabel} value={form.bookingUrl} onChange={(v) => setForm_('bookingUrl', v)} placeholder={industry.bookingPlaceholder} />
                 {form.industryType === 'restaurant' && (
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Most restaurants use <a href="https://www.opentable.com" target="_blank" rel="noreferrer" className="text-violet-500 hover:underline">OpenTable</a>, <a href="https://resy.com" target="_blank" rel="noreferrer" className="text-violet-500 hover:underline">Resy</a>, or <a href="https://www.yelp.com/reservations" target="_blank" rel="noreferrer" className="text-violet-500 hover:underline">Yelp Reservations</a></p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-1">Most restaurants use <a href="https://www.opentable.com" target="_blank" rel="noreferrer" className="text-violet-500 hover:underline">OpenTable</a>, <a href="https://resy.com" target="_blank" rel="noreferrer" className="text-violet-500 hover:underline">Resy</a>, or <a href="https://www.yelp.com/reservations" target="_blank" rel="noreferrer" className="text-violet-500 hover:underline">Yelp Reservations</a></p>
                 )}
               </div>
             </div>
             <div className="mb-6">
               <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
-                Hours <span className="font-normal text-slate-400 dark:text-slate-500">(optional — AI will suggest if left blank)</span>
+                Hours <span className="font-normal text-slate-400 dark:text-slate-400">(optional — AI will suggest if left blank)</span>
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
                 {DAYS.map((day) => (
@@ -707,7 +707,7 @@ export default function WebsiteBuilder({
             <div className="mb-6 border-t border-slate-100 dark:border-white/[0.06] pt-6">
               <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
                 {industry.defaultSections.find((s) => s.id === 'menu')?.label ?? 'Menu / Services'}{' '}
-                <span className="font-normal text-slate-400 dark:text-slate-500">(optional — upload to auto-populate)</span>
+                <span className="font-normal text-slate-400 dark:text-slate-400">(optional — upload to auto-populate)</span>
               </label>
               <div className="flex items-center gap-2 mt-3 mb-3">
                 {(['text', 'image', 'pdf'] as const).map((mode) => (
@@ -762,7 +762,7 @@ export default function WebsiteBuilder({
                     <>
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6 text-slate-400 mb-2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
                       <span className="text-sm text-slate-500 dark:text-slate-400">Click to upload {menuInputMode === 'image' ? 'a photo of your menu' : 'a PDF menu'}</span>
-                      <span className="text-xs text-slate-400 dark:text-slate-500 mt-1">{menuInputMode === 'image' ? 'JPG, PNG, HEIC, WEBP' : 'PDF'} · up to 10MB</span>
+                      <span className="text-xs text-slate-400 dark:text-slate-400 mt-1">{menuInputMode === 'image' ? 'JPG, PNG, HEIC, WEBP' : 'PDF'} · up to 10MB</span>
                     </>
                   )}
                 </label>
@@ -772,7 +772,7 @@ export default function WebsiteBuilder({
             {/* Gallery Images */}
             <div className="mb-6 border-t border-slate-100 dark:border-white/[0.06] pt-6">
               <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
-                Photo Gallery <span className="font-normal text-slate-400 dark:text-slate-500">(paste image URLs — up to 6)</span>
+                Photo Gallery <span className="font-normal text-slate-400 dark:text-slate-400">(paste image URLs — up to 6)</span>
               </label>
               <div className="space-y-2 mt-3">
                 {form.galleryImages.map((url, i) => (
@@ -820,13 +820,13 @@ export default function WebsiteBuilder({
             {/* Analytics (collapsible) */}
             <details className="mb-6 border-t border-slate-100 dark:border-white/[0.06] pt-6">
               <summary className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider cursor-pointer select-none">
-                Analytics & Tracking <span className="font-normal text-slate-400 dark:text-slate-500">(optional)</span>
+                Analytics & Tracking <span className="font-normal text-slate-400 dark:text-slate-400">(optional)</span>
               </summary>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 <Field label="Google Analytics ID" value={form.googleAnalyticsId} onChange={(v) => setForm_('googleAnalyticsId', v)} placeholder="G-XXXXXXXXXX" />
                 <Field label="Meta Pixel ID" value={form.metaPixelId} onChange={(v) => setForm_('metaPixelId', v)} placeholder="123456789012345" />
               </div>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2">Tracking codes will be injected into your generated website automatically.</p>
+              <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-2">Tracking codes will be injected into your generated website automatically.</p>
             </details>
 
             <div className="flex gap-3">
@@ -852,9 +852,9 @@ export default function WebsiteBuilder({
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Hero Banner</p>
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500">Always first — your main headline and CTA</p>
+                  <p className="text-[11px] text-slate-400 dark:text-slate-400">Always first — your main headline and CTA</p>
                 </div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 bg-slate-200 dark:bg-white/[0.06] px-2 py-0.5 rounded-full">Locked</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 bg-slate-200 dark:bg-white/[0.06] px-2 py-0.5 rounded-full">Locked</span>
               </div>
 
               {/* Reorderable sections */}
@@ -890,7 +890,7 @@ export default function WebsiteBuilder({
 
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-slate-800 dark:text-white">{section.label}</p>
-                      {section.hint && <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">{section.hint}</p>}
+                      {section.hint && <p className="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5">{section.hint}</p>}
                     </div>
 
                     {/* Page mode toggle */}
@@ -917,7 +917,7 @@ export default function WebsiteBuilder({
               {/* Additional Pages */}
               <div className="mt-6 border-t border-slate-100 dark:border-white/[0.06] pt-6">
                 <h3 className="text-sm font-bold text-slate-800 dark:text-white mb-1">Additional Pages</h3>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">Standalone pages with their own nav links and AI-generated content — perfect for Contact, Careers, Team pages.</p>
+                <p className="text-xs text-slate-400 dark:text-slate-400 mb-4">Standalone pages with their own nav links and AI-generated content — perfect for Contact, Careers, Team pages.</p>
                 <div className="grid grid-cols-3 gap-2">
                   {extraPages.map((page) => (
                     <button
@@ -928,7 +928,7 @@ export default function WebsiteBuilder({
                       }`}
                     >
                       <p className={`text-xs font-semibold ${page.enabled ? 'text-violet-700 dark:text-violet-400' : 'text-slate-700 dark:text-slate-200'}`}>{page.label}</p>
-                      <p className={`text-[10px] mt-0.5 font-mono ${page.enabled ? 'text-violet-400' : 'text-slate-400 dark:text-slate-500'}`}>/{page.slug}</p>
+                      <p className={`text-[10px] mt-0.5 font-mono ${page.enabled ? 'text-violet-400' : 'text-slate-400 dark:text-slate-400'}`}>/{page.slug}</p>
                     </button>
                   ))}
                 </div>
@@ -1043,7 +1043,7 @@ export default function WebsiteBuilder({
                         <span style={{ color: cs.accent }} className="text-[10px] font-bold">{cs.label}</span>
                       </div>
                       <div className="px-2 py-1.5 bg-white dark:bg-white/[0.04] border-t border-slate-100 dark:border-white/[0.06]">
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500">{cs.preview}</p>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-400">{cs.preview}</p>
                       </div>
                       {form.colorScheme === cs.id && (
                         <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-violet-500 rounded-full flex items-center justify-center">
@@ -1099,7 +1099,7 @@ export default function WebsiteBuilder({
               {/* Scroll Animations */}
               <div className="mt-8 pt-8 border-t border-slate-100 dark:border-white/[0.06]">
                 <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Scroll Animations</label>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">Sections animate into view as visitors scroll. Powered by native CSS scroll-driven animations.</p>
+                <p className="text-xs text-slate-400 dark:text-slate-400 mb-4">Sections animate into view as visitors scroll. Powered by native CSS scroll-driven animations.</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   {ANIMATION_PRESETS.map((ap) => {
                     const selected = form.animationPreset === ap.id;
@@ -1179,7 +1179,7 @@ export default function WebsiteBuilder({
             {result.url && (
               <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-5 flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Your Live Website</p>
+                  <p className="text-xs font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1">Your Live Website</p>
                   <a href={result.url} target="_blank" rel="noreferrer" className="text-violet-600 font-semibold text-sm hover:underline break-all">{result.url}</a>
                 </div>
                 <div className="flex gap-2 flex-shrink-0">
@@ -1197,7 +1197,7 @@ export default function WebsiteBuilder({
                     <div className="w-3 h-3 rounded-full bg-amber-400" />
                     <div className="w-3 h-3 rounded-full bg-emerald-400" />
                   </div>
-                  <div className="flex-1 bg-slate-100 dark:bg-white/[0.06] rounded-md px-3 py-1.5 text-xs text-slate-400 dark:text-slate-500 truncate">{result.url || 'preview'}</div>
+                  <div className="flex-1 bg-slate-100 dark:bg-white/[0.06] rounded-md px-3 py-1.5 text-xs text-slate-400 dark:text-slate-400 truncate">{result.url || 'preview'}</div>
                 </div>
                 <iframe srcDoc={result.html} title="Website Preview" className="w-full" style={{ height: '600px', border: 'none' }} sandbox="allow-same-origin allow-scripts" />
               </div>

@@ -76,12 +76,12 @@ function ImagePicker({ businessId, selectedUrl, onSelect }: { businessId: string
   }, [businessId]);
 
   if (loading) {
-    return <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 py-2"><div className="w-3 h-3 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" /> Loading images...</div>;
+    return <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-400 py-2"><div className="w-3 h-3 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" /> Loading images...</div>;
   }
 
   if (images.length === 0) {
     return (
-      <div className="text-xs text-slate-400 dark:text-slate-500 py-2">
+      <div className="text-xs text-slate-400 dark:text-slate-400 py-2">
         No images in your library. <Link href="/images" className="text-violet-500 hover:underline">Upload or generate images</Link> first.
       </div>
     );
@@ -202,9 +202,9 @@ function GenerateModal({ businessId, onDone, onClose }: { businessId: string; on
       <div className="px-6 py-4 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between">
         <div>
           <h3 className="text-sm font-semibold text-slate-800 dark:text-white">Generate AI Post</h3>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Claude will write a platform-optimised post for you</p>
+          <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">Claude will write a platform-optimised post for you</p>
         </div>
-        <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-500 transition-colors">
+        <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-400 transition-colors">
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
         </button>
       </div>
@@ -225,7 +225,7 @@ function GenerateModal({ businessId, onDone, onClose }: { businessId: string; on
           <input type="text" value={topic} onChange={(e) => setTopic(e.target.value)}
             placeholder="e.g. weekend brunch special, new menu item, happy hour..."
             className={inputClass} />
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Leave blank to generate general business content</p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-1">Leave blank to generate general business content</p>
         </div>
         <div>
           <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Image</label>
@@ -241,7 +241,7 @@ function GenerateModal({ businessId, onDone, onClose }: { businessId: string; on
               <input type="date" value={scheduleDate} min={defaultDate} onChange={(e) => setScheduleDate(e.target.value)} className={inputClass} />
               <input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} className={inputClass} placeholder="09:00" />
             </div>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Leave blank to save as a draft</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-1">Leave blank to save as a draft</p>
           </div>
         )}
         <label className="flex items-center gap-2 cursor-pointer">
@@ -319,7 +319,7 @@ function EditModal({ businessId, post, onDone, onClose }: { businessId: string; 
     <ModalBackdrop onClose={onClose}>
       <div className="px-6 py-4 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between">
         <h3 className="text-sm font-semibold text-slate-800 dark:text-white">Edit Post</h3>
-        <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-500 transition-colors">
+        <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-400 transition-colors">
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
         </button>
       </div>
@@ -342,7 +342,7 @@ function EditModal({ businessId, post, onDone, onClose }: { businessId: string; 
         <div>
           <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Hashtags</label>
           <input type="text" value={hashtags} onChange={(e) => setHashtags(e.target.value)} placeholder="food, restaurant, dining" className={inputClass} />
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Comma-separated, without #</p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-1">Comma-separated, without #</p>
         </div>
         <div>
           <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Image</label>
@@ -357,7 +357,7 @@ function EditModal({ businessId, post, onDone, onClose }: { businessId: string; 
             <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className={inputClass} />
             <input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} className={inputClass} />
           </div>
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Clear to save as draft</p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-1">Clear to save as draft</p>
         </div>
         {error && <p className="text-xs text-red-500">{error}</p>}
       </div>
@@ -528,7 +528,7 @@ export default function SocialMediaPage() {
                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{platform}</p>
                 <div className="flex items-center gap-1 mt-0.5">
                   <div className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-500' : 'bg-slate-300'}`} />
-                  <p className={`text-[10px] ${connected ? 'text-emerald-600 font-medium' : 'text-slate-400 dark:text-slate-500'}`}>
+                  <p className={`text-[10px] ${connected ? 'text-emerald-600 font-medium' : 'text-slate-400 dark:text-slate-400'}`}>
                     {connected ? 'Connected' : 'Not connected'}
                   </p>
                 </div>
@@ -554,7 +554,7 @@ export default function SocialMediaPage() {
               <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
             </svg>
             <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">No content yet</p>
-            <p className="text-slate-400 dark:text-slate-500 text-xs mb-4">
+            <p className="text-slate-400 dark:text-slate-400 text-xs mb-4">
               {connectedCount === 0
                 ? 'Connect a social account to start generating and scheduling AI content.'
                 : 'Click "Generate Post" to create your first AI-powered social media post.'}
@@ -574,12 +574,12 @@ export default function SocialMediaPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-white/[0.06] bg-slate-50/50 dark:bg-white/[0.06]">
-                  <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Content</th>
-                  <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Platform</th>
-                  <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Status</th>
-                  <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Date</th>
-                  <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Engagement</th>
-                  <th className="text-right text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Actions</th>
+                  <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-5 py-3">Content</th>
+                  <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-5 py-3">Platform</th>
+                  <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-5 py-3">Status</th>
+                  <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-5 py-3">Date</th>
+                  <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-5 py-3">Engagement</th>
+                  <th className="text-right text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-5 py-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -606,7 +606,7 @@ export default function SocialMediaPage() {
                           {post.status === 'POSTED' ? 'Published' : post.status.charAt(0) + post.status.slice(1).toLowerCase()}
                         </span>
                       </td>
-                      <td className="px-5 py-3 text-xs text-slate-400 dark:text-slate-500">
+                      <td className="px-5 py-3 text-xs text-slate-400 dark:text-slate-400">
                         {post.postedAt ? formatDate(post.postedAt) : post.scheduledAt ? formatDate(post.scheduledAt) : '—'}
                       </td>
                       <td className="px-5 py-3 text-xs text-slate-500 dark:text-slate-400">

@@ -7,4 +7,5 @@ export * from './survey.types.js';
 export * from './social.types.js';
 export * from './proposal.types.js';
 export * from './website.types.js';
+export * from './reservation.types.js';
 export * from './events.types.js';
