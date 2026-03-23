@@ -468,20 +468,22 @@ Return ONLY a JSON object with:
     return updated;
   });
 
-  // GET /businesses/:id/trends — daily counts for last 30 days
+  // GET /businesses/:id/trends — daily counts for last N days (7, 30, or 90)
   app.get('/businesses/:id/trends', async (request) => {
     const { id } = request.params as { id: string };
+    const query = request.query as { days?: string };
+    const days = [7, 30, 90].includes(Number(query.days)) ? Number(query.days) : 30;
     const business = await db.business.findUnique({ where: { id }, select: { id: true } });
     if (!business) throw new NotFoundError('Business', id);
 
     const now = new Date();
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    thirtyDaysAgo.setHours(0, 0, 0, 0);
+    const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+    startDate.setHours(0, 0, 0, 0);
 
-    // Build a complete array of date strings for the last 30 days
+    // Build a complete array of date strings for the last N days
     const dateStrings: string[] = [];
-    for (let i = 0; i < 30; i++) {
-      const d = new Date(thirtyDaysAgo.getTime() + i * 24 * 60 * 60 * 1000);
+    for (let i = 0; i < days; i++) {
+      const d = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000);
       dateStrings.push(d.toISOString().slice(0, 10));
     }
 
@@ -489,23 +491,23 @@ Return ONLY a JSON object with:
     const [contactRows, callRows, chatRows, appointmentRows, qrScanRows] = await Promise.all([
       db.$queryRawUnsafe<Array<{ date: Date; count: bigint }>>(
         'SELECT DATE("createdAt") as date, COUNT(*)::bigint as count FROM "Contact" WHERE "businessId" = $1 AND "createdAt" >= $2 GROUP BY DATE("createdAt")',
-        id, thirtyDaysAgo,
+        id, startDate,
       ),
       db.$queryRawUnsafe<Array<{ date: Date; count: bigint }>>(
         'SELECT DATE("createdAt") as date, COUNT(*)::bigint as count FROM "VoiceCallLog" WHERE "businessId" = $1 AND "createdAt" >= $2 GROUP BY DATE("createdAt")',
-        id, thirtyDaysAgo,
+        id, startDate,
       ),
       db.$queryRawUnsafe<Array<{ date: Date; count: bigint }>>(
         'SELECT DATE("createdAt") as date, COUNT(*)::bigint as count FROM "ChatSession" WHERE "businessId" = $1 AND "createdAt" >= $2 GROUP BY DATE("createdAt")',
-        id, thirtyDaysAgo,
+        id, startDate,
       ),
       db.$queryRawUnsafe<Array<{ date: Date; count: bigint }>>(
         'SELECT DATE("startTime") as date, COUNT(*)::bigint as count FROM "Appointment" WHERE "businessId" = $1 AND "startTime" >= $2 GROUP BY DATE("startTime")',
-        id, thirtyDaysAgo,
+        id, startDate,
       ),
       db.$queryRawUnsafe<Array<{ date: Date; count: bigint }>>(
         'SELECT DATE(s."createdAt") as date, COUNT(*)::bigint as count FROM "QrCodeScan" s JOIN "QrCode" q ON s."qrCodeId" = q."id" WHERE q."businessId" = $1 AND s."createdAt" >= $2 GROUP BY DATE(s."createdAt")',
-        id, thirtyDaysAgo,
+        id, startDate,
       ),
     ]);
 
