@@ -188,7 +188,7 @@ const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 interface WebsiteRecord {
   id: string;
   deployUrl: string | null;
-  customDomain: string | null;
+  customDomain?: string | null;
   status: string;
   createdAt: string;
   updatedAt: string;
