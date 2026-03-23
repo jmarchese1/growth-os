@@ -187,7 +187,7 @@ export default function DashboardOverview() {
 
       <div className="mb-8 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Dashboard</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Dashboard</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             {business ? `Overview for ${business.name}` : 'Overview of your Embedo AI services'}
           </p>
@@ -195,7 +195,7 @@ export default function DashboardOverview() {
         {business && !!settings?.['onboardingComplete'] && (
           <button
             onClick={() => setShowOnboarding(true)}
-            className="px-3 py-1.5 text-xs font-medium text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/30 border border-violet-200 dark:border-violet-700 rounded-lg hover:bg-violet-100 dark:hover:bg-violet-900/50 transition-colors flex items-center gap-1.5"
+            className="px-3 py-1.5 text-xs font-medium text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-600/15 border border-violet-200 dark:border-violet-500/25 rounded-lg hover:bg-violet-100 dark:hover:bg-violet-600/25 transition-colors flex items-center gap-1.5"
           >
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>
             Setup Guide
@@ -222,14 +222,14 @@ export default function DashboardOverview() {
           </div>
 
           {/* Trends Chart */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 mb-8">
+          <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-5 mb-8">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">30-Day Trends</h2>
-              <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5">
+              <h2 className="text-sm font-semibold text-slate-700 dark:text-white">30-Day Trends</h2>
+              <div className="flex gap-1 bg-slate-100 dark:bg-white/[0.06] rounded-lg p-0.5">
                 {TREND_METRICS.map((m) => (
                   <button key={m.key} onClick={() => setTrendMetric(m.key)}
                     className={`px-3 py-1 text-[11px] font-medium rounded-md transition-all ${
-                      trendMetric === m.key ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                      trendMetric === m.key ? 'bg-white dark:bg-white/10 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white'
                     }`}
                   >
                     {m.label}
@@ -266,8 +266,8 @@ export default function DashboardOverview() {
 
           {/* Conversion Funnel + Quick Actions */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
-            <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
-              <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">Contact Pipeline</h2>
+            <div className="lg:col-span-2 bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-5">
+              <h2 className="text-sm font-semibold text-slate-700 dark:text-white mb-4">Contact Pipeline</h2>
               {(() => {
                 const leads = dashboard?.contactsByStatus.leads ?? 0;
                 const prospects = dashboard?.contactsByStatus.prospects ?? 0;
@@ -286,7 +286,7 @@ export default function DashboardOverview() {
                           <span className="text-xs text-slate-500">{s.label}</span>
                           <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${s.bg} ${s.text}`}>{s.value}</span>
                         </div>
-                        <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div className="h-2 bg-slate-100 dark:bg-white/[0.06] rounded-full overflow-hidden">
                           <div className={`h-full ${s.color} rounded-full transition-all duration-500`} style={{ width: `${Math.round((s.value / total) * 100)}%` }} />
                         </div>
                       </div>
@@ -299,8 +299,8 @@ export default function DashboardOverview() {
                 );
               })()}
             </div>
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
-              <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">Quick Actions</h2>
+            <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-5">
+              <h2 className="text-sm font-semibold text-slate-700 dark:text-white mb-4">Quick Actions</h2>
               <div className="space-y-2">
                 {[
                   { href: '/campaigns', label: 'New Campaign', color: 'violet', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg> },
@@ -321,12 +321,12 @@ export default function DashboardOverview() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             {/* Recent Activity Feed */}
-            <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-700">
-                <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Recent Activity</h2>
+            <div className="lg:col-span-2 bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-white/[0.06]">
+                <h2 className="text-sm font-semibold text-slate-700 dark:text-white">Recent Activity</h2>
                 <Link href="/customers" className="text-xs text-violet-600 hover:underline">View all contacts</Link>
               </div>
-              <div className="divide-y divide-slate-50 dark:divide-slate-700/50">
+              <div className="divide-y divide-slate-50 dark:divide-white/[0.04]">
                 {activityFeed.length === 0 ? (
                   <p className="px-5 py-10 text-center text-sm text-slate-400">Activity will appear here as your customers interact with your business.</p>
                 ) : (
@@ -334,10 +334,10 @@ export default function DashboardOverview() {
                     const icon = ACTIVITY_ICONS[item.type] ?? ACTIVITY_ICONS['CHAT'];
                     const color = ACTIVITY_COLORS[item.type] ?? 'bg-slate-100 text-slate-500';
                     const Inner = (
-                      <div className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                      <div className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50/50 dark:hover:bg-white/[0.03] transition-colors">
                         <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${color}`}>{icon}</div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-slate-700 dark:text-slate-200 truncate">{item.label}</p>
+                          <p className="text-sm text-slate-700 dark:text-white truncate">{item.label}</p>
                           <p className="text-[11px] text-slate-400">{item.sub}</p>
                         </div>
                         <span className="text-[11px] text-slate-400 flex-shrink-0">{formatRelative(item.time)}</span>
@@ -351,17 +351,17 @@ export default function DashboardOverview() {
 
             {/* Right column */}
             <div className="space-y-6">
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
-                <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700">
-                  <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Upcoming Appointments</h2>
+              <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
+                <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06]">
+                  <h2 className="text-sm font-semibold text-slate-700 dark:text-white">Upcoming Appointments</h2>
                 </div>
-                <div className="divide-y divide-slate-50 dark:divide-slate-700/50">
+                <div className="divide-y divide-slate-50 dark:divide-white/[0.04]">
                   {!dashboard || dashboard.upcomingAppointments.length === 0 ? (
                     <p className="px-5 py-6 text-center text-xs text-slate-400">No upcoming appointments</p>
                   ) : (
                     dashboard.upcomingAppointments.map((appt) => (
                       <div key={appt.id} className="px-5 py-3">
-                        <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">{appt.title ?? 'Appointment'}</p>
+                        <p className="text-sm font-medium text-slate-700 dark:text-white truncate">{appt.title ?? 'Appointment'}</p>
                         <p className="text-[11px] text-slate-400 mt-0.5">{formatDate(appt.startTime)}</p>
                         <span className={`inline-flex mt-1 px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wide ${
                           appt.status === 'CONFIRMED' ? 'bg-emerald-50 text-emerald-600' :
@@ -374,8 +374,8 @@ export default function DashboardOverview() {
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
-                <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">This Month</h2>
+              <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-5">
+                <h2 className="text-sm font-semibold text-slate-700 dark:text-white mb-3">This Month</h2>
                 <div className="space-y-2.5">
                   {[
                     { label: 'New contacts', value: dashboard?.newContactsThisMonth ?? 0 },
@@ -385,7 +385,7 @@ export default function DashboardOverview() {
                   ].map(({ label, value }) => (
                     <div key={label} className="flex justify-between items-center">
                       <span className="text-xs text-slate-500">{label}</span>
-                      <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{value}</span>
+                      <span className="text-sm font-semibold text-slate-700 dark:text-white">{value}</span>
                     </div>
                   ))}
                 </div>
@@ -395,7 +395,7 @@ export default function DashboardOverview() {
 
           {/* Active Modules */}
           <div className="mb-8">
-            <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">Active Modules</h2>
+            <h2 className="text-sm font-semibold text-slate-700 dark:text-white mb-4">Active Modules</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <ModuleStatus name="Voice Agent" active={!!business?.elevenLabsAgentId} description="AI receptionist for inbound calls"
                 icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" /></svg>} />

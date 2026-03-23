@@ -46,6 +46,18 @@
     border-color: rgba(124,58,237,0.25) !important;
     box-shadow: 0 0 28px rgba(124,58,237,0.10), inset 0 0 20px rgba(124,58,237,0.03);
   }
+
+  /* ── Dark mode glass card ──────────────────────────────────────────────── */
+  .dark-card {
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .dark-card-elevated {
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.10);
+  }
 }
 
 /* ── Orbital particles ─────────────────────────────────────────────────────── */
@@ -89,6 +101,5 @@
 ::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.35); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(124,58,237,0.55); }
 
-/* Dark mode overrides */
 .dark ::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.5); }
 .dark ::-webkit-scrollbar-thumb:hover { background: rgba(124,58,237,0.7); }

@@ -187,10 +187,10 @@ export default function SettingsPage() {
     { id: 'danger', label: 'Danger Zone', icon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z' },
   ];
 
-  const inputCls = 'w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-200 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-600 transition-all';
-  const selectCls = 'w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-200 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-600 transition-all appearance-none';
+  const inputCls = 'w-full px-3 py-2 bg-slate-50 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-700 dark:text-white placeholder:dark:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40 transition-all';
+  const selectCls = 'w-full px-3 py-2 bg-slate-50 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40 transition-all appearance-none';
   const labelCls = 'block text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1';
-  const cardCls = 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 mb-6';
+  const cardCls = 'bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl p-6 mb-6';
   const saveBtnCls = 'px-4 py-2 text-sm font-medium text-white bg-violet-600 rounded-xl hover:bg-violet-700 transition-colors disabled:opacity-50 flex items-center gap-2';
 
   return (
@@ -210,22 +210,22 @@ export default function SettingsPage() {
       )}
 
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Settings</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Settings</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage your business profile, preferences, and team</p>
       </div>
 
       {/* Tabs */}
-      <div className="flex flex-wrap gap-1 bg-slate-100/80 dark:bg-slate-800/80 rounded-2xl p-1.5 mb-8">
+      <div className="flex flex-wrap gap-1 bg-slate-100/80 dark:bg-white/[0.06] rounded-2xl p-1.5 mb-8">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
               activeTab === tab.id
-                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm'
+                ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm'
                 : tab.id === 'danger'
                   ? 'text-red-400 hover:text-red-600 hover:bg-red-50/50 dark:hover:bg-red-900/20'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-white/50 dark:hover:bg-slate-700/50'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/[0.04]'
             }`}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -241,11 +241,11 @@ export default function SettingsPage() {
         <div className="animate-fade-up">
           {/* Account */}
           <div className={cardCls}>
-            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">Account</h3>
+            <h3 className="text-sm font-semibold text-slate-700 dark:text-white mb-4">Account</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelCls}>Email</label>
-                <p className="text-sm text-slate-700 dark:text-slate-200">{user?.email ?? '--'}</p>
+                <p className="text-sm text-slate-700 dark:text-white">{user?.email ?? '--'}</p>
               </div>
               <div>
                 <label className={labelCls}>User ID</label>
@@ -253,7 +253,7 @@ export default function SettingsPage() {
               </div>
               <div>
                 <label className={labelCls}>Role</label>
-                <p className="text-sm text-slate-700 dark:text-slate-200">{embedoUser?.role ?? 'Admin'}</p>
+                <p className="text-sm text-slate-700 dark:text-white">{embedoUser?.role ?? 'Admin'}</p>
               </div>
               <div>
                 <label className={labelCls}>Business Status</label>
@@ -268,7 +268,7 @@ export default function SettingsPage() {
           <div className={cardCls}>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Business Profile</h3>
+                <h3 className="text-sm font-semibold text-slate-700 dark:text-white">Business Profile</h3>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Core details about your business</p>
               </div>
             </div>
@@ -321,7 +321,7 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-white/[0.06]">
               <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-3">Address</p>
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div className="sm:col-span-2">
@@ -349,7 +349,7 @@ export default function SettingsPage() {
           <div className={cardCls}>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Integrations</h3>
+                <h3 className="text-sm font-semibold text-slate-700 dark:text-white">Integrations</h3>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Connected services and social accounts</p>
               </div>
               <Link href="/integrations" className="px-3 py-1.5 text-xs font-medium text-violet-600 bg-violet-50 border border-violet-200 rounded-lg hover:bg-violet-100 transition-colors">
@@ -382,7 +382,7 @@ export default function SettingsPage() {
         <div className="animate-fade-up">
           <div className={cardCls}>
             <div className="mb-4">
-              <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Business Hours</h3>
+              <h3 className="text-sm font-semibold text-slate-700 dark:text-white">Business Hours</h3>
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Set your regular operating hours. These are shown on your website and used by the AI voice agent.</p>
             </div>
 
@@ -390,7 +390,7 @@ export default function SettingsPage() {
               {DAYS.map((day) => {
                 const d = hours[day] ?? { open: '09:00', close: '17:00', closed: false };
                 return (
-                  <div key={day} className={`flex items-center gap-4 py-3 px-4 rounded-xl border transition-all ${d.closed ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'}`}>
+                  <div key={day} className={`flex items-center gap-4 py-3 px-4 rounded-xl border transition-all ${d.closed ? 'bg-slate-50 dark:bg-white/[0.03] border-slate-100 dark:border-white/[0.06]' : 'bg-white dark:bg-white/[0.04] border-slate-200 dark:border-white/[0.06]'}`}>
                     <div className="w-28">
                       <span className={`text-sm font-medium ${d.closed ? 'text-slate-400' : 'text-slate-700'}`}>{day}</span>
                     </div>
@@ -409,14 +409,14 @@ export default function SettingsPage() {
                           type="time"
                           value={d.open}
                           onChange={(e) => setHours((h) => ({ ...h, [day]: { ...d, open: e.target.value } }))}
-                          className="px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+                          className="px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30"
                         />
                         <span className="text-slate-400 text-xs">to</span>
                         <input
                           type="time"
                           value={d.close}
                           onChange={(e) => setHours((h) => ({ ...h, [day]: { ...d, close: e.target.value } }))}
-                          className="px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+                          className="px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30"
                         />
                       </div>
                     )}
@@ -464,7 +464,7 @@ export default function SettingsPage() {
         <div className="animate-fade-up">
           <div className={cardCls}>
             <div className="mb-4">
-              <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Notification Preferences</h3>
+              <h3 className="text-sm font-semibold text-slate-700 dark:text-white">Notification Preferences</h3>
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Choose how and when you want to be notified about activity.</p>
             </div>
 
@@ -475,9 +475,9 @@ export default function SettingsPage() {
                 { key: 'emailNewBooking' as const, label: 'New booking', desc: 'When a customer books an appointment' },
                 { key: 'emailWeeklyReport' as const, label: 'Weekly summary', desc: 'Receive a weekly performance digest every Monday' },
               ]).map(({ key, label, desc }) => (
-                <label key={key} className="flex items-center justify-between py-3 px-4 rounded-xl border border-slate-100 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer">
+                <label key={key} className="flex items-center justify-between py-3 px-4 rounded-xl border border-slate-100 dark:border-white/[0.06] hover:bg-slate-50/50 dark:hover:bg-white/[0.04] transition-colors cursor-pointer">
                   <div>
-                    <p className="text-sm text-slate-700 dark:text-slate-200 font-medium">{label}</p>
+                    <p className="text-sm text-slate-700 dark:text-white font-medium">{label}</p>
                     <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{desc}</p>
                   </div>
                   <div className="relative">
@@ -487,7 +487,7 @@ export default function SettingsPage() {
                       onChange={() => setNotifs((n) => ({ ...n, [key]: !n[key] }))}
                       className="sr-only peer"
                     />
-                    <div className="w-10 h-6 bg-slate-200 dark:bg-slate-600 rounded-full peer-checked:bg-violet-600 transition-colors" />
+                    <div className="w-10 h-6 bg-slate-200 dark:bg-white/[0.12] rounded-full peer-checked:bg-violet-600 transition-colors" />
                     <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm peer-checked:translate-x-4 transition-transform" />
                   </div>
                 </label>
@@ -498,9 +498,9 @@ export default function SettingsPage() {
                 { key: 'smsNewLead' as const, label: 'New lead (SMS)', desc: 'Get a text when a new lead comes in' },
                 { key: 'smsNewBooking' as const, label: 'New booking (SMS)', desc: 'Get a text when someone books' },
               ]).map(({ key, label, desc }) => (
-                <label key={key} className="flex items-center justify-between py-3 px-4 rounded-xl border border-slate-100 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer">
+                <label key={key} className="flex items-center justify-between py-3 px-4 rounded-xl border border-slate-100 dark:border-white/[0.06] hover:bg-slate-50/50 dark:hover:bg-white/[0.04] transition-colors cursor-pointer">
                   <div>
-                    <p className="text-sm text-slate-700 dark:text-slate-200 font-medium">{label}</p>
+                    <p className="text-sm text-slate-700 dark:text-white font-medium">{label}</p>
                     <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{desc}</p>
                   </div>
                   <div className="relative">
@@ -510,7 +510,7 @@ export default function SettingsPage() {
                       onChange={() => setNotifs((n) => ({ ...n, [key]: !n[key] }))}
                       className="sr-only peer"
                     />
-                    <div className="w-10 h-6 bg-slate-200 dark:bg-slate-600 rounded-full peer-checked:bg-violet-600 transition-colors" />
+                    <div className="w-10 h-6 bg-slate-200 dark:bg-white/[0.12] rounded-full peer-checked:bg-violet-600 transition-colors" />
                     <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm peer-checked:translate-x-4 transition-transform" />
                   </div>
                 </label>
@@ -532,7 +532,7 @@ export default function SettingsPage() {
         <div className="animate-fade-up">
           <div className={cardCls}>
             <div className="mb-4">
-              <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Email Defaults</h3>
+              <h3 className="text-sm font-semibold text-slate-700 dark:text-white">Email Defaults</h3>
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Default sender info and styling for outbound emails.</p>
             </div>
 
@@ -621,7 +621,7 @@ export default function SettingsPage() {
         <div className="animate-fade-up">
           <div className={cardCls}>
             <div className="mb-4">
-              <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Enabled Modules</h3>
+              <h3 className="text-sm font-semibold text-slate-700 dark:text-white">Enabled Modules</h3>
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Toggle which Embedo modules are active for your business. Disabled modules are hidden from the sidebar.</p>
             </div>
 
@@ -640,8 +640,8 @@ export default function SettingsPage() {
                   key={key}
                   className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
                     modules[key]
-                      ? 'border-violet-200 dark:border-violet-700/40 bg-violet-50/30 dark:bg-violet-900/20'
-                      : 'border-slate-100 dark:border-slate-700 bg-slate-50/30 dark:bg-slate-800/30 opacity-60'
+                      ? 'border-violet-200 dark:border-violet-500/20 bg-violet-50/30 dark:bg-violet-500/10'
+                      : 'border-slate-100 dark:border-white/[0.06] bg-slate-50/30 dark:bg-white/[0.02] opacity-60'
                   }`}
                 >
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${modules[key] ? 'bg-violet-100 text-violet-600' : 'bg-slate-100 text-slate-400'}`}>
@@ -679,7 +679,7 @@ export default function SettingsPage() {
           <div className={cardCls}>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Team Members</h3>
+                <h3 className="text-sm font-semibold text-slate-700 dark:text-white">Team Members</h3>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Manage who has access to this business dashboard.</p>
               </div>
               <button className="px-3 py-1.5 text-xs font-medium text-violet-600 bg-violet-50 border border-violet-200 rounded-lg hover:bg-violet-100 transition-colors">
@@ -694,7 +694,7 @@ export default function SettingsPage() {
                     {(user?.email?.[0] ?? 'U').toUpperCase()}
                   </div>
                   <div>
-                    <p className="text-sm text-slate-700 dark:text-slate-200 font-medium">{user?.email ?? '--'}</p>
+                    <p className="text-sm text-slate-700 dark:text-white font-medium">{user?.email ?? '--'}</p>
                     <p className="text-xs text-slate-400">Owner</p>
                   </div>
                 </div>
@@ -715,7 +715,7 @@ export default function SettingsPage() {
       {/* ===== DANGER ZONE TAB ===== */}
       {activeTab === 'danger' && (
         <div className="animate-fade-up">
-          <div className="bg-white dark:bg-slate-900 border-2 border-red-200 dark:border-red-800/60 rounded-2xl p-6">
+          <div className="bg-white dark:bg-white/[0.04] border-2 border-red-200 dark:border-red-500/20 rounded-2xl p-6">
             <div className="mb-6">
               <h3 className="text-sm font-semibold text-red-600 flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -729,7 +729,7 @@ export default function SettingsPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between py-3 px-4 rounded-xl border border-red-100 bg-red-50/30">
                 <div>
-                  <p className="text-sm text-slate-700 dark:text-slate-200 font-medium">Reset Onboarding</p>
+                  <p className="text-sm text-slate-700 dark:text-white font-medium">Reset Onboarding</p>
                   <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Show the setup wizard again on your next visit</p>
                 </div>
                 <button
@@ -747,7 +747,7 @@ export default function SettingsPage() {
 
               <div className="flex items-center justify-between py-3 px-4 rounded-xl border border-red-100 bg-red-50/30">
                 <div>
-                  <p className="text-sm text-slate-700 dark:text-slate-200 font-medium">Clear All Contacts</p>
+                  <p className="text-sm text-slate-700 dark:text-white font-medium">Clear All Contacts</p>
                   <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Remove all contacts from your business. Cannot be undone.</p>
                 </div>
                 <button
@@ -760,7 +760,7 @@ export default function SettingsPage() {
 
               <div className="flex items-center justify-between py-3 px-4 rounded-xl border border-red-100 bg-red-50/30">
                 <div>
-                  <p className="text-sm text-slate-700 dark:text-slate-200 font-medium">Delete Business</p>
+                  <p className="text-sm text-slate-700 dark:text-white font-medium">Delete Business</p>
                   <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Permanently delete this business and all associated data.</p>
                 </div>
                 <button
