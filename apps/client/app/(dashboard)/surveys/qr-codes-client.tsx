@@ -85,10 +85,10 @@ function qrPublicUrl(token: string): string {
 function ColorPicker({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
-      <label className="block text-[10px] font-medium text-slate-500 mb-1">{label}</label>
+      <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">{label}</label>
       <div className="flex items-center gap-1.5">
         <input type="color" value={value} onChange={(e) => onChange(e.target.value)} className="w-6 h-6 rounded border-0 cursor-pointer flex-shrink-0" />
-        <input type="text" value={value} onChange={(e) => onChange(e.target.value)} className="w-20 px-1.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 font-mono" />
+        <input type="text" value={value} onChange={(e) => onChange(e.target.value)} className="w-20 px-1.5 py-1 border border-slate-200 dark:border-white/[0.08] rounded text-[10px] text-slate-700 dark:text-slate-200 dark:bg-white/[0.06] font-mono" />
         {COLOR_PRESETS.slice(0, 6).map((c) => (
           <button key={c} onClick={() => onChange(c)} className="w-3.5 h-3.5 rounded-full border transition-all hover:scale-125 flex-shrink-0" style={{ background: c, borderColor: value === c ? '#333' : 'transparent' }} />
         ))}
@@ -126,7 +126,7 @@ function SpinPrizeBuilder({ prizes, onChange }: { prizes: SpinPrize[]; onChange:
             value={p.label}
             onChange={(e) => update(i, 'label', e.target.value)}
             placeholder="Prize label"
-            className="flex-1 px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+            className="flex-1 px-2.5 py-1.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-xs text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30"
           />
           <div className="flex items-center gap-1">
             <input
@@ -135,12 +135,12 @@ function SpinPrizeBuilder({ prizes, onChange }: { prizes: SpinPrize[]; onChange:
               onChange={(e) => update(i, 'probability', parseInt(e.target.value) || 0)}
               min={1}
               max={100}
-              className="w-16 px-2 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-800 text-center focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+              className="w-16 px-2 py-1.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-xs text-slate-800 dark:text-white dark:bg-white/[0.06] text-center focus:outline-none focus:ring-2 focus:ring-violet-500/30"
             />
-            <span className="text-[10px] text-slate-400">%</span>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500">%</span>
           </div>
           {prizes.length > 2 && (
-            <button onClick={() => remove(i)} className="p-1 text-slate-400 hover:text-red-500 transition-colors">
+            <button onClick={() => remove(i)} className="p-1 text-slate-400 dark:text-slate-500 hover:text-red-500 transition-colors">
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
             </button>
           )}
@@ -275,7 +275,7 @@ function LivePreview({ purpose, accentColor, bgColor, fontFamily, heading, subhe
   const defaultBtn = purpose === 'SURVEY' ? 'Submit Feedback' : purpose === 'SPIN_WHEEL' ? 'Spin the Wheel!' : purpose === 'SIGNUP' ? 'Sign Me Up' : 'Claim Now';
 
   return (
-    <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+    <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-white/[0.08] shadow-sm">
       <div className="px-3 py-1.5 bg-slate-100 dark:bg-white/[0.06] border-b border-slate-200 dark:border-white/[0.08] flex items-center gap-1.5">
         <div className="w-2 h-2 rounded-full bg-red-400" />
         <div className="w-2 h-2 rounded-full bg-amber-400" />
@@ -400,30 +400,30 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-white dark:bg-[#1a1730] rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
-          <h3 className="text-sm font-semibold text-slate-800">{step === 'form' ? 'Create QR Code' : 'Preview & Download'}</h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
+        <div className="px-6 py-4 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between flex-shrink-0">
+          <h3 className="text-sm font-semibold text-slate-800 dark:text-white">{step === 'form' ? 'Create QR Code' : 'Preview & Download'}</h3>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
           </button>
         </div>
 
         {step === 'form' ? (
           <div className="flex-1 overflow-y-auto">
-            <div className="flex divide-x divide-slate-200">
+            <div className="flex divide-x divide-slate-200 dark:divide-white/[0.08]">
               {/* Left: Settings */}
               <div className="flex-1 px-6 py-5 space-y-5 overflow-y-auto max-h-[calc(90vh-120px)]">
                 {/* Purpose */}
                 <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-2">QR Code Purpose</label>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">QR Code Purpose</label>
                   <div className="grid grid-cols-2 gap-2">
                     {(Object.entries(PURPOSE_CONFIG) as [QrPurpose, typeof PURPOSE_CONFIG[QrPurpose]][]).map(([key, cfg]) => (
                       <button
                         key={key}
                         onClick={() => setPurpose(key)}
-                        className={`text-left p-3 rounded-lg border transition-colors ${purpose === key ? 'border-violet-300 bg-violet-50' : 'border-slate-200 hover:bg-slate-50'}`}
+                        className={`text-left p-3 rounded-lg border transition-colors ${purpose === key ? 'border-violet-300 bg-violet-50 dark:bg-violet-500/10 dark:border-violet-500/30' : 'border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04]'}`}
                       >
-                        <p className="text-xs font-semibold text-slate-800">{cfg.icon} {cfg.label}</p>
-                        <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">{cfg.desc}</p>
+                        <p className="text-xs font-semibold text-slate-800 dark:text-white">{cfg.icon} {cfg.label}</p>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 leading-relaxed">{cfg.desc}</p>
                       </button>
                     ))}
                   </div>
@@ -431,24 +431,24 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
 
                 {/* Label */}
                 <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Internal Label</label>
-                  <input type="text" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="e.g. Table Tent — Summer Promo" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Internal Label</label>
+                  <input type="text" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="e.g. Table Tent — Summer Promo" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
                 </div>
 
                 {/* Purpose-specific fields */}
                 {purpose === 'SURVEY' && (
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-xs font-medium text-slate-500 mb-1">Link to Survey</label>
-                      <select value={surveyId} onChange={(e) => setSurveyId(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30">
+                      <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Link to Survey</label>
+                      <select value={surveyId} onChange={(e) => setSurveyId(e.target.value)} className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30"
                         <option value="">Select a survey...</option>
                         {surveys.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}
                       </select>
                       {surveys.length === 0 && <p className="text-[10px] text-amber-600 mt-1">No surveys yet — create one in the Surveys section first.</p>}
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-slate-500 mb-1">Reward After Completing (optional)</label>
-                      <input type="text" value={surveyReward} onChange={(e) => setSurveyReward(e.target.value)} placeholder="e.g. 10% off your next visit" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+                      <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Reward After Completing (optional)</label>
+                      <input type="text" value={surveyReward} onChange={(e) => setSurveyReward(e.target.value)} placeholder="e.g. 10% off your next visit" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
                     </div>
                   </div>
                 )}
@@ -456,12 +456,12 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
                 {purpose === 'DISCOUNT' && (
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-xs font-medium text-slate-500 mb-1">Discount Value</label>
-                      <input type="text" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} placeholder='e.g. "10% off" or "$5 off"' className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+                      <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Discount Value</label>
+                      <input type="text" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} placeholder='e.g. "10% off" or "$5 off"' className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-slate-500 mb-1">Discount Code (optional)</label>
-                      <input type="text" value={discountCode} onChange={(e) => setDiscountCode(e.target.value)} placeholder="e.g. SCAN10" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+                      <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Discount Code (optional)</label>
+                      <input type="text" value={discountCode} onChange={(e) => setDiscountCode(e.target.value)} placeholder="e.g. SCAN10" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
                     </div>
                   </div>
                 )}
@@ -473,54 +473,54 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
                       <SpinPrizeBuilder prizes={spinPrizes} onChange={setSpinPrizes} />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-slate-500 mb-1">Discount Code to Show Winners (optional)</label>
-                      <input type="text" value={discountCode} onChange={(e) => setDiscountCode(e.target.value)} placeholder="e.g. WINNER15" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+                      <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Discount Code to Show Winners (optional)</label>
+                      <input type="text" value={discountCode} onChange={(e) => setDiscountCode(e.target.value)} placeholder="e.g. WINNER15" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
                     </div>
                   </div>
                 )}
 
                 {['MENU', 'REVIEW', 'CUSTOM'].includes(purpose) && (
                   <div>
-                    <label className="block text-xs font-medium text-slate-500 mb-1">
+                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
                       {purpose === 'MENU' ? 'Menu URL' : purpose === 'REVIEW' ? 'Google Review URL' : 'Destination URL'}
                     </label>
-                    <input type="url" value={destinationUrl} onChange={(e) => setDestinationUrl(e.target.value)} placeholder="https://" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+                    <input type="url" value={destinationUrl} onChange={(e) => setDestinationUrl(e.target.value)} placeholder="https://" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
                   </div>
                 )}
 
                 {purpose === 'SIGNUP' && (
-                  <div className="bg-sky-50 border border-sky-200 rounded-lg px-4 py-3">
-                    <p className="text-xs text-sky-800 font-medium">How Sign-up works</p>
-                    <p className="text-[11px] text-sky-700 mt-1">Customers scan, enter their name + email or phone number, and are automatically added to your Contacts with source "QR Code".</p>
+                  <div className="bg-sky-50 dark:bg-sky-500/10 border border-sky-200 dark:border-sky-500/20 rounded-lg px-4 py-3">
+                    <p className="text-xs text-sky-800 dark:text-sky-300 font-medium">How Sign-up works</p>
+                    <p className="text-[11px] text-sky-700 dark:text-sky-400 mt-1">Customers scan, enter their name + email or phone number, and are automatically added to your Contacts with source "QR Code".</p>
                   </div>
                 )}
 
                 {/* Cooldown / usage limit */}
                 {['SPIN_WHEEL', 'DISCOUNT'].includes(purpose) && (
                   <div>
-                    <label className="block text-xs font-medium text-slate-500 mb-1">Usage Limit</label>
-                    <select value={cooldownPeriod} onChange={(e) => setCooldownPeriod(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800">
+                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Usage Limit</label>
+                    <select value={cooldownPeriod} onChange={(e) => setCooldownPeriod(e.target.value)} className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06]">
                       <option value="DAILY">Once per day</option>
                       <option value="WEEKLY">Once per week</option>
                       <option value="MONTHLY">Once per month</option>
                       <option value="ONCE">One-time only</option>
                       <option value="">Unlimited (no limit)</option>
                     </select>
-                    <p className="text-[10px] text-slate-400 mt-1">How often the same person can {purpose === 'SPIN_WHEEL' ? 'spin' : 'claim'}</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">How often the same person can {purpose === 'SPIN_WHEEL' ? 'spin' : 'claim'}</p>
                   </div>
                 )}
 
                 {/* Page Appearance */}
-                <div className="space-y-3 border border-slate-200 rounded-xl p-4">
-                  <p className="text-xs font-semibold text-slate-700">Page Appearance</p>
+                <div className="space-y-3 border border-slate-200 dark:border-white/[0.08] rounded-xl p-4">
+                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">Page Appearance</p>
 
                   <div className="grid grid-cols-2 gap-3">
                     <ColorPicker label="Accent Color" value={accentColor} onChange={setAccentColor} />
                     <div>
-                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Background Color</label>
+                      <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Background Color</label>
                       <div className="flex items-center gap-1.5">
                         <input type="color" value={bgColor.startsWith('#') ? bgColor : '#f8fafc'} onChange={(e) => setBgColor(e.target.value)} className="w-6 h-6 rounded border-0 cursor-pointer flex-shrink-0" />
-                        <input type="text" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="w-20 px-1.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 font-mono" />
+                        <input type="text" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="w-20 px-1.5 py-1 border border-slate-200 dark:border-white/[0.08] rounded text-[10px] text-slate-700 dark:text-slate-200 dark:bg-white/[0.06] font-mono" />
                         {['#ffffff', '#0f172a', '#eff6ff', '#ecfdf5'].map((c) => (
                           <button key={c} onClick={() => setBgColor(c)} className="w-3.5 h-3.5 rounded-full border transition-all hover:scale-125 flex-shrink-0" style={{ background: c, borderColor: bgColor === c ? '#333' : c === '#ffffff' || c === '#eff6ff' || c === '#ecfdf5' ? '#e2e8f0' : 'transparent' }} />
                         ))}
@@ -529,41 +529,41 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-medium text-slate-500 mb-1">Font</label>
-                    <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-800">
+                    <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Font</label>
+                    <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} className="w-full px-2.5 py-1.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-xs text-slate-800 dark:text-white dark:bg-white/[0.06]">
                       {FONT_OPTIONS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-medium text-slate-500 mb-1">Heading (optional)</label>
-                    <input type="text" value={pageHeading} onChange={(e) => setPageHeading(e.target.value)} placeholder={purpose === 'SURVEY' ? "We'd love your feedback!" : purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'DISCOUNT' ? 'Your Exclusive Offer' : 'Join Us!'} className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
+                    <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Heading (optional)</label>
+                    <input type="text" value={pageHeading} onChange={(e) => setPageHeading(e.target.value)} placeholder={purpose === 'SURVEY' ? "We'd love your feedback!" : purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'DISCOUNT' ? 'Your Exclusive Offer' : 'Join Us!'} className="w-full px-3 py-1.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06]" />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-medium text-slate-500 mb-1">Subheading (optional)</label>
-                    <input type="text" value={pageSubheading} onChange={(e) => setPageSubheading(e.target.value)} placeholder="Short description below the heading" className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
+                    <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Subheading (optional)</label>
+                    <input type="text" value={pageSubheading} onChange={(e) => setPageSubheading(e.target.value)} placeholder="Short description below the heading" className="w-full px-3 py-1.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06]" />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Logo URL (optional)</label>
-                      <input type="url" value={pageLogo} onChange={(e) => setPageLogo(e.target.value)} placeholder="https://..." className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-800" />
+                      <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Logo URL (optional)</label>
+                      <input type="url" value={pageLogo} onChange={(e) => setPageLogo(e.target.value)} placeholder="https://..." className="w-full px-3 py-1.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-xs text-slate-800 dark:text-white dark:bg-white/[0.06]" />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Button Text (optional)</label>
-                      <input type="text" value={pageButtonText} onChange={(e) => setPageButtonText(e.target.value)} placeholder={purpose === 'SURVEY' ? 'Submit Feedback' : purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'SIGNUP' ? 'Sign Me Up' : 'Claim Now'} className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
+                      <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Button Text (optional)</label>
+                      <input type="text" value={pageButtonText} onChange={(e) => setPageButtonText(e.target.value)} placeholder={purpose === 'SURVEY' ? 'Submit Feedback' : purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'SIGNUP' ? 'Sign Me Up' : 'Claim Now'} className="w-full px-3 py-1.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06]" />
                     </div>
                   </div>
                 </div>
 
                 {/* Expiration */}
                 <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Expiration Date (optional)</label>
-                  <input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} min={new Date().toISOString().split('T')[0]} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
-                  <p className="text-[10px] text-slate-400 mt-1">Leave blank for no expiration</p>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Expiration Date (optional)</label>
+                  <input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} min={new Date().toISOString().split('T')[0]} className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Leave blank for no expiration</p>
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2">
-                  <button onClick={onClose} className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
+                  <button onClick={onClose} className="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">Cancel</button>
                   <button onClick={handleGenerate} disabled={saving || !canGenerate} className="px-5 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 transition-colors flex items-center gap-2">
                     {saving && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                     {saving ? 'Generating...' : 'Generate QR Code'}
@@ -572,8 +572,8 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
               </div>
 
               {/* Right: Live Preview */}
-              <div className="w-[280px] flex-shrink-0 px-5 py-5 bg-slate-50/50 flex flex-col">
-                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-3">Live Preview</p>
+              <div className="w-[280px] flex-shrink-0 px-5 py-5 bg-slate-50/50 dark:bg-white/[0.02] flex flex-col">
+                <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Live Preview</p>
                 <LivePreview
                   purpose={purpose}
                   accentColor={accentColor}
@@ -592,11 +592,11 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
         ) : createdQr ? (
           <div className="px-6 py-5 overflow-y-auto">
             <div className="flex flex-col items-center gap-4 mb-6">
-              <div className="bg-white border-2 border-slate-100 rounded-xl p-4 shadow-sm">
+              <div className="bg-white dark:bg-white/[0.04] border-2 border-slate-100 dark:border-white/[0.06] rounded-xl p-4 shadow-sm">
                 <img src={qrImageUrl(qrPublicUrl(createdQr.token), 200)} alt={createdQr.label} width={200} height={200} className="rounded" />
               </div>
               <div className="text-center">
-                <p className="text-sm font-semibold text-slate-800">{createdQr.label}</p>
+                <p className="text-sm font-semibold text-slate-800 dark:text-white">{createdQr.label}</p>
                 <span className={`inline-flex mt-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium ${PURPOSE_CONFIG[createdQr.purpose]?.color}`}>
                   {PURPOSE_CONFIG[createdQr.purpose]?.icon} {PURPOSE_CONFIG[createdQr.purpose]?.label}
                 </span>
@@ -607,7 +607,7 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
               </div>
             </div>
             <div className="flex justify-center gap-3">
-              <button onClick={onClose} className="px-4 py-2 text-sm text-slate-500 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">Done</button>
+              <button onClick={onClose} className="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/[0.08] rounded-lg hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors">Done</button>
               <button onClick={handleDownload} className="px-5 py-2 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors flex items-center gap-2">
                 <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
                 Download PNG
@@ -652,7 +652,7 @@ function QrCodeCard({ qr, onDelete }: { qr: QrCode; onDelete: () => void }) {
 
   return (
     <div
-      className={`bg-white border rounded-xl p-4 flex gap-4 items-start cursor-pointer hover:border-violet-300 hover:shadow-sm transition-all ${isExpired ? 'border-red-200 opacity-60' : 'border-slate-200'}`}
+      className={`bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border rounded-xl p-4 flex gap-4 items-start cursor-pointer hover:border-violet-300 hover:shadow-sm transition-all ${isExpired ? 'border-red-200 opacity-60' : 'border-slate-200 dark:border-white/[0.08]'}`}
       onClick={() => router.push(`/qr-codes/${qr.id}`)}
     >
       <div className="bg-slate-50 dark:bg-white/[0.06] rounded-lg p-2 flex-shrink-0">
@@ -660,27 +660,27 @@ function QrCodeCard({ qr, onDelete }: { qr: QrCode; onDelete: () => void }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-sm font-semibold text-slate-800 truncate">{qr.label}</p>
+          <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">{qr.label}</p>
           <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium flex-shrink-0 ${cfg?.color}`}>{cfg?.icon} {cfg?.label}</span>
-          {isExpired && <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-600">Expired</span>}
+          {isExpired && <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-600 dark:bg-red-500/15 dark:text-red-400">Expired</span>}
         </div>
-        {qr.survey && <p className="text-[11px] text-slate-500 mt-0.5">Survey: {qr.survey.title}</p>}
-        {qr.discountValue && <p className="text-[11px] text-slate-500 mt-0.5">Discount: {qr.discountValue}{qr.discountCode ? ` — Code: ${qr.discountCode}` : ''}</p>}
-        {qr.expiresAt && !isExpired && <p className="text-[11px] text-slate-400 mt-0.5">Expires {new Date(qr.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>}
+        {qr.survey && <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Survey: {qr.survey.title}</p>}
+        {qr.discountValue && <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Discount: {qr.discountValue}{qr.discountCode ? ` — Code: ${qr.discountCode}` : ''}</p>}
+        {qr.expiresAt && !isExpired && <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Expires {new Date(qr.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>}
         <div className="flex items-center gap-3 mt-1.5">
-          <span className="text-[10px] font-medium text-slate-600">{qr.scanCount} scan{qr.scanCount !== 1 ? 's' : ''}</span>
-          <span className="text-[10px] text-slate-300">·</span>
-          <span className="text-[10px] text-slate-400">{new Date(qr.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+          <span className="text-[10px] font-medium text-slate-600 dark:text-slate-300">{qr.scanCount} scan{qr.scanCount !== 1 ? 's' : ''}</span>
+          <span className="text-[10px] text-slate-300 dark:text-slate-600">·</span>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500">{new Date(qr.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
           <button onClick={handleCopy} className="text-[10px] text-violet-500 hover:text-violet-700 transition-colors">
             {copied ? 'Copied!' : 'Copy link'}
           </button>
         </div>
       </div>
       <div className="flex flex-col gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-        <button onClick={handleDownload} disabled={downloading} className="px-3 py-1.5 text-xs font-medium text-violet-600 hover:bg-violet-50 rounded-lg transition-colors disabled:opacity-50">
+        <button onClick={handleDownload} disabled={downloading} className="px-3 py-1.5 text-xs font-medium text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-500/10 rounded-lg transition-colors disabled:opacity-50">
           {downloading ? '...' : 'Download'}
         </button>
-        <button onClick={onDelete} className="px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">Delete</button>
+        <button onClick={onDelete} className="px-3 py-1.5 text-xs font-medium text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors">Delete</button>
       </div>
     </div>
   );
@@ -745,7 +745,7 @@ export default function QrCodesTab() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <p className="text-sm font-medium text-slate-500">Scannable codes for tables, menus, and promos</p>
+        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Scannable codes for tables, menus, and promos</p>
         <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors">
           Create QR Code
         </button>
@@ -759,8 +759,8 @@ export default function QrCodesTab() {
       </div>
 
       {/* Purpose explainer */}
-      <div className="bg-violet-50 border border-violet-100 rounded-xl p-5 mb-8">
-        <h3 className="text-xs font-semibold text-violet-800 mb-3">QR Code Use Cases</h3>
+      <div className="bg-violet-50 dark:bg-violet-500/10 border border-violet-100 dark:border-violet-500/20 rounded-xl p-5 mb-8">
+        <h3 className="text-xs font-semibold text-violet-800 dark:text-violet-300 mb-3">QR Code Use Cases</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {(['SURVEY', 'SPIN_WHEEL', 'DISCOUNT', 'SIGNUP'] as QrPurpose[]).map((p) => {
             const cfg = PURPOSE_CONFIG[p];
@@ -768,8 +768,8 @@ export default function QrCodesTab() {
               <div key={p} className="flex gap-2.5 items-start">
                 <span className="text-lg flex-shrink-0">{cfg?.icon}</span>
                 <div>
-                  <p className="text-xs font-semibold text-violet-900">{cfg?.label}</p>
-                  <p className="text-[10px] text-violet-700 mt-0.5 leading-relaxed">{cfg?.desc}</p>
+                  <p className="text-xs font-semibold text-violet-900 dark:text-violet-200">{cfg?.label}</p>
+                  <p className="text-[10px] text-violet-700 dark:text-violet-400 mt-0.5 leading-relaxed">{cfg?.desc}</p>
                 </div>
               </div>
             );
@@ -779,14 +779,14 @@ export default function QrCodesTab() {
 
       {/* QR Code list */}
       <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-700">Your QR Codes</h2>
-          {qrCodes.length > 0 && <span className="text-xs text-slate-400">{qrCodes.length} total</span>}
+        <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Your QR Codes</h2>
+          {qrCodes.length > 0 && <span className="text-xs text-slate-400 dark:text-slate-500">{qrCodes.length} total</span>}
         </div>
         {loading ? (
           <div className="px-5 py-12 flex justify-center"><div className="w-6 h-6 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" /></div>
         ) : qrCodes.length === 0 ? (
-          <div className="px-5 py-12 text-center text-sm text-slate-400">
+          <div className="px-5 py-12 text-center text-sm text-slate-400 dark:text-slate-500">
             No QR codes yet. Create one and place it in your business to start building your customer list.
           </div>
         ) : (

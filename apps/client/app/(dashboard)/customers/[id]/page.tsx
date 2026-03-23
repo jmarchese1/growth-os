@@ -40,10 +40,10 @@ interface ContactDetail {
 }
 
 const STATUS_CONFIG: Record<ContactStatus, { label: string; color: string }> = {
-  CUSTOMER: { label: 'Customer', color: 'bg-emerald-100 text-emerald-700' },
-  PROSPECT: { label: 'Prospect', color: 'bg-violet-100 text-violet-700' },
-  LEAD: { label: 'Lead', color: 'bg-amber-100 text-amber-700' },
-  CHURNED: { label: 'Churned', color: 'bg-slate-100 text-slate-500' },
+  CUSTOMER: { label: 'Customer', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400' },
+  PROSPECT: { label: 'Prospect', color: 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-400' },
+  LEAD: { label: 'Lead', color: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400' },
+  CHURNED: { label: 'Churned', color: 'bg-slate-100 text-slate-500 dark:bg-white/[0.06] dark:text-slate-400' },
 };
 
 const SOURCE_LABELS: Record<LeadSource, string> = {
@@ -75,7 +75,7 @@ function fullName(c: Pick<ContactDetail, 'firstName' | 'lastName' | 'email'>) { 
 function initials(c: Pick<ContactDetail, 'firstName' | 'lastName' | 'email'>) { if (c.firstName) return (c.firstName[0] ?? '') + (c.lastName?.[0] ?? ''); return (c.email?.[0] ?? '?').toUpperCase(); }
 function delayLabel(h: number) { if (h === 0) return 'Immediately'; if (h < 24) return `${h}h later`; const d = Math.round(h / 24); return `${d} day${d > 1 ? 's' : ''} later`; }
 
-const inputClass = 'w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300';
+const inputClass = 'w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300';
 
 /* ─── Modal Backdrop ─────────────────────────────────────────────────────── */
 
@@ -83,7 +83,7 @@ function ModalBackdrop({ children, onClose }: { children: React.ReactNode; onClo
   if (typeof document === 'undefined') return null;
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white dark:bg-[#1a1730] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         {children}
       </div>
     </div>,
@@ -155,15 +155,15 @@ function ComposeEmailModal({ contact, onDone, onClose }: { contact: ContactDetai
   if (showPreview && previewHtml) {
     return (
       <ModalBackdrop onClose={() => setShowPreview(false)}>
-        <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-800">Email Preview</h3>
-          <button onClick={() => setShowPreview(false)} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400"><svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
+        <div className="px-5 py-3 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-slate-800 dark:text-white">Email Preview</h3>
+          <button onClick={() => setShowPreview(false)} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-500"><svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
         </div>
         <div className="flex-1 overflow-auto">
           <iframe srcDoc={previewHtml} className="w-full h-[500px] border-0" title="Email preview" />
         </div>
         <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex justify-end">
-          <button onClick={() => setShowPreview(false)} className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800">Back to editor</button>
+          <button onClick={() => setShowPreview(false)} className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white">Back to editor</button>
         </div>
       </ModalBackdrop>
     );
@@ -171,20 +171,20 @@ function ComposeEmailModal({ contact, onDone, onClose }: { contact: ContactDetai
 
   return (
     <ModalBackdrop onClose={onClose}>
-      <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
+      <div className="px-5 py-3 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-slate-800">Send Email</h3>
-          <p className="text-xs text-slate-400 mt-0.5">To: {contact.email ?? 'no email'}</p>
+          <h3 className="text-sm font-semibold text-slate-800 dark:text-white">Send Email</h3>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">To: {contact.email ?? 'no email'}</p>
         </div>
-        <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400"><svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
+        <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-500"><svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
       </div>
       <div className="px-5 py-4 space-y-3 overflow-y-auto">
         {/* AI Generate */}
-        <div className="bg-violet-50 border border-violet-200 rounded-xl p-3">
-          <label className="block text-xs font-medium text-violet-700 mb-1.5">AI Draft</label>
+        <div className="bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20 rounded-xl p-3">
+          <label className="block text-xs font-medium text-violet-700 dark:text-violet-400 mb-1.5">AI Draft</label>
           <div className="flex gap-2">
             <input value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder="e.g. win-back offer, new menu item, thank you..."
-              className="flex-1 px-3 py-1.5 border border-violet-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400/40 bg-white" />
+              className="flex-1 px-3 py-1.5 border border-violet-200 dark:border-violet-500/20 rounded-lg text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-400/40 bg-white dark:bg-white/[0.06]" />
             <button onClick={handleAiGenerate} disabled={generating}
               className="px-3 py-1.5 bg-violet-600 text-white text-xs font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 flex items-center gap-1">
               {generating ? <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>}
@@ -193,13 +193,13 @@ function ComposeEmailModal({ contact, onDone, onClose }: { contact: ContactDetai
           </div>
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Subject</label>
+          <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Subject</label>
           <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Email subject line..." className={inputClass} />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Body</label>
+          <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Body</label>
           <textarea value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={6} placeholder="<p>Hi {{firstName}},</p><p>Your email content here...</p>" className={inputClass} />
-          <p className="text-[10px] text-slate-400 mt-1">Use {'{{firstName}}'} and {'{{business}}'} as variables. HTML supported.</p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Use {'{{firstName}}'} and {'{{business}}'} as variables. HTML supported.</p>
         </div>
         {/* Email Style — below body so dropdowns open downward */}
         <EmailStylePicker
@@ -214,10 +214,10 @@ function ComposeEmailModal({ contact, onDone, onClose }: { contact: ContactDetai
         />
         {error && <p className="text-xs text-red-500">{error}</p>}
       </div>
-      <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex gap-2 justify-between">
-        <button onClick={handlePreview} disabled={!emailBody.trim()} className="px-3 py-2 text-xs font-medium text-slate-500 border border-slate-200 rounded-lg hover:bg-white disabled:opacity-40 transition-colors">Preview</button>
+      <div className="px-5 py-3 bg-slate-50 dark:bg-white/[0.04] border-t border-slate-200 dark:border-white/[0.08] flex gap-2 justify-between">
+        <button onClick={handlePreview} disabled={!emailBody.trim()} className="px-3 py-2 text-xs font-medium text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/[0.08] rounded-lg hover:bg-white dark:hover:bg-white/[0.06] disabled:opacity-40 transition-colors">Preview</button>
         <div className="flex gap-2">
-          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700">Cancel</button>
+          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">Cancel</button>
           <button onClick={handleSend} disabled={sending || !contact.email || !subject.trim() || !emailBody.trim()}
             className="px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 flex items-center gap-2">
             {sending && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
@@ -324,13 +324,13 @@ function SequenceBuilderModal({ businessId, existingSequence, onDone, onClose }:
   if (previewStep !== null && previewHtml) {
     return (
       <ModalBackdrop onClose={() => setPreviewStep(null)}>
-        <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-800">Step {previewStep + 1} Preview</h3>
-          <button onClick={() => setPreviewStep(null)} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400"><svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
+        <div className="px-5 py-3 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-slate-800 dark:text-white">Step {previewStep + 1} Preview</h3>
+          <button onClick={() => setPreviewStep(null)} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-500"><svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
         </div>
         <div className="flex-1 overflow-auto"><iframe srcDoc={previewHtml} className="w-full h-[500px] border-0" title="Email preview" /></div>
-        <div className="px-5 py-3 bg-slate-50 border-t flex justify-end">
-          <button onClick={() => setPreviewStep(null)} className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800">Back to editor</button>
+        <div className="px-5 py-3 bg-slate-50 dark:bg-white/[0.04] border-t dark:border-white/[0.08] flex justify-end">
+          <button onClick={() => setPreviewStep(null)} className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white">Back to editor</button>
         </div>
       </ModalBackdrop>
     );
@@ -338,18 +338,18 @@ function SequenceBuilderModal({ businessId, existingSequence, onDone, onClose }:
 
   return (
     <ModalBackdrop onClose={onClose}>
-      <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-800">{isEdit ? 'Edit' : 'Create'} Email Sequence</h3>
-        <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400"><svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
+      <div className="px-5 py-3 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-slate-800 dark:text-white">{isEdit ? 'Edit' : 'Create'} Email Sequence</h3>
+        <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-500"><svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
       </div>
       <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1">
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2">
-            <label className="block text-xs font-medium text-slate-500 mb-1">Sequence Name</label>
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Sequence Name</label>
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Welcome series, Win-back, Post-visit..." className={inputClass} />
           </div>
           <div className="col-span-2">
-            <label className="block text-xs font-medium text-slate-500 mb-1">Trigger</label>
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Trigger</label>
             <select value={trigger} onChange={(e) => setTrigger(e.target.value)} className={inputClass}>
               {TRIGGERS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
@@ -359,14 +359,14 @@ function SequenceBuilderModal({ businessId, existingSequence, onDone, onClose }:
         {/* Step tabs */}
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <label className="text-xs font-medium text-slate-500">Steps</label>
+            <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Steps</label>
             <button onClick={addStep}
               className="px-2 py-0.5 text-[10px] font-medium text-violet-600 bg-violet-50 border border-violet-200 rounded-lg hover:bg-violet-100">+ Add Step</button>
           </div>
           <div className="flex gap-1 mb-3 overflow-x-auto">
             {emailSteps.map((_, idx) => (
               <button key={idx} onClick={() => setActiveStep(idx)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg shrink-0 transition-colors ${activeStep === idx ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg shrink-0 transition-colors ${activeStep === idx ? 'bg-violet-600 text-white' : 'bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.1]'}`}>
                 Step {idx + 1}
                 <span className="ml-1 text-[10px] opacity-70">{delayLabel(emailSteps[idx]?.delayHours ?? 0)}</span>
               </button>
@@ -374,12 +374,12 @@ function SequenceBuilderModal({ businessId, existingSequence, onDone, onClose }:
           </div>
 
           {emailSteps[activeStep] && (
-            <div className="border border-slate-200 rounded-xl p-3 space-y-2.5">
+            <div className="border border-slate-200 dark:border-white/[0.08] rounded-xl p-3 space-y-2.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <label className="text-xs font-medium text-slate-500">Delay</label>
+                  <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Delay</label>
                   <select value={emailSteps[activeStep]!.delayHours} onChange={(e) => updateStep(activeStep, 'delayHours', Number(e.target.value))}
-                    className="px-2 py-1 border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none">
+                    className="px-2 py-1 border border-slate-200 dark:border-white/[0.08] rounded-lg text-xs text-slate-700 dark:text-slate-200 dark:bg-white/[0.06] focus:outline-none">
                     <option value={0}>Immediately</option>
                     <option value={1}>1 hour</option>
                     <option value={4}>4 hours</option>
@@ -398,18 +398,18 @@ function SequenceBuilderModal({ businessId, existingSequence, onDone, onClose }:
                     AI Write
                   </button>
                   <button onClick={() => handlePreview(activeStep)} disabled={!emailSteps[activeStep]?.body}
-                    className="px-2 py-1 text-[10px] font-medium text-slate-500 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40">Preview</button>
+                    className="px-2 py-1 text-[10px] font-medium text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/[0.08] rounded-lg hover:bg-slate-50 dark:hover:bg-white/[0.04] disabled:opacity-40">Preview</button>
                   {emailSteps.length > 1 && (
                     <button onClick={() => removeStep(activeStep)} className="px-2 py-1 text-[10px] font-medium text-red-400 hover:text-red-600 rounded-lg hover:bg-red-50">Remove</button>
                   )}
                 </div>
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-slate-400 mb-0.5">Subject</label>
+                <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5">Subject</label>
                 <input value={emailSteps[activeStep]!.subject} onChange={(e) => updateStep(activeStep, 'subject', e.target.value)} placeholder="Email subject..." className={inputClass} />
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-slate-400 mb-0.5">Body (HTML)</label>
+                <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5">Body (HTML)</label>
                 <textarea value={emailSteps[activeStep]!.body} onChange={(e) => updateStep(activeStep, 'body', e.target.value)} rows={5} placeholder="<p>Hi {{firstName}},</p>..." className={inputClass} />
               </div>
             </div>
@@ -417,8 +417,8 @@ function SequenceBuilderModal({ businessId, existingSequence, onDone, onClose }:
         </div>
         {error && <p className="text-xs text-red-500">{error}</p>}
       </div>
-      <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex gap-2 justify-end">
-        <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700">Cancel</button>
+      <div className="px-5 py-3 bg-slate-50 dark:bg-white/[0.04] border-t border-slate-200 dark:border-white/[0.08] flex gap-2 justify-end">
+        <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">Cancel</button>
         <button onClick={handleSave} disabled={saving || !name.trim()}
           className="px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 flex items-center gap-2">
           {saving && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
@@ -612,7 +612,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   }
 
   if (loading) return <div className="p-8 flex justify-center items-center min-h-[400px]"><div className="w-6 h-6 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" /></div>;
-  if (error || !contact) return <div className="p-8 text-slate-500">{error || 'Not found'}</div>;
+  if (error || !contact) return <div className="p-8 text-slate-500 dark:text-slate-400">{error || 'Not found'}</div>;
 
   const statusCfg = STATUS_CONFIG[contact.status];
 
@@ -621,23 +621,23 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       {/* Modals */}
       {showEdit && (
         <ModalBackdrop onClose={() => setShowEdit(false)}>
-          <div className="px-5 py-3 border-b border-slate-200"><h2 className="text-sm font-semibold text-slate-900">Edit Contact</h2></div>
+          <div className="px-5 py-3 border-b border-slate-200 dark:border-white/[0.08]"><h2 className="text-sm font-semibold text-slate-900 dark:text-white">Edit Contact</h2></div>
           <div className="px-5 py-4 space-y-3">
             <div className="grid grid-cols-2 gap-3">
               {(['firstName', 'lastName'] as const).map((f) => (
                 <div key={f}>
-                  <label className="text-xs text-slate-500 font-medium">{f === 'firstName' ? 'First name' : 'Last name'}</label>
+                  <label className="text-xs text-slate-500 dark:text-slate-400 font-medium">{f === 'firstName' ? 'First name' : 'Last name'}</label>
                   <input value={editForm[f]} onChange={(e) => setEditForm((p) => ({ ...p, [f]: e.target.value }))} className={`mt-1 ${inputClass}`} />
                 </div>
               ))}
             </div>
-            <div><label className="text-xs text-slate-500 font-medium">Email</label><input value={editForm.email} onChange={(e) => setEditForm((p) => ({ ...p, email: e.target.value }))} className={`mt-1 ${inputClass}`} /></div>
-            <div><label className="text-xs text-slate-500 font-medium">Phone</label><input value={editForm.phone} onChange={(e) => setEditForm((p) => ({ ...p, phone: e.target.value }))} className={`mt-1 ${inputClass}`} /></div>
-            <div><label className="text-xs text-slate-500 font-medium">Notes</label><textarea value={editForm.notes} onChange={(e) => setEditForm((p) => ({ ...p, notes: e.target.value }))} rows={3} className={`mt-1 ${inputClass} resize-none`} /></div>
+            <div><label className="text-xs text-slate-500 dark:text-slate-400 font-medium">Email</label><input value={editForm.email} onChange={(e) => setEditForm((p) => ({ ...p, email: e.target.value }))} className={`mt-1 ${inputClass}`} /></div>
+            <div><label className="text-xs text-slate-500 dark:text-slate-400 font-medium">Phone</label><input value={editForm.phone} onChange={(e) => setEditForm((p) => ({ ...p, phone: e.target.value }))} className={`mt-1 ${inputClass}`} /></div>
+            <div><label className="text-xs text-slate-500 dark:text-slate-400 font-medium">Notes</label><textarea value={editForm.notes} onChange={(e) => setEditForm((p) => ({ ...p, notes: e.target.value }))} rows={3} className={`mt-1 ${inputClass} resize-none`} /></div>
             {editError && <p className="text-sm text-red-500">{editError}</p>}
           </div>
-          <div className="px-5 py-3 bg-slate-50 border-t flex gap-3">
-            <button onClick={() => setShowEdit(false)} className="flex-1 px-4 py-2 rounded-xl border border-slate-200 text-sm text-slate-600 hover:bg-slate-50">Cancel</button>
+          <div className="px-5 py-3 bg-slate-50 dark:bg-white/[0.04] border-t dark:border-white/[0.08] flex gap-3">
+            <button onClick={() => setShowEdit(false)} className="flex-1 px-4 py-2 rounded-xl border border-slate-200 dark:border-white/[0.08] text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04]">Cancel</button>
             <button onClick={() => void handleEditSave()} disabled={editSaving} className="flex-1 px-4 py-2 rounded-xl bg-violet-600 text-white text-sm font-medium hover:bg-violet-700 disabled:opacity-60">{editSaving ? 'Saving...' : 'Save'}</button>
           </div>
         </ModalBackdrop>
@@ -645,13 +645,13 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
       {showSurvey && (
         <ModalBackdrop onClose={() => setShowSurvey(false)}>
-          <div className="px-5 py-3 border-b border-slate-200"><h2 className="text-sm font-semibold text-slate-900">Send Survey</h2></div>
+          <div className="px-5 py-3 border-b border-slate-200 dark:border-white/[0.08]"><h2 className="text-sm font-semibold text-slate-900 dark:text-white">Send Survey</h2></div>
           <div className="px-5 py-4 space-y-3">
             {surveySuccess ? (
               <div className="text-center py-6"><div className="text-4xl mb-2">✓</div><p className="text-slate-700 font-medium">Survey sent successfully</p></div>
             ) : (<>
               <div>
-                <label className="text-xs text-slate-500 font-medium">Survey</label>
+                <label className="text-xs text-slate-500 dark:text-slate-400 font-medium">Survey</label>
                 {surveys.length === 0 ? <p className="mt-2 text-sm text-slate-400">Loading surveys...</p> : (
                   <select value={selectedSurveyId} onChange={(e) => setSelectedSurveyId(e.target.value)} className={`mt-1 ${inputClass}`}>
                     {surveys.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}
@@ -659,7 +659,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 )}
               </div>
               <div>
-                <label className="text-xs text-slate-500 font-medium">Send via</label>
+                <label className="text-xs text-slate-500 dark:text-slate-400 font-medium">Send via</label>
                 <div className="mt-1">
                   <button className="w-full py-2 rounded-lg border border-violet-500 bg-violet-50 text-violet-700 text-sm font-medium">Email</button>
                 </div>
@@ -669,8 +669,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             </>)}
           </div>
           {!surveySuccess && (
-            <div className="px-5 py-3 bg-slate-50 border-t flex gap-3">
-              <button onClick={() => setShowSurvey(false)} className="flex-1 px-4 py-2 rounded-xl border border-slate-200 text-sm text-slate-600 hover:bg-slate-50">Cancel</button>
+            <div className="px-5 py-3 bg-slate-50 dark:bg-white/[0.04] border-t dark:border-white/[0.08] flex gap-3">
+              <button onClick={() => setShowSurvey(false)} className="flex-1 px-4 py-2 rounded-xl border border-slate-200 dark:border-white/[0.08] text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04]">Cancel</button>
               <button onClick={() => void handleSendSurvey()} disabled={surveySending || surveys.length === 0 || !contact?.email}
                 className="flex-1 px-4 py-2 rounded-xl bg-violet-600 text-white text-sm font-medium hover:bg-violet-700 disabled:opacity-60">{surveySending ? 'Sending...' : 'Send Survey'}</button>
             </div>
@@ -684,53 +684,53 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       )}
 
       {/* Back */}
-      <button onClick={() => router.push('/customers')} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors">
+      <button onClick={() => router.push('/customers')} className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors">
         <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" /></svg>
         Back to Customers
       </button>
 
       {/* Header card */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 flex gap-5 items-start">
-        <div className="w-16 h-16 rounded-2xl bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-xl shrink-0">
+      <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-6 flex gap-5 items-start">
+        <div className="w-16 h-16 rounded-2xl bg-violet-100 dark:bg-violet-500/15 flex items-center justify-center text-violet-600 dark:text-violet-400 font-bold text-xl shrink-0">
           {initials(contact).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <h1 className="text-xl font-bold text-slate-900">{fullName(contact)}</h1>
+              <h1 className="text-xl font-bold text-slate-900 dark:text-white">{fullName(contact)}</h1>
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 <select value={contact.status} onChange={(e) => void handleStatusChange(e.target.value)} disabled={statusSaving}
                   className={`text-xs font-medium px-2.5 py-1 rounded-full border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-violet-400 disabled:opacity-60 ${statusCfg.color}`}>
                   <option value="LEAD">Lead</option><option value="PROSPECT">Prospect</option><option value="CUSTOMER">Customer</option><option value="CHURNED">Churned</option>
                 </select>
-                <span className="text-xs text-slate-400">{SOURCE_LABELS[contact.source]}</span>
-                {contact.leadScore !== null && <span className="text-xs text-slate-400">Score: <span className="font-medium text-slate-700">{contact.leadScore}</span></span>}
+                <span className="text-xs text-slate-400 dark:text-slate-500">{SOURCE_LABELS[contact.source]}</span>
+                {contact.leadScore !== null && <span className="text-xs text-slate-400 dark:text-slate-500">Score: <span className="font-medium text-slate-700 dark:text-slate-200">{contact.leadScore}</span></span>}
               </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs text-slate-400">Added {formatDate(contact.createdAt)}</span>
-              <button onClick={() => setShowComposeEmail(true)} disabled={!contact.email} className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors">Send Email</button>
-              <button onClick={openSurveyModal} className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">Send Survey</button>
+              <span className="text-xs text-slate-400 dark:text-slate-500">Added {formatDate(contact.createdAt)}</span>
+              <button onClick={() => setShowComposeEmail(true)} disabled={!contact.email} className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/[0.08] text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04] disabled:opacity-40 transition-colors">Send Email</button>
+              <button onClick={openSurveyModal} className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/[0.08] text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors">Send Survey</button>
               <button onClick={() => setShowEdit(true)} className="px-3 py-1.5 rounded-lg bg-violet-600 text-white text-xs font-medium hover:bg-violet-700 transition-colors">Edit</button>
             </div>
           </div>
           <div className="mt-3 grid grid-cols-2 gap-x-8 gap-y-1.5 text-sm">
-            {contact.email && <div className="text-slate-500">Email <a href={`mailto:${contact.email}`} className="text-slate-800 font-medium hover:text-violet-600">{contact.email}</a></div>}
-            {contact.phone && <div className="text-slate-500">Phone <a href={`tel:${contact.phone}`} className="text-slate-800 font-medium hover:text-violet-600">{contact.phone}</a></div>}
+            {contact.email && <div className="text-slate-500 dark:text-slate-400">Email <a href={`mailto:${contact.email}`} className="text-slate-800 dark:text-white font-medium hover:text-violet-600">{contact.email}</a></div>}
+            {contact.phone && <div className="text-slate-500 dark:text-slate-400">Phone <a href={`tel:${contact.phone}`} className="text-slate-800 dark:text-white font-medium hover:text-violet-600">{contact.phone}</a></div>}
             <div className="col-span-2 mt-1">
               <div className="flex items-center gap-1.5 flex-wrap">
                 {contact.tags.map((t) => (
-                  <span key={t} className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 bg-violet-100 text-violet-700 rounded-full">
+                  <span key={t} className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400 rounded-full">
                     {t}<button onClick={() => void handleRemoveTag(t)} className="hover:text-red-500 transition-colors leading-none">×</button>
                   </span>
                 ))}
                 <form onSubmit={(e) => { e.preventDefault(); void handleAddTag(); }} className="flex items-center gap-1">
-                  <input value={tagInput} onChange={(e) => setTagInput(e.target.value)} placeholder="Add tag..." className="text-[11px] px-2 py-0.5 border border-dashed border-slate-300 rounded-full focus:outline-none focus:border-violet-400 w-20 placeholder-slate-400" />
+                  <input value={tagInput} onChange={(e) => setTagInput(e.target.value)} placeholder="Add tag..." className="text-[11px] px-2 py-0.5 border border-dashed border-slate-300 dark:border-white/[0.15] rounded-full focus:outline-none focus:border-violet-400 w-20 placeholder-slate-400 dark:text-white dark:bg-transparent" />
                   {tagInput.trim() && <button type="submit" disabled={tagSaving} className="text-[11px] px-2 py-0.5 bg-violet-600 text-white rounded-full hover:bg-violet-700 disabled:opacity-50">{tagSaving ? '...' : '+'}</button>}
                 </form>
               </div>
             </div>
-            {contact.notes && <div className="col-span-2 text-slate-500 text-xs mt-1 italic">{contact.notes}</div>}
+            {contact.notes && <div className="col-span-2 text-slate-500 dark:text-slate-400 text-xs mt-1 italic">{contact.notes}</div>}
           </div>
         </div>
       </div>

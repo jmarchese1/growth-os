@@ -352,16 +352,16 @@ function SettingsPanel({ businessId, settings, onSaved }: {
 function TranscriptModal({ call, onClose }: { call: CallLog; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+      <div className="bg-white dark:bg-[#1a1730] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="px-6 py-4 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-slate-800">Call Transcript</h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <h3 className="text-sm font-semibold text-slate-800 dark:text-white">Call Transcript</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {formatDate(call.createdAt)} &middot; {call.duration ? formatDuration(call.duration) : 'N/A'}
               {call.contact && ` — ${call.contact.firstName} ${call.contact.lastName}`}
             </p>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
           </button>
         </div>
@@ -369,20 +369,20 @@ function TranscriptModal({ call, onClose }: { call: CallLog; onClose: () => void
         <div className="px-6 py-4 overflow-y-auto max-h-[60vh]">
           {/* Summary */}
           {call.summary && (
-            <div className="mb-4 p-3 bg-violet-50 border border-violet-100 rounded-lg">
-              <p className="text-xs font-semibold text-violet-700 mb-1">AI Summary</p>
-              <p className="text-sm text-slate-700">{call.summary}</p>
+            <div className="mb-4 p-3 bg-violet-50 dark:bg-violet-500/10 border border-violet-100 dark:border-violet-500/20 rounded-lg">
+              <p className="text-xs font-semibold text-violet-700 dark:text-violet-400 mb-1">AI Summary</p>
+              <p className="text-sm text-slate-700 dark:text-slate-200">{call.summary}</p>
             </div>
           )}
 
           {/* Extracted data */}
           {call.extractedData && Object.keys(call.extractedData).length > 0 && (
-            <div className="mb-4 p-3 bg-emerald-50 border border-emerald-100 rounded-lg">
-              <p className="text-xs font-semibold text-emerald-700 mb-1">Extracted Information</p>
+            <div className="mb-4 p-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 rounded-lg">
+              <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 mb-1">Extracted Information</p>
               <div className="grid grid-cols-2 gap-1">
                 {Object.entries(call.extractedData).map(([key, val]) => (
-                  <p key={key} className="text-xs text-slate-600">
-                    <span className="font-medium text-slate-700">{key}:</span> {String(val)}
+                  <p key={key} className="text-xs text-slate-600 dark:text-slate-300">
+                    <span className="font-medium text-slate-700 dark:text-slate-200">{key}:</span> {String(val)}
                   </p>
                 ))}
               </div>
@@ -399,7 +399,7 @@ function TranscriptModal({ call, onClose }: { call: CallLog; onClose: () => void
                   <div key={i} className={`flex ${isAgent ? 'justify-start' : 'justify-end'}`}>
                     <div className={`max-w-[80%] px-3 py-2 rounded-xl text-sm ${
                       isAgent
-                        ? 'bg-slate-100 text-slate-700'
+                        ? 'bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-200'
                         : 'bg-violet-600 text-white'
                     }`}>
                       {text}
@@ -409,7 +409,7 @@ function TranscriptModal({ call, onClose }: { call: CallLog; onClose: () => void
               })}
             </div>
           ) : (
-            <p className="text-sm text-slate-400 text-center py-8">No transcript available for this call</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-8">No transcript available for this call</p>
           )}
         </div>
       </div>
@@ -493,11 +493,11 @@ function VoiceBrowser({ businessId, currentVoiceId }: { businessId: string; curr
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search voices... (e.g. 'Sarah', 'British', 'warm')"
           style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
-          className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400"
+          className="flex-1 px-4 py-2.5 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] dark:text-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400"
         />
         <div className="flex gap-1">
           {['all', 'female', 'male'].map(f => (
-            <button key={f} onClick={() => setFilter(f)} className={`px-3 py-2 text-xs font-medium rounded-lg border ${filter === f ? 'border-violet-500 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500'}`}>
+            <button key={f} onClick={() => setFilter(f)} className={`px-3 py-2 text-xs font-medium rounded-lg border ${filter === f ? 'border-violet-500 bg-violet-50 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400' : 'border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-slate-400'}`}>
               {f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)}
             </button>
           ))}
@@ -512,12 +512,12 @@ function VoiceBrowser({ businessId, currentVoiceId }: { businessId: string; curr
             <div
               key={voice.id}
               onClick={() => setSelectedId(voice.id)}
-              className={`relative p-3 rounded-xl border-2 cursor-pointer transition-all ${selectedId === voice.id ? 'border-violet-500 bg-violet-50 shadow-md' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+              className={`relative p-3 rounded-xl border-2 cursor-pointer transition-all ${selectedId === voice.id ? 'border-violet-500 bg-violet-50 dark:bg-violet-500/15 shadow-md' : 'border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.04] hover:border-slate-300 dark:hover:border-white/[0.12]'}`}
             >
               <div className="flex items-center gap-2 mb-2">
                 <button
                   onClick={(e) => { e.stopPropagation(); playPreview(voice); }}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${playingId === voice.id ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-violet-100 hover:text-violet-600'}`}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${playingId === voice.id ? 'bg-violet-600 text-white' : 'bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-slate-400 hover:bg-violet-100 dark:hover:bg-violet-500/15 hover:text-violet-600 dark:hover:text-violet-400'}`}
                 >
                   {playingId === voice.id ? (
                     <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
@@ -526,11 +526,11 @@ function VoiceBrowser({ businessId, currentVoiceId }: { businessId: string; curr
                   )}
                 </button>
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-800 truncate">{voice.name}</p>
-                  <p className="text-[10px] text-slate-400">{voice.gender}{voice.accent ? ` · ${voice.accent}` : ''}</p>
+                  <p className="text-xs font-bold text-slate-800 dark:text-white truncate">{voice.name}</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500">{voice.gender}{voice.accent ? ` · ${voice.accent}` : ''}</p>
                 </div>
               </div>
-              {voice.useCase && <p className="text-[9px] text-slate-400 truncate">{voice.useCase}</p>}
+              {voice.useCase && <p className="text-[9px] text-slate-400 dark:text-slate-500 truncate">{voice.useCase}</p>}
               {selectedId === voice.id && (
                 <div className="absolute top-2 right-2 w-4 h-4 bg-violet-500 rounded-full flex items-center justify-center">
                   <svg viewBox="0 0 12 12" fill="none" className="w-2.5 h-2.5"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -583,10 +583,10 @@ function PromptEditor({ businessId, settings }: { businessId: string; settings: 
     <div className="space-y-4">
       {/* Templates */}
       <div>
-        <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Quick Templates</label>
+        <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">Quick Templates</label>
         <div className="flex gap-2">
           {Object.entries(templates).map(([key, val]) => (
-            <button key={key} onClick={() => setPrompt(val)} className="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:border-violet-200 hover:text-violet-600 transition-colors capitalize">
+            <button key={key} onClick={() => setPrompt(val)} className="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 hover:border-violet-200 hover:text-violet-600 dark:hover:text-violet-400 transition-colors capitalize">
               {key}
             </button>
           ))}
@@ -595,29 +595,29 @@ function PromptEditor({ businessId, settings }: { businessId: string; settings: 
 
       {/* First message */}
       <div>
-        <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">First Message (greeting when caller connects)</label>
+        <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">First Message (greeting when caller connects)</label>
         <input
           type="text"
           value={firstMsg}
           onChange={(e) => setFirstMsg(e.target.value)}
           placeholder="Thank you for calling! I'm your AI assistant. How can I help you today?"
           style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
-          className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400"
+          className="w-full px-4 py-2.5 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] dark:text-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400"
         />
       </div>
 
       {/* System prompt */}
       <div>
-        <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">System Prompt (agent behavior & personality)</label>
+        <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">System Prompt (agent behavior & personality)</label>
         <textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           rows={12}
           style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
-          className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm font-mono placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none"
+          className="w-full px-4 py-3 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] dark:text-white rounded-xl text-sm font-mono placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none"
           placeholder="Describe how your AI receptionist should behave..."
         />
-        <p className="text-[10px] text-slate-400 mt-1">{prompt.length} characters</p>
+        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">{prompt.length} characters</p>
       </div>
 
       <div className="flex justify-end">
@@ -660,16 +660,16 @@ function KnowledgeBaseManager({ businessId, settings }: { businessId: string; se
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-slate-500">Upload documents, menus, FAQs, and policies. The AI agent will use these to answer caller questions accurately.</p>
+      <p className="text-sm text-slate-500 dark:text-slate-400">Upload documents, menus, FAQs, and policies. The AI agent will use these to answer caller questions accurately.</p>
 
       {/* Existing entries */}
       {entries.length > 0 && (
         <div className="space-y-2">
-          <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider">Uploaded Documents</label>
+          <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Uploaded Documents</label>
           {entries.map((entry) => (
-            <div key={entry.id} className="flex items-center gap-3 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-emerald-600 flex-shrink-0"><path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" /></svg>
-              <span className="text-sm text-emerald-800 font-medium">{entry.name}</span>
+            <div key={entry.id} className="flex items-center gap-3 px-4 py-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0"><path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" /></svg>
+              <span className="text-sm text-emerald-800 dark:text-emerald-300 font-medium">{entry.name}</span>
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-emerald-400 ml-auto"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
             </div>
           ))}
@@ -677,15 +677,15 @@ function KnowledgeBaseManager({ businessId, settings }: { businessId: string; se
       )}
 
       {/* Upload new */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5">
-        <h4 className="text-sm font-bold text-slate-700 mb-3">Add New Document</h4>
+      <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-5">
+        <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-3">Add New Document</h4>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Document name (e.g. 'Full Menu', 'Parking Info', 'FAQ')"
           style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
-          className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 mb-3"
+          className="w-full px-4 py-2.5 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] dark:text-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 mb-3"
         />
         <textarea
           value={content}
@@ -693,7 +693,7 @@ function KnowledgeBaseManager({ businessId, settings }: { businessId: string; se
           rows={8}
           placeholder="Paste the full text content here — menu items, FAQ answers, parking instructions, policies, etc."
           style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
-          className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none mb-3"
+          className="w-full px-4 py-3 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] dark:text-white rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none mb-3"
         />
         {error && <p className="text-red-500 text-xs mb-2">{error}</p>}
         <button onClick={handleUpload} disabled={!name.trim() || !content.trim() || uploading} className="px-6 py-2.5 bg-violet-600 text-white text-sm font-semibold rounded-xl hover:bg-violet-700 disabled:opacity-50 transition-colors">
@@ -819,7 +819,7 @@ function ConversationHistory({ businessId }: { businessId: string }) {
     <div className="space-y-4">
       {conversations.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-sm text-slate-400">No conversations yet. Make a test call to see them here.</p>
+          <p className="text-sm text-slate-400 dark:text-slate-500">No conversations yet. Make a test call to see them here.</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -827,12 +827,12 @@ function ConversationHistory({ businessId }: { businessId: string }) {
             <div
               key={c.id}
               onClick={() => void loadDetail(c.id)}
-              className="flex items-center gap-4 px-4 py-3 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-violet-200 hover:shadow-md transition-all"
+              className="flex items-center gap-4 px-4 py-3 bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-xl cursor-pointer hover:border-violet-200 dark:hover:border-violet-500/30 hover:shadow-md transition-all"
             >
               <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${c.successful === 'success' ? 'bg-emerald-500' : c.successful === 'failure' ? 'bg-rose-500' : 'bg-slate-300'}`} />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-800 truncate">{c.summary || 'Conversation'}</p>
-                <p className="text-[11px] text-slate-400">{new Date(c.startTime).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} · {formatDur(c.duration)} · {c.messageCount} messages</p>
+                <p className="text-sm font-medium text-slate-800 dark:text-white truncate">{c.summary || 'Conversation'}</p>
+                <p className="text-[11px] text-slate-400 dark:text-slate-500">{new Date(c.startTime).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} · {formatDur(c.duration)} · {c.messageCount} messages</p>
               </div>
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-slate-300"><path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" /></svg>
             </div>
@@ -843,8 +843,8 @@ function ConversationHistory({ businessId }: { businessId: string }) {
       {/* Conversation detail modal */}
       {(selected || loadingDetail) && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-8" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={() => { setSelected(null); }}>
-          <div onClick={(e) => e.stopPropagation()} className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-            <button onClick={() => setSelected(null)} className="absolute top-4 right-4 z-10 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-800">
+          <div onClick={(e) => e.stopPropagation()} className="relative bg-white dark:bg-[#1a1730] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <button onClick={() => setSelected(null)} className="absolute top-4 right-4 z-10 w-8 h-8 bg-slate-100 dark:bg-white/[0.06] rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white">
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/></svg>
             </button>
 
@@ -852,21 +852,21 @@ function ConversationHistory({ businessId }: { businessId: string }) {
               <div className="flex justify-center py-20"><div className="w-6 h-6 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" /></div>
             ) : selected ? (
               <>
-                <div className="px-6 py-5 border-b border-slate-100">
+                <div className="px-6 py-5 border-b border-slate-100 dark:border-white/[0.06]">
                   <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${selected.successful === 'success' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
-                    <h3 className="text-lg font-bold text-slate-900">Conversation</h3>
-                    <span className="text-xs text-slate-400">{formatDur(selected.duration)}</span>
+                    <div className={`w-3 h-3 rounded-full ${selected.successful === 'success' ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Conversation</h3>
+                    <span className="text-xs text-slate-400 dark:text-slate-500">{formatDur(selected.duration)}</span>
                   </div>
-                  {selected.summary && <p className="text-sm text-slate-500 mt-2">{selected.summary}</p>}
+                  {selected.summary && <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">{selected.summary}</p>}
                 </div>
 
                 {Object.keys(selected.collectedData).length > 0 && (
-                  <div className="px-6 py-3 bg-emerald-50 border-b border-emerald-100">
-                    <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider mb-1">Collected Data</p>
+                  <div className="px-6 py-3 bg-emerald-50 dark:bg-emerald-500/10 border-b border-emerald-100 dark:border-emerald-500/20">
+                    <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-1">Collected Data</p>
                     <div className="flex flex-wrap gap-2">
                       {Object.entries(selected.collectedData).map(([key, val]) => (
-                        <span key={key} className="px-2 py-1 bg-white border border-emerald-200 rounded-lg text-xs text-emerald-800">
+                        <span key={key} className="px-2 py-1 bg-white dark:bg-white/[0.04] border border-emerald-200 dark:border-emerald-500/20 rounded-lg text-xs text-emerald-800 dark:text-emerald-300">
                           <span className="font-medium">{key}:</span> {String(typeof val === 'object' ? JSON.stringify(val) : val)}
                         </span>
                       ))}
@@ -879,7 +879,7 @@ function ConversationHistory({ businessId }: { businessId: string }) {
                     <div key={i} className={`flex ${msg.role === 'agent' ? 'justify-start' : 'justify-end'}`}>
                       <div className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl text-sm ${
                         msg.role === 'agent'
-                          ? 'bg-slate-100 text-slate-700 rounded-bl-sm'
+                          ? 'bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-200 rounded-bl-sm'
                           : 'bg-violet-600 text-white rounded-br-sm'
                       }`}>
                         {msg.message}
@@ -955,23 +955,23 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-200">
+              <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-200 dark:shadow-violet-900/30">
                 <svg viewBox="0 0 20 20" fill="white" className="w-5 h-5"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Phone Agent</h1>
-                <p className="text-sm text-slate-500">AI receptionist — configure, monitor, and manage calls</p>
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Phone Agent</h1>
+                <p className="text-sm text-slate-500 dark:text-slate-400">AI receptionist — configure, monitor, and manage calls</p>
               </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl">
+            <div className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-500/10 dark:to-teal-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl">
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-sm font-semibold text-emerald-700">Active</span>
+              <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">Active</span>
             </div>
             {status.twilioNumber && (
-              <div className="px-4 py-2 bg-gradient-to-r from-violet-50 to-indigo-50 border border-violet-200 rounded-xl">
-                <span className="text-sm font-semibold text-violet-700">{status.twilioNumber}</span>
+              <div className="px-4 py-2 bg-gradient-to-r from-violet-50 to-indigo-50 dark:from-violet-500/10 dark:to-indigo-500/10 border border-violet-200 dark:border-violet-500/20 rounded-xl">
+                <span className="text-sm font-semibold text-violet-700 dark:text-violet-400">{status.twilioNumber}</span>
               </div>
             )}
           </div>
@@ -979,7 +979,7 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
       </div>
 
       {/* Tab Navigation — Embedo violet theme */}
-      <div className="flex gap-1.5 mb-8 bg-slate-100/80 rounded-2xl p-1.5 w-fit">
+      <div className="flex gap-1.5 mb-8 bg-slate-100/80 dark:bg-white/[0.06] rounded-2xl p-1.5 w-fit">
         {([
           { id: 'dashboard' as const, label: 'Dashboard', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" /><path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" /></svg> },
           { id: 'voice' as const, label: 'Voice', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" /></svg> },
@@ -995,11 +995,11 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${
                 active
-                  ? 'bg-white text-violet-700 shadow-sm border border-violet-100'
-                  : 'text-slate-500 hover:text-violet-600 hover:bg-white/60'
+                  ? 'bg-white dark:bg-white/[0.08] text-violet-700 dark:text-violet-400 shadow-sm border border-violet-100 dark:border-violet-500/20'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-white/60 dark:hover:bg-white/[0.04]'
               }`}
             >
-              <span className={active ? 'text-violet-600' : 'text-slate-400'}>{tab.icon}</span>
+              <span className={active ? 'text-violet-600 dark:text-violet-400' : 'text-slate-400 dark:text-slate-500'}>{tab.icon}</span>
               {tab.label}
             </button>
           );
@@ -1008,14 +1008,14 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
 
       {/* Voice Tab */}
       {activeTab === 'voice' && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-9 h-9 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center">
               <svg viewBox="0 0 20 20" fill="white" className="w-4 h-4"><path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" /></svg>
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900">Choose a Voice</h2>
-              <p className="text-sm text-slate-500">Select the voice your AI receptionist will use. Click play to preview.</p>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Choose a Voice</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Select the voice your AI receptionist will use. Click play to preview.</p>
             </div>
           </div>
           <VoiceBrowser businessId={businessId} currentVoiceId={(status.settings as Record<string, unknown>)?.['voiceId'] as string | undefined} />
@@ -1024,14 +1024,14 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
 
       {/* Prompt Tab */}
       {activeTab === 'prompt' && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-9 h-9 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center">
               <svg viewBox="0 0 20 20" fill="white" className="w-4 h-4"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" /></svg>
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900">System Prompt</h2>
-              <p className="text-sm text-slate-500">Define your AI receptionist&apos;s personality, capabilities, and behavior.</p>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">System Prompt</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Define your AI receptionist&apos;s personality, capabilities, and behavior.</p>
             </div>
           </div>
           <PromptEditor businessId={businessId} settings={status.settings as VoiceStatus['settings'] & { customPrompt?: string; firstMessage?: string }} />
@@ -1040,14 +1040,14 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
 
       {/* Knowledge Base Tab */}
       {activeTab === 'knowledge' && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-9 h-9 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center">
               <svg viewBox="0 0 20 20" fill="white" className="w-4 h-4"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" /></svg>
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900">Knowledge Base</h2>
-              <p className="text-sm text-slate-500">Upload your menu, FAQ, parking info, and policies so the AI can answer accurately.</p>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Knowledge Base</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Upload your menu, FAQ, parking info, and policies so the AI can answer accurately.</p>
             </div>
           </div>
           <KnowledgeBaseManager businessId={businessId} settings={(status.settings as Record<string, unknown>) ?? {}} />
@@ -1056,14 +1056,14 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
 
       {/* Test Call Tab */}
       {activeTab === 'test' && status.agentId && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-9 h-9 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center">
               <svg viewBox="0 0 20 20" fill="white" className="w-4 h-4"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" /></svg>
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900">Test Call</h2>
-              <p className="text-sm text-slate-500">Talk to your AI agent directly from the browser.</p>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Test Call</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Talk to your AI agent directly from the browser.</p>
             </div>
           </div>
           <TestCallWidget agentId={status.agentId} />
@@ -1072,14 +1072,14 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
 
       {/* Conversation History Tab */}
       {activeTab === 'history' && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-9 h-9 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center">
               <svg viewBox="0 0 20 20" fill="white" className="w-4 h-4"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clipRule="evenodd" /></svg>
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900">Conversation History</h2>
-              <p className="text-sm text-slate-500">All conversations from ElevenLabs — transcripts, summaries, and collected data.</p>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Conversation History</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">All conversations from ElevenLabs — transcripts, summaries, and collected data.</p>
             </div>
           </div>
           <ConversationHistory businessId={businessId} />
@@ -1102,20 +1102,20 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
       {/* Analytics row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Intent breakdown */}
-        <div className="bg-white border border-slate-200 rounded-xl p-6 hover:shadow-lg hover:border-violet-200 transition-all duration-300">
-          <h3 className="text-sm font-semibold text-slate-700 mb-4">Intent Breakdown</h3>
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-6 hover:shadow-lg hover:border-violet-200 dark:hover:border-violet-500/30 transition-all duration-300">
+          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">Intent Breakdown</h3>
           <div className="space-y-3">
             {['RESERVATION', 'INQUIRY', 'COMPLAINT', 'GENERAL'].map((intent) => {
               const count = s.intentBreakdown[intent] ?? 0;
               const pct = s.totalCalls > 0 ? Math.round((count / s.totalCalls) * 100) : 0;
               return (
                 <div key={intent} className="flex items-center justify-between">
-                  <span className="text-sm text-slate-600 capitalize">{intent.toLowerCase()}</span>
+                  <span className="text-sm text-slate-600 dark:text-slate-300 capitalize">{intent.toLowerCase()}</span>
                   <div className="flex items-center gap-3">
-                    <div className="w-32 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="w-32 h-1.5 bg-slate-100 dark:bg-white/[0.06] rounded-full overflow-hidden">
                       <div className="h-full bg-violet-400 rounded-full transition-all" style={{ width: `${pct}%` }} />
                     </div>
-                    <span className="text-xs text-slate-400 w-8 text-right">{count}</span>
+                    <span className="text-xs text-slate-400 dark:text-slate-500 w-8 text-right">{count}</span>
                   </div>
                 </div>
               );
@@ -1124,8 +1124,8 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
         </div>
 
         {/* Sentiment */}
-        <div className="bg-white border border-slate-200 rounded-xl p-6 hover:shadow-lg hover:border-emerald-200 transition-all duration-300">
-          <h3 className="text-sm font-semibold text-slate-700 mb-4">Sentiment Analysis</h3>
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-6 hover:shadow-lg hover:border-emerald-200 dark:hover:border-emerald-500/30 transition-all duration-300">
+          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">Sentiment Analysis</h3>
           <div className="space-y-3">
             {[
               { label: 'Positive', key: 'POSITIVE', color: 'bg-emerald-400' },
@@ -1136,12 +1136,12 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
               const pct = s.totalCalls > 0 ? Math.round((count / s.totalCalls) * 100) : 0;
               return (
                 <div key={label} className="flex items-center justify-between">
-                  <span className="text-sm text-slate-600">{label}</span>
+                  <span className="text-sm text-slate-600 dark:text-slate-300">{label}</span>
                   <div className="flex items-center gap-3">
-                    <div className="w-32 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="w-32 h-1.5 bg-slate-100 dark:bg-white/[0.06] rounded-full overflow-hidden">
                       <div className={`h-full ${color} rounded-full transition-all`} style={{ width: `${pct}%` }} />
                     </div>
-                    <span className="text-xs text-slate-400 w-8 text-right">{pct}%</span>
+                    <span className="text-xs text-slate-400 dark:text-slate-500 w-8 text-right">{pct}%</span>
                   </div>
                 </div>
               );
@@ -1153,44 +1153,44 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
       {/* Call log table */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-slate-700">Recent Calls</h2>
-          {totalCalls > 0 && <span className="text-xs text-slate-400">{totalCalls} total</span>}
+          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Recent Calls</h2>
+          {totalCalls > 0 && <span className="text-xs text-slate-400 dark:text-slate-500">{totalCalls} total</span>}
         </div>
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-100">
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Date</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Caller</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Intent</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Duration</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Sentiment</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Lead</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3"></th>
+              <tr className="border-b border-slate-100 dark:border-white/[0.06]">
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Date</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Caller</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Intent</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Duration</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Sentiment</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Lead</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3"></th>
               </tr>
             </thead>
             <tbody>
               {calls.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-12 text-center text-sm text-slate-400">
+                  <td colSpan={7} className="px-5 py-12 text-center text-sm text-slate-400 dark:text-slate-500">
                     No calls recorded yet. Your voice agent will log calls here once it receives its first call.
                   </td>
                 </tr>
               ) : (
                 calls.map((call) => (
-                  <tr key={call.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                    <td className="px-5 py-3 text-sm text-slate-600">{formatDate(call.createdAt)}</td>
-                    <td className="px-5 py-3 text-sm text-slate-800 font-medium">
+                  <tr key={call.id} className="border-b border-slate-50 dark:border-white/[0.04] hover:bg-slate-50/50 dark:hover:bg-white/[0.04] transition-colors">
+                    <td className="px-5 py-3 text-sm text-slate-600 dark:text-slate-300">{formatDate(call.createdAt)}</td>
+                    <td className="px-5 py-3 text-sm text-slate-800 dark:text-white font-medium">
                       {call.contact
                         ? `${call.contact.firstName} ${call.contact.lastName}`
-                        : <span className="text-slate-400">Unknown</span>}
+                        : <span className="text-slate-400 dark:text-slate-500">Unknown</span>}
                     </td>
                     <td className="px-5 py-3">
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${INTENT_COLORS[call.intent] ?? INTENT_COLORS['UNKNOWN']}`}>
                         {call.intent.toLowerCase()}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-sm text-slate-600 tabular-nums">
+                    <td className="px-5 py-3 text-sm text-slate-600 dark:text-slate-300 tabular-nums">
                       {call.duration != null ? formatDuration(call.duration) : '—'}
                     </td>
                     <td className="px-5 py-3">
@@ -1204,12 +1204,12 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
                     </td>
                     <td className="px-5 py-3">
                       {call.leadCaptured && (
-                        <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-100 text-emerald-700">
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
                           captured
                         </span>
                       )}
                       {call.reservationMade && (
-                        <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-violet-100 text-violet-700 ml-1">
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400 ml-1">
                           reservation
                         </span>
                       )}

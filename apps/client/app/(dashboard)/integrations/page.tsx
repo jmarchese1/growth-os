@@ -206,10 +206,10 @@ const SOCIAL_ACCOUNTS: SocialAccount[] = [
 
 function ServiceStatusBadge({ status, label }: { status: ServiceStatus; label: string }) {
   const styles: Record<ServiceStatus, string> = {
-    active: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    inactive: 'bg-slate-50 text-slate-500 border-slate-200',
-    provisioning: 'bg-amber-50 text-amber-700 border-amber-200',
-    error: 'bg-red-50 text-red-600 border-red-200',
+    active: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30',
+    inactive: 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-white/[0.06] dark:text-slate-400 dark:border-white/[0.08]',
+    provisioning: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30',
+    error: 'bg-red-50 text-red-600 border-red-200 dark:bg-red-500/20 dark:text-red-400 dark:border-red-500/30',
   };
   const dots: Record<ServiceStatus, string> = {
     active: 'bg-emerald-500',
@@ -227,9 +227,9 @@ function ServiceStatusBadge({ status, label }: { status: ServiceStatus; label: s
 
 function OAuthStatusBadge({ status }: { status: OAuthStatus }) {
   const config: Record<OAuthStatus, { style: string; dot: string; label: string }> = {
-    connected: { style: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500', label: 'Connected' },
-    not_connected: { style: 'bg-slate-50 text-slate-500 border-slate-200', dot: 'bg-slate-300', label: 'Not connected' },
-    expired: { style: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500', label: 'Token expired' },
+    connected: { style: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30', dot: 'bg-emerald-500', label: 'Connected' },
+    not_connected: { style: 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-white/[0.06] dark:text-slate-400 dark:border-white/[0.08]', dot: 'bg-slate-300', label: 'Not connected' },
+    expired: { style: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30', dot: 'bg-amber-500', label: 'Token expired' },
   };
   const c = config[status];
   return (
@@ -252,7 +252,7 @@ function ManagedServiceCard({ service }: { service: ManagedService }) {
   const iconBg = colorMap[service.color] ?? colorMap.slate;
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-5 flex flex-col transition-all hover:shadow-sm hover:border-slate-300">
+    <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-5 flex flex-col transition-all hover:shadow-sm hover:border-slate-300">
       <div className="flex items-start justify-between mb-3">
         <div className={`w-11 h-11 rounded-xl border flex items-center justify-center ${iconBg}`}>
           {service.icon}
@@ -260,11 +260,11 @@ function ManagedServiceCard({ service }: { service: ManagedService }) {
         <ServiceStatusBadge status={service.status} label={service.statusLabel} />
       </div>
 
-      <h3 className="text-sm font-semibold text-slate-900 mb-1">{service.name}</h3>
-      <p className="text-xs text-slate-500 leading-relaxed mb-3 flex-1">{service.description}</p>
+      <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">{service.name}</h3>
+      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-3 flex-1">{service.description}</p>
 
       <div className="mb-4">
-        <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">Powers</p>
+        <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">Powers</p>
         <div className="flex flex-wrap gap-1">
           {service.powersModules.map((mod) => (
             <span key={mod} className="inline-block px-2 py-0.5 rounded text-[10px] font-medium bg-violet-50 text-violet-600 border border-violet-100">
@@ -275,12 +275,12 @@ function ManagedServiceCard({ service }: { service: ManagedService }) {
       </div>
 
       {service.detail && (
-        <div className="bg-slate-50 border border-slate-200/60 rounded-lg px-3 py-2 mb-3">
-          <p className="text-xs text-slate-600 font-mono">{service.detail}</p>
+        <div className="bg-slate-50 dark:bg-white/[0.06] border border-slate-200/60 dark:border-white/[0.06] rounded-lg px-3 py-2 mb-3">
+          <p className="text-xs text-slate-600 dark:text-slate-300 font-mono">{service.detail}</p>
         </div>
       )}
 
-      <div className="flex items-center gap-2 text-xs text-slate-400 mt-auto pt-2 border-t border-slate-100">
+      <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 mt-auto pt-2 border-t border-slate-100 dark:border-white/[0.06]">
         <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-violet-400">
           <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
         </svg>
@@ -300,7 +300,7 @@ function SocialAccountCard({ account, onConnect }: { account: SocialAccount; onC
   const iconBg = colorMap[account.color] ?? colorMap.slate;
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-5 flex flex-col transition-all hover:shadow-sm hover:border-slate-300">
+    <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-5 flex flex-col transition-all hover:shadow-sm hover:border-slate-300">
       <div className="flex items-start justify-between mb-3">
         <div className={`w-11 h-11 rounded-xl border flex items-center justify-center ${iconBg}`}>
           {account.icon}
@@ -308,18 +308,18 @@ function SocialAccountCard({ account, onConnect }: { account: SocialAccount; onC
         <OAuthStatusBadge status={account.status} />
       </div>
 
-      <h3 className="text-sm font-semibold text-slate-900 mb-1">{account.name}</h3>
-      <p className="text-xs text-slate-500 leading-relaxed mb-3 flex-1">{account.description}</p>
+      <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">{account.name}</h3>
+      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-3 flex-1">{account.description}</p>
 
       {account.accountName && (
-        <div className="bg-slate-50 border border-slate-200/60 rounded-lg px-3 py-2 mb-3">
-          <p className="text-[10px] text-slate-400 uppercase tracking-wider">Account</p>
-          <p className="text-xs text-slate-700 font-medium">{account.accountName}</p>
+        <div className="bg-slate-50 dark:bg-white/[0.06] border border-slate-200/60 dark:border-white/[0.06] rounded-lg px-3 py-2 mb-3">
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider">Account</p>
+          <p className="text-xs text-slate-700 dark:text-slate-200 font-medium">{account.accountName}</p>
         </div>
       )}
 
       <div className="mb-4">
-        <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">Powers</p>
+        <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">Powers</p>
         <div className="flex flex-wrap gap-1">
           {account.powersModules.map((mod) => (
             <span key={mod} className="inline-block px-2 py-0.5 rounded text-[10px] font-medium bg-violet-50 text-violet-600 border border-violet-100">
@@ -333,7 +333,7 @@ function SocialAccountCard({ account, onConnect }: { account: SocialAccount; onC
         onClick={() => onConnect(account.id)}
         className={`w-full py-2.5 px-3 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-2 ${
           account.status === 'connected'
-            ? 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
+            ? 'bg-slate-50 dark:bg-white/[0.06] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/[0.08] hover:bg-slate-100 dark:hover:bg-white/[0.06]'
             : account.status === 'expired'
             ? 'bg-amber-500 text-white hover:bg-amber-600'
             : 'bg-violet-600 text-white hover:bg-violet-700'
@@ -471,12 +471,12 @@ export default function IntegrationsPage() {
       )}
 
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Integrations</h1>
-        <p className="text-sm text-slate-500 mt-1">Your AI services and connected accounts</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Integrations</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Your AI services and connected accounts</p>
       </div>
 
       {/* Status Overview */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5 mb-8">
+      <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-5 mb-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-violet-50 border border-violet-200/60 flex items-center justify-center">
@@ -485,11 +485,11 @@ export default function IntegrationsPage() {
               </svg>
             </div>
             <div>
-              <p className="text-sm font-semibold text-slate-900">{activeCount} of {totalServices} active</p>
-              <p className="text-xs text-slate-500">Services and connected accounts</p>
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">{activeCount} of {totalServices} active</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Services and connected accounts</p>
             </div>
           </div>
-          <div className="w-48 h-2 bg-slate-100 rounded-full overflow-hidden">
+          <div className="w-48 h-2 bg-slate-100 dark:bg-white/[0.06] rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-all"
               style={{ width: `${(activeCount / totalServices) * 100}%` }}
@@ -501,12 +501,12 @@ export default function IntegrationsPage() {
       {/* Managed Services */}
       <div className="mb-10">
         <div className="flex items-center gap-3 mb-1">
-          <h2 className="text-base font-semibold text-slate-900">Embedo Services</h2>
+          <h2 className="text-base font-semibold text-slate-900 dark:text-white">Embedo Services</h2>
           <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-violet-50 text-violet-600 border border-violet-100">
             Fully managed
           </span>
         </div>
-        <p className="text-xs text-slate-500 mb-5">
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">
           These services are provisioned and managed by Embedo. No setup required — they activate automatically when your account is configured.
         </p>
 
@@ -520,12 +520,12 @@ export default function IntegrationsPage() {
       {/* Social Accounts */}
       <div>
         <div className="flex items-center gap-3 mb-1">
-          <h2 className="text-base font-semibold text-slate-900">Social Accounts</h2>
+          <h2 className="text-base font-semibold text-slate-900 dark:text-white">Social Accounts</h2>
           <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-sky-50 text-sky-600 border border-sky-100">
             You connect
           </span>
         </div>
-        <p className="text-xs text-slate-500 mb-5">
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">
           Connect your social media accounts to enable AI content publishing, DM automation, and engagement tracking. You&apos;ll be redirected to sign in with each platform.
         </p>
 

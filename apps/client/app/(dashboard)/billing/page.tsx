@@ -26,11 +26,11 @@ function formatDate(iso: string | null): string {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  ACTIVE: 'bg-emerald-100 text-emerald-700',
-  TRIALING: 'bg-violet-100 text-violet-700',
-  PAST_DUE: 'bg-amber-100 text-amber-700',
-  CANCELED: 'bg-slate-100 text-slate-500',
-  PAUSED: 'bg-slate-100 text-slate-500',
+  ACTIVE: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400',
+  TRIALING: 'bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-400',
+  PAST_DUE: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400',
+  CANCELED: 'bg-slate-100 text-slate-500 dark:bg-white/[0.06] dark:text-slate-400',
+  PAUSED: 'bg-slate-100 text-slate-500 dark:bg-white/[0.06] dark:text-slate-400',
 };
 
 export default function BillingPage() {
@@ -157,13 +157,13 @@ export default function BillingPage() {
     <div className="p-8 animate-fade-up">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Billing</h1>
-        <p className="text-sm text-slate-500 mt-1">Manage your subscription and billing</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Billing</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage your subscription and billing</p>
       </div>
 
       {/* Error */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl flex items-start gap-3">
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5">
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
           </svg>
@@ -176,26 +176,26 @@ export default function BillingPage() {
 
       {/* Active paid subscription card */}
       {subscription && !isOnFree && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 mb-8">
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl p-6 mb-8">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <h2 className="text-lg font-bold text-slate-900">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">
                   {TIERS[activeTierKey]?.name ?? activeTierKey} Plan
                 </h2>
-                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLES[subscription.status] ?? 'bg-slate-100 text-slate-500'}`}>
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLES[subscription.status] ?? 'bg-slate-100 text-slate-500 dark:bg-white/[0.06] dark:text-slate-400'}`}>
                   {subscription.status === 'TRIALING' ? 'Free Trial' : subscription.status.toLowerCase().replace('_', ' ')}
                 </span>
                 {subscription.cancelAtPeriodEnd && (
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400">
                     Cancels {formatDate(subscription.currentPeriodEnd)}
                   </span>
                 )}
               </div>
-              <p className="text-3xl font-bold text-slate-900">
-                ${TIERS[activeTierKey]?.price.toFixed(2)}<span className="text-base font-normal text-slate-400">/mo</span>
+              <p className="text-3xl font-bold text-slate-900 dark:text-white">
+                ${TIERS[activeTierKey]?.price.toFixed(2)}<span className="text-base font-normal text-slate-400 dark:text-slate-500">/mo</span>
               </p>
-              <div className="flex gap-6 mt-3 text-xs text-slate-500">
+              <div className="flex gap-6 mt-3 text-xs text-slate-500 dark:text-slate-400">
                 {subscription.status === 'TRIALING' && subscription.trialEndsAt && (
                   <span>Trial ends {formatDate(subscription.trialEndsAt)}</span>
                 )}
@@ -216,7 +216,7 @@ export default function BillingPage() {
                       Resume
                     </button>
                   ) : (
-                    <button onClick={handleCancel} disabled={actionLoading} className="px-4 py-2 text-xs font-medium text-slate-500 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50">
+                    <button onClick={handleCancel} disabled={actionLoading} className="px-4 py-2 text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors disabled:opacity-50">
                       Cancel
                     </button>
                   )}
@@ -230,10 +230,10 @@ export default function BillingPage() {
       {/* Plan selection header */}
       <div className="mb-6 flex items-end justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-slate-800">
+          <h2 className="text-lg font-semibold text-slate-800 dark:text-white">
             {isOnFree ? 'Choose a plan' : 'Plans'}
           </h2>
-          <p className="text-sm text-slate-500 mt-1">All paid plans include a 14-day free trial</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">All paid plans include a 14-day free trial</p>
         </div>
         <Link
           href="/billing/compare"
@@ -257,12 +257,12 @@ export default function BillingPage() {
           return (
             <div
               key={key}
-              className={`relative bg-white border rounded-2xl p-6 flex flex-col transition-all ${
+              className={`relative bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border rounded-2xl p-6 flex flex-col transition-all ${
                 isPopular
-                  ? 'border-violet-300 ring-2 ring-violet-100 shadow-lg shadow-violet-100/50'
+                  ? 'border-violet-300 ring-2 ring-violet-100 dark:ring-violet-500/20 shadow-lg shadow-violet-100/50 dark:shadow-violet-500/10'
                   : isCurrent
-                    ? 'border-emerald-300 ring-2 ring-emerald-100'
-                    : 'border-slate-200 hover:border-slate-300 hover:shadow-sm'
+                    ? 'border-emerald-300 ring-2 ring-emerald-100 dark:ring-emerald-500/20'
+                    : 'border-slate-200 dark:border-white/[0.08] hover:border-slate-300 hover:shadow-sm'
               }`}
             >
               {/* Badge */}
@@ -279,14 +279,14 @@ export default function BillingPage() {
 
               {/* Name + price */}
               <div className="mb-5">
-                <h3 className="text-base font-bold text-slate-900">{tier.name}</h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">{tier.desc}</p>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">{tier.name}</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{tier.desc}</p>
                 <div className="mt-3">
                   {tier.price === 0 ? (
-                    <p className="text-3xl font-bold text-slate-900">Free</p>
+                    <p className="text-3xl font-bold text-slate-900 dark:text-white">Free</p>
                   ) : (
-                    <p className="text-3xl font-bold text-slate-900">
-                      ${tier.price.toFixed(2)}<span className="text-sm font-normal text-slate-400">/mo</span>
+                    <p className="text-3xl font-bold text-slate-900 dark:text-white">
+                      ${tier.price.toFixed(2)}<span className="text-sm font-normal text-slate-400 dark:text-slate-500">/mo</span>
                     </p>
                   )}
                 </div>
@@ -301,7 +301,7 @@ export default function BillingPage() {
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     </span>
-                    <span className="text-xs text-slate-600 leading-snug">{h}</span>
+                    <span className="text-xs text-slate-600 dark:text-slate-300 leading-snug">{h}</span>
                   </li>
                 ))}
               </ul>
@@ -310,7 +310,7 @@ export default function BillingPage() {
               {isFree ? (
                 <button
                   disabled
-                  className="w-full py-2.5 text-sm font-semibold rounded-xl bg-slate-100 text-slate-400 cursor-default"
+                  className="w-full py-2.5 text-sm font-semibold rounded-xl bg-slate-100 dark:bg-white/[0.06] text-slate-400 dark:text-slate-500 cursor-default"
                 >
                   {isCurrent ? 'Current Plan' : 'Free Forever'}
                 </button>
@@ -344,7 +344,7 @@ export default function BillingPage() {
       <div className="mt-8 text-center">
         <Link
           href="/billing/compare"
-          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-violet-600 transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 hover:text-violet-600 transition-colors"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
             <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />

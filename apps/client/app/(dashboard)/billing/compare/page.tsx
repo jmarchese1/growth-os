@@ -41,7 +41,7 @@ const CATEGORY_ICONS: Record<string, ReactNode> = {
 function FeatureCell({ value }: { value: FeatureValue }) {
   if (value === true) {
     return (
-      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100">
+      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/20">
         <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-emerald-600">
           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
         </svg>
@@ -49,9 +49,9 @@ function FeatureCell({ value }: { value: FeatureValue }) {
     );
   }
   if (value === false) {
-    return <span className="text-xs text-slate-300">&mdash;</span>;
+    return <span className="text-xs text-slate-300 dark:text-slate-600">&mdash;</span>;
   }
-  return <span className="text-[11px] font-semibold text-slate-700">{value}</span>;
+  return <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{value}</span>;
 }
 
 export default function ComparePlansPage() {
@@ -72,28 +72,28 @@ export default function ComparePlansPage() {
       <div className="mb-8 flex items-center gap-4">
         <Link
           href="/billing"
-          className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors"
+          className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.06] transition-colors"
         >
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-slate-600">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-slate-600 dark:text-slate-300">
             <path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" />
           </svg>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Compare Plans</h1>
-          <p className="text-sm text-slate-500 mt-0.5">See exactly what&apos;s included in each tier</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Compare Plans</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">See exactly what&apos;s included in each tier</p>
         </div>
       </div>
 
       {/* Sticky tier header */}
-      <div className="sticky top-0 z-20 -mx-8 px-8 pb-3 pt-1 bg-gradient-to-b from-slate-50 via-slate-50 to-transparent">
+      <div className="sticky top-0 z-20 -mx-8 px-8 pb-3 pt-1 bg-gradient-to-b from-slate-50 via-slate-50 to-transparent dark:from-[#110f1d] dark:via-[#110f1d] dark:to-transparent">
         <div className="grid grid-cols-[1fr_repeat(5,100px)] gap-2 items-end">
           <div />
           {TIER_KEYS.map((key) => {
             const tier = TIERS[key];
             return (
               <div key={key} className="text-center">
-                <p className="text-xs font-bold text-slate-900">{tier.name}</p>
-                <p className="text-[10px] text-slate-500 mt-0.5">
+                <p className="text-xs font-bold text-slate-900 dark:text-white">{tier.name}</p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                   {tier.price === 0 ? 'Free' : `$${tier.price.toFixed(2)}/mo`}
                 </p>
                 {tier.popular && (
@@ -114,23 +114,23 @@ export default function ComparePlansPage() {
           const features = FEATURES.filter((f) => f.category === category);
 
           return (
-            <div key={category} className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+            <div key={category} className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl overflow-hidden">
               {/* Category header — clickable */}
               <button
                 onClick={() => toggle(category)}
-                className="w-full px-5 py-4 flex items-center gap-3 hover:bg-slate-50/50 transition-colors"
+                className="w-full px-5 py-4 flex items-center gap-3 hover:bg-slate-50/50 dark:hover:bg-white/[0.04] transition-colors"
               >
                 <span className="w-8 h-8 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center flex-shrink-0">
                   {CATEGORY_ICONS[category] ?? CATEGORY_ICONS['Platform']}
                 </span>
                 <div className="flex-1 text-left">
-                  <p className="text-sm font-semibold text-slate-900">{category}</p>
-                  <p className="text-[11px] text-slate-500">{features.length} features</p>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">{category}</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">{features.length} features</p>
                 </div>
                 <svg
                   viewBox="0 0 20 20"
                   fill="currentColor"
-                  className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                  className={`w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
                 >
                   <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
                 </svg>
@@ -138,15 +138,15 @@ export default function ComparePlansPage() {
 
               {/* Feature rows */}
               {isOpen && (
-                <div className="border-t border-slate-100">
+                <div className="border-t border-slate-100 dark:border-white/[0.06]">
                   {features.map((feature, i) => (
                     <div
                       key={feature.label}
                       className={`grid grid-cols-[1fr_repeat(5,100px)] gap-2 px-5 py-3 items-center ${
-                        i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'
+                        i % 2 === 0 ? 'bg-white dark:bg-transparent' : 'bg-slate-50/40 dark:bg-white/[0.02]'
                       }`}
                     >
-                      <span className="text-[13px] text-slate-700 pl-11">{feature.label}</span>
+                      <span className="text-[13px] text-slate-700 dark:text-slate-200 pl-11">{feature.label}</span>
                       {TIER_KEYS.map((key) => (
                         <div key={key} className="flex justify-center">
                           <FeatureCell value={feature.values[key]} />

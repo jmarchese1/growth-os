@@ -486,12 +486,12 @@ export default function WebsiteBuilder({
             return (
               <div key={label} className="flex items-center flex-1 last:flex-none">
                 <div className="flex items-center gap-2">
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-colors ${done ? 'bg-violet-600 text-white' : active ? 'bg-violet-600 text-white' : 'bg-slate-200 text-slate-400'}`}>
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-colors ${done ? 'bg-violet-600 text-white' : active ? 'bg-violet-600 text-white' : 'bg-slate-200 dark:bg-white/[0.06] text-slate-400 dark:text-slate-500'}`}>
                     {done ? <svg viewBox="0 0 12 12" fill="none" className="w-3.5 h-3.5"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> : n}
                   </div>
-                  <span className={`text-xs font-medium ${active ? 'text-slate-900' : done ? 'text-violet-600' : 'text-slate-400'}`}>{label}</span>
+                  <span className={`text-xs font-medium ${active ? 'text-slate-900 dark:text-white' : done ? 'text-violet-600' : 'text-slate-400 dark:text-slate-500'}`}>{label}</span>
                 </div>
-                {i < allStepLabels.length - 1 && <div className={`flex-1 h-px mx-2 ${done ? 'bg-violet-300' : 'bg-slate-200'}`} />}
+                {i < allStepLabels.length - 1 && <div className={`flex-1 h-px mx-2 ${done ? 'bg-violet-300' : 'bg-slate-200 dark:bg-white/[0.08]'}`} />}
               </div>
             );
           })}
@@ -503,9 +503,9 @@ export default function WebsiteBuilder({
         {/* ── STEP 1 — Industry (only shown if not auto-detected) ── */}
         {step === 1 && !industryKnown && (
           <div className="space-y-6">
-            <div className="bg-white border border-slate-200 rounded-2xl p-8">
-              <h2 className="text-2xl font-bold text-slate-900 mb-1">What type of business are you?</h2>
-              <p className="text-sm text-slate-500 mb-8">We&apos;ll tailor the design, copy, and AI defaults to your industry.</p>
+            <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl p-8">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">What type of business are you?</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">We&apos;ll tailor the design, copy, and AI defaults to your industry.</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {INDUSTRIES.map((ind) => {
                   const selected = form.industryType === ind.id;
@@ -513,15 +513,15 @@ export default function WebsiteBuilder({
                     <button
                       key={ind.id}
                       onClick={() => selectIndustry(ind)}
-                      className={`relative text-left rounded-2xl border-2 p-5 transition-all duration-150 ${selected ? 'border-violet-500 bg-violet-50 shadow-md shadow-violet-100' : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'}`}
+                      className={`relative text-left rounded-2xl border-2 p-5 transition-all duration-150 ${selected ? 'border-violet-500 bg-violet-50 dark:bg-violet-500/15 shadow-md shadow-violet-100 dark:shadow-none' : 'border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.04] hover:border-slate-300 dark:hover:border-white/[0.12] hover:shadow-sm'}`}
                     >
                       <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style={{ background: ind.iconBg }}>
                         <svg viewBox="0 0 24 24" fill="none" stroke={ind.iconColor} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
                           <path d={ind.icon} />
                         </svg>
                       </div>
-                      <p className={`text-sm font-bold mb-0.5 ${selected ? 'text-violet-900' : 'text-slate-800'}`}>{ind.label}</p>
-                      <p className="text-[11px] text-slate-500 leading-snug">{ind.tagline}</p>
+                      <p className={`text-sm font-bold mb-0.5 ${selected ? 'text-violet-900 dark:text-violet-300' : 'text-slate-800 dark:text-white'}`}>{ind.label}</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">{ind.tagline}</p>
                       {selected && (
                         <div className="absolute top-3 right-3 w-5 h-5 bg-violet-500 rounded-full flex items-center justify-center">
                           <svg viewBox="0 0 12 12" fill="none" className="w-3 h-3"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -546,7 +546,7 @@ export default function WebsiteBuilder({
 
         {/* ── STEP 2 — Import ── */}
         {step === 2 && (
-          <div className="bg-white border border-slate-200 rounded-2xl p-8">
+          <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl p-8">
             {industryKnown && (
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: industry.iconBg }}>
@@ -554,36 +554,36 @@ export default function WebsiteBuilder({
                     <path d={industry.icon} />
                   </svg>
                 </div>
-                <span className="text-xs font-semibold text-slate-500">{industry.label}</span>
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{industry.label}</span>
               </div>
             )}
-            <h2 className="text-xl font-bold text-slate-900 mb-1">Import & Inspiration</h2>
-            <p className="text-sm text-slate-500 mb-8">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">Import & Inspiration</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">
               Import data from an existing site, add inspiration URLs for style reference, or skip both to start completely fresh.
             </p>
 
             {/* Existing website — collapsible if not needed */}
             <details className="mb-6" open={!!form.existingWebsiteUrl}>
-              <summary className="text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer select-none mb-2">
-                Import from existing website <span className="font-normal text-slate-400">(optional)</span>
+              <summary className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider cursor-pointer select-none mb-2">
+                Import from existing website <span className="font-normal text-slate-400 dark:text-slate-500">(optional)</span>
               </summary>
               <input
                 type="url"
                 placeholder={`https://your${industry.id}.com`}
                 value={form.existingWebsiteUrl}
                 onChange={(e) => setForm_('existingWebsiteUrl', e.target.value)}
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 mt-2"
+                className="w-full px-4 py-3 border border-slate-200 dark:border-white/[0.08] rounded-xl text-sm text-slate-900 dark:text-white dark:bg-white/[0.06] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 mt-2"
               />
-              <p className="text-xs text-slate-400 mt-2">We&apos;ll pull hours, menu, photos, and contact info automatically.</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">We&apos;ll pull hours, menu, photos, and contact info automatically.</p>
             </details>
 
             {/* Inspiration websites — prominently displayed */}
-            <div className="border-t border-slate-100 pt-6 mb-6">
+            <div className="border-t border-slate-100 dark:border-white/[0.06] pt-6 mb-6">
               <div className="flex items-center gap-2 mb-1">
-                <p className="text-sm font-bold text-slate-800">Style Inspiration</p>
-                <span className="px-2 py-0.5 bg-violet-100 text-violet-700 text-[10px] font-bold rounded-full">Recommended</span>
+                <p className="text-sm font-bold text-slate-800 dark:text-white">Style Inspiration</p>
+                <span className="px-2 py-0.5 bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400 text-[10px] font-bold rounded-full">Recommended</span>
               </div>
-              <p className="text-xs text-slate-400 mb-4">Paste URLs of websites whose look and feel you love. Our AI will screenshot them, extract their design DNA (colors, typography, spacing, layout), and apply that aesthetic to your site. <strong className="text-slate-500">This is what makes each site unique.</strong></p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">Paste URLs of websites whose look and feel you love. Our AI will screenshot them, extract their design DNA (colors, typography, spacing, layout), and apply that aesthetic to your site. <strong className="text-slate-500">This is what makes each site unique.</strong></p>
               <div className="space-y-2">
                 {inspirationUrls.map((url, i) => (
                   <div key={i} className="flex gap-2">
@@ -592,7 +592,7 @@ export default function WebsiteBuilder({
                       value={url}
                       onChange={(e) => updateInspirationUrl(i, e.target.value)}
                       placeholder="https://example.com"
-                      className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400"
+                      className="flex-1 px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-900 dark:text-white dark:bg-white/[0.06] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400"
                     />
                     <button
                       onClick={() => removeInspirationUrl(i)}
@@ -615,12 +615,12 @@ export default function WebsiteBuilder({
             </div>
 
             {/* Dream prompt — describe what you want */}
-            <div className="border-t border-slate-100 pt-6 mb-6">
+            <div className="border-t border-slate-100 dark:border-white/[0.06] pt-6 mb-6">
               <div className="flex items-center gap-2 mb-1">
-                <p className="text-sm font-bold text-slate-800">Or Describe Your Dream Site</p>
-                <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-full">Alternative</span>
+                <p className="text-sm font-bold text-slate-800 dark:text-white">Or Describe Your Dream Site</p>
+                <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-400 text-[10px] font-bold rounded-full">Alternative</span>
               </div>
-              <p className="text-xs text-slate-400 mb-3">No inspiration URL? Just describe the look and feel you want. The AI will design from your description.</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">No inspiration URL? Just describe the look and feel you want. The AI will design from your description.</p>
               <textarea
                 value={dreamPrompt}
                 onChange={(e) => setDreamPrompt(e.target.value)}
@@ -704,7 +704,7 @@ export default function WebsiteBuilder({
               </div>
             </div>
             {/* Menu / Services upload */}
-            <div className="mb-6 border-t border-slate-100 pt-6">
+            <div className="mb-6 border-t border-slate-100 dark:border-white/[0.06] pt-6">
               <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
                 {industry.defaultSections.find((s) => s.id === 'menu')?.label ?? 'Menu / Services'}{' '}
                 <span className="font-normal text-slate-400">(optional — upload to auto-populate)</span>
@@ -770,7 +770,7 @@ export default function WebsiteBuilder({
             </div>
 
             {/* Gallery Images */}
-            <div className="mb-6 border-t border-slate-100 pt-6">
+            <div className="mb-6 border-t border-slate-100 dark:border-white/[0.06] pt-6">
               <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
                 Photo Gallery <span className="font-normal text-slate-400">(paste image URLs — up to 6)</span>
               </label>
@@ -786,7 +786,7 @@ export default function WebsiteBuilder({
                         setForm_('galleryImages', next);
                       }}
                       placeholder="https://example.com/photo.jpg"
-                      className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400"
+                      className="flex-1 px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-900 dark:text-white dark:bg-white/[0.06] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400"
                     />
                     <button
                       onClick={() => setForm_('galleryImages', form.galleryImages.filter((_, j) => j !== i))}
@@ -818,7 +818,7 @@ export default function WebsiteBuilder({
             </div>
 
             {/* Analytics (collapsible) */}
-            <details className="mb-6 border-t border-slate-100 pt-6">
+            <details className="mb-6 border-t border-slate-100 dark:border-white/[0.06] pt-6">
               <summary className="text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer select-none">
                 Analytics & Tracking <span className="font-normal text-slate-400">(optional)</span>
               </summary>
@@ -915,9 +915,9 @@ export default function WebsiteBuilder({
               </div>
 
               {/* Additional Pages */}
-              <div className="mt-6 border-t border-slate-100 pt-6">
+              <div className="mt-6 border-t border-slate-100 dark:border-white/[0.06] pt-6">
                 <h3 className="text-sm font-bold text-slate-800 mb-1">Additional Pages</h3>
-                <p className="text-xs text-slate-400 mb-4">Standalone pages with their own nav links and AI-generated content — perfect for Contact, Careers, Team pages.</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">Standalone pages with their own nav links and AI-generated content — perfect for Contact, Careers, Team pages.</p>
                 <div className="grid grid-cols-3 gap-2">
                   {extraPages.map((page) => (
                     <button
@@ -1099,7 +1099,7 @@ export default function WebsiteBuilder({
               {/* Scroll Animations */}
               <div className="mt-8 pt-8 border-t border-slate-100">
                 <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Scroll Animations</label>
-                <p className="text-xs text-slate-400 mb-4">Sections animate into view as visitors scroll. Powered by native CSS scroll-driven animations.</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">Sections animate into view as visitors scroll. Powered by native CSS scroll-driven animations.</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   {ANIMATION_PRESETS.map((ap) => {
                     const selected = form.animationPreset === ap.id;

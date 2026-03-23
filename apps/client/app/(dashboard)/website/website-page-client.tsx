@@ -384,7 +384,7 @@ function UserGuideModal({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-8" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} className="relative bg-white dark:bg-[#1a1730] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto my-auto">
         {/* Close */}
-        <button onClick={onClose} className="absolute top-4 right-4 z-10 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-800 transition-colors">
+        <button onClick={onClose} className="absolute top-4 right-4 z-10 w-8 h-8 bg-slate-100 dark:bg-white/[0.06] rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors">
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/></svg>
         </button>
 
@@ -411,7 +411,7 @@ function UserGuideModal({ onClose }: { onClose: () => void }) {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <span className="w-7 h-7 bg-violet-100 rounded-lg flex items-center justify-center text-violet-600 text-sm font-bold">T</span>
-              <h3 className="text-sm font-bold text-slate-800">Text & Copy</h3>
+              <h3 className="text-sm font-bold text-slate-800 dark:text-white">Text & Copy</h3>
             </div>
             <div className="space-y-2">
               {[
@@ -425,19 +425,19 @@ function UserGuideModal({ onClose }: { onClose: () => void }) {
                   <span className="text-violet-400 mt-0.5 flex-shrink-0">
                     <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5"><path d="M12.416 3.376a.75.75 0 01.208 1.04l-5 7.5a.75.75 0 01-1.154.114l-3-3a.75.75 0 011.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 011.04-.207z"/></svg>
                   </span>
-                  <p className="text-xs text-slate-600 leading-relaxed">{tip}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{tip}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="h-px bg-slate-100" />
+          <div className="h-px bg-slate-100 dark:bg-white/[0.06]" />
 
           {/* Layout & Structure */}
           <div>
             <div className="flex items-center gap-2 mb-3">
               <span className="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 text-sm font-bold">L</span>
-              <h3 className="text-sm font-bold text-slate-800">Layout & Structure</h3>
+              <h3 className="text-sm font-bold text-slate-800 dark:text-white">Layout & Structure</h3>
             </div>
             <div className="space-y-2">
               {[
@@ -451,19 +451,19 @@ function UserGuideModal({ onClose }: { onClose: () => void }) {
                   <span className="text-blue-400 mt-0.5 flex-shrink-0">
                     <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5"><path d="M12.416 3.376a.75.75 0 01.208 1.04l-5 7.5a.75.75 0 01-1.154.114l-3-3a.75.75 0 011.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 011.04-.207z"/></svg>
                   </span>
-                  <p className="text-xs text-slate-600 leading-relaxed">{tip}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{tip}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="h-px bg-slate-100" />
+          <div className="h-px bg-slate-100 dark:bg-white/[0.06]" />
 
           {/* Visual & Style */}
           <div>
             <div className="flex items-center gap-2 mb-3">
               <span className="w-7 h-7 bg-pink-100 rounded-lg flex items-center justify-center text-pink-600 text-sm font-bold">V</span>
-              <h3 className="text-sm font-bold text-slate-800">Visual & Style</h3>
+              <h3 className="text-sm font-bold text-slate-800 dark:text-white">Visual & Style</h3>
             </div>
             <div className="space-y-2">
               {[
@@ -477,19 +477,19 @@ function UserGuideModal({ onClose }: { onClose: () => void }) {
                   <span className="text-pink-400 mt-0.5 flex-shrink-0">
                     <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5"><path d="M12.416 3.376a.75.75 0 01.208 1.04l-5 7.5a.75.75 0 01-1.154.114l-3-3a.75.75 0 011.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 011.04-.207z"/></svg>
                   </span>
-                  <p className="text-xs text-slate-600 leading-relaxed">{tip}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{tip}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="h-px bg-slate-100" />
+          <div className="h-px bg-slate-100 dark:bg-white/[0.06]" />
 
           {/* Images & Media */}
           <div>
             <div className="flex items-center gap-2 mb-3">
               <span className="w-7 h-7 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 text-sm font-bold">I</span>
-              <h3 className="text-sm font-bold text-slate-800">Images & Media</h3>
+              <h3 className="text-sm font-bold text-slate-800 dark:text-white">Images & Media</h3>
             </div>
             <div className="space-y-2">
               {[
@@ -503,19 +503,19 @@ function UserGuideModal({ onClose }: { onClose: () => void }) {
                   <span className="text-emerald-400 mt-0.5 flex-shrink-0">
                     <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5"><path d="M12.416 3.376a.75.75 0 01.208 1.04l-5 7.5a.75.75 0 01-1.154.114l-3-3a.75.75 0 011.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 011.04-.207z"/></svg>
                   </span>
-                  <p className="text-xs text-slate-600 leading-relaxed">{tip}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{tip}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="h-px bg-slate-100" />
+          <div className="h-px bg-slate-100 dark:bg-white/[0.06]" />
 
           {/* Animations & Effects */}
           <div>
             <div className="flex items-center gap-2 mb-3">
               <span className="w-7 h-7 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600 text-sm font-bold">A</span>
-              <h3 className="text-sm font-bold text-slate-800">Animations & Effects</h3>
+              <h3 className="text-sm font-bold text-slate-800 dark:text-white">Animations & Effects</h3>
             </div>
             <div className="space-y-2">
               {[
@@ -529,23 +529,23 @@ function UserGuideModal({ onClose }: { onClose: () => void }) {
                   <span className="text-amber-400 mt-0.5 flex-shrink-0">
                     <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5"><path d="M12.416 3.376a.75.75 0 01.208 1.04l-5 7.5a.75.75 0 01-1.154.114l-3-3a.75.75 0 011.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 011.04-.207z"/></svg>
                   </span>
-                  <p className="text-xs text-slate-600 leading-relaxed">{tip}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{tip}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="h-px bg-slate-100" />
+          <div className="h-px bg-slate-100 dark:bg-white/[0.06]" />
 
           {/* Pro Tips */}
-          <div className="bg-violet-50 border border-violet-100 rounded-xl p-4">
-            <h3 className="text-sm font-bold text-violet-800 mb-2">Pro Tips</h3>
+          <div className="bg-violet-50 dark:bg-violet-500/15 border border-violet-100 dark:border-violet-500/20 rounded-xl p-4">
+            <h3 className="text-sm font-bold text-violet-800 dark:text-violet-300 mb-2">Pro Tips</h3>
             <div className="space-y-2">
-              <p className="text-xs text-violet-700">Use the <strong>Color Picker</strong> tool to find exact hex codes, then tell the AI: &quot;Change the hero background to #2d1b4e&quot;</p>
-              <p className="text-xs text-violet-700">Use <strong>Search Photos</strong> to find Pexels images, click one, and the URL auto-fills your chat</p>
-              <p className="text-xs text-violet-700">Use <strong>My Images</strong> to insert images you&apos;ve generated with DALL-E or saved to your library</p>
-              <p className="text-xs text-violet-700">Be specific — &quot;make the text bigger&quot; is vague, &quot;make the hero heading 72px bold&quot; is precise</p>
-              <p className="text-xs text-violet-700">You can undo any change using the <strong>Version History</strong> (clock icon in the AI Editor panel)</p>
+              <p className="text-xs text-violet-700 dark:text-violet-300">Use the <strong>Color Picker</strong> tool to find exact hex codes, then tell the AI: &quot;Change the hero background to #2d1b4e&quot;</p>
+              <p className="text-xs text-violet-700 dark:text-violet-300">Use <strong>Search Photos</strong> to find Pexels images, click one, and the URL auto-fills your chat</p>
+              <p className="text-xs text-violet-700 dark:text-violet-300">Use <strong>My Images</strong> to insert images you&apos;ve generated with DALL-E or saved to your library</p>
+              <p className="text-xs text-violet-700 dark:text-violet-300">Be specific — &quot;make the text bigger&quot; is vague, &quot;make the hero heading 72px bold&quot; is precise</p>
+              <p className="text-xs text-violet-700 dark:text-violet-300">You can undo any change using the <strong>Version History</strong> (clock icon in the AI Editor panel)</p>
             </div>
           </div>
         </div>
@@ -573,13 +573,13 @@ function WebsiteList({
       {showGuide && <UserGuideModal onClose={() => setShowGuide(false)} />}
       <div className="flex items-start justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Websites</h1>
-          <p className="text-sm text-slate-500 mt-1">All your AI-generated websites</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Websites</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">All your AI-generated websites</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => setShowGuide(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-50 to-indigo-50 border border-violet-200 text-violet-700 text-sm font-semibold rounded-xl hover:from-violet-100 hover:to-indigo-100 hover:border-violet-300 transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-50 to-indigo-50 dark:from-violet-500/15 dark:to-indigo-500/15 border border-violet-200 dark:border-violet-500/30 text-violet-700 dark:text-violet-400 text-sm font-semibold rounded-xl hover:from-violet-100 hover:to-indigo-100 hover:border-violet-300 transition-all"
           >
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" /></svg>
             AI Editor Guide
@@ -597,14 +597,14 @@ function WebsiteList({
       </div>
 
       {sites.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-2xl p-16 text-center">
-          <div className="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl p-16 text-center">
+          <div className="w-12 h-12 rounded-xl bg-violet-100 dark:bg-violet-500/15 flex items-center justify-center mx-auto mb-4">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6 text-violet-600">
               <path fillRule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16z" clipRule="evenodd" />
             </svg>
           </div>
-          <h2 className="text-base font-semibold text-slate-800 mb-1">No websites yet</h2>
-          <p className="text-sm text-slate-500 mb-6">Generate your first AI-powered website in under 2 minutes.</p>
+          <h2 className="text-base font-semibold text-slate-800 dark:text-white mb-1">No websites yet</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Generate your first AI-powered website in under 2 minutes.</p>
           <button
             onClick={onBuildNew}
             className="px-6 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-700 transition-colors"
@@ -613,15 +613,15 @@ function WebsiteList({
           </button>
         </div>
       ) : (
-        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-100">
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-6 py-3">Name</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Status</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">URL</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Created</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-4 py-3">Last updated</th>
+              <tr className="border-b border-slate-100 dark:border-white/[0.06]">
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-6 py-3">Name</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-4 py-3">Status</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-4 py-3">URL</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-4 py-3">Created</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-4 py-3">Last updated</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -630,17 +630,17 @@ function WebsiteList({
                 <tr
                   key={site.id}
                   onClick={() => onSelect(site)}
-                  className="border-b border-slate-50 last:border-0 hover:bg-slate-50/60 cursor-pointer transition-colors"
+                  className="border-b border-slate-50 dark:border-white/[0.04] last:border-0 hover:bg-slate-50/60 dark:hover:bg-white/[0.04] cursor-pointer transition-colors"
                 >
                   <td className="px-6 py-4">
-                    <p className="text-sm font-medium text-slate-800">{siteName(site)}</p>
-                    <p className="text-[11px] text-slate-400 mt-0.5 capitalize">{String(site.config?.['cuisine'] ?? site.config?.['colorScheme'] ?? 'restaurant')}</p>
+                    <p className="text-sm font-medium text-slate-800 dark:text-white">{siteName(site)}</p>
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 capitalize">{String(site.config?.['cuisine'] ?? site.config?.['colorScheme'] ?? 'restaurant')}</p>
                   </td>
                   <td className="px-4 py-4">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${
                       site.status === 'LIVE'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-amber-100 text-amber-700'
+                        ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+                        : 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400'
                     }`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${site.status === 'LIVE' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                       {site.status === 'LIVE' ? 'Live' : 'Draft'}
@@ -662,11 +662,11 @@ function WebsiteList({
                         </svg>
                       </a>
                     ) : (
-                      <span className="text-xs text-slate-400">—</span>
+                      <span className="text-xs text-slate-400 dark:text-slate-500">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-4 text-xs text-slate-500">{formatDate(site.createdAt)}</td>
-                  <td className="px-4 py-4 text-xs text-slate-500">{formatDate(site.updatedAt)}</td>
+                  <td className="px-4 py-4 text-xs text-slate-500 dark:text-slate-400">{formatDate(site.createdAt)}</td>
+                  <td className="px-4 py-4 text-xs text-slate-500 dark:text-slate-400">{formatDate(site.updatedAt)}</td>
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
                       <button
@@ -683,10 +683,10 @@ function WebsiteList({
                           >
                             Confirm
                           </button>
-                          <span className="text-slate-300">·</span>
+                          <span className="text-slate-300 dark:text-slate-600">·</span>
                           <button
                             onClick={() => setConfirmId(null)}
-                            className="text-[11px] text-slate-500 hover:text-slate-700 transition-colors"
+                            className="text-[11px] text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
                           >
                             Cancel
                           </button>
@@ -787,13 +787,13 @@ function EditingIndicator() {
 
   return (
     <div className="flex justify-start">
-      <div className="bg-slate-100 rounded-xl rounded-bl-sm px-4 py-3 flex items-center gap-2.5">
+      <div className="bg-slate-100 dark:bg-white/[0.06] rounded-xl rounded-bl-sm px-4 py-3 flex items-center gap-2.5">
         <div className="flex gap-1">
           {[0, 150, 300].map((delay) => (
             <div key={delay} className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: `${delay}ms` }} />
           ))}
         </div>
-        <span key={idx} className="text-xs text-slate-500 italic" style={{ animation: 'fadeInMsg 0.4s ease-out' }}>
+        <span key={idx} className="text-xs text-slate-500 dark:text-slate-400 italic" style={{ animation: 'fadeInMsg 0.4s ease-out' }}>
           {EDITING_SLOGANS[idx]}
         </span>
       </div>
@@ -813,7 +813,7 @@ function VersionRow({ version, onRevert, onRename, reverting, disabled }: {
   const [editLabel, setEditLabel] = useState(version.label ?? 'Version');
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg">
+    <div className="flex items-center gap-2 px-3 py-2.5 bg-slate-50 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] rounded-lg">
       <div className="flex-1 min-w-0">
         {editing ? (
           <input
@@ -827,7 +827,7 @@ function VersionRow({ version, onRevert, onRename, reverting, disabled }: {
           />
         ) : (
           <p
-            className="text-[11px] font-medium text-slate-700 truncate cursor-pointer hover:text-violet-600"
+            className="text-[11px] font-medium text-slate-700 dark:text-slate-200 truncate cursor-pointer hover:text-violet-600"
             onClick={() => setEditing(true)}
             title="Click to rename"
           >
@@ -835,7 +835,7 @@ function VersionRow({ version, onRevert, onRename, reverting, disabled }: {
             <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3 inline ml-1 text-slate-300"><path d="M13.488 2.513a1.75 1.75 0 00-2.475 0L3.22 10.303a.75.75 0 00-.178.31l-.893 3.124a.75.75 0 00.926.926l3.124-.894a.75.75 0 00.31-.178l7.791-7.79a1.75 1.75 0 000-2.475l-.812-.813zM11.72 3.22a.25.25 0 01.354 0l.812.813a.25.25 0 010 .354L5.895 11.38l-1.834.524.524-1.834 6.935-6.85z" /></svg>
           </p>
         )}
-        <p className="text-[10px] text-slate-400">{new Date(version.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</p>
+        <p className="text-[10px] text-slate-400 dark:text-slate-500">{new Date(version.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</p>
       </div>
       <button
         onClick={onRevert}
@@ -997,24 +997,24 @@ function WebsiteEditor({
   return (
     <div className="flex flex-col" style={{ height: 'calc(100vh - 64px)' }}>
       {/* Top bar */}
-      <div className="flex items-center gap-3 px-6 py-3 border-b border-slate-200 bg-white flex-shrink-0">
+      <div className="flex items-center gap-3 px-6 py-3 border-b border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm flex-shrink-0">
         <button
           onClick={onBack}
-          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors"
+          className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
             <path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" />
           </svg>
           Websites
         </button>
-        <span className="text-slate-300">/</span>
-        <span className="text-sm font-medium text-slate-800">{siteName(site)}</span>
+        <span className="text-slate-300 dark:text-slate-600">/</span>
+        <span className="text-sm font-medium text-slate-800 dark:text-white">{siteName(site)}</span>
 
         <div className="flex items-center gap-3 ml-auto">
           {site.status === 'LIVE' && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-200 rounded-full">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/20 rounded-full">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span className="text-[11px] font-medium text-emerald-700">Live</span>
+              <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400">Live</span>
             </div>
           )}
           {deployUrl && (
@@ -1035,7 +1035,7 @@ function WebsiteEditor({
           <button
             onClick={() => void handleDelete()}
             title="Delete website"
-            className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+            className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/15 rounded-lg transition-colors"
           >
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
               <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -1045,12 +1045,12 @@ function WebsiteEditor({
       </div>
 
       {/* ── Tools Toolbar ── */}
-      <div className="flex items-center gap-2 px-4 py-2 border-b border-slate-200 bg-slate-50 flex-shrink-0">
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Tools</span>
+      <div className="flex items-center gap-2 px-4 py-2 border-b border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-white/[0.04] flex-shrink-0">
+        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mr-1">Tools</span>
         {/* 1. Color Picker */}
         <button
           onClick={() => setShowColorWheel(!showColorWheel)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showColorWheel ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-slate-200 bg-white text-slate-600 hover:border-violet-200 hover:text-violet-600'}`}
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showColorWheel ? 'border-violet-300 bg-violet-50 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400' : 'border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.04] text-slate-600 dark:text-slate-300 hover:border-violet-200 hover:text-violet-600'}`}
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 110-12 6 6 0 010 12zm0-2a4 4 0 100-8 4 4 0 000 8zm0-2a2 2 0 110-4 2 2 0 010 4z" clipRule="evenodd" /></svg>
           Color Picker
@@ -1058,7 +1058,7 @@ function WebsiteEditor({
         {/* 2. Custom Domain */}
         <button
           onClick={() => setShowDomainSetup(!showDomainSetup)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showDomainSetup ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-slate-200 bg-white text-slate-600 hover:border-violet-200 hover:text-violet-600'}`}
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showDomainSetup ? 'border-violet-300 bg-violet-50 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400' : 'border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.04] text-slate-600 dark:text-slate-300 hover:border-violet-200 hover:text-violet-600'}`}
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.497-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z" clipRule="evenodd" /></svg>
           Custom Domain
@@ -1066,7 +1066,7 @@ function WebsiteEditor({
         {/* 3. Search Photos */}
         <button
           onClick={() => setShowPexelsSearch(!showPexelsSearch)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showPexelsSearch ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-200 hover:text-emerald-600'}`}
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showPexelsSearch ? 'border-emerald-300 bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400' : 'border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.04] text-slate-600 dark:text-slate-300 hover:border-emerald-200 hover:text-emerald-600'}`}
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" /></svg>
           Search Photos
@@ -1074,7 +1074,7 @@ function WebsiteEditor({
         {/* 4. AI Images */}
         <button
           onClick={() => setShowImageGen(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-violet-200 hover:text-violet-600 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.04] text-slate-600 dark:text-slate-300 hover:border-violet-200 hover:text-violet-600 transition-colors"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M1 8a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 018.07 3h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0016.07 6H17a2 2 0 012 2v7a2 2 0 01-2 2H3a2 2 0 01-2-2V8zm13.5 3a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM10 14a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>
           AI Images
@@ -1083,21 +1083,21 @@ function WebsiteEditor({
         <div className="relative">
           <button
             onClick={() => { setShowMyImages(!showMyImages); if (!showMyImages && myImages.length === 0) void loadMyImages(); }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showMyImages ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-slate-200 bg-white text-slate-600 hover:border-violet-200 hover:text-violet-600'}`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showMyImages ? 'border-violet-300 bg-violet-50 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400' : 'border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.04] text-slate-600 dark:text-slate-300 hover:border-violet-200 hover:text-violet-600'}`}
           >
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" /></svg>
             My Images
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
           </button>
           {showMyImages && (
-            <div className="absolute top-full left-0 mt-1 w-96 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-80 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="absolute top-full left-0 mt-1 w-96 bg-white dark:bg-[#1a1730] border border-slate-200 dark:border-white/[0.08] rounded-xl shadow-xl z-50 max-h-80 overflow-hidden" onClick={(e) => e.stopPropagation()}>
               {/* Category filter tabs */}
-              <div className="flex gap-1 px-2 pt-2 pb-1 border-b border-slate-100 overflow-x-auto">
+              <div className="flex gap-1 px-2 pt-2 pb-1 border-b border-slate-100 dark:border-white/[0.06] overflow-x-auto">
                 {['all', 'food', 'interior', 'team', 'logo', 'product', 'lifestyle', 'general'].map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setMyImageFilter(cat)}
-                    className={`px-2 py-0.5 text-[9px] font-medium rounded-full whitespace-nowrap transition-colors ${myImageFilter === cat ? 'bg-violet-100 text-violet-700' : 'text-slate-400 hover:text-slate-600'}`}
+                    className={`px-2 py-0.5 text-[9px] font-medium rounded-full whitespace-nowrap transition-colors ${myImageFilter === cat ? 'bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
                   >
                     {cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1)}
                   </button>
@@ -1106,7 +1106,7 @@ function WebsiteEditor({
               <div className="overflow-y-auto max-h-64">
                 {filteredMyImages.length === 0 ? (
                   <div className="p-4 text-center">
-                    <p className="text-xs text-slate-400">No images{myImageFilter !== 'all' ? ` in "${myImageFilter}"` : ''}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">No images{myImageFilter !== 'all' ? ` in "${myImageFilter}"` : ''}</p>
                     <a href="/images" className="text-xs text-violet-600 hover:underline">Go to Image Library</a>
                   </div>
                 ) : (
@@ -1133,18 +1133,18 @@ function WebsiteEditor({
           )}
         </div>
         <div className="flex-1" />
-        <div className="flex items-center gap-0.5 bg-white rounded-lg border border-slate-200 p-0.5">
+        <div className="flex items-center gap-0.5 bg-white dark:bg-white/[0.04] rounded-lg border border-slate-200 dark:border-white/[0.08] p-0.5">
           <button
             onClick={() => setMobilePreview(false)}
             title="Desktop"
-            className={`px-2 py-1 rounded-md text-[10px] font-medium transition-colors ${!mobilePreview ? 'bg-violet-100 text-violet-700' : 'text-slate-400 hover:text-slate-600'}`}
+            className={`px-2 py-1 rounded-md text-[10px] font-medium transition-colors ${!mobilePreview ? 'bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
           >
             Desktop
           </button>
           <button
             onClick={() => setMobilePreview(true)}
             title="Mobile"
-            className={`px-2 py-1 rounded-md text-[10px] font-medium transition-colors ${mobilePreview ? 'bg-violet-100 text-violet-700' : 'text-slate-400 hover:text-slate-600'}`}
+            className={`px-2 py-1 rounded-md text-[10px] font-medium transition-colors ${mobilePreview ? 'bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
           >
             Mobile
           </button>
@@ -1153,16 +1153,16 @@ function WebsiteEditor({
 
       {/* Domain setup panel */}
       {showDomainSetup && (
-        <div className="bg-white border-b border-slate-200 px-6 py-4">
+        <div className="bg-white dark:bg-white/[0.04] border-b border-slate-200 dark:border-white/[0.08] px-6 py-4">
           <div className="max-w-lg">
-            <p className="text-xs font-bold text-slate-700 mb-2">Connect Custom Domain</p>
+            <p className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-2">Connect Custom Domain</p>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={customDomain}
                 onChange={(e) => setCustomDomain(e.target.value)}
                 placeholder="www.yourbusiness.com"
-                className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400"
+                className="flex-1 px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400"
               />
               <button
                 onClick={async () => {
@@ -1188,21 +1188,21 @@ function WebsiteEditor({
               </button>
             </div>
             {domainStatus && (
-              <div className="mt-3 bg-slate-50 border border-slate-200 rounded-lg p-3">
-                <p className="text-xs font-semibold text-slate-700 mb-2">
+              <div className="mt-3 bg-slate-50 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] rounded-lg p-3">
+                <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2">
                   {domainStatus.configured ? 'Domain connected!' : 'Add these DNS records at your registrar:'}
                 </p>
                 {!domainStatus.configured && (
                   <table className="w-full text-[11px]">
-                    <thead><tr className="text-slate-400"><th className="text-left pr-4">Type</th><th className="text-left pr-4">Name</th><th className="text-left">Value</th></tr></thead>
+                    <thead><tr className="text-slate-400 dark:text-slate-500"><th className="text-left pr-4">Type</th><th className="text-left pr-4">Name</th><th className="text-left">Value</th></tr></thead>
                     <tbody>
                       {domainStatus.dnsRecords.map((r, i) => (
-                        <tr key={i} className="text-slate-700 font-mono"><td className="pr-4">{r.type}</td><td className="pr-4">{r.name}</td><td>{r.value}</td></tr>
+                        <tr key={i} className="text-slate-700 dark:text-slate-200 font-mono"><td className="pr-4">{r.type}</td><td className="pr-4">{r.name}</td><td>{r.value}</td></tr>
                       ))}
                     </tbody>
                   </table>
                 )}
-                <p className="text-[10px] text-slate-400 mt-2">DNS changes can take up to 48 hours to propagate.</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2">DNS changes can take up to 48 hours to propagate.</p>
               </div>
             )}
           </div>
@@ -1211,9 +1211,9 @@ function WebsiteEditor({
 
       {/* Pexels search panel */}
       {showPexelsSearch && (
-        <div className="bg-white border-b border-slate-200 px-6 py-4">
+        <div className="bg-white dark:bg-white/[0.04] border-b border-slate-200 dark:border-white/[0.08] px-6 py-4">
           <div className="max-w-3xl">
-            <p className="text-xs font-bold text-slate-700 mb-2">Search Free Photos (Pexels)</p>
+            <p className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-2">Search Free Photos (Pexels)</p>
             <div className="flex gap-2 mb-3">
               <input
                 type="text"
@@ -1222,7 +1222,7 @@ function WebsiteEditor({
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void searchPexels(); } }}
                 placeholder="Search for photos... e.g. 'italian restaurant interior'"
                 style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
-                className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                className="flex-1 px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm dark:text-white dark:bg-white/[0.06] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
               />
               <button
                 onClick={() => void searchPexels()}
@@ -1249,7 +1249,7 @@ function WebsiteEditor({
               </div>
             )}
             {pexelsResults.length > 0 && (
-              <p className="text-[9px] text-slate-400 mt-2">Photos by <a href="https://www.pexels.com" target="_blank" rel="noreferrer" className="underline">Pexels</a> photographers. Click an image to use it.</p>
+              <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-2">Photos by <a href="https://www.pexels.com" target="_blank" rel="noreferrer" className="underline">Pexels</a> photographers. Click an image to use it.</p>
             )}
           </div>
         </div>
@@ -1272,14 +1272,14 @@ function WebsiteEditor({
       {/* Split panel */}
       <div className="flex flex-1 overflow-hidden">
         {/* Preview */}
-        <div className="flex-1 flex flex-col overflow-hidden border-r border-slate-200 bg-slate-100">
-          <div className="bg-slate-100 border-b border-slate-200 px-4 py-2 flex items-center gap-3 flex-shrink-0">
+        <div className="flex-1 flex flex-col overflow-hidden border-r border-slate-200 dark:border-white/[0.08] bg-slate-100 dark:bg-white/[0.02]">
+          <div className="bg-slate-100 dark:bg-white/[0.04] border-b border-slate-200 dark:border-white/[0.08] px-4 py-2 flex items-center gap-3 flex-shrink-0">
             <div className="flex gap-1.5">
               <div className="w-2.5 h-2.5 rounded-full bg-rose-400" />
               <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
             </div>
-            <div className="flex-1 bg-white border border-slate-200 rounded px-3 py-1 text-[11px] text-slate-500 truncate">
+            <div className="flex-1 bg-white dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] rounded px-3 py-1 text-[11px] text-slate-500 dark:text-slate-400 truncate">
               {deployUrl ? deployUrl.replace(/^https?:\/\//, '') : 'local preview'}
             </div>
           </div>
@@ -1300,19 +1300,19 @@ function WebsiteEditor({
         </div>
 
         {/* Chat */}
-        <div className="w-80 flex flex-col bg-white flex-shrink-0">
-          <div className="px-4 py-3 border-b border-slate-100 flex-shrink-0">
+        <div className="w-80 flex flex-col bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm flex-shrink-0">
+          <div className="px-4 py-3 border-b border-slate-100 dark:border-white/[0.06] flex-shrink-0">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-slate-700">{showHistory ? 'Version History' : 'AI Editor'}</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">{showHistory ? 'Revert to any previous version' : 'Ask me to change anything on this site'}</p>
+                <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">{showHistory ? 'Version History' : 'AI Editor'}</p>
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">{showHistory ? 'Revert to any previous version' : 'Ask me to change anything on this site'}</p>
               </div>
               <button
                 onClick={() => {
                   setShowHistory(!showHistory);
                   if (!showHistory && versions.length === 0) void loadVersions();
                 }}
-                className={`p-1.5 rounded-lg transition-colors ${showHistory ? 'bg-violet-100 text-violet-700' : 'text-slate-400 hover:text-violet-600'}`}
+                className={`p-1.5 rounded-lg transition-colors ${showHistory ? 'bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400' : 'text-slate-400 hover:text-violet-600'}`}
                 title="Version history"
               >
                 <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clipRule="evenodd"/></svg>
@@ -1325,7 +1325,7 @@ function WebsiteEditor({
             {showHistory && (
               <div className="space-y-2">
                 {versions.length === 0 ? (
-                  <p className="text-xs text-slate-400 text-center py-4">No previous versions yet. Versions are saved automatically before each edit.</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-4">No previous versions yet. Versions are saved automatically before each edit.</p>
                 ) : versions.map((v) => (
                   <VersionRow
                     key={v.id}
@@ -1342,7 +1342,7 @@ function WebsiteEditor({
           <div className={`flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0 ${showHistory ? 'hidden' : ''}`}>
             {messages.length === 0 && (
               <div className="space-y-2 pt-1">
-                <p className="text-[11px] text-slate-400 font-medium uppercase tracking-wide">Try asking:</p>
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wide">Try asking:</p>
                 {[
                   'Change the hero heading to "Best Pizza in Brooklyn"',
                   'Switch to the warm color scheme',
@@ -1353,7 +1353,7 @@ function WebsiteEditor({
                   <button
                     key={s}
                     onClick={() => setInput(s)}
-                    className="w-full text-left px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600 hover:bg-violet-50 hover:border-violet-200 hover:text-violet-700 transition-colors"
+                    className="w-full text-left px-3 py-2 rounded-lg bg-slate-50 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] text-xs text-slate-600 dark:text-slate-300 hover:bg-violet-50 dark:hover:bg-violet-500/15 hover:border-violet-200 dark:hover:border-violet-500/30 hover:text-violet-700 dark:hover:text-violet-400 transition-colors"
                   >
                     {s}
                   </button>
@@ -1366,7 +1366,7 @@ function WebsiteEditor({
                 <div className={`max-w-[85%] px-3 py-2 rounded-xl text-xs leading-relaxed ${
                   msg.role === 'user'
                     ? 'bg-violet-600 text-white rounded-br-sm'
-                    : 'bg-slate-100 text-slate-700 rounded-bl-sm'
+                    : 'bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-200 rounded-bl-sm'
                 }`}>
                   {msg.text}
                 </div>
@@ -1376,7 +1376,7 @@ function WebsiteEditor({
             {/* Smart AI suggestions — shown after edits */}
             {suggestions.length > 0 && !editing && messages.length > 0 && (
               <div className="space-y-1.5 pt-1">
-                <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide flex items-center gap-1">
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wide flex items-center gap-1">
                   <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3"><path d="M8 1.5A4.5 4.5 0 003.5 6c0 1.09.39 2.09 1.03 2.87.48.58.72 1.2.72 1.88V11a1 1 0 001 1h3.5a1 1 0 001-1v-.25c0-.68.24-1.3.72-1.88A4.48 4.48 0 0012.5 6 4.5 4.5 0 008 1.5zM6.25 13a.75.75 0 000 1.5h3.5a.75.75 0 000-1.5h-3.5z"/></svg>
                   Ideas for your next change
                 </p>
@@ -1384,7 +1384,7 @@ function WebsiteEditor({
                   <button
                     key={i}
                     onClick={() => { setInput(s); setSuggestions([]); }}
-                    className="w-full text-left px-3 py-2 rounded-lg bg-violet-50/50 border border-violet-100 text-[11px] text-violet-700 hover:bg-violet-50 hover:border-violet-200 transition-colors"
+                    className="w-full text-left px-3 py-2 rounded-lg bg-violet-50/50 dark:bg-violet-500/10 border border-violet-100 dark:border-violet-500/20 text-[11px] text-violet-700 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/15 hover:border-violet-200 dark:hover:border-violet-500/30 transition-colors"
                   >
                     {s}
                   </button>
@@ -1396,7 +1396,7 @@ function WebsiteEditor({
             <div ref={chatEndRef} />
           </div>
 
-          <div className="px-3 py-3 border-t border-slate-100 flex-shrink-0">
+          <div className="px-3 py-3 border-t border-slate-100 dark:border-white/[0.06] flex-shrink-0">
             <div className="flex gap-2">
               <textarea
                 value={input}
@@ -1405,7 +1405,7 @@ function WebsiteEditor({
                 placeholder="What would you like to change?"
                 rows={2}
                 disabled={editing}
-                className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 resize-none disabled:opacity-50"
+                className="flex-1 px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-xs text-slate-800 dark:text-white dark:bg-white/[0.06] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 resize-none disabled:opacity-50"
               />
               <button
                 onClick={() => void handleSend()}
@@ -1417,7 +1417,7 @@ function WebsiteEditor({
                 </svg>
               </button>
             </div>
-            <p className="text-[10px] text-slate-400 mt-1.5 text-center">Enter to send · Shift+Enter for new line</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1.5 text-center">Enter to send · Shift+Enter for new line</p>
           </div>
         </div>
       </div>

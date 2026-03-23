@@ -473,8 +473,8 @@ export default function SocialMediaPage() {
 
       <div className="mb-8 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Social Media</h1>
-          <p className="text-sm text-slate-500 mt-1">AI content generation, scheduling & publishing</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Social Media</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">AI content generation, scheduling & publishing</p>
         </div>
         <button onClick={() => setShowGenerate(true)}
           className="flex items-center gap-2 px-4 py-2.5 bg-violet-600 text-white text-sm font-semibold rounded-xl hover:bg-violet-500 transition-colors shadow-sm shadow-violet-600/20">
@@ -486,7 +486,7 @@ export default function SocialMediaPage() {
       </div>
 
       {error && (
-        <div className="mb-6 px-4 py-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2">
+        <div className="mb-6 px-4 py-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl flex items-center gap-2">
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-red-500 shrink-0">
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
           </svg>
@@ -511,7 +511,7 @@ export default function SocialMediaPage() {
       {/* Connected Platforms */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-slate-700">Connected Platforms</h2>
+          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Connected Platforms</h2>
           <Link href="/integrations"
             className="px-3 py-1.5 text-xs font-medium text-violet-600 bg-violet-50 border border-violet-200 rounded-lg hover:bg-violet-100 transition-colors">
             Manage Integrations
@@ -520,15 +520,15 @@ export default function SocialMediaPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {platforms.map(({ platform, icon, color, connected }) => (
             <Link key={platform} href="/integrations"
-              className="bg-white border border-slate-200 rounded-xl p-4 flex items-center gap-3 hover:border-slate-300 hover:shadow-sm transition-all group">
+              className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-4 flex items-center gap-3 hover:border-slate-300 hover:shadow-sm transition-all group">
               <div className={`w-9 h-9 rounded-lg bg-${color}-50 border border-${color}-200/60 flex items-center justify-center text-${color}-600`}>
                 {icon}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-700">{platform}</p>
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{platform}</p>
                 <div className="flex items-center gap-1 mt-0.5">
                   <div className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-500' : 'bg-slate-300'}`} />
-                  <p className={`text-[10px] ${connected ? 'text-emerald-600 font-medium' : 'text-slate-400'}`}>
+                  <p className={`text-[10px] ${connected ? 'text-emerald-600 font-medium' : 'text-slate-400 dark:text-slate-500'}`}>
                     {connected ? 'Connected' : 'Not connected'}
                   </p>
                 </div>
@@ -543,18 +543,18 @@ export default function SocialMediaPage() {
 
       {/* Content Posts */}
       <div>
-        <h2 className="text-sm font-semibold text-slate-700 mb-4">Content</h2>
+        <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">Content</h2>
         {loading ? (
-          <div className="bg-white border border-slate-200 rounded-xl p-12 flex justify-center">
+          <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-12 flex justify-center">
             <div className="w-5 h-5 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : posts.length === 0 ? (
-          <div className="bg-white border border-slate-200 rounded-xl p-8 text-center">
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-8 h-8 text-slate-300 mx-auto mb-3">
+          <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-8 text-center">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-3">
               <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
             </svg>
-            <p className="text-slate-500 text-sm font-medium mb-1">No content yet</p>
-            <p className="text-slate-400 text-xs mb-4">
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">No content yet</p>
+            <p className="text-slate-400 dark:text-slate-500 text-xs mb-4">
               {connectedCount === 0
                 ? 'Connect a social account to start generating and scheduling AI content.'
                 : 'Click "Generate Post" to create your first AI-powered social media post.'}
@@ -570,16 +570,16 @@ export default function SocialMediaPage() {
             )}
           </div>
         ) : (
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Content</th>
-                  <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Platform</th>
-                  <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Status</th>
-                  <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Date</th>
-                  <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Engagement</th>
-                  <th className="text-right text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Actions</th>
+                <tr className="border-b border-slate-100 dark:border-white/[0.06] bg-slate-50/50 dark:bg-white/[0.06]">
+                  <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Content</th>
+                  <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Platform</th>
+                  <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Status</th>
+                  <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Date</th>
+                  <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Engagement</th>
+                  <th className="text-right text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -587,13 +587,13 @@ export default function SocialMediaPage() {
                   const colorKey = PLATFORM_COLORS[post.platform] ?? 'slate';
                   const isPublishing = publishingId === post.id;
                   return (
-                    <tr key={post.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                    <tr key={post.id} className="border-b border-slate-50 dark:border-white/[0.04] hover:bg-slate-50/50 dark:hover:bg-white/[0.04] transition-colors">
                       <td className="px-5 py-3 max-w-xs">
                         <div className="flex items-center gap-3">
                           {post.imageUrl && (
-                            <img src={post.imageUrl} alt="" className="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0" />
+                            <img src={post.imageUrl} alt="" className="w-10 h-10 rounded-lg object-cover border border-slate-200 dark:border-white/[0.08] shrink-0" />
                           )}
-                          <p className="text-sm text-slate-700 truncate">{post.caption}</p>
+                          <p className="text-sm text-slate-700 dark:text-slate-200 truncate">{post.caption}</p>
                         </div>
                       </td>
                       <td className="px-5 py-3">
@@ -606,10 +606,10 @@ export default function SocialMediaPage() {
                           {post.status === 'POSTED' ? 'Published' : post.status.charAt(0) + post.status.slice(1).toLowerCase()}
                         </span>
                       </td>
-                      <td className="px-5 py-3 text-xs text-slate-400">
+                      <td className="px-5 py-3 text-xs text-slate-400 dark:text-slate-500">
                         {post.postedAt ? formatDate(post.postedAt) : post.scheduledAt ? formatDate(post.scheduledAt) : '—'}
                       </td>
-                      <td className="px-5 py-3 text-xs text-slate-500">
+                      <td className="px-5 py-3 text-xs text-slate-500 dark:text-slate-400">
                         {post.status === 'POSTED' ? `${post.likes + post.comments + post.shares} total` : '—'}
                       </td>
                       <td className="px-5 py-3">
@@ -628,7 +628,7 @@ export default function SocialMediaPage() {
                                 {post.status === 'FAILED' ? 'Retry' : 'Publish'}
                               </button>
                               <button onClick={() => setEditingPost(post)}
-                                className="px-2.5 py-1 text-[11px] font-medium text-slate-500 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
+                                className="px-2.5 py-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/[0.08] rounded-lg hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors">
                                 Edit
                               </button>
                               <button onClick={() => handleDelete(post.id)}

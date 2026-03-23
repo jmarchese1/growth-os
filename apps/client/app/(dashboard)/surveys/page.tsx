@@ -237,20 +237,20 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-white dark:bg-[#1a1730] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
-        <div className="px-6 py-5 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
-          <h2 className="text-lg font-bold text-slate-900">Create QR Code</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400"><svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
+        <div className="px-6 py-5 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between flex-shrink-0">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Create QR Code</h2>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-500"><svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
         </div>
         <div className="p-6 space-y-5 overflow-y-auto flex-1">
           {/* Purpose selector */}
           <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">What type of QR code?</label>
+            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">What type of QR code?</label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {PURPOSES.map((p) => (
-                <button key={p.value} onClick={() => setPurpose(p.value)} className={`p-3 rounded-xl border text-left transition-all ${purpose === p.value ? 'border-violet-400 bg-violet-50 shadow-sm' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'}`}>
+                <button key={p.value} onClick={() => setPurpose(p.value)} className={`p-3 rounded-xl border text-left transition-all ${purpose === p.value ? 'border-violet-400 bg-violet-50 dark:bg-violet-500/10 dark:border-violet-500/30 shadow-sm' : 'border-slate-200 dark:border-white/[0.08] hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04]'}`}>
                   <span className="text-xl">{p.icon}</span>
-                  <p className="text-xs font-semibold text-slate-800 mt-1">{p.label}</p>
-                  <p className="text-[10px] text-slate-400 mt-0.5 leading-tight">{p.desc}</p>
+                  <p className="text-xs font-semibold text-slate-800 dark:text-white mt-1">{p.label}</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 leading-tight">{p.desc}</p>
                 </button>
               ))}
             </div>
@@ -260,29 +260,29 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
             <>
               {/* Label */}
               <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1">QR Code Label</label>
-                <input type="text" value={label} onChange={(e) => setLabel(e.target.value)} placeholder={`e.g. Front Counter ${PURPOSES.find((p) => p.value === purpose)?.label ?? ''}`} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
+                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">QR Code Label</label>
+                <input type="text" value={label} onChange={(e) => setLabel(e.target.value)} placeholder={`e.g. Front Counter ${PURPOSES.find((p) => p.value === purpose)?.label ?? ''}`} className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
               </div>
 
               {/* SURVEY: inline survey builder */}
               {purpose === 'SURVEY' && (
-                <div className="bg-violet-50/50 border border-violet-200/60 rounded-xl p-4 space-y-4">
+                <div className="bg-violet-50/50 dark:bg-violet-500/5 border border-violet-200/60 dark:border-violet-500/20 rounded-xl p-4 space-y-4">
                   <div className="flex items-center gap-2">
-                    <div className="flex bg-white rounded-lg p-0.5 border border-slate-200">
+                    <div className="flex bg-white dark:bg-white/[0.06] rounded-lg p-0.5 border border-slate-200 dark:border-white/[0.08]">
                       <button onClick={() => setSurveyMode('new')} className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${surveyMode === 'new' ? 'bg-violet-600 text-white' : 'text-slate-500'}`}>New Survey</button>
                       {surveys.length > 0 && <button onClick={() => setSurveyMode('existing')} className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${surveyMode === 'existing' ? 'bg-violet-600 text-white' : 'text-slate-500'}`}>Existing Survey</button>}
                     </div>
                   </div>
 
                   {surveyMode === 'existing' ? (
-                    <select value={surveyId} onChange={(e) => setSurveyId(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800">
+                    <select value={surveyId} onChange={(e) => setSurveyId(e.target.value)} className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06]">
                       <option value="">Select a survey...</option>
                       {surveys.map((s) => <option key={s.id} value={s.id}>{s.title} ({s.responseCount} responses)</option>)}
                     </select>
                   ) : (
                     <>
-                      <input type="text" value={surveyTitle} onChange={(e) => setSurveyTitle(e.target.value)} placeholder="Survey title" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
-                      <input type="text" value={surveyDesc} onChange={(e) => setSurveyDesc(e.target.value)} placeholder="Brief description (optional)" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
+                      <input type="text" value={surveyTitle} onChange={(e) => setSurveyTitle(e.target.value)} placeholder="Survey title" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
+                      <input type="text" value={surveyDesc} onChange={(e) => setSurveyDesc(e.target.value)} placeholder="Brief description (optional)" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
 
                       {/* Question builder */}
                       <div className="space-y-3">
@@ -323,7 +323,7 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
                     </>
                   )}
 
-                  <input type="text" value={surveyReward} onChange={(e) => setSurveyReward(e.target.value)} placeholder="Reward after survey (optional, e.g. '10% off next visit')" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
+                  <input type="text" value={surveyReward} onChange={(e) => setSurveyReward(e.target.value)} placeholder="Reward after survey (optional, e.g. '10% off next visit')" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
                 </div>
               )}
 
@@ -331,12 +331,12 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
               {purpose === 'DISCOUNT' && (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-slate-500 mb-1">Discount Value</label>
-                    <input type="text" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} placeholder="e.g. 10% off" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800" />
+                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Discount Value</label>
+                    <input type="text" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} placeholder="e.g. 10% off" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06]" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-500 mb-1">Code (optional)</label>
-                    <input type="text" value={discountCode} onChange={(e) => setDiscountCode(e.target.value)} placeholder="e.g. SAVE10" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 font-mono" />
+                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Code (optional)</label>
+                    <input type="text" value={discountCode} onChange={(e) => setDiscountCode(e.target.value)} placeholder="e.g. SAVE10" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] font-mono" />
                   </div>
                 </div>
               )}
@@ -347,7 +347,7 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
                   <label className="block text-xs font-medium text-slate-500">Prize Pool</label>
                   {spinPrizes.map((p, i) => (
                     <div key={i} className="flex gap-2 items-center">
-                      <input type="text" value={p.label} onChange={(e) => updatePrize(i, 'label', e.target.value)} className="flex-1 px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
+                      <input type="text" value={p.label} onChange={(e) => updatePrize(i, 'label', e.target.value)} className="flex-1 px-3 py-1.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06]" />
                       <div className="flex items-center gap-1">
                         <input type="number" value={p.probability} onChange={(e) => updatePrize(i, 'probability', Number(e.target.value))} className="w-16 px-2 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800 text-center" />
                         <span className="text-xs text-slate-400">%</span>
@@ -365,8 +365,8 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
               {/* Cooldown / usage limit */}
               {['SPIN_WHEEL', 'DISCOUNT'].includes(purpose) && (
                 <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Usage Limit</label>
-                  <select value={cooldownPeriod} onChange={(e) => setCooldownPeriod(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800">
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Usage Limit</label>
+                  <select value={cooldownPeriod} onChange={(e) => setCooldownPeriod(e.target.value)} className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06]">
                     <option value="DAILY">Once per day</option>
                     <option value="WEEKLY">Once per week</option>
                     <option value="MONTHLY">Once per month</option>
@@ -380,8 +380,8 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
               {/* URL fields */}
               {needsUrl && (
                 <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">{purpose === 'MENU' ? 'Menu URL' : purpose === 'REVIEW' ? 'Google Review URL' : 'Destination URL'}</label>
-                  <input type="url" value={destinationUrl} onChange={(e) => setDestinationUrl(e.target.value)} placeholder="https://..." className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800" />
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{purpose === 'MENU' ? 'Menu URL' : purpose === 'REVIEW' ? 'Google Review URL' : 'Destination URL'}</label>
+                  <input type="url" value={destinationUrl} onChange={(e) => setDestinationUrl(e.target.value)} placeholder="https://..." className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06]" />
                 </div>
               )}
 
@@ -400,7 +400,7 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
                   {/* Two color pickers: accent + background */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Accent Color</label>
+                      <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Accent Color</label>
                       <div className="flex items-center gap-1.5">
                         <input type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="w-6 h-6 rounded border-0 cursor-pointer flex-shrink-0" />
                         <input type="text" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="w-20 px-1.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 font-mono" />
@@ -410,7 +410,7 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Background Color</label>
+                      <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Background Color</label>
                       <div className="flex items-center gap-1.5">
                         <input type="color" value={bgColor.startsWith('#') ? bgColor : '#f8fafc'} onChange={(e) => setBgColor(e.target.value)} className="w-6 h-6 rounded border-0 cursor-pointer flex-shrink-0" />
                         <input type="text" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="flex-1 px-1.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 font-mono" />
@@ -423,8 +423,8 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
 
                   {/* Font */}
                   <div>
-                    <label className="block text-[10px] font-medium text-slate-500 mb-1">Font</label>
-                    <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-800">
+                    <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Font</label>
+                    <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} className="w-full px-2.5 py-1.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-xs text-slate-800 dark:text-white dark:bg-white/[0.06]">
                       <option value="system">System Default</option>
                       <option value="inter">Inter</option>
                       <option value="poppins">Poppins</option>
@@ -435,21 +435,21 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
 
                   {/* Text overrides */}
                   <div>
-                    <label className="block text-[10px] font-medium text-slate-500 mb-1">Heading (optional)</label>
-                    <input type="text" value={pageHeading} onChange={(e) => setPageHeading(e.target.value)} placeholder={purpose === 'SURVEY' ? 'We\'d love your feedback!' : purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'DISCOUNT' ? 'Your Exclusive Offer' : 'Join Us!'} className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
+                    <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Heading (optional)</label>
+                    <input type="text" value={pageHeading} onChange={(e) => setPageHeading(e.target.value)} placeholder={purpose === 'SURVEY' ? 'We\'d love your feedback!' : purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'DISCOUNT' ? 'Your Exclusive Offer' : 'Join Us!'} className="w-full px-3 py-1.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06]" />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-medium text-slate-500 mb-1">Subheading (optional)</label>
-                    <input type="text" value={pageSubheading} onChange={(e) => setPageSubheading(e.target.value)} placeholder="Short description shown below the heading" className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
+                    <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Subheading (optional)</label>
+                    <input type="text" value={pageSubheading} onChange={(e) => setPageSubheading(e.target.value)} placeholder="Short description shown below the heading" className="w-full px-3 py-1.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06]" />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Logo URL (optional)</label>
-                      <input type="url" value={pageLogo} onChange={(e) => setPageLogo(e.target.value)} placeholder="https://..." className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-800" />
+                      <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Logo URL (optional)</label>
+                      <input type="url" value={pageLogo} onChange={(e) => setPageLogo(e.target.value)} placeholder="https://..." className="w-full px-3 py-1.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-xs text-slate-800 dark:text-white dark:bg-white/[0.06]" />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-medium text-slate-500 mb-1">Button Text (optional)</label>
-                      <input type="text" value={pageButtonText} onChange={(e) => setPageButtonText(e.target.value)} placeholder={purpose === 'SURVEY' ? 'Submit Feedback' : purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'SIGNUP' ? 'Sign Me Up' : 'Claim Now'} className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
+                      <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Button Text (optional)</label>
+                      <input type="text" value={pageButtonText} onChange={(e) => setPageButtonText(e.target.value)} placeholder={purpose === 'SURVEY' ? 'Submit Feedback' : purpose === 'SPIN_WHEEL' ? 'Spin to Win!' : purpose === 'SIGNUP' ? 'Sign Me Up' : 'Claim Now'} className="w-full px-3 py-1.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06]" />
                     </div>
                   </div>
 
@@ -491,8 +491,8 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
 
               {/* Expiration */}
               <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1">Expires (optional)</label>
-                <input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} min={new Date().toISOString().split('T')[0]} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800" />
+                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Expires (optional)</label>
+                <input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} min={new Date().toISOString().split('T')[0]} className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06]" />
               </div>
 
               {error && <p className="text-sm text-rose-600 bg-rose-50 rounded-lg px-3 py-2">{error}</p>}
@@ -635,14 +635,14 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
               {/* Global branding */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-medium text-slate-500 mb-1">Accent Color</label>
+                  <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Accent Color</label>
                   <div className="flex items-center gap-1.5">
                     <input type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="w-6 h-6 rounded border-0 cursor-pointer flex-shrink-0" />
                     <input type="text" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="flex-1 px-1.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 font-mono" />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-medium text-slate-500 mb-1">Logo</label>
+                  <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Logo</label>
                   <div className="relative">
                     <button
                       onClick={() => setShowImagePicker(!showImagePicker)}
@@ -688,8 +688,8 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
 
               {/* Font */}
               <div>
-                <label className="block text-[10px] font-medium text-slate-500 mb-1">Email Font</label>
-                <select value={emailFont} onChange={(e) => setEmailFont(e.target.value)} className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-800">
+                <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Email Font</label>
+                <select value={emailFont} onChange={(e) => setEmailFont(e.target.value)} className="w-full px-2.5 py-1.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-xs text-slate-800 dark:text-white dark:bg-white/[0.06]">
                   {EMAIL_FONT_OPTIONS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
                 </select>
               </div>
@@ -706,16 +706,16 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
               {/* Per-type fields */}
               <div className="space-y-3">
                 <div>
-                  <label className="block text-[10px] font-medium text-slate-500 mb-1">Email Subject</label>
-                  <input type="text" value={cfg.subject} onChange={(e) => updateConfig('subject', e.target.value)} className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
+                  <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Email Subject</label>
+                  <input type="text" value={cfg.subject} onChange={(e) => updateConfig('subject', e.target.value)} className="w-full px-3 py-1.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06]" />
                   <p className="text-[9px] text-slate-400 mt-0.5">Use {'{{reward}}'} for reward name, {'{{business}}'} for business name</p>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-medium text-slate-500 mb-1">Heading</label>
-                  <input type="text" value={cfg.heading} onChange={(e) => updateConfig('heading', e.target.value)} className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800" />
+                  <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Heading</label>
+                  <input type="text" value={cfg.heading} onChange={(e) => updateConfig('heading', e.target.value)} className="w-full px-3 py-1.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06]" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-medium text-slate-500 mb-1">Body Text</label>
+                  <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Body Text</label>
                   <textarea value={cfg.bodyText} onChange={(e) => updateConfig('bodyText', e.target.value)} rows={2} className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800 resize-none" />
                 </div>
               </div>

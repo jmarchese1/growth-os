@@ -468,26 +468,26 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
                       {(c.firstName?.[0] ?? c.email?.[0] ?? '?').toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-slate-700 truncate">{[c.firstName, c.lastName].filter(Boolean).join(' ') || 'Unknown'}</p>
-                      <p className="text-[10px] text-slate-400 truncate">{c.email ?? 'no email'}</p>
+                      <p className="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">{[c.firstName, c.lastName].filter(Boolean).join(' ') || 'Unknown'}</p>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">{c.email ?? 'no email'}</p>
                     </div>
                     <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium shrink-0 ${STATUS_LABELS[c.status]?.color ?? 'bg-slate-100 text-slate-500'}`}>{STATUS_LABELS[c.status]?.label ?? c.status}</span>
                   </label>
                 ))}
                 {filteredContacts.length === 0 && (
-                  <div className="px-3 py-4 text-center text-xs text-slate-400">No contacts found</div>
+                  <div className="px-3 py-4 text-center text-xs text-slate-400 dark:text-slate-500">No contacts found</div>
                 )}
               </div>
               {pickedIds.size > 0 && (
-                <div className="px-3 py-2 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-                  <span className="text-[10px] text-slate-500">{pickedIds.size} selected</span>
+                <div className="px-3 py-2 bg-slate-50 dark:bg-white/[0.06] border-t border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400">{pickedIds.size} selected</span>
                   <button onClick={() => setPickedIds(new Set())} className="text-[10px] text-violet-500 hover:text-violet-700">Clear all</button>
                 </div>
               )}
             </div>
           )}
 
-          <p className="text-xs text-slate-500 mt-2">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
             <span className="font-medium text-violet-600">{recipients.length}</span> recipient{recipients.length !== 1 ? 's' : ''} will receive this {campaignMode === 'sequence' ? 'sequence' : 'email'}
           </p>
         </div>
@@ -495,11 +495,11 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
         {/* ─── Single Email Content ────────────────────────────────── */}
         {campaignMode === 'single' && (
           <>
-            <div className="bg-violet-50 border border-violet-200 rounded-xl p-3">
-              <label className="block text-xs font-medium text-violet-700 mb-1.5">AI Draft</label>
+            <div className="bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20 rounded-xl p-3">
+              <label className="block text-xs font-medium text-violet-700 dark:text-violet-400 mb-1.5">AI Draft</label>
               <div className="flex gap-2">
                 <input value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder="e.g. win-back offer, new menu item, thank you..."
-                  className="flex-1 px-3 py-1.5 border border-violet-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400/40 bg-white" />
+                  className="flex-1 px-3 py-1.5 border border-violet-200 dark:border-violet-500/20 rounded-lg text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-400/40 bg-white dark:bg-white/[0.06]" />
                 <button onClick={() => handleAiGenerate()} disabled={generating !== null}
                   className="px-3 py-1.5 bg-violet-600 text-white text-xs font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 flex items-center gap-1.5">
                   {generating === -1 ? <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>}
@@ -514,7 +514,7 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
             <div>
               <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Body</label>
               <textarea value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={6} placeholder="<p>Hi {{firstName}},</p><p>Your email content here...</p>" className={inputClass} />
-              <p className="text-[10px] text-slate-400 mt-1">Use {'{{firstName}}'} and {'{{business}}'} as variables. HTML supported.</p>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Use {'{{firstName}}'} and {'{{business}}'} as variables. HTML supported.</p>
             </div>
             {/* Email Style — single mode (below body so dropdowns open downward) */}
             <EmailStylePicker
@@ -541,15 +541,15 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
             {/* Step tabs */}
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <label className="text-xs font-semibold text-slate-700">Steps</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-200">Steps</label>
                 <button onClick={addStep}
                   className="px-2 py-0.5 text-[10px] font-medium text-violet-600 bg-violet-50 border border-violet-200 rounded-lg hover:bg-violet-100">+ Add Step</button>
-                <span className="text-[10px] text-slate-400 ml-auto">Step 1 sends immediately, follow-ups auto-send on schedule</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 ml-auto">Step 1 sends immediately, follow-ups auto-send on schedule</span>
               </div>
               <div className="flex gap-1 mb-3 overflow-x-auto">
                 {steps.map((_, idx) => (
                   <button key={idx} onClick={() => setActiveStep(idx)}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-lg shrink-0 transition-colors ${activeStep === idx ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+                    className={`px-3 py-1.5 text-xs font-medium rounded-lg shrink-0 transition-colors ${activeStep === idx ? 'bg-violet-600 text-white' : 'bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.1]'}`}>
                     Step {idx + 1}
                     <span className="ml-1 text-[10px] opacity-70">{delayLabel(steps[idx]?.delayHours ?? 0)}</span>
                   </button>
@@ -557,12 +557,12 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
               </div>
 
               {steps[activeStep] && (
-                <div className="border border-slate-200 rounded-xl p-3 space-y-2.5">
+                <div className="border border-slate-200 dark:border-white/[0.08] rounded-xl p-3 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <label className="text-xs font-medium text-slate-500">Delay</label>
+                      <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Delay</label>
                       <select value={steps[activeStep]!.delayHours} onChange={(e) => updateStep(activeStep, 'delayHours', Number(e.target.value))}
-                        className="px-2 py-1 border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none">
+                        className="px-2 py-1 border border-slate-200 dark:border-white/[0.08] rounded-lg text-xs text-slate-700 dark:text-slate-200 dark:bg-white/[0.06] focus:outline-none">
                         <option value={0}>Immediately</option>
                         <option value={1}>1 hour</option>
                         <option value={4}>4 hours</option>
@@ -581,20 +581,20 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
                         AI Write
                       </button>
                       <button onClick={() => handlePreview(activeStep)} disabled={!steps[activeStep]?.body}
-                        className="px-2 py-1 text-[10px] font-medium text-slate-500 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40">Preview</button>
+                        className="px-2 py-1 text-[10px] font-medium text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/[0.08] rounded-lg hover:bg-slate-50 dark:hover:bg-white/[0.04] disabled:opacity-40">Preview</button>
                       {steps.length > 1 && (
                         <button onClick={() => removeStep(activeStep)} className="px-2 py-1 text-[10px] font-medium text-red-400 hover:text-red-600 rounded-lg hover:bg-red-50">Remove</button>
                       )}
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-medium text-slate-400 mb-0.5">Subject</label>
+                    <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5">Subject</label>
                     <input value={steps[activeStep]!.subject} onChange={(e) => updateStep(activeStep, 'subject', e.target.value)} placeholder="Email subject..." className={inputClass} />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-medium text-slate-400 mb-0.5">Body (HTML)</label>
+                    <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5">Body (HTML)</label>
                     <textarea value={steps[activeStep]!.body} onChange={(e) => updateStep(activeStep, 'body', e.target.value)} rows={5} placeholder="<p>Hi {{firstName}},</p>..." className={inputClass} />
-                    <p className="text-[10px] text-slate-400 mt-1">Use {'{{firstName}}'} and {'{{business}}'} as variables</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Use {'{{firstName}}'} and {'{{business}}'} as variables</p>
                   </div>
                   {/* Per-step style & attachments */}
                   <EmailStylePicker
@@ -613,16 +613,16 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
 
             {/* Sequence timeline preview */}
             {steps.length > 1 && (
-              <div className="bg-slate-50 rounded-xl p-3">
-                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">Sequence Timeline</p>
+              <div className="bg-slate-50 dark:bg-white/[0.06] rounded-xl p-3">
+                <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Sequence Timeline</p>
                 <div className="space-y-1.5">
                   {steps.map((step, idx) => (
                     <div key={idx} className="flex items-center gap-2">
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${idx === 0 ? 'bg-violet-600 text-white' : 'bg-slate-200 text-slate-500'}`}>{idx + 1}</div>
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${idx === 0 ? 'bg-violet-600 text-white' : 'bg-slate-200 dark:bg-white/[0.1] text-slate-500 dark:text-slate-400'}`}>{idx + 1}</div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-slate-700 truncate">{step.subject || '(no subject)'}</p>
+                        <p className="text-xs text-slate-700 dark:text-slate-200 truncate">{step.subject || '(no subject)'}</p>
                       </div>
-                      <span className="text-[10px] text-slate-400 shrink-0">{delayLabel(step.delayHours)}</span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0">{delayLabel(step.delayHours)}</span>
                     </div>
                   ))}
                 </div>
@@ -634,11 +634,11 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
         {/* ─── Progress bar ───────────────────────────────────────── */}
         {progress && (
           <div>
-            <div className="flex justify-between text-xs text-slate-500 mb-1">
+            <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
               <span>Sending step 1...</span>
               <span>{progress.current} / {progress.total}</span>
             </div>
-            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-slate-100 dark:bg-white/[0.06] rounded-full overflow-hidden">
               <div className="h-full bg-violet-500 rounded-full transition-all" style={{ width: `${(progress.current / progress.total) * 100}%` }} />
             </div>
           </div>
@@ -647,12 +647,12 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
         {error && <p className="text-xs text-red-500">{error}</p>}
       </div>
 
-      <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex gap-2 justify-between">
+      <div className="px-5 py-3 bg-slate-50 dark:bg-white/[0.04] border-t border-slate-200 dark:border-white/[0.08] flex gap-2 justify-between">
         <button onClick={() => campaignMode === 'single' ? handlePreview() : handlePreview(activeStep)}
           disabled={campaignMode === 'single' ? !emailBody.trim() : !steps[activeStep]?.body}
-          className="px-3 py-2 text-xs font-medium text-slate-500 border border-slate-200 rounded-lg hover:bg-white disabled:opacity-40 transition-colors">Preview</button>
+          className="px-3 py-2 text-xs font-medium text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/[0.08] rounded-lg hover:bg-white dark:hover:bg-white/[0.06] disabled:opacity-40 transition-colors">Preview</button>
         <div className="flex gap-2">
-          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700">Cancel</button>
+          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">Cancel</button>
           <button onClick={handleSend} disabled={sending || recipients.length === 0 || (campaignMode === 'single' ? (!subject.trim() || !emailBody.trim()) : (!seqName.trim() || steps.some((s) => !s.subject.trim() || !s.body.trim())))}
             className="px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 flex items-center gap-2 transition-colors">
             {sending && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
@@ -843,8 +843,8 @@ export default function CustomersPage() {
 
       <div className="mb-8 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Customers</h1>
-          <p className="text-sm text-slate-500 mt-1">Everyone who has interacted with your business — walk-ins, callers, chatters, and more</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Customers</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Everyone who has interacted with your business — walk-ins, callers, chatters, and more</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => setShowCampaign(true)}
@@ -872,20 +872,20 @@ export default function CustomersPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white border border-slate-200 rounded-xl p-6">
-          <h3 className="text-sm font-semibold text-slate-700 mb-4">How They Found You</h3>
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-6">
+          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">How They Found You</h3>
           <div className="space-y-3">
             {['VOICE', 'CHATBOT', 'WEBSITE', 'SURVEY', 'SOCIAL', 'MANUAL', 'QR_CODE'].map((source) => {
               const count = sourceCounts[source] ?? 0;
               const pct = total > 0 ? (count / maxSourceCount) * 100 : 0;
               return (
                 <div key={source} className="flex items-center justify-between">
-                  <span className="text-sm text-slate-600">{SOURCE_LABELS[source] ?? source}</span>
+                  <span className="text-sm text-slate-600 dark:text-slate-300">{SOURCE_LABELS[source] ?? source}</span>
                   <div className="flex items-center gap-3">
-                    <div className="w-32 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="w-32 h-1.5 bg-slate-100 dark:bg-white/[0.06] rounded-full overflow-hidden">
                       <div className="h-full bg-violet-400 rounded-full transition-all" style={{ width: `${pct}%` }} />
                     </div>
-                    <span className="text-xs text-slate-400 w-8 text-right">{count}</span>
+                    <span className="text-xs text-slate-400 dark:text-slate-500 w-8 text-right">{count}</span>
                   </div>
                 </div>
               );
@@ -893,8 +893,8 @@ export default function CustomersPage() {
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-6">
-          <h3 className="text-sm font-semibold text-slate-700 mb-4">By Status</h3>
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-6">
+          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">By Status</h3>
           <div className="space-y-3">
             {[
               { label: 'Leads', status: 'LEAD' },
@@ -905,8 +905,8 @@ export default function CustomersPage() {
               const count = contacts.filter((c) => c.status === status).length;
               return (
                 <div key={status} className="flex items-center justify-between">
-                  <span className="text-sm text-slate-600">{label}</span>
-                  <span className="text-sm font-medium text-slate-500">{count}</span>
+                  <span className="text-sm text-slate-600 dark:text-slate-300">{label}</span>
+                  <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{count}</span>
                 </div>
               );
             })}
@@ -916,13 +916,13 @@ export default function CustomersPage() {
 
       {/* ─── Active Campaigns ─────────────────────────────────────────── */}
       {(sequences.length > 0 || seqLoading) && (
-        <div className="bg-white border border-slate-200 rounded-xl p-5 mb-8">
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-5 mb-8">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="text-sm font-semibold text-slate-700">Active Campaigns</h3>
-              <p className="text-[10px] text-slate-400 mt-0.5">Email sequences running across your contacts</p>
+              <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Active Campaigns</h3>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Email sequences running across your contacts</p>
             </div>
-            <span className="text-xs text-slate-400">{sequences.filter((s) => s.active).length} active</span>
+            <span className="text-xs text-slate-400 dark:text-slate-500">{sequences.filter((s) => s.active).length} active</span>
           </div>
 
           {seqLoading ? (
@@ -930,23 +930,23 @@ export default function CustomersPage() {
           ) : (
             <div className="space-y-2">
               {sequences.map((seq) => (
-                <div key={seq.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition-colors">
+                <div key={seq.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-white/[0.06] border border-slate-100 dark:border-white/[0.06] hover:border-slate-200 dark:hover:border-white/[0.1] transition-colors">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-violet-100 text-violet-600">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-violet-100 dark:bg-violet-500/15 text-violet-600 dark:text-violet-400">
                       <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-slate-800 truncate">{seq.name}</p>
+                      <p className="text-sm font-medium text-slate-800 dark:text-white truncate">{seq.name}</p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[10px] text-slate-400">{seq.stepCount} step{seq.stepCount !== 1 ? 's' : ''}</span>
-                        <span className="text-[10px] text-slate-400">{seq.triggerLabel}</span>
-                        <span className="text-[10px] text-slate-400">{new Date(seq.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500">{seq.stepCount} step{seq.stepCount !== 1 ? 's' : ''}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500">{seq.triggerLabel}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500">{new Date(seq.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
                     <button onClick={() => void handleToggleSeq(seq)}
-                      className={`px-2.5 py-1 text-[10px] font-medium rounded-lg transition-colors ${seq.active ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
+                      className={`px-2.5 py-1 text-[10px] font-medium rounded-lg transition-colors ${seq.active ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-500/15 dark:text-emerald-400 dark:hover:bg-emerald-500/25' : 'bg-slate-100 dark:bg-white/[0.06] text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.1]'}`}>
                       {seq.active ? 'Active' : 'Paused'}
                     </button>
                     <button onClick={() => void handleDeleteSeq(seq)}
@@ -991,39 +991,39 @@ export default function CustomersPage() {
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Search name, email, or phone..."
-              className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300"
+              className="w-full pl-9 pr-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300"
             />
           </div>
           <select
             value={statusFilter}
             onChange={(e) => handleFilterChange('status', e.target.value)}
-            className="px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 bg-white"
+            className="px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 bg-white dark:bg-white/[0.06]"
           >
             {STATUS_FILTER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
           <select
             value={sourceFilter}
             onChange={(e) => handleFilterChange('source', e.target.value)}
-            className="px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 bg-white"
+            className="px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 bg-white dark:bg-white/[0.06]"
           >
             {SOURCE_FILTER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
-          <span className="text-xs text-slate-400 ml-auto">{total} result{total !== 1 ? 's' : ''}</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500 ml-auto">{total} result{total !== 1 ? 's' : ''}</span>
         </div>
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-100">
+              <tr className="border-b border-slate-100 dark:border-white/[0.06]">
                 <th className="w-10 px-3 py-3">
                   <input type="checkbox" checked={contacts.length > 0 && selectedIds.size === contacts.length} onChange={toggleSelectAll}
                     className="w-3.5 h-3.5 rounded border-slate-300 text-violet-600 focus:ring-violet-500 cursor-pointer" />
                 </th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Name</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Email</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Phone</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Source</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Status</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Added</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Name</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Email</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Phone</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Source</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Status</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Added</th>
               </tr>
             </thead>
             <tbody>
@@ -1037,13 +1037,13 @@ export default function CustomersPage() {
                 </tr>
               ) : contacts.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-12 text-center text-sm text-slate-400">
+                  <td colSpan={7} className="px-5 py-12 text-center text-sm text-slate-400 dark:text-slate-500">
                     No customers yet. They&apos;ll appear here when they call, chat, scan a QR code, or fill out a form.
                   </td>
                 </tr>
               ) : (
                 contacts.map((contact) => (
-                  <tr key={contact.id} className={`border-b border-slate-50 hover:bg-slate-50/50 transition-colors ${selectedIds.has(contact.id) ? 'bg-violet-50/30' : ''}`}>
+                  <tr key={contact.id} className={`border-b border-slate-50 dark:border-white/[0.04] hover:bg-slate-50/50 dark:hover:bg-white/[0.04] transition-colors ${selectedIds.has(contact.id) ? 'bg-violet-50/30 dark:bg-violet-500/10' : ''}`}>
                     <td className="w-10 px-3 py-3" onClick={(e) => e.stopPropagation()}>
                       <input type="checkbox" checked={selectedIds.has(contact.id)} onChange={() => toggleSelect(contact.id)}
                         className="w-3.5 h-3.5 rounded border-slate-300 text-violet-600 focus:ring-violet-500 cursor-pointer" />
@@ -1053,13 +1053,13 @@ export default function CustomersPage() {
                         <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center text-violet-600 text-[10px] font-bold flex-shrink-0">
                           {(contact.firstName?.[0] ?? contact.email?.[0] ?? '?').toUpperCase()}
                         </div>
-                        <span className="text-sm font-medium text-slate-700">{formatName(contact)}</span>
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{formatName(contact)}</span>
                       </div>
                     </td>
-                    <td className="px-5 py-3 text-sm text-slate-500 cursor-pointer" onClick={() => router.push(`/customers/${contact.id}`)}>{contact.email ?? '--'}</td>
-                    <td className="px-5 py-3 text-sm text-slate-500 cursor-pointer" onClick={() => router.push(`/customers/${contact.id}`)}>{contact.phone ?? '--'}</td>
+                    <td className="px-5 py-3 text-sm text-slate-500 dark:text-slate-400 cursor-pointer" onClick={() => router.push(`/customers/${contact.id}`)}>{contact.email ?? '--'}</td>
+                    <td className="px-5 py-3 text-sm text-slate-500 dark:text-slate-400 cursor-pointer" onClick={() => router.push(`/customers/${contact.id}`)}>{contact.phone ?? '--'}</td>
                     <td className="px-5 py-3 cursor-pointer" onClick={() => router.push(`/customers/${contact.id}`)}>
-                      <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">
+                      <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-300">
                         {SOURCE_LABELS[contact.source] ?? contact.source}
                       </span>
                     </td>
@@ -1068,7 +1068,7 @@ export default function CustomersPage() {
                         {STATUS_LABELS[contact.status]?.label ?? contact.status}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-sm text-slate-400 cursor-pointer" onClick={() => router.push(`/customers/${contact.id}`)}>{formatDate(contact.createdAt)}</td>
+                    <td className="px-5 py-3 text-sm text-slate-400 dark:text-slate-500 cursor-pointer" onClick={() => router.push(`/customers/${contact.id}`)}>{formatDate(contact.createdAt)}</td>
                   </tr>
                 ))
               )}
@@ -1077,21 +1077,21 @@ export default function CustomersPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100">
+            <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 dark:border-white/[0.06]">
               <button
                 onClick={() => setPage((p) => { const next = Math.max(1, p - 1); return next; })}
                 disabled={page <= 1}
-                className="px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.1] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Previous
               </button>
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-slate-400 dark:text-slate-500">
                 Page {page} of {totalPages}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.1] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Next
               </button>

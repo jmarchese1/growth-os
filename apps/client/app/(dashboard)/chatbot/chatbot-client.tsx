@@ -64,9 +64,9 @@ function formatDate(iso: string): string {
 }
 
 const CHANNEL_COLORS: Record<string, string> = {
-  WEB: 'bg-violet-100 text-violet-700',
-  INSTAGRAM: 'bg-rose-100 text-rose-700',
-  FACEBOOK: 'bg-sky-100 text-sky-700',
+  WEB: 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-400',
+  INSTAGRAM: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400',
+  FACEBOOK: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-400',
 };
 
 const TABS = [
@@ -137,8 +137,8 @@ function DeployHero({ businessId, onEnabled }: { businessId: string; onEnabled: 
   return (
     <div className="p-8 animate-fade-up">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Chat Widget</h1>
-        <p className="text-sm text-slate-500 mt-1">AI chatbot — captures leads, answers questions, books appointments</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Chat Widget</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">AI chatbot — captures leads, answers questions, books appointments</p>
       </div>
       <div className="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-2xl p-10 text-center mb-8 shadow-lg">
         <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center mx-auto mb-5">
@@ -184,8 +184,8 @@ function WidgetPreview({ color, secondaryColor, bubbleSize, borderRadius, fontFa
   const inputBr = Math.max(borderRadius / 2, 6);
 
   return (
-    <div className="relative bg-slate-100 rounded-xl p-6 min-h-[400px] flex items-end justify-end">
-      <p className="absolute top-3 left-4 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Live Preview</p>
+    <div className="relative bg-slate-100 dark:bg-white/[0.06] rounded-xl p-6 min-h-[400px] flex items-end justify-end">
+      <p className="absolute top-3 left-4 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Live Preview</p>
       {/* Chat window preview */}
       <div className="mr-2 mb-16 shadow-xl" style={{ width: Math.min(windowWidth, 320), height: Math.min(windowHeight, 380), background: '#fff', borderRadius, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily }}>
         <div style={{ background: color, padding: '14px 16px', color: '#fff', borderRadius: `${borderRadius}px ${borderRadius}px 0 0`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -274,14 +274,14 @@ function AppearanceTab({ businessId, settings, businessName, onSaved }: {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Controls */}
       <div className="space-y-6">
-        <div className="bg-white border border-slate-200 rounded-xl p-6">
-          <h3 className="text-sm font-semibold text-slate-700 mb-4">Colors & Branding</h3>
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-6">
+          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">Colors & Branding</h3>
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1.5">Widget Color</label>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Widget Color</label>
               <div className="flex items-center gap-3">
-                <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="w-12 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5" />
-                <input type="text" value={color} onChange={(e) => setColor(e.target.value)} className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
+                <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="w-12 h-10 rounded-lg border border-slate-200 dark:border-white/[0.08] cursor-pointer p-0.5" />
+                <input type="text" value={color} onChange={(e) => setColor(e.target.value)} className="flex-1 px-3 py-2 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] rounded-lg text-sm text-slate-800 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
                 {['#a855f7', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#6366f1', '#14b8a6', '#000000', '#1e293b', '#dc2626', '#0ea5e9'].map((c) => (
@@ -290,10 +290,10 @@ function AppearanceTab({ businessId, settings, businessName, onSaved }: {
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1.5">Secondary Color <span className="text-slate-400">(bot messages background)</span></label>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Secondary Color <span className="text-slate-400">(bot messages background)</span></label>
               <div className="flex items-center gap-3">
-                <input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-12 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5" />
-                <input type="text" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
+                <input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-12 h-10 rounded-lg border border-slate-200 dark:border-white/[0.08] cursor-pointer p-0.5" />
+                <input type="text" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="flex-1 px-3 py-2 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] rounded-lg text-sm text-slate-800 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
                 {['#f0f0f0', '#e8e0f7', '#dbeafe', '#d1fae5', '#fef3c7', '#ffe4e6', '#f1f5f9', '#fdf4ff', '#ecfdf5', '#fff7ed'].map((c) => (
@@ -302,53 +302,53 @@ function AppearanceTab({ businessId, settings, businessName, onSaved }: {
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1.5">Welcome Message <span className="text-slate-400">(first chat bubble)</span></label>
-              <input type="text" value={welcomeMsg} onChange={(e) => setWelcomeMsg(e.target.value)} placeholder="Hi! How can I help you today?" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Welcome Message <span className="text-slate-400">(first chat bubble)</span></label>
+              <input type="text" value={welcomeMsg} onChange={(e) => setWelcomeMsg(e.target.value)} placeholder="Hi! How can I help you today?" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] rounded-lg text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1.5">Header Subtitle <span className="text-slate-400">(optional — below business name)</span></label>
-              <input type="text" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} placeholder="Typically replies in seconds" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Header Subtitle <span className="text-slate-400">(optional — below business name)</span></label>
+              <input type="text" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} placeholder="Typically replies in seconds" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] rounded-lg text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
               <div className="flex flex-wrap gap-1.5 mt-1.5">
                 {['Typically replies in seconds', 'Online now', 'Ask us anything', 'We usually reply instantly'].map((s) => (
-                  <button key={s} onClick={() => setSubtitle(s)} className="px-2 py-0.5 text-[10px] rounded border border-slate-200 text-slate-500 hover:bg-violet-50 hover:text-violet-600 hover:border-violet-200 transition-all">{s}</button>
+                  <button key={s} onClick={() => setSubtitle(s)} className="px-2 py-0.5 text-[10px] rounded border border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-slate-400 hover:bg-violet-50 dark:hover:bg-violet-500/10 hover:text-violet-600 dark:hover:text-violet-400 hover:border-violet-200 dark:hover:border-violet-500/30 transition-all">{s}</button>
                 ))}
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1.5">Font</label>
-              <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30">
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Font</label>
+              <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] rounded-lg text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30">
                 {FONT_OPTIONS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
               </select>
             </div>
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-6">
-          <h3 className="text-sm font-semibold text-slate-700 mb-4">Size & Position</h3>
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-6">
+          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">Size & Position</h3>
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1.5">Bubble Size: {bubbleSize}px</label>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Bubble Size: {bubbleSize}px</label>
               <input type="range" min={40} max={80} value={bubbleSize} onChange={(e) => setBubbleSize(Number(e.target.value))} className="w-full accent-violet-600" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1.5">Border Radius: {borderRadius}px</label>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Border Radius: {borderRadius}px</label>
               <input type="range" min={0} max={24} value={borderRadius} onChange={(e) => setBorderRadius(Number(e.target.value))} className="w-full accent-violet-600" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1.5">Window Width: {windowWidth}px</label>
+                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Window Width: {windowWidth}px</label>
                 <input type="range" min={280} max={420} step={10} value={windowWidth} onChange={(e) => setWindowWidth(Number(e.target.value))} className="w-full accent-violet-600" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1.5">Window Height: {windowHeight}px</label>
+                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Window Height: {windowHeight}px</label>
                 <input type="range" min={350} max={600} step={10} value={windowHeight} onChange={(e) => setWindowHeight(Number(e.target.value))} className="w-full accent-violet-600" />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1.5">Position</label>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Position</label>
               <div className="grid grid-cols-2 gap-2">
                 {['bottom-right', 'bottom-left'].map((p) => (
-                  <button key={p} onClick={() => setPosition(p)} className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all ${position === p ? 'bg-violet-50 border-violet-300 text-violet-700' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                  <button key={p} onClick={() => setPosition(p)} className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all ${position === p ? 'bg-violet-50 dark:bg-violet-500/15 border-violet-300 dark:border-violet-500/30 text-violet-700 dark:text-violet-400' : 'border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04]'}`}>
                     {p === 'bottom-right' ? 'Bottom Right' : 'Bottom Left'}
                   </button>
                 ))}
@@ -361,7 +361,7 @@ function AppearanceTab({ businessId, settings, businessName, onSaved }: {
           <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-500 disabled:opacity-50 transition-colors">
             {saving ? 'Saving...' : 'Save Appearance'}
           </button>
-          {saved && <span className="text-xs text-emerald-600 font-medium">Saved</span>}
+          {saved && <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Saved</span>}
         </div>
       </div>
 
@@ -438,11 +438,11 @@ function SystemPromptTab({ businessId, settings, businessName, onSaved }: {
     <div className="space-y-6">
       {/* Mode toggle */}
       <div className="flex items-center gap-2">
-        <div className="flex bg-slate-100 rounded-xl p-1">
-          <button onClick={() => setMode('wizard')} className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${mode === 'wizard' ? 'bg-white text-violet-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+        <div className="flex bg-slate-100 dark:bg-white/[0.06] rounded-xl p-1">
+          <button onClick={() => setMode('wizard')} className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${mode === 'wizard' ? 'bg-white dark:bg-white/[0.08] text-violet-700 dark:text-violet-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}>
             Personality Wizard
           </button>
-          <button onClick={() => setMode('advanced')} className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${mode === 'advanced' ? 'bg-white text-violet-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+          <button onClick={() => setMode('advanced')} className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${mode === 'advanced' ? 'bg-white dark:bg-white/[0.08] text-violet-700 dark:text-violet-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}>
             Advanced Editor
           </button>
         </div>
@@ -451,19 +451,19 @@ function SystemPromptTab({ businessId, settings, businessName, onSaved }: {
       {mode === 'wizard' ? (
         <div className="space-y-6">
           {/* Personality Sliders */}
-          <div className="bg-gradient-to-br from-violet-50/50 to-indigo-50/50 border border-violet-200/40 rounded-2xl p-6">
-            <p className="text-xs text-violet-600 font-medium mb-4 uppercase tracking-wider">Drag the sliders to shape your chatbot&apos;s personality</p>
+          <div className="bg-gradient-to-br from-violet-50/50 to-indigo-50/50 dark:from-violet-500/5 dark:to-indigo-500/5 border border-violet-200/40 dark:border-violet-500/20 rounded-2xl p-6">
+            <p className="text-xs text-violet-600 dark:text-violet-400 font-medium mb-4 uppercase tracking-wider">Drag the sliders to shape your chatbot&apos;s personality</p>
             <div className="space-y-5">
               {sliders.map(({ key, label, left, right, leftEmoji, rightEmoji }) => (
                 <div key={key}>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-sm font-medium text-slate-700">{label}</label>
-                    <span className="text-xs text-slate-400">{traits[key]}%</span>
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-200">{label}</label>
+                    <span className="text-xs text-slate-400 dark:text-slate-500">{traits[key]}%</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-sm w-24 text-right text-slate-500">{leftEmoji} {left}</span>
+                    <span className="text-sm w-24 text-right text-slate-500 dark:text-slate-400">{leftEmoji} {left}</span>
                     <input type="range" min={0} max={100} value={traits[key]} onChange={(e) => updateTrait(key, Number(e.target.value))} className="flex-1 accent-violet-600 h-2" />
-                    <span className="text-sm w-24 text-slate-500">{right} {rightEmoji}</span>
+                    <span className="text-sm w-24 text-slate-500 dark:text-slate-400">{right} {rightEmoji}</span>
                   </div>
                 </div>
               ))}
@@ -471,27 +471,27 @@ function SystemPromptTab({ businessId, settings, businessName, onSaved }: {
           </div>
 
           {/* Auto-generated prompt preview */}
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+          <div className="bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-xl p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-slate-500">Generated System Prompt</p>
-              <button onClick={() => setMode('advanced')} className="text-[10px] text-violet-600 hover:text-violet-800 font-medium">Edit manually</button>
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Generated System Prompt</p>
+              <button onClick={() => setMode('advanced')} className="text-[10px] text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300 font-medium">Edit manually</button>
             </div>
-            <pre className="text-xs text-slate-600 whitespace-pre-wrap font-mono leading-relaxed">{prompt}</pre>
+            <pre className="text-xs text-slate-600 dark:text-slate-300 whitespace-pre-wrap font-mono leading-relaxed">{prompt}</pre>
           </div>
         </div>
       ) : (
         <div className="space-y-4">
           {mode === 'advanced' && savedTraits && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-2.5 flex items-center justify-between">
-              <p className="text-xs text-amber-700">Manual edits will disconnect from the personality wizard sliders.</p>
-              <button onClick={() => { setMode('wizard'); setPrompt(generatePromptFromTraits(traits, businessName)); }} className="text-xs text-amber-600 hover:text-amber-800 font-medium whitespace-nowrap ml-4">Back to wizard</button>
+            <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-lg px-4 py-2.5 flex items-center justify-between">
+              <p className="text-xs text-amber-700 dark:text-amber-400">Manual edits will disconnect from the personality wizard sliders.</p>
+              <button onClick={() => { setMode('wizard'); setPrompt(generatePromptFromTraits(traits, businessName)); }} className="text-xs text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium whitespace-nowrap ml-4">Back to wizard</button>
             </div>
           )}
 
           <div>
             <div className="flex flex-wrap gap-2 mb-3">
               {PROMPT_TEMPLATES.map((t) => (
-                <button key={t.label} onClick={() => applyTemplate(t.prompt)} className="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-violet-50 hover:border-violet-300 hover:text-violet-700 transition-all">
+                <button key={t.label} onClick={() => applyTemplate(t.prompt)} className="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 hover:bg-violet-50 dark:hover:bg-violet-500/10 hover:border-violet-300 dark:hover:border-violet-500/30 hover:text-violet-700 dark:hover:text-violet-400 transition-all">
                   {t.label}
                 </button>
               ))}
@@ -501,14 +501,14 @@ function SystemPromptTab({ businessId, settings, businessName, onSaved }: {
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="You are a helpful AI assistant for our business..."
               rows={12}
-              className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-800 font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-violet-500/30 resize-y"
+              className="w-full px-4 py-3 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] rounded-xl text-sm text-slate-800 dark:text-white font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-violet-500/30 resize-y"
             />
-            <p className="text-[10px] text-slate-400 mt-1">{prompt.length} characters</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">{prompt.length} characters</p>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1.5">Personality / Persona</label>
-            <input type="text" value={persona} onChange={(e) => setPersona(e.target.value)} placeholder="friendly, warm, and professional" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Personality / Persona</label>
+            <input type="text" value={persona} onChange={(e) => setPersona(e.target.value)} placeholder="friendly, warm, and professional" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] rounded-lg text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
           </div>
         </div>
       )}
@@ -517,7 +517,7 @@ function SystemPromptTab({ businessId, settings, businessName, onSaved }: {
         <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-500 disabled:opacity-50 transition-colors">
           {saving ? 'Saving...' : 'Save Personality'}
         </button>
-        {saved && <span className="text-xs text-emerald-600 font-medium">Saved</span>}
+        {saved && <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Saved</span>}
       </div>
     </div>
   );
@@ -547,9 +547,9 @@ function KnowledgeBaseTab({ businessId, settings, onSaved }: {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white border border-slate-200 rounded-xl p-6">
-        <h3 className="text-sm font-semibold text-slate-700 mb-1">Knowledge Base</h3>
-        <p className="text-xs text-slate-400 mb-4">
+      <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-6">
+        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">Knowledge Base</h3>
+        <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">
           Paste your menu, FAQ, business details, parking info, policies — anything you want the chatbot to know. The AI will reference this when answering questions.
         </p>
 
@@ -560,7 +560,7 @@ function KnowledgeBaseTab({ businessId, settings, onSaved }: {
             { label: 'FAQ', placeholder: '## FAQ\n\nQ: Do you take reservations?\nA: Yes! Call us or book online at...\n\nQ: Is there parking?\nA: Free parking lot behind the building, plus street parking\n\nQ: Do you offer catering?\nA: Yes, we cater events of all sizes.' },
             { label: 'Policies', placeholder: '## Policies\n\n- Large parties (8+): please call ahead\n- Cancellation: 24 hour notice required\n- Dietary: We can accommodate most allergies, please inform your server' },
           ].map((t) => (
-            <button key={t.label} onClick={() => setKb((prev) => prev ? prev + '\n\n' + t.placeholder : t.placeholder)} className="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-violet-50 hover:border-violet-300 hover:text-violet-700 transition-all">
+            <button key={t.label} onClick={() => setKb((prev) => prev ? prev + '\n\n' + t.placeholder : t.placeholder)} className="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 hover:bg-violet-50 dark:hover:bg-violet-500/10 hover:border-violet-300 dark:hover:border-violet-500/30 hover:text-violet-700 dark:hover:text-violet-400 transition-all">
               + {t.label}
             </button>
           ))}
@@ -571,16 +571,16 @@ function KnowledgeBaseTab({ businessId, settings, onSaved }: {
           onChange={(e) => setKb(e.target.value)}
           placeholder="Paste your menu, FAQ, hours, parking details, policies, and anything else your chatbot should know..."
           rows={16}
-          className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-800 font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 resize-y"
+          className="w-full px-4 py-3 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] rounded-xl text-sm text-slate-800 dark:text-white font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 resize-y"
         />
-        <p className="text-[10px] text-slate-400 mt-1">{kb.length} characters · ~{Math.ceil(kb.length / 4)} tokens</p>
+        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">{kb.length} characters · ~{Math.ceil(kb.length / 4)} tokens</p>
       </div>
 
       <div className="flex items-center gap-3">
         <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-500 disabled:opacity-50 transition-colors">
           {saving ? 'Saving...' : 'Save Knowledge Base'}
         </button>
-        {saved && <span className="text-xs text-emerald-600 font-medium">Saved</span>}
+        {saved && <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Saved</span>}
       </div>
     </div>
   );
@@ -689,9 +689,9 @@ function OptionsTab({ businessId, settings, onSaved }: {
         </div>
         {autoOpenEnabled && (
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1.5">Delay: {autoOpenDelay} seconds</label>
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Delay: {autoOpenDelay} seconds</label>
             <input type="range" min={1} max={30} value={autoOpenDelay} onChange={(e) => setAutoOpenDelay(Number(e.target.value))} className="w-full accent-violet-600" />
-            <div className="flex justify-between text-[10px] text-slate-400 mt-1">
+            <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 mt-1">
               <span>1s (aggressive)</span>
               <span>5s (recommended)</span>
               <span>30s (subtle)</span>
@@ -729,7 +729,7 @@ function OptionsTab({ businessId, settings, onSaved }: {
                   onChange={(e) => setNewQuickReply(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addQuickReply(); } }}
                   placeholder="Add a quick reply..."
-                  className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+                  className="flex-1 px-3 py-2 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] rounded-lg text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30"
                 />
                 <button onClick={addQuickReply} disabled={!newQuickReply.trim()} className="px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 transition-colors">Add</button>
               </div>
@@ -748,7 +748,7 @@ function OptionsTab({ businessId, settings, onSaved }: {
         <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-500 disabled:opacity-50 transition-colors">
           {saving ? 'Saving...' : 'Save Options'}
         </button>
-        {saved && <span className="text-xs text-emerald-600 font-medium">Saved</span>}
+        {saved && <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Saved</span>}
       </div>
 
       {/* Embed Code */}
@@ -844,7 +844,7 @@ function TestChatTab({ businessId }: { businessId: string }) {
         )}
       </div>
       <div className="px-4 py-3 border-t border-slate-100 flex items-center gap-2">
-        <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }} placeholder="Type a test message..." disabled={sending} className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 disabled:opacity-50" />
+        <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }} placeholder="Type a test message..." disabled={sending} className="flex-1 px-4 py-2.5 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] rounded-xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 disabled:opacity-50" />
         <button onClick={handleSend} disabled={!input.trim() || sending} className="px-4 py-2.5 bg-violet-600 text-white rounded-xl text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition-colors">Send</button>
       </div>
     </div>
@@ -1124,7 +1124,7 @@ export default function ChatbotClient({ businessId }: { businessId: string }) {
               <div key={channel} className="bg-white border border-slate-200 rounded-2xl p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
                 <p className="text-xs text-slate-500">{channel}</p>
                 <p className="text-xl font-bold text-slate-800 mt-1">{s.channelBreakdown[key] ?? 0}</p>
-                <p className="text-[10px] text-slate-400 mt-1">conversations</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">conversations</p>
               </div>
             ))}
           </div>
