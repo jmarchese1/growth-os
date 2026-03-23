@@ -29,6 +29,7 @@ function buildSystemPrompt(business: { name: string; phone: string | null; addre
   const giftCardTool = tools?.find(t => t.type === 'GIFT_CARD_LOYALTY' && t.enabled);
   const promoTool = tools?.find(t => t.type === 'PROMO_ALERTS' && t.enabled);
   const tableTool = tools?.find(t => t.type === 'TABLE_TURNOVER' && t.enabled);
+  const feedbackTool = tools?.find(t => t.type === 'FEEDBACK_COLLECTION' && t.enabled);
 
   let capNum = 4;
   let capabilities = `YOUR CAPABILITIES:
@@ -148,6 +149,19 @@ GIFT CARD INSTRUCTIONS:
 TABLE AVAILABILITY:
 - When asked about wait times or table availability, provide accurate estimates.
 - If no tables are available, offer to add them to the waitlist${waitlistTool ? ' (see waitlist instructions above)' : ''} or take a reservation for later.`;
+  }
+
+  // ── Feedback Collection ──
+  if (feedbackTool) {
+    capNum++;
+    capabilities += `\n${capNum}. Collect customer feedback and reviews`;
+    instructions += `
+FEEDBACK COLLECTION INSTRUCTIONS:
+- If a customer wants to leave feedback, a review, or share their experience, collect it.
+- Ask for: their name (optional), a rating (1-5 stars or terrible/bad/okay/good/excellent), and their comments.
+- Thank them sincerely for their feedback.
+- When collected, output: FEEDBACK_DATA: {"customerName":"...","customerPhone":"...","rating":"EXCELLENT","comment":"..."}
+- Rating must be one of: TERRIBLE, BAD, OKAY, GOOD, EXCELLENT`;
   }
 
   instructions += `\nIMPORTANT: Keep responses concise — this is a phone call. Never make up information you don't know.
