@@ -222,12 +222,12 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
         <div className="bg-white dark:bg-[#1a1730] rounded-2xl shadow-2xl w-full max-w-md p-8 text-center my-auto" onClick={(e) => e.stopPropagation()}>
           <img src={qrImageUrl(url)} alt="QR Code" className="w-48 h-48 mx-auto mb-4 rounded-lg" />
-          <h3 className="text-lg font-bold text-slate-900 mb-1">{created.label}</h3>
-          <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-100 text-violet-700 mb-3">{created.purpose}</span>
-          <p className="text-xs text-slate-400 font-mono bg-slate-50 dark:bg-white/[0.06] rounded-lg px-3 py-2 mb-4 break-all">{url}</p>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">{created.label}</h3>
+          <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300 mb-3">{created.purpose}</span>
+          <p className="text-xs text-slate-400 dark:text-slate-500 font-mono bg-slate-50 dark:bg-white/[0.06] rounded-lg px-3 py-2 mb-4 break-all">{url}</p>
           <div className="flex gap-3 justify-center">
             <button onClick={onClose} className="px-5 py-2 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-500 transition-colors">Done</button>
-            <a href={qrImageUrl(url)} download={`${created.label.replace(/\s+/g, '-').toLowerCase()}-qr.png`} className="px-5 py-2 border border-slate-200 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-50 transition-colors">Download PNG</a>
+            <a href={qrImageUrl(url)} download={`${created.label.replace(/\s+/g, '-').toLowerCase()}-qr.png`} className="px-5 py-2 border border-slate-200 dark:border-white/[0.08] text-slate-700 dark:text-slate-200 text-sm font-medium rounded-xl hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors">Download PNG</a>
           </div>
         </div>
       </div>
@@ -792,10 +792,10 @@ function QrCard({ qr, onDelete }: { qr: QrCode; onDelete: () => void }) {
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
-        <button onClick={copyLink} className="px-3 py-1 text-xs text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">{copied ? 'Copied!' : 'Copy Link'}</button>
-        <a href={qrImageUrl(url)} download={`${qr.label.replace(/\s+/g, '-').toLowerCase()}-qr.png`} className="px-3 py-1 text-xs text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">Download</a>
-        <button onClick={onDelete} className="px-3 py-1 text-xs text-rose-500 border border-rose-200 rounded-lg hover:bg-rose-50 transition-colors ml-auto">Delete</button>
+      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-white/[0.06]">
+        <button onClick={copyLink} className="px-3 py-1 text-xs text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/[0.08] rounded-lg hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors">{copied ? 'Copied!' : 'Copy Link'}</button>
+        <a href={qrImageUrl(url)} download={`${qr.label.replace(/\s+/g, '-').toLowerCase()}-qr.png`} className="px-3 py-1 text-xs text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/[0.08] rounded-lg hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors">Download</a>
+        <button onClick={onDelete} className="px-3 py-1 text-xs text-rose-500 border border-rose-200 dark:border-rose-500/30 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors ml-auto">Delete</button>
       </div>
     </div>
   );
@@ -851,8 +851,8 @@ export default function QrCodesPage() {
             <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5z" /></svg>
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">QR Codes</h1>
-            <p className="text-sm text-slate-500">Scannable codes for surveys, promos, menus, and sign-ups</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">QR Codes</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Scannable codes for surveys, promos, menus, and sign-ups</p>
           </div>
         </div>
         <button onClick={() => setShowCreate(true)} className="px-5 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-500 transition-colors shadow-sm">
@@ -874,7 +874,7 @@ export default function QrCodesPage() {
           const info = PURPOSES.find((p) => p.value === f);
           const count = f === 'ALL' ? qrCodes.length : qrCodes.filter((q) => q.purpose === f).length;
           return (
-            <button key={f} onClick={() => setFilter(f)} className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-all ${filter === f ? 'bg-violet-100 text-violet-700 border border-violet-200' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+            <button key={f} onClick={() => setFilter(f)} className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-all ${filter === f ? 'bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-500/30' : 'bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/[0.06]'}`}>
               {info ? `${info.icon} ${info.label}` : 'All'} <span className="text-[10px] opacity-60">{count}</span>
             </button>
           );
@@ -890,7 +890,7 @@ export default function QrCodesPage() {
       ) : filtered.length === 0 ? (
         <div className="text-center py-16 bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl">
           <p className="text-3xl mb-3">{filter !== 'ALL' ? PURPOSES.find((p) => p.value === filter)?.icon : '\uD83D\uDCF1'}</p>
-          <p className="text-sm text-slate-500 mb-4">{filter !== 'ALL' ? `No ${PURPOSES.find((p) => p.value === filter)?.label} QR codes yet` : 'No QR codes yet'}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">{filter !== 'ALL' ? `No ${PURPOSES.find((p) => p.value === filter)?.label} QR codes yet` : 'No QR codes yet'}</p>
           <button onClick={() => setShowCreate(true)} className="px-5 py-2 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-500 transition-colors">Create Your First QR Code</button>
         </div>
       ) : (

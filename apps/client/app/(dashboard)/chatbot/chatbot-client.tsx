@@ -290,7 +290,7 @@ function AppearanceTab({ businessId, settings, businessName, onSaved }: {
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Secondary Color <span className="text-slate-400">(bot messages background)</span></label>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Secondary Color <span className="text-slate-400 dark:text-slate-500">(bot messages background)</span></label>
               <div className="flex items-center gap-3">
                 <input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-12 h-10 rounded-lg border border-slate-200 dark:border-white/[0.08] cursor-pointer p-0.5" />
                 <input type="text" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="flex-1 px-3 py-2 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] rounded-lg text-sm text-slate-800 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
@@ -302,11 +302,11 @@ function AppearanceTab({ businessId, settings, businessName, onSaved }: {
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Welcome Message <span className="text-slate-400">(first chat bubble)</span></label>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Welcome Message <span className="text-slate-400 dark:text-slate-500">(first chat bubble)</span></label>
               <input type="text" value={welcomeMsg} onChange={(e) => setWelcomeMsg(e.target.value)} placeholder="Hi! How can I help you today?" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] rounded-lg text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Header Subtitle <span className="text-slate-400">(optional — below business name)</span></label>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Header Subtitle <span className="text-slate-400 dark:text-slate-500">(optional — below business name)</span></label>
               <input type="text" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} placeholder="Typically replies in seconds" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] rounded-lg text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
               <div className="flex flex-wrap gap-1.5 mt-1.5">
                 {['Typically replies in seconds', 'Online now', 'Ask us anything', 'We usually reply instantly'].map((s) => (
@@ -1121,9 +1121,9 @@ export default function ChatbotClient({ businessId }: { businessId: string }) {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {[{ channel: 'Web Widget', key: 'WEB', color: 'violet' }, { channel: 'Instagram DMs', key: 'INSTAGRAM', color: 'rose' }, { channel: 'Facebook Messenger', key: 'FACEBOOK', color: 'sky' }].map(({ channel, key }) => (
-              <div key={channel} className="bg-white border border-slate-200 rounded-2xl p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
-                <p className="text-xs text-slate-500">{channel}</p>
-                <p className="text-xl font-bold text-slate-800 mt-1">{s.channelBreakdown[key] ?? 0}</p>
+              <div key={channel} className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+                <p className="text-xs text-slate-500 dark:text-slate-400">{channel}</p>
+                <p className="text-xl font-bold text-slate-800 dark:text-white mt-1">{s.channelBreakdown[key] ?? 0}</p>
                 <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">conversations</p>
               </div>
             ))}
@@ -1164,9 +1164,9 @@ export default function ChatbotClient({ businessId }: { businessId: string }) {
       </div>
 
       {/* Pill Tabs */}
-      <div className="flex gap-1.5 mb-8 bg-slate-100/80 rounded-2xl p-1.5 overflow-x-auto">
+      <div className="flex gap-1.5 mb-8 bg-slate-100/80 dark:bg-white/[0.06] rounded-2xl p-1.5 overflow-x-auto">
         {TABS.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl whitespace-nowrap transition-all duration-200 ${tab === t.id ? 'bg-white text-violet-700 shadow-sm border border-violet-100' : 'text-slate-500 hover:text-violet-600 hover:bg-white/60'}`}>
+          <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl whitespace-nowrap transition-all duration-200 ${tab === t.id ? 'bg-white dark:bg-white/[0.08] text-violet-700 dark:text-violet-400 shadow-sm border border-violet-100 dark:border-violet-500/20' : 'text-slate-500 dark:text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-white/60 dark:hover:bg-white/[0.04]'}`}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d={t.icon} /></svg>
             {t.label}
           </button>

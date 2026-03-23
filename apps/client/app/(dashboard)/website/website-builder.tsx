@@ -681,13 +681,13 @@ export default function WebsiteBuilder({
               <div>
                 <Field label={industry.bookingLabel} value={form.bookingUrl} onChange={(v) => setForm_('bookingUrl', v)} placeholder={industry.bookingPlaceholder} />
                 {form.industryType === 'restaurant' && (
-                  <p className="text-[10px] text-slate-400 mt-1">Most restaurants use <a href="https://www.opentable.com" target="_blank" rel="noreferrer" className="text-violet-500 hover:underline">OpenTable</a>, <a href="https://resy.com" target="_blank" rel="noreferrer" className="text-violet-500 hover:underline">Resy</a>, or <a href="https://www.yelp.com/reservations" target="_blank" rel="noreferrer" className="text-violet-500 hover:underline">Yelp Reservations</a></p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Most restaurants use <a href="https://www.opentable.com" target="_blank" rel="noreferrer" className="text-violet-500 hover:underline">OpenTable</a>, <a href="https://resy.com" target="_blank" rel="noreferrer" className="text-violet-500 hover:underline">Resy</a>, or <a href="https://www.yelp.com/reservations" target="_blank" rel="noreferrer" className="text-violet-500 hover:underline">Yelp Reservations</a></p>
                 )}
               </div>
             </div>
             <div className="mb-6">
               <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
-                Hours <span className="font-normal text-slate-400">(optional — AI will suggest if left blank)</span>
+                Hours <span className="font-normal text-slate-400 dark:text-slate-500">(optional — AI will suggest if left blank)</span>
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
                 {DAYS.map((day) => (
@@ -707,7 +707,7 @@ export default function WebsiteBuilder({
             <div className="mb-6 border-t border-slate-100 dark:border-white/[0.06] pt-6">
               <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
                 {industry.defaultSections.find((s) => s.id === 'menu')?.label ?? 'Menu / Services'}{' '}
-                <span className="font-normal text-slate-400">(optional — upload to auto-populate)</span>
+                <span className="font-normal text-slate-400 dark:text-slate-500">(optional — upload to auto-populate)</span>
               </label>
               <div className="flex items-center gap-2 mt-3 mb-3">
                 {(['text', 'image', 'pdf'] as const).map((mode) => (
@@ -754,7 +754,7 @@ export default function WebsiteBuilder({
                     className="hidden"
                   />
                   {extractingMenu ? (
-                    <span className="flex items-center gap-2 text-sm text-slate-500">
+                    <span className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                       <span className="w-4 h-4 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" />
                       Reading your {menuInputMode}...
                     </span>
@@ -762,7 +762,7 @@ export default function WebsiteBuilder({
                     <>
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6 text-slate-400 mb-2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
                       <span className="text-sm text-slate-500">Click to upload {menuInputMode === 'image' ? 'a photo of your menu' : 'a PDF menu'}</span>
-                      <span className="text-xs text-slate-400 mt-1">{menuInputMode === 'image' ? 'JPG, PNG, HEIC, WEBP' : 'PDF'} · up to 10MB</span>
+                      <span className="text-xs text-slate-400 dark:text-slate-500 mt-1">{menuInputMode === 'image' ? 'JPG, PNG, HEIC, WEBP' : 'PDF'} · up to 10MB</span>
                     </>
                   )}
                 </label>
@@ -772,7 +772,7 @@ export default function WebsiteBuilder({
             {/* Gallery Images */}
             <div className="mb-6 border-t border-slate-100 dark:border-white/[0.06] pt-6">
               <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
-                Photo Gallery <span className="font-normal text-slate-400">(paste image URLs — up to 6)</span>
+                Photo Gallery <span className="font-normal text-slate-400 dark:text-slate-500">(paste image URLs — up to 6)</span>
               </label>
               <div className="space-y-2 mt-3">
                 {form.galleryImages.map((url, i) => (
@@ -1167,37 +1167,37 @@ export default function WebsiteBuilder({
         {step === 6 && result && (
           <div className="space-y-6">
             <div className="bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/20 rounded-xl p-5 flex gap-4">
-              <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <div className="w-8 h-8 bg-amber-100 dark:bg-amber-500/15 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                 <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-amber-600"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/></svg>
               </div>
               <div>
-                <p className="text-sm font-semibold text-amber-800 mb-1">This is your first draft</p>
-                <p className="text-sm text-amber-700 leading-relaxed">Use the AI editor to refine copy, swap colors, add sections — anything you need.</p>
+                <p className="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-1">This is your first draft</p>
+                <p className="text-sm text-amber-700 dark:text-amber-400 leading-relaxed">Use the AI editor to refine copy, swap colors, add sections — anything you need.</p>
               </div>
             </div>
 
             {result.url && (
-              <div className="bg-white border border-slate-200 rounded-xl p-5 flex items-center justify-between gap-4">
+              <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-5 flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Your Live Website</p>
+                  <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Your Live Website</p>
                   <a href={result.url} target="_blank" rel="noreferrer" className="text-violet-600 font-semibold text-sm hover:underline break-all">{result.url}</a>
                 </div>
                 <div className="flex gap-2 flex-shrink-0">
                   <a href={result.url} target="_blank" rel="noreferrer" className="px-4 py-2 bg-violet-600 text-white text-xs font-semibold rounded-lg hover:bg-violet-700 transition-colors">Visit Site</a>
-                  <button onClick={() => void navigator.clipboard.writeText(result.url)} className="px-4 py-2 border border-slate-200 text-slate-600 text-xs font-medium rounded-lg hover:bg-slate-50">Copy Link</button>
+                  <button onClick={() => void navigator.clipboard.writeText(result.url)} className="px-4 py-2 border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 text-xs font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-white/[0.04]">Copy Link</button>
                 </div>
               </div>
             )}
 
             {result.html && (
-              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-                <div className="px-5 py-3 border-b border-slate-100 flex items-center gap-2">
+              <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl overflow-hidden shadow-sm">
+                <div className="px-5 py-3 border-b border-slate-100 dark:border-white/[0.06] flex items-center gap-2">
                   <div className="flex gap-1.5">
                     <div className="w-3 h-3 rounded-full bg-red-400" />
                     <div className="w-3 h-3 rounded-full bg-amber-400" />
                     <div className="w-3 h-3 rounded-full bg-emerald-400" />
                   </div>
-                  <div className="flex-1 bg-slate-100 rounded-md px-3 py-1.5 text-xs text-slate-400 truncate">{result.url || 'preview'}</div>
+                  <div className="flex-1 bg-slate-100 dark:bg-white/[0.06] rounded-md px-3 py-1.5 text-xs text-slate-400 dark:text-slate-500 truncate">{result.url || 'preview'}</div>
                 </div>
                 <iframe srcDoc={result.html} title="Website Preview" className="w-full" style={{ height: '600px', border: 'none' }} sandbox="allow-same-origin allow-scripts" />
               </div>
@@ -1316,7 +1316,7 @@ function Field({ label, value, onChange, placeholder, type = 'text' }: {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
+        className="w-full px-4 py-3 border border-slate-200 dark:border-white/[0.08] rounded-xl text-sm text-slate-900 dark:text-white dark:bg-white/[0.06] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
       />
     </div>
   );

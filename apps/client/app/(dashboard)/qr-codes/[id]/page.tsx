@@ -123,7 +123,7 @@ export default function QrCodeDetailPage({ params }: { params: Promise<{ id: str
   );
 
   if (error || !qr) return (
-    <div className="p-8 text-slate-500">{error || 'Not found'}</div>
+    <div className="p-8 text-slate-500 dark:text-slate-400">{error || 'Not found'}</div>
   );
 
   const cfg = PURPOSE_CONFIG[qr.purpose];
@@ -135,7 +135,7 @@ export default function QrCodeDetailPage({ params }: { params: Promise<{ id: str
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
       {/* Back */}
-      <button onClick={() => router.push('/qr-codes')} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors">
+      <button onClick={() => router.push('/qr-codes')} className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors">
         <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" /></svg>
         Back to QR Codes
       </button>
@@ -147,15 +147,15 @@ export default function QrCodeDetailPage({ params }: { params: Promise<{ id: str
           <img
             src={qrImageUrl(publicUrl, 160)}
             alt="QR Code"
-            className={`rounded-xl border border-slate-200 ${!qr.active || isExpired ? 'opacity-40 grayscale' : ''}`}
+            className={`rounded-xl border border-slate-200 dark:border-white/[0.08] ${!qr.active || isExpired ? 'opacity-40 grayscale' : ''}`}
             width={160}
             height={160}
           />
           <div className="flex gap-2 mt-3">
-            <button onClick={copyLink} className="flex-1 text-xs py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+            <button onClick={copyLink} className="flex-1 text-xs py-1.5 rounded-lg border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors">
               {copied ? 'Copied!' : 'Copy link'}
             </button>
-            <button onClick={downloadQr} className="flex-1 text-xs py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+            <button onClick={downloadQr} className="flex-1 text-xs py-1.5 rounded-lg border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors">
               Download
             </button>
           </div>
