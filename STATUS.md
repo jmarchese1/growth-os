@@ -1,6 +1,6 @@
 # Embedo Platform — Current Status
 
-> Last updated: 2026-03-22. Update this file at the end of any session that changes deployment state, implements a new feature, or discovers a broken integration.
+> Last updated: 2026-03-23. Update this file at the end of any session that changes deployment state, implements a new feature, or discovers a broken integration.
 
 ---
 
@@ -136,7 +136,12 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 - **Billing/Subscriptions**: Stripe integration — 5 tiers (Free, Solo $249.99, Small $399.99, Medium $549.99, Large $999.99). Checkout with 14-day free trial, billing portal, cancel/resume. Webhook handles checkout.completed, subscription.updated/deleted, invoice.payment_failed. Feature comparison page at `/billing/compare` with collapsible categories. Rich checkout descriptions per tier. FREE tier is default on signup.
 - **Integrations page**: OAuth param cleanup
 - **Public routes**: `/qr/` and `/s/` middleware-exempted (no auth required)
-- **Reward emails**: SendGrid-powered reward emails for spin wheel/discount/survey prizes, branded per business ("Business Name" <rewards@embedo.io>), configurable logo/font/accent color in QR codes settings
+**Client Dashboard (continued)**
+- **Onboarding Wizard**: 4-step guided setup (Welcome → Hours → Tools → Quick Start) after first signup
+- **Dashboard Charts**: Recharts area chart with 30-day trends for Contacts, Calls, Chats, QR Scans. Metric toggle buttons.
+- **In-App Notifications**: Bell icon + dropdown with badge count, real-time polling (30s), audio chime, filter by type (Calls/Chats/QR/Surveys/Bookings), mark as read with localStorage persistence
+- **Chatbot Embed Code**: Prominent embed snippet display with copy-to-clipboard, dynamic fetch from API, placement instructions
+- **Tool Library (10 tools)**: Waitlist Manager, Daily Specials & 86'd Items, Catering Requests, Review Response, Feedback Collection, Promo Alerts, Table Turnover Tracker, Delivery Tracking, Gift Cards & Loyalty — all with catalog entries, API routes, voice agent integration, and dashboard pages
 
 **Website Generator (major overhaul)**
 - **AI-generated websites**: When inspiration URLs provided, Claude generates COMPLETE custom HTML using Tailwind CSS CDN — unique layout, colors, typography per site
@@ -179,32 +184,35 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 
 ## Next Steps — Prioritized Roadmap
 
-### Must-Build (high-impact gaps)
+### Must-Build (remaining gaps)
 
 | # | Feature | What's Needed | Notes |
 |---|---|---|---|
-| 1 | **Sequences / Follow-Up UI** | Build `/billing/sequences` (or `/sequences`) page — list, create, edit, delete email/SMS sequences | API is 100% done (CRUD, AI generation, triggers). Just needs a client page. |
-| 2 | **Onboarding Wizard** | Guided setup flow after first signup — connect phone, set up chatbot, build website, create first QR code | Directly impacts whether new signups activate. Step-by-step checklist or wizard overlay. |
-| 3 | **Dashboard Charts & Trends** | Line charts for contacts/calls/chats over time, time-range selector (7d/30d/90d) | Dashboard currently shows counts only — no trends or visual analytics. |
+| 1 | **Sequences / Follow-Up UI** | Build `/sequences` page — list, create, edit, delete email/SMS follow-up sequences | API is 100% done (CRUD, AI generation, triggers). Just needs a client page. |
+| 2 | **Proposals Management Page** | Build `/proposals` list page — view generated proposals, share links, track views | API supports it, just no dedicated client page. |
+| 3 | **Dashboard Time-Range Selector** | Add 7d/30d/90d toggle to the existing dashboard chart — currently hardcoded to 30d only | Small but makes the chart much more useful. |
 
-### Should-Build (polish gaps)
+### Revenue / Growth Features (new ideas)
+
+| # | Feature | What it does | Why it matters |
+|---|---|---|---|
+| 4 | **AI Receptionist Analytics** | Per-call breakdown: intent detected, outcome (reservation/order/transfer/hangup), sentiment score, missed opportunities. Weekly digest email. | Owners can't see *what* the AI is doing. This makes the voice agent's value visible and justifies the subscription. |
+| 5 | **Smart SMS Campaigns (auto-segmented)** | Auto-create segments from tool data — "ordered last 7 days", "waitlisted but no-showed", "left 5-star feedback", "gift card balance > $0". One-click campaign to segment. | Turns tool data into re-engagement. Currently campaigns require manual contact selection. |
+| 6 | **Online Ordering Page** | Public `/order/{slug}` page — browse menu, add to cart, checkout (pickup time, contact info). Creates Order in DB. Link from generated website. | The takeout tool only works via voice/chat. A web ordering page captures customers who prefer self-service. |
+| 7 | **Customer Portal / Loyalty Dashboard** | Public `/my/{slug}` page — customer enters phone, sees: order history, gift card balance, loyalty points, upcoming reservations. | Gives customers a reason to come back. Reduces "what's my gift card balance?" calls. |
+| 8 | **Automated Review Solicitation** | After a GOOD/EXCELLENT feedback entry, auto-send SMS with Google Review link. After TERRIBLE/POOR, auto-send apology + owner alert. | Turns the feedback tool into a review generation machine. Intercepts bad reviews before they go public. |
+| 9 | **Multi-Location Support** | One owner account → multiple businesses (locations). Location picker in sidebar. Shared contacts, separate tools/settings per location. | Natural upsell for restaurant groups. Currently 1 account = 1 business. |
+| 10 | **Competitor Monitor** | Weekly AI report: new Google/Yelp reviews for competitors, their social media activity, menu/price changes. Uses web scraping + Claude analysis. | Owners love knowing what competitors are doing. High perceived value, relatively easy to build. |
+
+### Polish / Infrastructure
 
 | # | Feature | What's Needed | Notes |
 |---|---|---|---|
-| 4 | **In-App Notifications** | Bell icon + dropdown. Notify on: new lead, call completed, survey response, payment failed | No notification system exists. Users have no way to know things happened. |
-| 5 | **Settings Hardcoded Statuses** | Query real service config for "Email Delivery" and "Booking Calendar" instead of hardcoded "Not configured" | Minor but makes settings page feel broken. |
-| 6 | **Chatbot Embed Code Display** | Make embed snippet more prominent in chatbot UI — copy button, instructions for external sites | API returns snippet but it's not obvious how to grab it. |
-| 7 | **Proposals Management Page** | Build `/proposals` list page — view generated proposals, share links, track views | API supports it, just no dedicated client page. |
-| 8 | **Website Custom Domain UI** | Surface the existing API route (`POST /websites/:id/domain`) in the editor — domain input + DNS instructions | API works, needs client UI. |
-
-### Nice-to-Have (future)
-
-| # | Feature | What's Needed | Notes |
-|---|---|---|---|
-| 9 | **Activity / Audit Log Page** | Unified timeline across all channels (calls, chats, scans, emails, etc.) | Would be a great single-pane-of-glass view. |
-| 10 | **Analytics Page** | Deeper reporting: email open rates, QR scan heatmaps, social engagement, chatbot quality | Beyond dashboard KPIs — dedicated analytics section. |
-| 11 | **Multi-User / Team Support** | Roles, permissions, inviting team members per business | Currently 1 user per business. |
-| 12 | **Mobile Responsiveness** | Audit billing compare, campaign tables, website editor for smaller screens | Several pages assume wide desktop screens. |
+| 11 | **Settings Live Statuses** | Query real service config for "Email Delivery" and "Booking Calendar" instead of hardcoded values | Minor but makes settings page feel broken. |
+| 12 | **Activity / Audit Log Page** | Unified timeline across all channels (calls, chats, scans, emails, orders, reservations) | Single-pane-of-glass view across all touchpoints. |
+| 13 | **Mobile Responsiveness** | Audit billing compare, campaign tables, website editor for smaller screens | Several pages assume wide desktop screens. |
+| 14 | **Multi-User / Team Support** | Roles (owner, manager, staff), permissions, inviting team members per business | Currently 1 user per business. Needed for real restaurant teams. |
+| 15 | **Webhook / Zapier Integration** | Expose key events (new order, new lead, new reservation, feedback received) as outbound webhooks. Optional Zapier/Make integration page. | Lets power users connect Embedo to their existing stack. |
 
 ---
 
@@ -222,7 +230,7 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 ## Schema State
 
 The Prisma schema has been pushed to Supabase (`prisma db push`) and includes all models.
-Last schema change: Added `FREE` to `PricingTier` enum, changed Subscription default from `SOLO` to `FREE`.
+Last schema change: Added 9 restaurant tools (WaitlistEntry, CateringInquiry, FeedbackEntry, TableSession, GiftCard models + ToolType enum expansion).
 Migration method: `prisma db push` (non-interactive — use this for local dev; proper migrations TBD).
 
 ---
