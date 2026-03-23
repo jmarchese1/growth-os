@@ -181,6 +181,15 @@ export function EmailStylePicker({ selectedStyle, onStyleChange, options, onOpti
         </div>
       </div>
 
+      {/* Tagline — only for Hero Banner style */}
+      {selectedStyle === 'hero' && (
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1.5">Banner Tagline</label>
+          <input type="text" value={options.tagline ?? ''} onChange={(e) => onOptionsChange({ ...options, tagline: e.target.value || undefined })} placeholder="e.g. Special offer just for you"
+            className="w-full px-2.5 py-2 border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400/30" />
+        </div>
+      )}
+
       {/* ─── Embed Dropdowns: Spinners, Surveys, Discounts ─────────── */}
       {businessId && (
         <div className="grid grid-cols-3 gap-2.5">

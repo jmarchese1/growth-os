@@ -5,6 +5,7 @@ export interface EmailStyleOptions {
   logoUrl?: string;
   businessName?: string;
   font?: string;
+  tagline?: string;
 }
 
 export interface EmailStyle {
@@ -71,7 +72,7 @@ export const EMAIL_STYLES: EmailStyle[] = [
       return `<div style="font-family: ${ff(opts)}; background-color: #ffffff; max-width: 600px; margin: 0 auto;">
   <div style="background: linear-gradient(135deg, ${c} 0%, ${adjustColor(c, -30)} 100%); padding: 36px 32px; text-align: center; border-radius: 0 0 24px 24px;">
     ${headerContent}
-    <p style="color: rgba(255,255,255,0.8); font-size: 13px; margin: 8px 0 0; font-weight: 500;">Special message for you</p>
+    ${opts.tagline ? `<p style="color: rgba(255,255,255,0.8); font-size: 13px; margin: 8px 0 0; font-weight: 500;">${opts.tagline}</p>` : ''}
   </div>
   <div style="padding: 32px; color: #1a1a1a; line-height: 1.7; font-size: 15px;">
     ${content}
