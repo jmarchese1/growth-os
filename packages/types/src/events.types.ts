@@ -128,6 +128,18 @@ export interface ReservationCreatedPayload {
   source: string;
 }
 
+// Order Events
+export interface OrderCreatedPayload {
+  businessId: string;
+  orderId: string;
+  contactId?: string;
+  customerName: string;
+  itemCount: number;
+  total: number;
+  source: string;
+  pickupTime?: string;
+}
+
 // Outbound Prospecting Jobs
 export interface ProspectDiscoveredPayload {
   campaignId: string;

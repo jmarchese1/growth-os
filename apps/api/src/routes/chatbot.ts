@@ -222,6 +222,54 @@ export async function chatbotRoutes(app: FastifyInstance): Promise<void> {
   );
 
   /**
+   * GET /chatbot/context/:businessId
+   * Returns the full business context + enabled tools for the chatbot to use.
+   * The chatbot-agent service calls this to build its system prompt with tool awareness.
+   */
+  app.get<{ Params: { businessId: string } }>(
+    '/chatbot/context/:businessId',
+    async (request) => {
+      const { businessId } = request.params;
+      const business = await db.business.findUnique({
+        where: { id: businessId },
+        select: { id: true, name: true, phone: true, address: true, settings: true },
+      });
+      if (!business) throw new NotFoundError('Business', businessId);
+
+      const tools = await db.businessTool.findMany({
+        where: { businessId, enabled: true },
+        select: { type: true, enabled: true, config: true },
+      });
+
+      const settings = (business.settings as Record<string, unknown>) ?? {};
+      const takeoutTool = tools.find(t => t.type === 'TAKEOUT_ORDERS');
+
+      return {
+        success: true,
+        context: {
+          business: {
+            id: business.id,
+            name: business.name,
+            phone: business.phone,
+            address: business.address,
+            hours: settings['hours'] ?? null,
+            cuisine: settings['cuisine'] ?? null,
+            chatbotPersona: settings['chatbotPersona'] ?? null,
+          },
+          tools: tools.map(t => ({
+            type: t.type,
+            config: t.config,
+          })),
+          capabilities: {
+            takeOrders: !!takeoutTool,
+            menuItems: takeoutTool ? (takeoutTool.config as Record<string, unknown>)?.['menuItems'] ?? [] : [],
+          },
+        },
+      };
+    },
+  );
+
+  /**
    * PATCH /chatbot/settings/:businessId
    * Update chatbot configuration (persona, welcome message, colors).
    */

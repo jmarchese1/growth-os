@@ -247,6 +247,8 @@ model Business {
   smsSequences    SmsSequence[]
   appointments    Appointment[]
   reservations    Reservation[]
+  orders          Order[]
+  tools           BusinessTool[]
   onboardingLog   OnboardingLog[]
   subscription    Subscription?
 
@@ -284,6 +286,7 @@ model Contact {
   reservations    Reservation[]
   chatSessions    ChatSession[]
   callLogs        VoiceCallLog[]
+  orders          Order[]
   qrScans         QrCodeScan[]
 
   createdAt DateTime @default(now())
@@ -962,4 +965,99 @@ model Reservation {
   @@index([businessId])
   @@index([date])
   @@index([status])
+}
+
+// ─── Business Tools (extensible tool library) ─────────────────────────────────
+
+enum ToolType {
+  TAKEOUT_ORDERS
+  // Future: APPOINTMENT_BOOKING, WAITLIST, LOYALTY_PUNCH, etc.
+}
+
+model BusinessTool {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  type       ToolType
+  enabled    Boolean  @default(true)
+  config     Json?    // Tool-specific configuration (e.g. menu items, prep times, etc.)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([businessId, type])
+  @@index([businessId])
+}
+
+// ─── Takeout Orders ───────────────────────────────────────────────────────────
+
+enum OrderStatus {
+  RECEIVED
+  CONFIRMED
+  PREPARING
+  READY
+  PICKED_UP
+  CANCELLED
+}
+
+enum OrderSource {
+  VOICE_AGENT
+  CHATBOT
+  WEBSITE
+  MANUAL
+}
+
+model Order {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  contactId  String?
+  contact    Contact? @relation(fields: [contactId], references: [id])
+
+  // Customer info (denormalized for quick access)
+  customerName  String
+  customerPhone String?
+  customerEmail String?
+
+  // Order details
+  items         OrderItem[]
+  specialNotes  String?
+  pickupTime    String?       // Requested pickup time, e.g. "18:30"
+  estimatedReady String?      // Estimated ready time set by restaurant
+
+  // Pricing
+  subtotal   Float    @default(0)
+  tax        Float    @default(0)
+  total      Float    @default(0)
+
+  // Status & source
+  status     OrderStatus @default(RECEIVED)
+  source     OrderSource @default(MANUAL)
+
+  // Linking back to voice/chat
+  voiceCallLogId String?
+  chatSessionId  String?
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id       String @id @default(cuid())
+  orderId  String
+  order    Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  name     String
+  quantity Int    @default(1)
+  price    Float  @default(0)
+  notes    String?   // e.g. "no onions", "extra spicy"
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
 }

@@ -29,6 +29,8 @@ import { qrCodeRoutes } from './routes/qr-codes.js';
 import { socialMediaRoutes } from './routes/social-media.js';
 import { sequenceRoutes } from './routes/sequences.js';
 import { reservationRoutes } from './routes/reservations.js';
+import { orderRoutes } from './routes/orders.js';
+import { businessToolRoutes } from './routes/business-tools.js';
 
 const log = createLogger('api:gateway');
 
@@ -119,6 +121,8 @@ export async function buildApp() {
   await app.register(socialMediaRoutes);
   await app.register(sequenceRoutes);
   await app.register(reservationRoutes);
+  await app.register(orderRoutes);
+  await app.register(businessToolRoutes);
 
   log.info('API Gateway configured');
   return app;

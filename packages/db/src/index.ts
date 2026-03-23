@@ -50,4 +50,10 @@ export type {
   Reservation,
   ReservationSource,
   ReservationStatus,
+  BusinessTool,
+  ToolType,
+  Order,
+  OrderItem,
+  OrderStatus,
+  OrderSource,
 } from '@prisma/client';

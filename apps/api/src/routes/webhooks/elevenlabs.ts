@@ -92,6 +92,63 @@ export async function elevenLabsWebhookRoutes(app: FastifyInstance): Promise<voi
         });
       }
 
+      // Parse ORDER_DATA from transcript (voice agent outputs this when taking orders)
+      if (transcript) {
+        const orderMatch = transcript.match(/ORDER_DATA:\s*(\{[\s\S]*?\})/);
+        if (orderMatch?.[1]) {
+          try {
+            const orderData = JSON.parse(orderMatch[1]) as {
+              name?: string;
+              phone?: string;
+              items?: Array<{ name: string; quantity: number; price: number; notes?: string }>;
+              specialNotes?: string;
+              pickupTime?: string;
+            };
+
+            if (orderData.name && orderData.items && orderData.items.length > 0) {
+              // Check if takeout orders tool is enabled for this business
+              const tool = await db.businessTool.findUnique({
+                where: { businessId_type: { businessId: business.id, type: 'TAKEOUT_ORDERS' } },
+              });
+
+              if (tool?.enabled) {
+                const toolConfig = (tool.config as Record<string, unknown>) ?? {};
+                const taxRate = (toolConfig['taxRate'] as number) ?? 0;
+                const subtotal = orderData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const tax = Math.round(subtotal * taxRate * 100) / 100;
+                const total = Math.round((subtotal + tax) * 100) / 100;
+
+                await db.order.create({
+                  data: {
+                    businessId: business.id,
+                    customerName: orderData.name,
+                    customerPhone: orderData.phone,
+                    specialNotes: orderData.specialNotes,
+                    pickupTime: orderData.pickupTime,
+                    subtotal,
+                    tax,
+                    total,
+                    source: 'VOICE_AGENT',
+                    voiceCallLogId: data.conversation_id,
+                    items: {
+                      create: orderData.items.map(item => ({
+                        name: item.name,
+                        quantity: item.quantity,
+                        price: item.price,
+                        notes: item.notes,
+                      })),
+                    },
+                  },
+                });
+                log.info({ businessId: business.id, conversationId: data.conversation_id }, 'Order created from voice agent');
+              }
+            }
+          } catch (err) {
+            log.warn({ err, conversationId: data.conversation_id }, 'Failed to parse ORDER_DATA from transcript');
+          }
+        }
+      }
+
       return reply.code(200).send({ received: true });
     },
   );
