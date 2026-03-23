@@ -19,7 +19,7 @@ const colorMap = {
   teal:    { card: 'bg-teal-50 dark:bg-teal-500/10 border-teal-200/60 dark:border-teal-500/20', text: 'text-teal-700 dark:text-teal-300', icon: 'text-teal-500 dark:text-teal-400' },
 };
 
-export default function KpiCard({ label, value, subtitle, icon, color = 'violet', trend }: KpiCardProps) {
+export function KpiCard({ label, value, subtitle, icon, color = 'violet', trend }: KpiCardProps) {
   const c = colorMap[color];
   return (
     <div className={`${c.card} border rounded-xl p-5 glow-card dark:backdrop-blur-sm`}>
@@ -37,3 +37,5 @@ export default function KpiCard({ label, value, subtitle, icon, color = 'violet'
     </div>
   );
 }
+
+export default KpiCard;
