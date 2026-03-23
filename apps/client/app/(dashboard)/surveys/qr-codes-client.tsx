@@ -440,7 +440,7 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
                   <div className="space-y-3">
                     <div>
                       <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Link to Survey</label>
-                      <select value={surveyId} onChange={(e) => setSurveyId(e.target.value)} className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+                      <select value={surveyId} onChange={(e) => setSurveyId(e.target.value)} className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30">
                         <option value="">Select a survey...</option>
                         {surveys.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}
                       </select>

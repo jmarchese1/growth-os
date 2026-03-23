@@ -583,7 +583,7 @@ export default function WebsiteBuilder({
                 <p className="text-sm font-bold text-slate-800 dark:text-white">Style Inspiration</p>
                 <span className="px-2 py-0.5 bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400 text-[10px] font-bold rounded-full">Recommended</span>
               </div>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">Paste URLs of websites whose look and feel you love. Our AI will screenshot them, extract their design DNA (colors, typography, spacing, layout), and apply that aesthetic to your site. <strong className="text-slate-500">This is what makes each site unique.</strong></p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">Paste URLs of websites whose look and feel you love. Our AI will screenshot them, extract their design DNA (colors, typography, spacing, layout), and apply that aesthetic to your site. <strong className="text-slate-500 dark:text-slate-400">This is what makes each site unique.</strong></p>
               <div className="space-y-2">
                 {inspirationUrls.map((url, i) => (
                   <div key={i} className="flex gap-2">
@@ -746,7 +746,7 @@ export default function WebsiteBuilder({
               )}
 
               {(menuInputMode === 'image' || menuInputMode === 'pdf') && (
-                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-violet-400 hover:bg-violet-50/30 transition-colors">
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 dark:border-white/[0.12] rounded-xl cursor-pointer hover:border-violet-400 hover:bg-violet-50/30 dark:hover:bg-violet-500/10 transition-colors">
                   <input
                     type="file"
                     accept={menuInputMode === 'image' ? 'image/*' : '.pdf,application/pdf'}
@@ -761,7 +761,7 @@ export default function WebsiteBuilder({
                   ) : (
                     <>
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6 text-slate-400 mb-2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
-                      <span className="text-sm text-slate-500">Click to upload {menuInputMode === 'image' ? 'a photo of your menu' : 'a PDF menu'}</span>
+                      <span className="text-sm text-slate-500 dark:text-slate-400">Click to upload {menuInputMode === 'image' ? 'a photo of your menu' : 'a PDF menu'}</span>
                       <span className="text-xs text-slate-400 dark:text-slate-500 mt-1">{menuInputMode === 'image' ? 'JPG, PNG, HEIC, WEBP' : 'PDF'} · up to 10MB</span>
                     </>
                   )}

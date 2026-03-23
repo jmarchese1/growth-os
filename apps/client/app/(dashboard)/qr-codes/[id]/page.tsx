@@ -165,19 +165,19 @@ export default function QrCodeDetailPage({ params }: { params: Promise<{ id: str
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <h1 className="text-xl font-bold text-slate-900">{qr.label}</h1>
+              <h1 className="text-xl font-bold text-slate-900 dark:text-white">{qr.label}</h1>
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 <span className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full ${cfg.color}`}>
                   {cfg.icon} {cfg.label}
                 </span>
                 {!qr.active && (
-                  <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full bg-red-100 text-red-600">Inactive</span>
+                  <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full bg-red-100 text-red-600 dark:bg-red-500/15 dark:text-red-400">Inactive</span>
                 )}
                 {isExpired && (
-                  <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 text-slate-500">Expired</span>
+                  <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 dark:bg-white/[0.06] dark:text-slate-400">Expired</span>
                 )}
                 {qr.active && !isExpired && (
-                  <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-600">Active</span>
+                  <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">Active</span>
                 )}
               </div>
             </div>
@@ -186,8 +186,8 @@ export default function QrCodeDetailPage({ params }: { params: Promise<{ id: str
               disabled={toggling}
               className={`text-sm font-medium px-4 py-2 rounded-xl border transition-colors disabled:opacity-50 ${
                 qr.active
-                  ? 'border-red-200 text-red-600 hover:bg-red-50'
-                  : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
+                  ? 'border-red-200 dark:border-red-500/30 text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10'
+                  : 'border-emerald-200 dark:border-emerald-500/30 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10'
               }`}
             >
               {toggling ? 'Saving...' : qr.active ? 'Deactivate' : 'Reactivate'}
@@ -195,21 +195,21 @@ export default function QrCodeDetailPage({ params }: { params: Promise<{ id: str
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
-            <div className="text-slate-500">Created <span className="text-slate-800 font-medium">{formatDate(qr.createdAt)}</span></div>
+            <div className="text-slate-500 dark:text-slate-400">Created <span className="text-slate-800 dark:text-white font-medium">{formatDate(qr.createdAt)}</span></div>
             {qr.expiresAt && (
-              <div className="text-slate-500">Expires <span className={`font-medium ${isExpired ? 'text-red-500' : 'text-slate-800'}`}>{formatDate(qr.expiresAt)}</span></div>
+              <div className="text-slate-500 dark:text-slate-400">Expires <span className={`font-medium ${isExpired ? 'text-red-500' : 'text-slate-800 dark:text-white'}`}>{formatDate(qr.expiresAt)}</span></div>
             )}
             {qr.survey && (
-              <div className="text-slate-500">Survey <span className="text-violet-600 font-medium">{qr.survey.title}</span></div>
+              <div className="text-slate-500 dark:text-slate-400">Survey <span className="text-violet-600 dark:text-violet-400 font-medium">{qr.survey.title}</span></div>
             )}
             {qr.discountValue && (
-              <div className="text-slate-500">Discount <span className="text-slate-800 font-medium">{qr.discountValue}{qr.discountCode ? ` · ${qr.discountCode}` : ''}</span></div>
+              <div className="text-slate-500 dark:text-slate-400">Discount <span className="text-slate-800 dark:text-white font-medium">{qr.discountValue}{qr.discountCode ? ` · ${qr.discountCode}` : ''}</span></div>
             )}
             {qr.destinationUrl && (
-              <div className="text-slate-500 col-span-2 truncate">URL <span className="text-slate-800 font-medium">{qr.destinationUrl}</span></div>
+              <div className="text-slate-500 dark:text-slate-400 col-span-2 truncate">URL <span className="text-slate-800 dark:text-white font-medium">{qr.destinationUrl}</span></div>
             )}
             {qr.surveyReward && (
-              <div className="text-slate-500">Reward <span className="text-slate-800 font-medium">{qr.surveyReward}</span></div>
+              <div className="text-slate-500 dark:text-slate-400">Reward <span className="text-slate-800 dark:text-white font-medium">{qr.surveyReward}</span></div>
             )}
           </div>
         </div>
@@ -218,30 +218,30 @@ export default function QrCodeDetailPage({ params }: { params: Promise<{ id: str
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 text-center">
-          <div className="text-3xl font-bold text-slate-900">{qr.scanCount}</div>
-          <div className="text-sm text-slate-500 mt-1">Total Scans</div>
+          <div className="text-3xl font-bold text-slate-900 dark:text-white">{qr.scanCount}</div>
+          <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">Total Scans</div>
         </div>
         <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 text-center">
-          <div className="text-3xl font-bold text-slate-900">{uniqueContacts.size}</div>
-          <div className="text-sm text-slate-500 mt-1">Contacts Captured</div>
+          <div className="text-3xl font-bold text-slate-900 dark:text-white">{uniqueContacts.size}</div>
+          <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">Contacts Captured</div>
         </div>
         <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 text-center">
-          <div className="text-3xl font-bold text-slate-900">
+          <div className="text-3xl font-bold text-slate-900 dark:text-white">
             {qr.scanCount > 0 ? Math.round((uniqueContacts.size / qr.scanCount) * 100) : 0}%
           </div>
-          <div className="text-sm text-slate-500 mt-1">Conversion Rate</div>
+          <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">Conversion Rate</div>
         </div>
       </div>
 
       {/* Spin prizes */}
       {qr.spinPrizes && qr.spinPrizes.length > 0 && (
         <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5">
-          <h2 className="text-sm font-semibold text-slate-700 mb-3">Spin Wheel Prizes</h2>
+          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">Spin Wheel Prizes</h2>
           <div className="flex flex-wrap gap-2">
             {qr.spinPrizes.map((p, i) => (
-              <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-full text-sm">
-                <span className="font-medium text-amber-800">{p.label}</span>
-                <span className="text-amber-500 text-xs">{p.probability}%</span>
+              <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-full text-sm">
+                <span className="font-medium text-amber-800 dark:text-amber-300">{p.label}</span>
+                <span className="text-amber-500 dark:text-amber-400 text-xs">{p.probability}%</span>
               </div>
             ))}
           </div>
@@ -251,7 +251,7 @@ export default function QrCodeDetailPage({ params }: { params: Promise<{ id: str
       {/* Contacts captured */}
       {uniqueContacts.size > 0 && (
         <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5">
-          <h2 className="text-sm font-semibold text-slate-700 mb-3">Contacts Captured ({uniqueContacts.size})</h2>
+          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">Contacts Captured ({uniqueContacts.size})</h2>
           <div className="space-y-2">
             {[...uniqueContacts.values()].map((c) => (
               <div key={c.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50">
@@ -270,7 +270,7 @@ export default function QrCodeDetailPage({ params }: { params: Promise<{ id: str
 
       {/* Scan log */}
       <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5">
-        <h2 className="text-sm font-semibold text-slate-700 mb-3">Scan History {qr.scans.length > 0 ? `(last ${qr.scans.length})` : ''}</h2>
+        <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">Scan History {qr.scans.length > 0 ? `(last ${qr.scans.length})` : ''}</h2>
         {qr.scans.length === 0 ? (
           <p className="text-sm text-slate-400 py-4 text-center">No scans yet. Share your QR code to start collecting data.</p>
         ) : (
