@@ -238,16 +238,6 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
           </div>
           {campaign.type === 'EMAIL' && (
             <>
-              <EmailStylePicker
-                selectedStyle={selectedStyle}
-                onStyleChange={setSelectedStyle}
-                options={styleOptions}
-                onOptionsChange={setStyleOptions}
-                businessId={business?.id}
-                businessName={business?.name}
-                attachments={attachments}
-                onAttachmentsChange={setAttachments}
-              />
               <div>
                 <label className="text-xs text-slate-500 font-medium">Subject line</label>
                 <input value={editSubject} onChange={(e) => setEditSubject(e.target.value)} className={`mt-1 ${inputClass}`} />
@@ -259,6 +249,18 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
             <textarea value={editBody} onChange={(e) => setEditBody(e.target.value)} rows={8} className={`mt-1 ${inputClass} resize-none font-mono text-xs`} />
             {campaign.type === 'SMS' && <p className="text-[10px] text-slate-400 mt-1">{editBody.length}/160 characters</p>}
           </div>
+          {campaign.type === 'EMAIL' && (
+            <EmailStylePicker
+              selectedStyle={selectedStyle}
+              onStyleChange={setSelectedStyle}
+              options={styleOptions}
+              onOptionsChange={setStyleOptions}
+              businessId={business?.id}
+              businessName={business?.name}
+              attachments={attachments}
+              onAttachmentsChange={setAttachments}
+            />
+          )}
           {campaign.type === 'EMAIL' && editBody.trim() && (
             <div>
               <label className="text-xs text-slate-500 font-medium">Preview</label>

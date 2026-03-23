@@ -192,7 +192,16 @@ function ComposeEmailModal({ contact, onDone, onClose }: { contact: ContactDetai
             </button>
           </div>
         </div>
-        {/* Email Style */}
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1">Subject</label>
+          <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Email subject line..." className={inputClass} />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1">Body</label>
+          <textarea value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={6} placeholder="<p>Hi {{firstName}},</p><p>Your email content here...</p>" className={inputClass} />
+          <p className="text-[10px] text-slate-400 mt-1">Use {'{{firstName}}'} and {'{{business}}'} as variables. HTML supported.</p>
+        </div>
+        {/* Email Style — below body so dropdowns open downward */}
         <EmailStylePicker
           selectedStyle={selectedStyle}
           onStyleChange={setSelectedStyle}
@@ -203,15 +212,6 @@ function ComposeEmailModal({ contact, onDone, onClose }: { contact: ContactDetai
           attachments={attachments}
           onAttachmentsChange={setAttachments}
         />
-        <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Subject</label>
-          <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Email subject line..." className={inputClass} />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Body</label>
-          <textarea value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={6} placeholder="<p>Hi {{firstName}},</p><p>Your email content here...</p>" className={inputClass} />
-          <p className="text-[10px] text-slate-400 mt-1">Use {'{{firstName}}'} and {'{{business}}'} as variables. HTML supported.</p>
-        </div>
         {error && <p className="text-xs text-red-500">{error}</p>}
       </div>
       <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex gap-2 justify-between">

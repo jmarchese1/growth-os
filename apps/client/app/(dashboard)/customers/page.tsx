@@ -495,17 +495,6 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
         {/* ─── Single Email Content ────────────────────────────────── */}
         {campaignMode === 'single' && (
           <>
-            {/* Email Style — single mode */}
-            <EmailStylePicker
-              selectedStyle={selectedStyle}
-              onStyleChange={setSelectedStyle}
-              options={styleOptions}
-              onOptionsChange={setStyleOptions}
-              businessId={businessId}
-              businessName={biz?.name}
-              attachments={attachments}
-              onAttachmentsChange={setAttachments}
-            />
             <div className="bg-violet-50 border border-violet-200 rounded-xl p-3">
               <label className="block text-xs font-medium text-violet-700 mb-1.5">AI Draft</label>
               <div className="flex gap-2">
@@ -527,6 +516,17 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
               <textarea value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={6} placeholder="<p>Hi {{firstName}},</p><p>Your email content here...</p>" className={inputClass} />
               <p className="text-[10px] text-slate-400 mt-1">Use {'{{firstName}}'} and {'{{business}}'} as variables. HTML supported.</p>
             </div>
+            {/* Email Style — single mode (below body so dropdowns open downward) */}
+            <EmailStylePicker
+              selectedStyle={selectedStyle}
+              onStyleChange={setSelectedStyle}
+              options={styleOptions}
+              onOptionsChange={setStyleOptions}
+              businessId={businessId}
+              businessName={biz?.name}
+              attachments={attachments}
+              onAttachmentsChange={setAttachments}
+            />
           </>
         )}
 
