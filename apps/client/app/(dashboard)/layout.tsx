@@ -6,6 +6,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import EmbedoLogo from '../../components/EmbedoLogo';
 import { useSession } from '../../components/auth/session-provider';
 import { useBusiness } from '../../components/auth/business-provider';
+import { useTheme } from '../../components/theme-provider';
+import { NotificationsBell } from '../../components/ui/notifications-bell';
 import { createSupabaseBrowserClient } from '../../lib/supabase/client';
 
 const NAV = [
@@ -105,10 +107,10 @@ function NavItem({ href, label, icon, isActive, collapsed }: {
         collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5'
       } ${
         isActive
-          ? 'text-violet-700 bg-violet-50 border border-violet-200/60'
-          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 border border-transparent'
+          ? 'text-violet-700 bg-violet-50 border border-violet-200/60 dark:text-violet-300 dark:bg-violet-900/30 dark:border-violet-700/40'
+          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 border border-transparent dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700/50'
       }`}>
-      <span className={`flex-shrink-0 ${isActive ? 'text-violet-600' : 'text-slate-400'}`}>{icon}</span>
+      <span className={`flex-shrink-0 ${isActive ? 'text-violet-600 dark:text-violet-400' : 'text-slate-400 dark:text-slate-500'}`}>{icon}</span>
       {!collapsed && (
         <>
           {label}
@@ -116,6 +118,28 @@ function NavItem({ href, label, icon, isActive, collapsed }: {
         </>
       )}
     </Link>
+  );
+}
+
+function ThemeToggle() {
+  const { theme, toggle } = useTheme();
+
+  return (
+    <button
+      onClick={toggle}
+      className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 dark:hover:text-slate-300 transition-colors"
+      title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+    >
+      {theme === 'light' ? (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+        </svg>
+      ) : (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+        </svg>
+      )}
+    </button>
   );
 }
 
@@ -127,15 +151,15 @@ function Sidebar({ width, collapsed, onDragStart, onToggle, userEmail, userIniti
   const pathname = usePathname();
 
   return (
-    <aside className="flex-shrink-0 border-r border-slate-200 flex flex-col h-screen sticky top-0 relative overflow-hidden select-none bg-white"
+    <aside className="flex-shrink-0 border-r border-slate-200 dark:border-slate-700 flex flex-col h-screen sticky top-0 relative overflow-hidden select-none bg-white dark:bg-slate-900"
       style={{ width }}>
       {/* Logo */}
-      <div className={`border-b border-slate-200 flex items-center ${collapsed ? 'justify-center py-5 px-2' : 'px-5 py-5 gap-3'}`}>
+      <div className={`border-b border-slate-200 dark:border-slate-700 flex items-center ${collapsed ? 'justify-center py-5 px-2' : 'px-5 py-5 gap-3'}`}>
         <EmbedoLogo size={collapsed ? 28 : 36} />
         {!collapsed && (
           <div>
-            <p className="text-sm font-bold text-slate-900 leading-none tracking-tight">Embedo</p>
-            <p className="text-[10px] text-violet-500 mt-0.5 leading-none font-medium uppercase tracking-widest">Client</p>
+            <p className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-none tracking-tight">Embedo</p>
+            <p className="text-[10px] text-violet-500 dark:text-violet-400 mt-0.5 leading-none font-medium uppercase tracking-widest">Client</p>
           </div>
         )}
       </div>
@@ -145,7 +169,7 @@ function Sidebar({ width, collapsed, onDragStart, onToggle, userEmail, userIniti
         {NAV.map((group) => (
           <div key={group.section}>
             {!collapsed && (
-              <p className="px-3 mb-2 text-[9px] font-bold text-slate-400 uppercase tracking-[0.18em]">
+              <p className="px-3 mb-2 text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.18em]">
                 {group.section}
               </p>
             )}
@@ -160,7 +184,7 @@ function Sidebar({ width, collapsed, onDragStart, onToggle, userEmail, userIniti
       </nav>
 
       {/* Footer */}
-      <div className={`border-t border-slate-200 flex items-center ${collapsed ? 'justify-center py-4 px-2' : 'px-4 py-4 gap-2.5'}`}>
+      <div className={`border-t border-slate-200 dark:border-slate-700 flex items-center ${collapsed ? 'justify-center py-4 px-2' : 'px-4 py-4 gap-2.5'}`}>
         <div className="relative w-7 h-7 flex-shrink-0">
           <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold">
             {userInitial}
@@ -168,12 +192,12 @@ function Sidebar({ width, collapsed, onDragStart, onToggle, userEmail, userIniti
         </div>
         {!collapsed && (
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-slate-700 leading-none truncate">{userEmail ?? 'User'}</p>
+            <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 leading-none truncate">{userEmail ?? 'User'}</p>
           </div>
         )}
         {!collapsed && (
           <button onClick={onLogout} title="Sign out"
-            className="flex-shrink-0 p-1.5 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors">
+            className="flex-shrink-0 p-1.5 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
               <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H3zm11 4.414l-4.293 4.293a1 1 0 01-1.414-1.414L11.586 7H7a1 1 0 110-2h6a1 1 0 011 1v6a1 1 0 11-2 0V7.414z" clipRule="evenodd" />
             </svg>
@@ -183,7 +207,7 @@ function Sidebar({ width, collapsed, onDragStart, onToggle, userEmail, userIniti
 
       {/* Collapse toggle */}
       <button onClick={onToggle}
-        className="absolute bottom-16 -right-3 w-6 h-6 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-violet-600 hover:border-violet-300 transition-colors z-50 shadow-sm"
+        className="absolute bottom-16 -right-3 w-6 h-6 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-400 hover:text-violet-600 hover:border-violet-300 transition-colors z-50 shadow-sm"
         title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
         <svg viewBox="0 0 20 20" fill="currentColor" className={`w-3 h-3 transition-transform ${collapsed ? 'rotate-0' : 'rotate-180'}`}>
           <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -191,7 +215,7 @@ function Sidebar({ width, collapsed, onDragStart, onToggle, userEmail, userIniti
       </button>
 
       {/* Drag handle */}
-      <div className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-violet-100 active:bg-violet-200 transition-colors z-40"
+      <div className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-violet-100 dark:hover:bg-violet-900/30 active:bg-violet-200 transition-colors z-40"
         onMouseDown={onDragStart} />
     </aside>
   );
@@ -199,7 +223,7 @@ function Sidebar({ width, collapsed, onDragStart, onToggle, userEmail, userIniti
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user } = useSession();
-  const { needsOnboarding, loading: businessLoading } = useBusiness();
+  const { business, needsOnboarding, loading: businessLoading } = useBusiness();
   const router = useRouter();
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_WIDTH);
   const isDragging = useRef(false);
@@ -263,12 +287,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="min-h-screen flex bg-slate-50">
+    <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950">
       <Sidebar width={sidebarWidth} collapsed={collapsed} onDragStart={handleDragStart} onToggle={handleToggle}
         userEmail={userEmail} userInitial={userInitial} onLogout={handleLogout} />
-      <main className="flex-1 overflow-auto bg-grid-light">
-        {children}
-      </main>
+      <div className="flex-1 flex flex-col overflow-auto">
+        {/* Top bar */}
+        <header className="sticky top-0 z-30 flex items-center justify-between px-6 py-3 border-b border-slate-200/80 dark:border-slate-700/80 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{business?.name ?? 'Dashboard'}</p>
+          </div>
+          <div className="flex items-center gap-1">
+            <NotificationsBell />
+            <ThemeToggle />
+          </div>
+        </header>
+        <main className="flex-1 bg-grid-light dark:bg-slate-950">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
