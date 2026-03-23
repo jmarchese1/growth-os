@@ -201,7 +201,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
               <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-400 font-medium">{campaign.type}</span>
             </div>
             <h1 className="text-xl font-bold text-slate-900 dark:text-white">{campaign.name}</h1>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+            <p className="text-xs text-slate-400 dark:text-slate-400 mt-1">
               Created {new Date(campaign.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               {campaign.sentAt ? ` · Sent ${new Date(campaign.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}
             </p>
@@ -247,7 +247,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
           <div>
             <label className="text-xs text-slate-500 dark:text-slate-400 font-medium">{campaign.type === 'EMAIL' ? 'Email body (HTML)' : 'Message'}</label>
             <textarea value={editBody} onChange={(e) => setEditBody(e.target.value)} rows={8} className={`mt-1 ${inputClass} resize-none font-mono text-xs`} />
-            {campaign.type === 'SMS' && <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">{editBody.length}/160 characters</p>}
+            {campaign.type === 'SMS' && <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-1">{editBody.length}/160 characters</p>}
           </div>
           {campaign.type === 'EMAIL' && (
             <EmailStylePicker
@@ -299,7 +299,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
           ) : (
             <div className="max-w-xs">
               <div className="bg-slate-100 dark:bg-white/[0.06] rounded-2xl rounded-tl-sm px-4 py-3 text-sm text-slate-700 dark:text-slate-200">{campaign.body}</div>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">{campaign.body.length}/160 chars</p>
+              <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-1">{campaign.body.length}/160 chars</p>
             </div>
           )}
         </div>
@@ -311,11 +311,11 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Send to Contacts</h2>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Filter which contacts receive this campaign</p>
+              <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">Filter which contacts receive this campaign</p>
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold text-slate-900 dark:text-white">{recipientLoading ? '...' : (recipientCount ?? '—')}</p>
-              <p className="text-xs text-slate-400 dark:text-slate-500">recipients</p>
+              <p className="text-xs text-slate-400 dark:text-slate-400">recipients</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">

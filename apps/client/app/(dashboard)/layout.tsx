@@ -77,7 +77,7 @@ function NavItem({ href, label, icon, isActive, collapsed }: {
           ? 'text-violet-700 bg-violet-50 border border-violet-200/60 dark:text-white dark:bg-violet-600/20 dark:border-violet-500/30 dark:shadow-[0_0_16px_rgba(124,58,237,0.15)]'
           : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 border border-transparent dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/[0.04]'
       }`}>
-      <span className={`flex-shrink-0 ${isActive ? 'text-violet-600 dark:text-violet-400' : 'text-slate-400 dark:text-slate-500'}`}>{icon}</span>
+      <span className={`flex-shrink-0 ${isActive ? 'text-violet-600 dark:text-violet-400' : 'text-slate-400 dark:text-slate-400'}`}>{icon}</span>
       {!collapsed && (
         <>
           {label}
@@ -94,7 +94,7 @@ function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:text-slate-500 dark:hover:text-violet-400 dark:hover:bg-white/[0.04] transition-colors"
+      className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-violet-400 dark:hover:bg-white/[0.04] transition-colors"
       title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
     >
       {theme === 'light' ? (
@@ -149,7 +149,7 @@ function Sidebar({ width, collapsed, onDragStart, onToggle, userEmail, userIniti
           {NAV.map((group) => (
             <div key={group.section}>
               {!collapsed && (
-                <p className="px-3 mb-2 text-[9px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-[0.18em]">
+                <p className="px-3 mb-2 text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-[0.18em]">
                   {group.section}
                 </p>
               )}

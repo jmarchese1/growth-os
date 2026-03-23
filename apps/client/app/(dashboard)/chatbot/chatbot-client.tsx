@@ -185,7 +185,7 @@ function WidgetPreview({ color, secondaryColor, bubbleSize, borderRadius, fontFa
 
   return (
     <div className="relative bg-slate-100 dark:bg-white/[0.06] rounded-xl p-6 min-h-[400px] flex items-end justify-end">
-      <p className="absolute top-3 left-4 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Live Preview</p>
+      <p className="absolute top-3 left-4 text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Live Preview</p>
       {/* Chat window preview */}
       <div className="mr-2 mb-16 shadow-xl" style={{ width: Math.min(windowWidth, 320), height: Math.min(windowHeight, 380), background: '#fff', borderRadius, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily }}>
         <div style={{ background: color, padding: '14px 16px', color: '#fff', borderRadius: `${borderRadius}px ${borderRadius}px 0 0`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -290,7 +290,7 @@ function AppearanceTab({ businessId, settings, businessName, onSaved }: {
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Secondary Color <span className="text-slate-400 dark:text-slate-500">(bot messages background)</span></label>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Secondary Color <span className="text-slate-400 dark:text-slate-400">(bot messages background)</span></label>
               <div className="flex items-center gap-3">
                 <input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-12 h-10 rounded-lg border border-slate-200 dark:border-white/[0.08] cursor-pointer p-0.5" />
                 <input type="text" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="flex-1 px-3 py-2 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] rounded-lg text-sm text-slate-800 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
@@ -302,11 +302,11 @@ function AppearanceTab({ businessId, settings, businessName, onSaved }: {
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Welcome Message <span className="text-slate-400 dark:text-slate-500">(first chat bubble)</span></label>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Welcome Message <span className="text-slate-400 dark:text-slate-400">(first chat bubble)</span></label>
               <input type="text" value={welcomeMsg} onChange={(e) => setWelcomeMsg(e.target.value)} placeholder="Hi! How can I help you today?" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] rounded-lg text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Header Subtitle <span className="text-slate-400 dark:text-slate-500">(optional — below business name)</span></label>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Header Subtitle <span className="text-slate-400 dark:text-slate-400">(optional — below business name)</span></label>
               <input type="text" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} placeholder="Typically replies in seconds" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] rounded-lg text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30" />
               <div className="flex flex-wrap gap-1.5 mt-1.5">
                 {['Typically replies in seconds', 'Online now', 'Ask us anything', 'We usually reply instantly'].map((s) => (
@@ -458,7 +458,7 @@ function SystemPromptTab({ businessId, settings, businessName, onSaved }: {
                 <div key={key}>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-sm font-medium text-slate-700 dark:text-slate-200">{label}</label>
-                    <span className="text-xs text-slate-400 dark:text-slate-500">{traits[key]}%</span>
+                    <span className="text-xs text-slate-400 dark:text-slate-400">{traits[key]}%</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-sm w-24 text-right text-slate-500 dark:text-slate-400">{leftEmoji} {left}</span>
@@ -503,7 +503,7 @@ function SystemPromptTab({ businessId, settings, businessName, onSaved }: {
               rows={12}
               className="w-full px-4 py-3 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] rounded-xl text-sm text-slate-800 dark:text-white font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-violet-500/30 resize-y"
             />
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">{prompt.length} characters</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-1">{prompt.length} characters</p>
           </div>
 
           <div>
@@ -549,7 +549,7 @@ function KnowledgeBaseTab({ businessId, settings, onSaved }: {
     <div className="space-y-6">
       <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-6">
         <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">Knowledge Base</h3>
-        <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">
+        <p className="text-xs text-slate-400 dark:text-slate-400 mb-4">
           Paste your menu, FAQ, business details, parking info, policies — anything you want the chatbot to know. The AI will reference this when answering questions.
         </p>
 
@@ -573,7 +573,7 @@ function KnowledgeBaseTab({ businessId, settings, onSaved }: {
           rows={16}
           className="w-full px-4 py-3 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] rounded-xl text-sm text-slate-800 dark:text-white font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 resize-y"
         />
-        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">{kb.length} characters · ~{Math.ceil(kb.length / 4)} tokens</p>
+        <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-1">{kb.length} characters · ~{Math.ceil(kb.length / 4)} tokens</p>
       </div>
 
       <div className="flex items-center gap-3">
@@ -645,7 +645,7 @@ function OptionsTab({ businessId, settings, onSaved }: {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Close Button (X)</p>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Show an X button in the header to close the chat window</p>
+              <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">Show an X button in the header to close the chat window</p>
             </div>
             <button onClick={() => setShowCloseBtn(!showCloseBtn)} className={`relative w-11 h-6 rounded-full transition-colors ${showCloseBtn ? 'bg-violet-600' : 'bg-slate-300 dark:bg-white/[0.12]'}`}>
               <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${showCloseBtn ? 'left-[22px]' : 'left-0.5'}`} />
@@ -656,7 +656,7 @@ function OptionsTab({ businessId, settings, onSaved }: {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Sound Notification</p>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Play a subtle chime when the bot responds</p>
+              <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">Play a subtle chime when the bot responds</p>
             </div>
             <button onClick={() => setSoundEnabled(!soundEnabled)} className={`relative w-11 h-6 rounded-full transition-colors ${soundEnabled ? 'bg-violet-600' : 'bg-slate-300 dark:bg-white/[0.12]'}`}>
               <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${soundEnabled ? 'left-[22px]' : 'left-0.5'}`} />
@@ -667,7 +667,7 @@ function OptionsTab({ businessId, settings, onSaved }: {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Show &quot;Powered by Embedo&quot;</p>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Display branding footer in the chat window</p>
+              <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">Display branding footer in the chat window</p>
             </div>
             <button onClick={() => setPoweredBy(!poweredBy)} className={`relative w-11 h-6 rounded-full transition-colors ${poweredBy ? 'bg-violet-600' : 'bg-slate-300 dark:bg-white/[0.12]'}`}>
               <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${poweredBy ? 'left-[22px]' : 'left-0.5'}`} />
@@ -681,7 +681,7 @@ function OptionsTab({ businessId, settings, onSaved }: {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Auto-Open Chat</h3>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Automatically open the chat window after a delay — 3-5x more engagement</p>
+            <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">Automatically open the chat window after a delay — 3-5x more engagement</p>
           </div>
           <button onClick={() => setAutoOpenEnabled(!autoOpenEnabled)} className={`relative w-11 h-6 rounded-full transition-colors ${autoOpenEnabled ? 'bg-violet-600' : 'bg-slate-300 dark:bg-white/[0.12]'}`}>
             <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${autoOpenEnabled ? 'left-[22px]' : 'left-0.5'}`} />
@@ -691,7 +691,7 @@ function OptionsTab({ businessId, settings, onSaved }: {
           <div>
             <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Delay: {autoOpenDelay} seconds</label>
             <input type="range" min={1} max={30} value={autoOpenDelay} onChange={(e) => setAutoOpenDelay(Number(e.target.value))} className="w-full accent-violet-600" />
-            <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+            <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-400 mt-1">
               <span>1s (aggressive)</span>
               <span>5s (recommended)</span>
               <span>30s (subtle)</span>
@@ -705,7 +705,7 @@ function OptionsTab({ businessId, settings, onSaved }: {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Quick Reply Buttons</h3>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Show clickable buttons below the welcome message — removes the &quot;what do I say?&quot; barrier</p>
+            <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">Show clickable buttons below the welcome message — removes the &quot;what do I say?&quot; barrier</p>
           </div>
           <button onClick={() => setQuickRepliesEnabled(!quickRepliesEnabled)} className={`relative w-11 h-6 rounded-full transition-colors ${quickRepliesEnabled ? 'bg-violet-600' : 'bg-slate-300 dark:bg-white/[0.12]'}`}>
             <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${quickRepliesEnabled ? 'left-[22px]' : 'left-0.5'}`} />
@@ -734,7 +734,7 @@ function OptionsTab({ businessId, settings, onSaved }: {
                 <button onClick={addQuickReply} disabled={!newQuickReply.trim()} className="px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 transition-colors">Add</button>
               </div>
             )}
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2">{quickReplies.length}/6 quick replies. Keep them short and action-oriented.</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-2">{quickReplies.length}/6 quick replies. Keep them short and action-oriented.</p>
             <div className="flex flex-wrap gap-1.5 mt-2">
               {['View Menu', 'Make Reservation', 'Hours & Location', 'Catering Info', 'Delivery Options', 'Special Events'].filter((s) => !quickReplies.includes(s)).slice(0, 3).map((s) => (
                 <button key={s} onClick={() => { if (quickReplies.length < 6) setQuickReplies([...quickReplies, s]); }} className="px-2 py-0.5 text-[10px] rounded border border-slate-200 text-slate-500 hover:bg-violet-50 hover:text-violet-600 transition-all">+ {s}</button>
@@ -819,7 +819,7 @@ function TestChatTab({ businessId }: { businessId: string }) {
               <div className="w-10 h-10 rounded-full bg-violet-100 dark:bg-violet-500/15 flex items-center justify-center mx-auto mb-2">
                 <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-violet-500"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7z" clipRule="evenodd" /></svg>
               </div>
-              <p className="text-xs text-slate-400 dark:text-slate-500">Type a message to test your chatbot</p>
+              <p className="text-xs text-slate-400 dark:text-slate-400">Type a message to test your chatbot</p>
               <p className="text-[10px] text-slate-300 dark:text-slate-600 mt-1">Try: &quot;What&apos;s on the menu?&quot; or &quot;I&apos;d like to book a table&quot;</p>
             </div>
           </div>
@@ -859,26 +859,26 @@ function HistoryTab({ sessions, totalSessions, onSelect }: {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Conversations</h2>
-        {totalSessions > 0 && <span className="text-xs text-slate-400 dark:text-slate-500">{totalSessions} total</span>}
+        {totalSessions > 0 && <span className="text-xs text-slate-400 dark:text-slate-400">{totalSessions} total</span>}
       </div>
       <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
         <table className="w-full">
           <thead>
             <tr className="border-b border-slate-100 dark:border-white/[0.06]">
               {['Date', 'Visitor', 'Channel', 'Messages', 'Status', ''].map((h) => (
-                <th key={h} className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">{h}</th>
+                <th key={h} className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-5 py-3">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {sessions.length === 0 ? (
-              <tr><td colSpan={6} className="px-5 py-12 text-center text-sm text-slate-400 dark:text-slate-500">No conversations yet.</td></tr>
+              <tr><td colSpan={6} className="px-5 py-12 text-center text-sm text-slate-400 dark:text-slate-400">No conversations yet.</td></tr>
             ) : (
               sessions.map((session) => (
                 <tr key={session.id} className="border-b border-slate-50 dark:border-white/[0.04] hover:bg-slate-50/50 dark:hover:bg-white/[0.04] transition-colors cursor-pointer" onClick={() => onSelect(session)}>
                   <td className="px-5 py-3 text-sm text-slate-600 dark:text-slate-300">{formatDate(session.createdAt)}</td>
                   <td className="px-5 py-3 text-sm text-slate-800 dark:text-white font-medium">
-                    {session.contact ? `${session.contact.firstName} ${session.contact.lastName}` : <span className="text-slate-400 dark:text-slate-500">Anonymous</span>}
+                    {session.contact ? `${session.contact.firstName} ${session.contact.lastName}` : <span className="text-slate-400 dark:text-slate-400">Anonymous</span>}
                   </td>
                   <td className="px-5 py-3">
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${CHANNEL_COLORS[session.channel] ?? 'bg-slate-100 text-slate-500'}`}>{session.channel.toLowerCase()}</span>
@@ -936,7 +936,7 @@ function ConversationModal({ session, onClose }: { session: ChatSession; onClose
               <div className={`max-w-[80%] px-3 py-2 rounded-xl text-sm ${msg.role === 'user' ? 'bg-violet-600 text-white' : 'bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-200'}`}>{msg.content}</div>
             </div>
           ))}
-          {messages.length === 0 && <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-8">No messages</p>}
+          {messages.length === 0 && <p className="text-sm text-slate-400 dark:text-slate-400 text-center py-8">No messages</p>}
         </div>
       </div>
     </div>
@@ -1027,7 +1027,7 @@ function QuickSetupTemplates({ businessId, businessName, onApplied }: {
             <p className="text-sm font-semibold text-slate-800 dark:text-white group-hover:text-violet-700 dark:group-hover:text-violet-400 transition-colors">{t.label}</p>
             <div className="flex items-center gap-1.5 mt-2">
               <div className="w-3 h-3 rounded-full" style={{ background: t.color }} />
-              <span className="text-[10px] text-slate-400 dark:text-slate-500">{t.quickReplies.length} quick replies</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-400">{t.quickReplies.length} quick replies</span>
             </div>
             {applying === t.id && <div className="mt-2 w-4 h-4 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" />}
           </button>
@@ -1052,7 +1052,7 @@ function EmbedSnippet({ businessId }: { businessId: string }) {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Embed Code</h3>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Paste before &lt;/body&gt; on your website</p>
+          <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">Paste before &lt;/body&gt; on your website</p>
         </div>
         <button onClick={() => { navigator.clipboard.writeText(snippet); setCopied(true); setTimeout(() => setCopied(false), 2000); }} disabled={!snippet} className="px-4 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04] disabled:opacity-50 transition-colors">
           {copied ? 'Copied!' : 'Copy Code'}
@@ -1063,7 +1063,7 @@ function EmbedSnippet({ businessId }: { businessId: string }) {
       ) : snippet ? (
         <pre className="bg-slate-900 text-slate-300 rounded-lg p-4 text-xs overflow-x-auto font-mono leading-relaxed">{snippet}</pre>
       ) : (
-        <div className="bg-slate-50 dark:bg-white/[0.04] rounded-lg p-4 text-center"><p className="text-xs text-slate-400 dark:text-slate-500">Snippet unavailable</p></div>
+        <div className="bg-slate-50 dark:bg-white/[0.04] rounded-lg p-4 text-center"><p className="text-xs text-slate-400 dark:text-slate-400">Snippet unavailable</p></div>
       )}
     </div>
   );
@@ -1124,7 +1124,7 @@ export default function ChatbotClient({ businessId }: { businessId: string }) {
               <div key={channel} className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
                 <p className="text-xs text-slate-500 dark:text-slate-400">{channel}</p>
                 <p className="text-xl font-bold text-slate-800 dark:text-white mt-1">{s.channelBreakdown[key] ?? 0}</p>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">conversations</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-1">conversations</p>
               </div>
             ))}
           </div>

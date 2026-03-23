@@ -193,7 +193,7 @@ export default function BillingPage() {
                 )}
               </div>
               <p className="text-3xl font-bold text-slate-900 dark:text-white">
-                ${TIERS[activeTierKey]?.price.toFixed(2)}<span className="text-base font-normal text-slate-400 dark:text-slate-500">/mo</span>
+                ${TIERS[activeTierKey]?.price.toFixed(2)}<span className="text-base font-normal text-slate-400 dark:text-slate-400">/mo</span>
               </p>
               <div className="flex gap-6 mt-3 text-xs text-slate-500 dark:text-slate-400">
                 {subscription.status === 'TRIALING' && subscription.trialEndsAt && (
@@ -286,7 +286,7 @@ export default function BillingPage() {
                     <p className="text-3xl font-bold text-slate-900 dark:text-white">Free</p>
                   ) : (
                     <p className="text-3xl font-bold text-slate-900 dark:text-white">
-                      ${tier.price.toFixed(2)}<span className="text-sm font-normal text-slate-400 dark:text-slate-500">/mo</span>
+                      ${tier.price.toFixed(2)}<span className="text-sm font-normal text-slate-400 dark:text-slate-400">/mo</span>
                     </p>
                   )}
                 </div>
@@ -310,7 +310,7 @@ export default function BillingPage() {
               {isFree ? (
                 <button
                   disabled
-                  className="w-full py-2.5 text-sm font-semibold rounded-xl bg-slate-100 dark:bg-white/[0.06] text-slate-400 dark:text-slate-500 cursor-default"
+                  className="w-full py-2.5 text-sm font-semibold rounded-xl bg-slate-100 dark:bg-white/[0.06] text-slate-400 dark:text-slate-400 cursor-default"
                 >
                   {isCurrent ? 'Current Plan' : 'Free Forever'}
                 </button>

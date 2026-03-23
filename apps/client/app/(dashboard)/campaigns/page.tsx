@@ -53,7 +53,7 @@ function CreateCampaignModal({ onClose, onCreate }: {
       <div className="bg-white dark:bg-[#1a1730] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="px-6 py-4 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between">
           <h3 className="text-sm font-semibold text-slate-800 dark:text-white">New Campaign</h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
           </button>
         </div>
@@ -81,7 +81,7 @@ function CreateCampaignModal({ onClose, onCreate }: {
           <div>
             <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{type === 'EMAIL' ? 'Email Body' : 'Message'}</label>
             <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={4} placeholder={type === 'EMAIL' ? 'Write your email content here...' : 'Keep it under 160 characters for best results'} className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
-            {type === 'SMS' && <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">{body.length}/160 characters</p>}
+            {type === 'SMS' && <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-1">{body.length}/160 characters</p>}
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <button onClick={onClose} className="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">Cancel</button>
@@ -187,22 +187,22 @@ export default function CampaignsPage() {
       <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Your Campaigns</h2>
-          {campaigns.length > 0 && <span className="text-xs text-slate-400 dark:text-slate-500">{campaigns.length} total</span>}
+          {campaigns.length > 0 && <span className="text-xs text-slate-400 dark:text-slate-400">{campaigns.length} total</span>}
         </div>
 
         {loading ? (
           <div className="px-5 py-12 flex justify-center"><div className="w-6 h-6 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" /></div>
         ) : campaigns.length === 0 ? (
-          <div className="px-5 py-12 text-center text-sm text-slate-400 dark:text-slate-500">No campaigns yet. Create your first campaign to start reaching your customers.</div>
+          <div className="px-5 py-12 text-center text-sm text-slate-400 dark:text-slate-400">No campaigns yet. Create your first campaign to start reaching your customers.</div>
         ) : (
           <table className="w-full">
             <thead>
               <tr className="border-b border-slate-100 dark:border-white/[0.06] bg-slate-50/50 dark:bg-white/[0.06]">
-                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Name</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Type</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Status</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Created</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Reach</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-5 py-3">Name</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-5 py-3">Type</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-5 py-3">Status</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-5 py-3">Created</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-5 py-3">Reach</th>
                 <th className="px-5 py-3" />
               </tr>
             </thead>
@@ -211,7 +211,7 @@ export default function CampaignsPage() {
                 <tr key={c.id} onClick={() => router.push(`/campaigns/${c.id}`)} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.04] transition-colors cursor-pointer">
                   <td className="px-5 py-3">
                     <p className="text-sm font-medium text-slate-800 dark:text-white">{c.name}</p>
-                    {c.subject && <p className="text-xs text-slate-400 dark:text-slate-500 truncate max-w-xs">{c.subject}</p>}
+                    {c.subject && <p className="text-xs text-slate-400 dark:text-slate-400 truncate max-w-xs">{c.subject}</p>}
                   </td>
                   <td className="px-5 py-3">
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${TYPE_BADGES[c.type]}`}>{c.type.toLowerCase()}</span>
@@ -235,7 +235,7 @@ export default function CampaignsPage() {
                           {sendingId === c.id ? 'Sending...' : 'Send now'}
                         </button>
                       )}
-                      <button onClick={(e) => { e.stopPropagation(); handleDelete(c.id); }} className="text-xs text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 font-medium transition-colors">Delete</button>
+                      <button onClick={(e) => { e.stopPropagation(); handleDelete(c.id); }} className="text-xs text-slate-400 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 font-medium transition-colors">Delete</button>
                     </div>
                   </td>
                 </tr>

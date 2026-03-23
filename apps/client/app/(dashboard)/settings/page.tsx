@@ -187,9 +187,9 @@ export default function SettingsPage() {
     { id: 'danger', label: 'Danger Zone', icon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z' },
   ];
 
-  const inputCls = 'w-full px-3 py-2 bg-slate-50 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-700 dark:text-white placeholder:dark:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40 transition-all';
+  const inputCls = 'w-full px-3 py-2 bg-slate-50 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-700 dark:text-white placeholder:dark:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40 transition-all';
   const selectCls = 'w-full px-3 py-2 bg-slate-50 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40 transition-all appearance-none';
-  const labelCls = 'block text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1';
+  const labelCls = 'block text-[10px] text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1';
   const cardCls = 'bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl p-6 mb-6';
   const saveBtnCls = 'px-4 py-2 text-sm font-medium text-white bg-violet-600 rounded-xl hover:bg-violet-700 transition-colors disabled:opacity-50 flex items-center gap-2';
 
@@ -269,7 +269,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-sm font-semibold text-slate-700 dark:text-white">Business Profile</h3>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Core details about your business</p>
+                <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">Core details about your business</p>
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -350,7 +350,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-sm font-semibold text-slate-700 dark:text-white">Integrations</h3>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Connected services and social accounts</p>
+                <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">Connected services and social accounts</p>
               </div>
               <Link href="/integrations" className="px-3 py-1.5 text-xs font-medium text-violet-600 bg-violet-50 border border-violet-200 rounded-lg hover:bg-violet-100 transition-colors">
                 Manage All
@@ -383,7 +383,7 @@ export default function SettingsPage() {
           <div className={cardCls}>
             <div className="mb-4">
               <h3 className="text-sm font-semibold text-slate-700 dark:text-white">Business Hours</h3>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Set your regular operating hours. These are shown on your website and used by the AI voice agent.</p>
+              <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">Set your regular operating hours. These are shown on your website and used by the AI voice agent.</p>
             </div>
 
             <div className="space-y-3">
@@ -465,7 +465,7 @@ export default function SettingsPage() {
           <div className={cardCls}>
             <div className="mb-4">
               <h3 className="text-sm font-semibold text-slate-700 dark:text-white">Notification Preferences</h3>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Choose how and when you want to be notified about activity.</p>
+              <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">Choose how and when you want to be notified about activity.</p>
             </div>
 
             <div className="space-y-2">
@@ -478,7 +478,7 @@ export default function SettingsPage() {
                 <label key={key} className="flex items-center justify-between py-3 px-4 rounded-xl border border-slate-100 dark:border-white/[0.06] hover:bg-slate-50/50 dark:hover:bg-white/[0.04] transition-colors cursor-pointer">
                   <div>
                     <p className="text-sm text-slate-700 dark:text-white font-medium">{label}</p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{desc}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">{desc}</p>
                   </div>
                   <div className="relative">
                     <input
@@ -501,7 +501,7 @@ export default function SettingsPage() {
                 <label key={key} className="flex items-center justify-between py-3 px-4 rounded-xl border border-slate-100 dark:border-white/[0.06] hover:bg-slate-50/50 dark:hover:bg-white/[0.04] transition-colors cursor-pointer">
                   <div>
                     <p className="text-sm text-slate-700 dark:text-white font-medium">{label}</p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{desc}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">{desc}</p>
                   </div>
                   <div className="relative">
                     <input
@@ -533,7 +533,7 @@ export default function SettingsPage() {
           <div className={cardCls}>
             <div className="mb-4">
               <h3 className="text-sm font-semibold text-slate-700 dark:text-white">Email Defaults</h3>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Default sender info and styling for outbound emails.</p>
+              <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">Default sender info and styling for outbound emails.</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -622,7 +622,7 @@ export default function SettingsPage() {
           <div className={cardCls}>
             <div className="mb-4">
               <h3 className="text-sm font-semibold text-slate-700 dark:text-white">Enabled Modules</h3>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Toggle which Embedo modules are active for your business. Disabled modules are hidden from the sidebar.</p>
+              <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">Toggle which Embedo modules are active for your business. Disabled modules are hidden from the sidebar.</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -651,7 +651,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-slate-700">{name}</p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{desc}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">{desc}</p>
                   </div>
                   <input
                     type="checkbox"
@@ -680,7 +680,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-sm font-semibold text-slate-700 dark:text-white">Team Members</h3>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Manage who has access to this business dashboard.</p>
+                <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">Manage who has access to this business dashboard.</p>
               </div>
               <button className="px-3 py-1.5 text-xs font-medium text-violet-600 bg-violet-50 border border-violet-200 rounded-lg hover:bg-violet-100 transition-colors">
                 Invite Member
@@ -730,7 +730,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between py-3 px-4 rounded-xl border border-red-100 bg-red-50/30">
                 <div>
                   <p className="text-sm text-slate-700 dark:text-white font-medium">Reset Onboarding</p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Show the setup wizard again on your next visit</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">Show the setup wizard again on your next visit</p>
                 </div>
                 <button
                   onClick={async () => {
@@ -748,7 +748,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between py-3 px-4 rounded-xl border border-red-100 bg-red-50/30">
                 <div>
                   <p className="text-sm text-slate-700 dark:text-white font-medium">Clear All Contacts</p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Remove all contacts from your business. Cannot be undone.</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">Remove all contacts from your business. Cannot be undone.</p>
                 </div>
                 <button
                   className="px-3 py-1.5 text-xs font-medium text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors opacity-50 cursor-not-allowed"
@@ -761,7 +761,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between py-3 px-4 rounded-xl border border-red-100 bg-red-50/30">
                 <div>
                   <p className="text-sm text-slate-700 dark:text-white font-medium">Delete Business</p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Permanently delete this business and all associated data.</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">Permanently delete this business and all associated data.</p>
                 </div>
                 <button
                   className="px-3 py-1.5 text-xs font-medium text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors opacity-50 cursor-not-allowed"

@@ -137,10 +137,10 @@ function SpinPrizeBuilder({ prizes, onChange }: { prizes: SpinPrize[]; onChange:
               max={100}
               className="w-16 px-2 py-1.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-xs text-slate-800 dark:text-white dark:bg-white/[0.06] text-center focus:outline-none focus:ring-2 focus:ring-violet-500/30"
             />
-            <span className="text-[10px] text-slate-400 dark:text-slate-500">%</span>
+            <span className="text-[10px] text-slate-400 dark:text-slate-400">%</span>
           </div>
           {prizes.length > 2 && (
-            <button onClick={() => remove(i)} className="p-1 text-slate-400 dark:text-slate-500 hover:text-red-500 transition-colors">
+            <button onClick={() => remove(i)} className="p-1 text-slate-400 dark:text-slate-400 hover:text-red-500 transition-colors">
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
             </button>
           )}
@@ -402,7 +402,7 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
       <div className="bg-white dark:bg-[#1a1730] rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="px-6 py-4 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between flex-shrink-0">
           <h3 className="text-sm font-semibold text-slate-800 dark:text-white">{step === 'form' ? 'Create QR Code' : 'Preview & Download'}</h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
           </button>
         </div>
@@ -423,7 +423,7 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
                         className={`text-left p-3 rounded-lg border transition-colors ${purpose === key ? 'border-violet-300 bg-violet-50 dark:bg-violet-500/10 dark:border-violet-500/30' : 'border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04]'}`}
                       >
                         <p className="text-xs font-semibold text-slate-800 dark:text-white">{cfg.icon} {cfg.label}</p>
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 leading-relaxed">{cfg.desc}</p>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5 leading-relaxed">{cfg.desc}</p>
                       </button>
                     ))}
                   </div>
@@ -506,7 +506,7 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
                       <option value="ONCE">One-time only</option>
                       <option value="">Unlimited (no limit)</option>
                     </select>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">How often the same person can {purpose === 'SPIN_WHEEL' ? 'spin' : 'claim'}</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-1">How often the same person can {purpose === 'SPIN_WHEEL' ? 'spin' : 'claim'}</p>
                   </div>
                 )}
 
@@ -559,7 +559,7 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
                 <div>
                   <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Expiration Date (optional)</label>
                   <input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} min={new Date().toISOString().split('T')[0]} className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Leave blank for no expiration</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-1">Leave blank for no expiration</p>
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2">
@@ -666,11 +666,11 @@ function QrCodeCard({ qr, onDelete }: { qr: QrCode; onDelete: () => void }) {
         </div>
         {qr.survey && <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Survey: {qr.survey.title}</p>}
         {qr.discountValue && <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Discount: {qr.discountValue}{qr.discountCode ? ` — Code: ${qr.discountCode}` : ''}</p>}
-        {qr.expiresAt && !isExpired && <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Expires {new Date(qr.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>}
+        {qr.expiresAt && !isExpired && <p className="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5">Expires {new Date(qr.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>}
         <div className="flex items-center gap-3 mt-1.5">
           <span className="text-[10px] font-medium text-slate-600 dark:text-slate-300">{qr.scanCount} scan{qr.scanCount !== 1 ? 's' : ''}</span>
           <span className="text-[10px] text-slate-300 dark:text-slate-600">·</span>
-          <span className="text-[10px] text-slate-400 dark:text-slate-500">{new Date(qr.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+          <span className="text-[10px] text-slate-400 dark:text-slate-400">{new Date(qr.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
           <button onClick={handleCopy} className="text-[10px] text-violet-500 hover:text-violet-700 transition-colors">
             {copied ? 'Copied!' : 'Copy link'}
           </button>
@@ -680,7 +680,7 @@ function QrCodeCard({ qr, onDelete }: { qr: QrCode; onDelete: () => void }) {
         <button onClick={handleDownload} disabled={downloading} className="px-3 py-1.5 text-xs font-medium text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-500/10 rounded-lg transition-colors disabled:opacity-50">
           {downloading ? '...' : 'Download'}
         </button>
-        <button onClick={onDelete} className="px-3 py-1.5 text-xs font-medium text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors">Delete</button>
+        <button onClick={onDelete} className="px-3 py-1.5 text-xs font-medium text-slate-400 dark:text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors">Delete</button>
       </div>
     </div>
   );
@@ -781,12 +781,12 @@ export default function QrCodesTab() {
       <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Your QR Codes</h2>
-          {qrCodes.length > 0 && <span className="text-xs text-slate-400 dark:text-slate-500">{qrCodes.length} total</span>}
+          {qrCodes.length > 0 && <span className="text-xs text-slate-400 dark:text-slate-400">{qrCodes.length} total</span>}
         </div>
         {loading ? (
           <div className="px-5 py-12 flex justify-center"><div className="w-6 h-6 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" /></div>
         ) : qrCodes.length === 0 ? (
-          <div className="px-5 py-12 text-center text-sm text-slate-400 dark:text-slate-500">
+          <div className="px-5 py-12 text-center text-sm text-slate-400 dark:text-slate-400">
             No QR codes yet. Create one and place it in your business to start building your customer list.
           </div>
         ) : (

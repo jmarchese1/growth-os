@@ -124,7 +124,7 @@ function ColorWheelPopup({ onClose }: { onClose: () => void }) {
       >
         <div className="flex items-center justify-between mb-3">
           <p className="text-xs font-bold text-slate-700 dark:text-slate-200">Color Picker</p>
-          <button onClick={onClose} className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+          <button onClick={onClose} className="text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/></svg>
           </button>
         </div>
@@ -274,9 +274,9 @@ function ImageGeneratorPopup({
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-white/[0.06]">
           <div>
             <p className="text-sm font-bold text-slate-800 dark:text-white">AI Image Generator</p>
-            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Create images with DALL-E 3, then tell the AI editor to use them</p>
+            <p className="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5">Create images with DALL-E 3, then tell the AI editor to use them</p>
           </div>
-          <button onClick={onClose} className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+          <button onClick={onClose} className="text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/></svg>
           </button>
         </div>
@@ -349,7 +349,7 @@ function ImageGeneratorPopup({
                 <img src={imageUrl} alt="Generated" className="w-full" />
               </div>
               {revisedPrompt && (
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 italic leading-relaxed">DALL-E interpreted: &quot;{revisedPrompt}&quot;</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-400 italic leading-relaxed">DALL-E interpreted: &quot;{revisedPrompt}&quot;</p>
               )}
               <div className="flex gap-2">
                 <button
@@ -617,11 +617,11 @@ function WebsiteList({
           <table className="w-full">
             <thead>
               <tr className="border-b border-slate-100 dark:border-white/[0.06]">
-                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-6 py-3">Name</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-4 py-3">Status</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-4 py-3">URL</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-4 py-3">Created</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-4 py-3">Last updated</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-6 py-3">Name</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-4 py-3">Status</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-4 py-3">URL</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-4 py-3">Created</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-4 py-3">Last updated</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -634,7 +634,7 @@ function WebsiteList({
                 >
                   <td className="px-6 py-4">
                     <p className="text-sm font-medium text-slate-800 dark:text-white">{siteName(site)}</p>
-                    <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 capitalize">{String(site.config?.['cuisine'] ?? site.config?.['colorScheme'] ?? 'restaurant')}</p>
+                    <p className="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5 capitalize">{String(site.config?.['cuisine'] ?? site.config?.['colorScheme'] ?? 'restaurant')}</p>
                   </td>
                   <td className="px-4 py-4">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${
@@ -662,7 +662,7 @@ function WebsiteList({
                         </svg>
                       </a>
                     ) : (
-                      <span className="text-xs text-slate-400 dark:text-slate-500">—</span>
+                      <span className="text-xs text-slate-400 dark:text-slate-400">—</span>
                     )}
                   </td>
                   <td className="px-4 py-4 text-xs text-slate-500 dark:text-slate-400">{formatDate(site.createdAt)}</td>
@@ -835,7 +835,7 @@ function VersionRow({ version, onRevert, onRename, reverting, disabled }: {
             <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3 inline ml-1 text-slate-300"><path d="M13.488 2.513a1.75 1.75 0 00-2.475 0L3.22 10.303a.75.75 0 00-.178.31l-.893 3.124a.75.75 0 00.926.926l3.124-.894a.75.75 0 00.31-.178l7.791-7.79a1.75 1.75 0 000-2.475l-.812-.813zM11.72 3.22a.25.25 0 01.354 0l.812.813a.25.25 0 010 .354L5.895 11.38l-1.834.524.524-1.834 6.935-6.85z" /></svg>
           </p>
         )}
-        <p className="text-[10px] text-slate-400 dark:text-slate-500">{new Date(version.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</p>
+        <p className="text-[10px] text-slate-400 dark:text-slate-400">{new Date(version.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</p>
       </div>
       <button
         onClick={onRevert}
@@ -1035,7 +1035,7 @@ function WebsiteEditor({
           <button
             onClick={() => void handleDelete()}
             title="Delete website"
-            className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/15 rounded-lg transition-colors"
+            className="p-1.5 text-slate-400 dark:text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/15 rounded-lg transition-colors"
           >
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
               <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -1046,7 +1046,7 @@ function WebsiteEditor({
 
       {/* ── Tools Toolbar ── */}
       <div className="flex items-center gap-2 px-4 py-2 border-b border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-white/[0.04] flex-shrink-0">
-        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mr-1">Tools</span>
+        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider mr-1">Tools</span>
         {/* 1. Color Picker */}
         <button
           onClick={() => setShowColorWheel(!showColorWheel)}
@@ -1106,7 +1106,7 @@ function WebsiteEditor({
               <div className="overflow-y-auto max-h-64">
                 {filteredMyImages.length === 0 ? (
                   <div className="p-4 text-center">
-                    <p className="text-xs text-slate-400 dark:text-slate-500">No images{myImageFilter !== 'all' ? ` in "${myImageFilter}"` : ''}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-400">No images{myImageFilter !== 'all' ? ` in "${myImageFilter}"` : ''}</p>
                     <a href="/images" className="text-xs text-violet-600 hover:underline">Go to Image Library</a>
                   </div>
                 ) : (
@@ -1194,7 +1194,7 @@ function WebsiteEditor({
                 </p>
                 {!domainStatus.configured && (
                   <table className="w-full text-[11px]">
-                    <thead><tr className="text-slate-400 dark:text-slate-500"><th className="text-left pr-4">Type</th><th className="text-left pr-4">Name</th><th className="text-left">Value</th></tr></thead>
+                    <thead><tr className="text-slate-400 dark:text-slate-400"><th className="text-left pr-4">Type</th><th className="text-left pr-4">Name</th><th className="text-left">Value</th></tr></thead>
                     <tbody>
                       {domainStatus.dnsRecords.map((r, i) => (
                         <tr key={i} className="text-slate-700 dark:text-slate-200 font-mono"><td className="pr-4">{r.type}</td><td className="pr-4">{r.name}</td><td>{r.value}</td></tr>
@@ -1202,7 +1202,7 @@ function WebsiteEditor({
                     </tbody>
                   </table>
                 )}
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2">DNS changes can take up to 48 hours to propagate.</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-2">DNS changes can take up to 48 hours to propagate.</p>
               </div>
             )}
           </div>
@@ -1249,7 +1249,7 @@ function WebsiteEditor({
               </div>
             )}
             {pexelsResults.length > 0 && (
-              <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-2">Photos by <a href="https://www.pexels.com" target="_blank" rel="noreferrer" className="underline">Pexels</a> photographers. Click an image to use it.</p>
+              <p className="text-[9px] text-slate-400 dark:text-slate-400 mt-2">Photos by <a href="https://www.pexels.com" target="_blank" rel="noreferrer" className="underline">Pexels</a> photographers. Click an image to use it.</p>
             )}
           </div>
         </div>
@@ -1305,7 +1305,7 @@ function WebsiteEditor({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">{showHistory ? 'Version History' : 'AI Editor'}</p>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">{showHistory ? 'Revert to any previous version' : 'Ask me to change anything on this site'}</p>
+                <p className="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5">{showHistory ? 'Revert to any previous version' : 'Ask me to change anything on this site'}</p>
               </div>
               <button
                 onClick={() => {
@@ -1325,7 +1325,7 @@ function WebsiteEditor({
             {showHistory && (
               <div className="space-y-2">
                 {versions.length === 0 ? (
-                  <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-4">No previous versions yet. Versions are saved automatically before each edit.</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-400 text-center py-4">No previous versions yet. Versions are saved automatically before each edit.</p>
                 ) : versions.map((v) => (
                   <VersionRow
                     key={v.id}
@@ -1342,7 +1342,7 @@ function WebsiteEditor({
           <div className={`flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0 ${showHistory ? 'hidden' : ''}`}>
             {messages.length === 0 && (
               <div className="space-y-2 pt-1">
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wide">Try asking:</p>
+                <p className="text-[11px] text-slate-400 dark:text-slate-400 font-medium uppercase tracking-wide">Try asking:</p>
                 {[
                   'Change the hero heading to "Best Pizza in Brooklyn"',
                   'Switch to the warm color scheme',
@@ -1376,7 +1376,7 @@ function WebsiteEditor({
             {/* Smart AI suggestions — shown after edits */}
             {suggestions.length > 0 && !editing && messages.length > 0 && (
               <div className="space-y-1.5 pt-1">
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wide flex items-center gap-1">
+                <p className="text-[10px] text-slate-400 dark:text-slate-400 font-medium uppercase tracking-wide flex items-center gap-1">
                   <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3"><path d="M8 1.5A4.5 4.5 0 003.5 6c0 1.09.39 2.09 1.03 2.87.48.58.72 1.2.72 1.88V11a1 1 0 001 1h3.5a1 1 0 001-1v-.25c0-.68.24-1.3.72-1.88A4.48 4.48 0 0012.5 6 4.5 4.5 0 008 1.5zM6.25 13a.75.75 0 000 1.5h3.5a.75.75 0 000-1.5h-3.5z"/></svg>
                   Ideas for your next change
                 </p>
@@ -1417,7 +1417,7 @@ function WebsiteEditor({
                 </svg>
               </button>
             </div>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1.5 text-center">Enter to send · Shift+Enter for new line</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-1.5 text-center">Enter to send · Shift+Enter for new line</p>
           </div>
         </div>
       </div>

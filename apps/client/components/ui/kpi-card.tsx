@@ -33,7 +33,7 @@ export default function KpiCard({ label, value, subtitle, icon, color = 'violet'
       </div>
       <p className={`text-2xl font-bold ${c.text}`}>{value}</p>
       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{label}</p>
-      {subtitle && <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">{subtitle}</p>}
+      {subtitle && <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5">{subtitle}</p>}
     </div>
   );
 }

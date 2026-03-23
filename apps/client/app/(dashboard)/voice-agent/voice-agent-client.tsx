@@ -69,7 +69,7 @@ const INTENT_COLORS: Record<string, string> = {
   INQUIRY: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-400',
   COMPLAINT: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400',
   GENERAL: 'bg-slate-100 text-slate-600 dark:bg-white/[0.06] dark:text-slate-300',
-  UNKNOWN: 'bg-slate-50 text-slate-400 dark:bg-white/[0.04] dark:text-slate-500',
+  UNKNOWN: 'bg-slate-50 text-slate-400 dark:bg-white/[0.04] dark:text-slate-400',
 };
 
 /* ── Provisioning Hero ──────────────────────────────────────────── */
@@ -318,7 +318,7 @@ function SettingsPanel({ businessId, settings, onSaved }: {
                       onChange={(e) => setDayHours(day, 'open', e.target.value)}
                       className="flex-1 px-2 py-1 border border-slate-200 dark:border-white/[0.08] rounded text-xs text-slate-700 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-1 focus:ring-violet-400"
                     />
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500">—</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-400">—</span>
                     <input
                       type="time"
                       value={hours[day]?.close ?? DEFAULT_CLOSE}
@@ -327,7 +327,7 @@ function SettingsPanel({ businessId, settings, onSaved }: {
                     />
                   </div>
                 )}
-                {isClosed && <p className="text-[10px] text-slate-400 dark:text-slate-500">Closed all day</p>}
+                {isClosed && <p className="text-[10px] text-slate-400 dark:text-slate-400">Closed all day</p>}
               </div>
             );
           })}
@@ -409,7 +409,7 @@ function TranscriptModal({ call, onClose }: { call: CallLog; onClose: () => void
               })}
             </div>
           ) : (
-            <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-8">No transcript available for this call</p>
+            <p className="text-sm text-slate-400 dark:text-slate-400 text-center py-8">No transcript available for this call</p>
           )}
         </div>
       </div>
@@ -527,10 +527,10 @@ function VoiceBrowser({ businessId, currentVoiceId }: { businessId: string; curr
                 </button>
                 <div className="min-w-0">
                   <p className="text-xs font-bold text-slate-800 dark:text-white truncate">{voice.name}</p>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500">{voice.gender}{voice.accent ? ` · ${voice.accent}` : ''}</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-400">{voice.gender}{voice.accent ? ` · ${voice.accent}` : ''}</p>
                 </div>
               </div>
-              {voice.useCase && <p className="text-[9px] text-slate-400 dark:text-slate-500 truncate">{voice.useCase}</p>}
+              {voice.useCase && <p className="text-[9px] text-slate-400 dark:text-slate-400 truncate">{voice.useCase}</p>}
               {selectedId === voice.id && (
                 <div className="absolute top-2 right-2 w-4 h-4 bg-violet-500 rounded-full flex items-center justify-center">
                   <svg viewBox="0 0 12 12" fill="none" className="w-2.5 h-2.5"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -617,7 +617,7 @@ function PromptEditor({ businessId, settings }: { businessId: string; settings: 
           className="w-full px-4 py-3 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] dark:text-white rounded-xl text-sm font-mono placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none"
           placeholder="Describe how your AI receptionist should behave..."
         />
-        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">{prompt.length} characters</p>
+        <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-1">{prompt.length} characters</p>
       </div>
 
       <div className="flex justify-end">
@@ -819,7 +819,7 @@ function ConversationHistory({ businessId }: { businessId: string }) {
     <div className="space-y-4">
       {conversations.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-sm text-slate-400 dark:text-slate-500">No conversations yet. Make a test call to see them here.</p>
+          <p className="text-sm text-slate-400 dark:text-slate-400">No conversations yet. Make a test call to see them here.</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -832,7 +832,7 @@ function ConversationHistory({ businessId }: { businessId: string }) {
               <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${c.successful === 'success' ? 'bg-emerald-500' : c.successful === 'failure' ? 'bg-rose-500' : 'bg-slate-300'}`} />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-slate-800 dark:text-white truncate">{c.summary || 'Conversation'}</p>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500">{new Date(c.startTime).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} · {formatDur(c.duration)} · {c.messageCount} messages</p>
+                <p className="text-[11px] text-slate-400 dark:text-slate-400">{new Date(c.startTime).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} · {formatDur(c.duration)} · {c.messageCount} messages</p>
               </div>
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-slate-300"><path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" /></svg>
             </div>
@@ -856,7 +856,7 @@ function ConversationHistory({ businessId }: { businessId: string }) {
                   <div className="flex items-center gap-3">
                     <div className={`w-3 h-3 rounded-full ${selected.successful === 'success' ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white">Conversation</h3>
-                    <span className="text-xs text-slate-400 dark:text-slate-500">{formatDur(selected.duration)}</span>
+                    <span className="text-xs text-slate-400 dark:text-slate-400">{formatDur(selected.duration)}</span>
                   </div>
                   {selected.summary && <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">{selected.summary}</p>}
                 </div>
@@ -999,7 +999,7 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
                   : 'text-slate-500 dark:text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-white/60 dark:hover:bg-white/[0.04]'
               }`}
             >
-              <span className={active ? 'text-violet-600 dark:text-violet-400' : 'text-slate-400 dark:text-slate-500'}>{tab.icon}</span>
+              <span className={active ? 'text-violet-600 dark:text-violet-400' : 'text-slate-400 dark:text-slate-400'}>{tab.icon}</span>
               {tab.label}
             </button>
           );
@@ -1115,7 +1115,7 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
                     <div className="w-32 h-1.5 bg-slate-100 dark:bg-white/[0.06] rounded-full overflow-hidden">
                       <div className="h-full bg-violet-400 rounded-full transition-all" style={{ width: `${pct}%` }} />
                     </div>
-                    <span className="text-xs text-slate-400 dark:text-slate-500 w-8 text-right">{count}</span>
+                    <span className="text-xs text-slate-400 dark:text-slate-400 w-8 text-right">{count}</span>
                   </div>
                 </div>
               );
@@ -1141,7 +1141,7 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
                     <div className="w-32 h-1.5 bg-slate-100 dark:bg-white/[0.06] rounded-full overflow-hidden">
                       <div className={`h-full ${color} rounded-full transition-all`} style={{ width: `${pct}%` }} />
                     </div>
-                    <span className="text-xs text-slate-400 dark:text-slate-500 w-8 text-right">{pct}%</span>
+                    <span className="text-xs text-slate-400 dark:text-slate-400 w-8 text-right">{pct}%</span>
                   </div>
                 </div>
               );
@@ -1154,25 +1154,25 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Recent Calls</h2>
-          {totalCalls > 0 && <span className="text-xs text-slate-400 dark:text-slate-500">{totalCalls} total</span>}
+          {totalCalls > 0 && <span className="text-xs text-slate-400 dark:text-slate-400">{totalCalls} total</span>}
         </div>
         <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
           <table className="w-full">
             <thead>
               <tr className="border-b border-slate-100 dark:border-white/[0.06]">
-                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Date</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Caller</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Intent</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Duration</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Sentiment</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Lead</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3"></th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-5 py-3">Date</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-5 py-3">Caller</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-5 py-3">Intent</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-5 py-3">Duration</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-5 py-3">Sentiment</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-5 py-3">Lead</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider px-5 py-3"></th>
               </tr>
             </thead>
             <tbody>
               {calls.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-12 text-center text-sm text-slate-400 dark:text-slate-500">
+                  <td colSpan={7} className="px-5 py-12 text-center text-sm text-slate-400 dark:text-slate-400">
                     No calls recorded yet. Your voice agent will log calls here once it receives its first call.
                   </td>
                 </tr>
@@ -1183,7 +1183,7 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
                     <td className="px-5 py-3 text-sm text-slate-800 dark:text-white font-medium">
                       {call.contact
                         ? `${call.contact.firstName} ${call.contact.lastName}`
-                        : <span className="text-slate-400 dark:text-slate-500">Unknown</span>}
+                        : <span className="text-slate-400 dark:text-slate-400">Unknown</span>}
                     </td>
                     <td className="px-5 py-3">
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${INTENT_COLORS[call.intent] ?? INTENT_COLORS['UNKNOWN']}`}>

@@ -80,7 +80,7 @@ function QuestionRow({ question, onChange, onRemove }: {
                 <div key={i} className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full border-2 border-slate-300 dark:border-slate-500 flex-shrink-0" />
                   <span className="text-sm text-slate-700 dark:text-slate-200 flex-1">{opt}</span>
-                  <button onClick={() => removeOption(i)} className="text-xs text-slate-400 dark:text-slate-500 hover:text-red-500">remove</button>
+                  <button onClick={() => removeOption(i)} className="text-xs text-slate-400 dark:text-slate-400 hover:text-red-500">remove</button>
                 </div>
               ))}
               <div className="flex gap-2">
@@ -101,7 +101,7 @@ function QuestionRow({ question, onChange, onRemove }: {
             <span className="text-xs text-slate-500 dark:text-slate-400">Required</span>
           </label>
         </div>
-        <button onClick={onRemove} className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0">
+        <button onClick={onRemove} className="p-1.5 text-slate-400 dark:text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0">
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
         </button>
       </div>
@@ -137,7 +137,7 @@ function CreateSurveyModal({ onClose, onCreate }: {
       <div className="bg-white dark:bg-[#1a1730] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="px-6 py-4 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between flex-shrink-0">
           <h3 className="text-sm font-semibold text-slate-800 dark:text-white">Create Survey</h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
           </button>
         </div>
@@ -155,14 +155,14 @@ function CreateSurveyModal({ onClose, onCreate }: {
           <div>
             <div className="flex items-center justify-between mb-3">
               <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Questions</label>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500">{questions.length} question{questions.length !== 1 ? 's' : ''}</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-400">{questions.length} question{questions.length !== 1 ? 's' : ''}</span>
             </div>
             <div className="space-y-3">
               {questions.map((q, i) => (
                 <QuestionRow key={q.id} question={q} onChange={(updated) => { const u = [...questions]; u[i] = updated; setQuestions(u); }} onRemove={() => setQuestions(questions.filter((_, j) => j !== i))} />
               ))}
             </div>
-            <button onClick={addQuestion} className="mt-3 w-full py-2.5 border-2 border-dashed border-slate-200 dark:border-white/[0.08] rounded-lg text-xs font-medium text-slate-400 dark:text-slate-500 hover:text-violet-600 hover:border-violet-300 transition-colors">
+            <button onClick={addQuestion} className="mt-3 w-full py-2.5 border-2 border-dashed border-slate-200 dark:border-white/[0.08] rounded-lg text-xs font-medium text-slate-400 dark:text-slate-400 hover:text-violet-600 hover:border-violet-300 transition-colors">
               + Add Question
             </button>
           </div>
@@ -255,7 +255,7 @@ export default function SurveysTab() {
       <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Your Surveys</h2>
-          {surveys.length > 0 && <span className="text-xs text-slate-400 dark:text-slate-500">{surveys.length} total</span>}
+          {surveys.length > 0 && <span className="text-xs text-slate-400 dark:text-slate-400">{surveys.length} total</span>}
         </div>
 
         {loading ? (
@@ -267,7 +267,7 @@ export default function SurveysTab() {
             <div className="w-12 h-12 rounded-full bg-violet-100 dark:bg-violet-500/15 flex items-center justify-center mx-auto mb-3">
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6 text-violet-500"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" /><path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" /></svg>
             </div>
-            <p className="text-sm text-slate-400 dark:text-slate-500 mb-1">No surveys created yet</p>
+            <p className="text-sm text-slate-400 dark:text-slate-400 mb-1">No surveys created yet</p>
             <p className="text-xs text-slate-300 dark:text-slate-600">Create a survey to start collecting customer feedback after visits and appointments</p>
           </div>
         ) : (
@@ -277,21 +277,21 @@ export default function SurveysTab() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium text-slate-800 dark:text-white truncate">{s.title}</p>
-                    <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium ${s.active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400' : 'bg-slate-100 text-slate-400 dark:bg-white/[0.06] dark:text-slate-500'}`}>
+                    <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium ${s.active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400' : 'bg-slate-100 text-slate-400 dark:bg-white/[0.06] dark:text-slate-400'}`}>
                       {s.active ? 'Active' : 'Paused'}
                     </span>
                   </div>
-                  {s.description && <p className="text-xs text-slate-400 dark:text-slate-500 truncate mt-0.5">{s.description}</p>}
+                  {s.description && <p className="text-xs text-slate-400 dark:text-slate-400 truncate mt-0.5">{s.description}</p>}
                   <div className="flex items-center gap-3 mt-1.5">
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500">{s.questions.length} question{s.questions.length !== 1 ? 's' : ''}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-400">{s.questions.length} question{s.questions.length !== 1 ? 's' : ''}</span>
                     <span className="text-[10px] text-slate-300 dark:text-slate-600">|</span>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500">{s.responseCount} response{s.responseCount !== 1 ? 's' : ''}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-400">{s.responseCount} response{s.responseCount !== 1 ? 's' : ''}</span>
                     <span className="text-[10px] text-slate-300 dark:text-slate-600">|</span>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500">{new Date(s.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-400">{new Date(s.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                   </div>
                   {/* Survey link */}
                   <div className="mt-1.5 flex items-center gap-1.5">
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono truncate max-w-[220px]">{surveyUrl(s.slug)}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-400 font-mono truncate max-w-[220px]">{surveyUrl(s.slug)}</span>
                     <button
                       onClick={() => navigator.clipboard.writeText(surveyUrl(s.slug))}
                       className="text-[10px] text-violet-500 hover:text-violet-700 transition-colors flex-shrink-0"
@@ -304,7 +304,7 @@ export default function SurveysTab() {
                   <button onClick={() => handleToggle(s.id, !s.active)} className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${s.active ? 'text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10' : 'text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10'}`}>
                     {s.active ? 'Pause' : 'Activate'}
                   </button>
-                  <button onClick={() => handleDelete(s.id)} className="px-3 py-1.5 text-xs font-medium text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors">
+                  <button onClick={() => handleDelete(s.id)} className="px-3 py-1.5 text-xs font-medium text-slate-400 dark:text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors">
                     Delete
                   </button>
                 </div>
