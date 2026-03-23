@@ -467,4 +467,68 @@ Return ONLY a JSON object with:
     log.info({ businessId: id }, 'Business updated');
     return updated;
   });
+
+  // GET /businesses/:id/trends — daily counts for last 30 days
+  app.get('/businesses/:id/trends', async (request) => {
+    const { id } = request.params as { id: string };
+    const business = await db.business.findUnique({ where: { id }, select: { id: true } });
+    if (!business) throw new NotFoundError('Business', id);
+
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    thirtyDaysAgo.setHours(0, 0, 0, 0);
+
+    // Build a complete array of date strings for the last 30 days
+    const dateStrings: string[] = [];
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(thirtyDaysAgo.getTime() + i * 24 * 60 * 60 * 1000);
+      dateStrings.push(d.toISOString().slice(0, 10));
+    }
+
+    // Query daily counts in parallel using raw SQL for date grouping
+    const [contactRows, callRows, chatRows, appointmentRows, qrScanRows] = await Promise.all([
+      db.$queryRawUnsafe<Array<{ date: Date; count: bigint }>>(
+        'SELECT DATE("createdAt") as date, COUNT(*)::bigint as count FROM "Contact" WHERE "businessId" = $1 AND "createdAt" >= $2 GROUP BY DATE("createdAt")',
+        id, thirtyDaysAgo,
+      ),
+      db.$queryRawUnsafe<Array<{ date: Date; count: bigint }>>(
+        'SELECT DATE("createdAt") as date, COUNT(*)::bigint as count FROM "VoiceCallLog" WHERE "businessId" = $1 AND "createdAt" >= $2 GROUP BY DATE("createdAt")',
+        id, thirtyDaysAgo,
+      ),
+      db.$queryRawUnsafe<Array<{ date: Date; count: bigint }>>(
+        'SELECT DATE("createdAt") as date, COUNT(*)::bigint as count FROM "ChatSession" WHERE "businessId" = $1 AND "createdAt" >= $2 GROUP BY DATE("createdAt")',
+        id, thirtyDaysAgo,
+      ),
+      db.$queryRawUnsafe<Array<{ date: Date; count: bigint }>>(
+        'SELECT DATE("startTime") as date, COUNT(*)::bigint as count FROM "Appointment" WHERE "businessId" = $1 AND "startTime" >= $2 GROUP BY DATE("startTime")',
+        id, thirtyDaysAgo,
+      ),
+      db.$queryRawUnsafe<Array<{ date: Date; count: bigint }>>(
+        'SELECT DATE(s."createdAt") as date, COUNT(*)::bigint as count FROM "QrCodeScan" s JOIN "QrCode" q ON s."qrCodeId" = q."id" WHERE q."businessId" = $1 AND s."createdAt" >= $2 GROUP BY DATE(s."createdAt")',
+        id, thirtyDaysAgo,
+      ),
+    ]);
+
+    // Convert raw rows to a date->count map, then fill missing days with 0
+    function fillDays(rows: Array<{ date: Date; count: bigint }>): Array<{ date: string; count: number }> {
+      const map = new Map<string, number>();
+      for (const row of rows) {
+        const key = row.date instanceof Date ? row.date.toISOString().slice(0, 10) : String(row.date).slice(0, 10);
+        map.set(key, Number(row.count));
+      }
+      return dateStrings.map((d) => ({ date: d, count: map.get(d) ?? 0 }));
+    }
+
+    return {
+      success: true,
+      trends: {
+        contacts: fillDays(contactRows),
+        calls: fillDays(callRows),
+        chats: fillDays(chatRows),
+        appointments: fillDays(appointmentRows),
+        qrScans: fillDays(qrScanRows),
+      },
+    };
+  });
+
 }

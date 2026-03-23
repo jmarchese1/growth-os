@@ -2,11 +2,21 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import KpiCard from '../../components/ui/kpi-card';
 import ModuleStatus from '../../components/ui/module-status';
 import { useBusiness } from '../../components/auth/business-provider';
+import { OnboardingWizard } from '../../components/ui/onboarding-wizard';
 
 const API_BASE = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
+
+// Lazy load recharts to avoid SSR issues
+const AreaChart = dynamic(() => import('recharts').then((m) => m.AreaChart), { ssr: false });
+const Area = dynamic(() => import('recharts').then((m) => m.Area), { ssr: false });
+const XAxis = dynamic(() => import('recharts').then((m) => m.XAxis), { ssr: false });
+const YAxis = dynamic(() => import('recharts').then((m) => m.YAxis), { ssr: false });
+const Tooltip = dynamic(() => import('recharts').then((m) => m.Tooltip), { ssr: false });
+const ResponsiveContainer = dynamic(() => import('recharts').then((m) => m.ResponsiveContainer), { ssr: false });
 
 interface Activity {
   id: string;
@@ -49,32 +59,21 @@ interface DashboardData {
   recentQrScans: QrScan[];
 }
 
+interface TrendPoint { date: string; count: number; }
+interface TrendsData {
+  contacts: TrendPoint[];
+  calls: TrendPoint[];
+  chats: TrendPoint[];
+  appointments: TrendPoint[];
+  qrScans: TrendPoint[];
+}
+
 const ACTIVITY_ICONS: Record<string, React.ReactNode> = {
-  CALL: (
-    <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
-      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-    </svg>
-  ),
-  CHAT: (
-    <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
-      <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7z" clipRule="evenodd" />
-    </svg>
-  ),
-  QR_SCAN: (
-    <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
-      <path fillRule="evenodd" d="M3 4a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm2 2V5h1v1H5zM3 13a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1v-3zm2 2v-1h1v1H5z" clipRule="evenodd" />
-    </svg>
-  ),
-  SURVEY: (
-    <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
-      <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" /><path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5z" clipRule="evenodd" />
-    </svg>
-  ),
-  APPOINTMENT: (
-    <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
-      <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1z" clipRule="evenodd" />
-    </svg>
-  ),
+  CALL: <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>,
+  CHAT: <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7z" clipRule="evenodd" /></svg>,
+  QR_SCAN: <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M3 4a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm2 2V5h1v1H5zM3 13a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1v-3zm2 2v-1h1v1H5z" clipRule="evenodd" /></svg>,
+  SURVEY: <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" /><path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5z" clipRule="evenodd" /></svg>,
+  APPOINTMENT: <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1z" clipRule="evenodd" /></svg>,
 };
 
 const ACTIVITY_COLORS: Record<string, string> = {
@@ -84,6 +83,13 @@ const ACTIVITY_COLORS: Record<string, string> = {
   SURVEY: 'bg-emerald-100 text-emerald-600',
   APPOINTMENT: 'bg-indigo-100 text-indigo-600',
 };
+
+const TREND_METRICS = [
+  { key: 'contacts', label: 'Contacts', color: '#7c3aed' },
+  { key: 'calls', label: 'Calls', color: '#f59e0b' },
+  { key: 'chats', label: 'Chats', color: '#0ea5e9' },
+  { key: 'qrScans', label: 'QR Scans', color: '#10b981' },
+] as const;
 
 function formatRelative(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -106,80 +112,95 @@ function contactName(c: { firstName: string | null; lastName: string | null; ema
 }
 
 export default function DashboardOverview() {
-  const { business, loading: businessLoading } = useBusiness();
+  const { business, loading: businessLoading, refresh } = useBusiness();
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [dashLoading, setDashLoading] = useState(true);
+  const [trends, setTrends] = useState<TrendsData | null>(null);
+  const [trendMetric, setTrendMetric] = useState<string>('contacts');
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const counts = business?.counts ?? { contacts: 0, callLogs: 0, chatSessions: 0, appointments: 0, leads: 0 };
   const settings = business?.settings as Record<string, unknown> | null;
 
-  const fetchDashboard = useCallback(async () => {
-    if (!business?.id) {
-      setDashLoading(false);
-      return;
+  // Auto-show onboarding if not completed
+  useEffect(() => {
+    if (business && !settings?.['onboardingComplete']) {
+      setShowOnboarding(true);
     }
+  }, [business, settings]);
+
+  const fetchDashboard = useCallback(async () => {
+    if (!business?.id) { setDashLoading(false); return; }
     try {
-      const res = await fetch(`${API_BASE}/businesses/${business.id}/dashboard`);
-      if (res.ok) {
-        setDashboard(await res.json() as DashboardData);
+      const [dashRes, trendRes] = await Promise.all([
+        fetch(`${API_BASE}/businesses/${business.id}/dashboard`),
+        fetch(`${API_BASE}/businesses/${business.id}/trends`),
+      ]);
+      if (dashRes.ok) setDashboard(await dashRes.json() as DashboardData);
+      if (trendRes.ok) {
+        const trendData = await trendRes.json() as { success: boolean; trends: TrendsData };
+        if (trendData.success) setTrends(trendData.trends);
       }
     } catch {
-      // silently fail — non-critical
+      // non-critical
     } finally {
       setDashLoading(false);
     }
   }, [business?.id]);
 
-  useEffect(() => {
-    fetchDashboard();
-  }, [fetchDashboard]);
+  useEffect(() => { fetchDashboard(); }, [fetchDashboard]);
 
   const loading = businessLoading || dashLoading;
 
-  // Merge all recent events into a single timeline
+  // Build activity feed
   const activityFeed: Array<{ key: string; time: string; label: string; sub: string; type: string; href?: string }> = [];
-
   if (dashboard) {
     for (const a of dashboard.recentActivities) {
-      activityFeed.push({
-        key: `act-${a.id}`,
-        time: a.createdAt,
-        label: a.title ?? a.description ?? a.type,
-        sub: contactName(a.contact),
-        type: a.type,
-        href: a.contact ? `/customers/${a.contact.id}` : undefined,
-      });
+      activityFeed.push({ key: `act-${a.id}`, time: a.createdAt, label: a.title ?? a.description ?? a.type, sub: contactName(a.contact), type: a.type, href: a.contact ? `/customers/${a.contact.id}` : undefined });
     }
     for (const s of dashboard.recentSurveyResponses) {
-      activityFeed.push({
-        key: `survey-${s.id}`,
-        time: s.createdAt,
-        label: `Completed "${s.survey.title}"`,
-        sub: contactName(s.contact),
-        type: 'SURVEY',
-        href: s.contact ? `/customers/${s.contact.id}` : undefined,
-      });
+      activityFeed.push({ key: `survey-${s.id}`, time: s.createdAt, label: `Completed "${s.survey.title}"`, sub: contactName(s.contact), type: 'SURVEY', href: s.contact ? `/customers/${s.contact.id}` : undefined });
     }
     for (const q of dashboard.recentQrScans) {
-      activityFeed.push({
-        key: `qr-${q.id}`,
-        time: q.createdAt,
-        label: `Scanned QR — ${q.qrCode.label ?? q.qrCode.purpose}`,
-        sub: contactName(q.contact),
-        type: 'QR_SCAN',
-        href: q.contact ? `/customers/${q.contact.id}` : undefined,
-      });
+      activityFeed.push({ key: `qr-${q.id}`, time: q.createdAt, label: `Scanned QR — ${q.qrCode.label ?? q.qrCode.purpose}`, sub: contactName(q.contact), type: 'QR_SCAN', href: q.contact ? `/customers/${q.contact.id}` : undefined });
     }
     activityFeed.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
   }
 
+  // Chart data
+  const activeTrend = TREND_METRICS.find((m) => m.key === trendMetric) ?? TREND_METRICS[0];
+  const chartData = (trends?.[trendMetric as keyof TrendsData] ?? []).map((p) => ({
+    date: new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    value: p.count,
+  }));
+
   return (
     <div className="p-8 animate-fade-up">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Dashboard</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          {business ? `Overview for ${business.name}` : 'Overview of your Embedo AI services'}
-        </p>
+      {/* Onboarding Wizard */}
+      {showOnboarding && business && (
+        <OnboardingWizard
+          business={business as Parameters<typeof OnboardingWizard>[0]['business']}
+          onClose={() => setShowOnboarding(false)}
+          onComplete={() => { setShowOnboarding(false); void refresh(); }}
+        />
+      )}
+
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Dashboard</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            {business ? `Overview for ${business.name}` : 'Overview of your Embedo AI services'}
+          </p>
+        </div>
+        {business && !!settings?.['onboardingComplete'] && (
+          <button
+            onClick={() => setShowOnboarding(true)}
+            className="px-3 py-1.5 text-xs font-medium text-violet-600 bg-violet-50 border border-violet-200 rounded-lg hover:bg-violet-100 transition-colors flex items-center gap-1.5"
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>
+            Setup Guide
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -200,9 +221,51 @@ export default function DashboardOverview() {
               icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7z" clipRule="evenodd" /></svg>} />
           </div>
 
+          {/* Trends Chart */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5 mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-semibold text-slate-700">30-Day Trends</h2>
+              <div className="flex gap-1 bg-slate-100 rounded-lg p-0.5">
+                {TREND_METRICS.map((m) => (
+                  <button key={m.key} onClick={() => setTrendMetric(m.key)}
+                    className={`px-3 py-1 text-[11px] font-medium rounded-md transition-all ${
+                      trendMetric === m.key ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="h-52">
+              {chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+                    <defs>
+                      <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={activeTrend.color} stopOpacity={0.15} />
+                        <stop offset="95%" stopColor={activeTrend.color} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                    <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                    <Tooltip
+                      contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}
+                      labelStyle={{ fontWeight: 600, color: '#1e293b' }}
+                    />
+                    <Area type="monotone" dataKey="value" stroke={activeTrend.color} strokeWidth={2} fill="url(#trendGrad)" name={activeTrend.label} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-sm text-slate-400">
+                  Activity will show here as your business grows
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Conversion Funnel + Quick Actions */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
-            {/* Funnel */}
             <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-5">
               <h2 className="text-sm font-semibold text-slate-700 mb-4">Contact Pipeline</h2>
               {(() => {
@@ -224,52 +287,34 @@ export default function DashboardOverview() {
                           <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${s.bg} ${s.text}`}>{s.value}</span>
                         </div>
                         <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full ${s.color} rounded-full transition-all duration-500`}
-                            style={{ width: `${Math.round((s.value / total) * 100)}%` }}
-                          />
+                          <div className={`h-full ${s.color} rounded-full transition-all duration-500`} style={{ width: `${Math.round((s.value / total) * 100)}%` }} />
                         </div>
                       </div>
                     ))}
                     <div className="flex items-center gap-1.5 pt-1">
-                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-slate-400">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                      </svg>
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-slate-400"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
                       <span className="text-[11px] text-slate-400">{leads + prospects + customers} total contacts across all stages</span>
                     </div>
                   </div>
                 );
               })()}
             </div>
-
-            {/* Quick Actions */}
             <div className="bg-white border border-slate-200 rounded-xl p-5">
               <h2 className="text-sm font-semibold text-slate-700 mb-4">Quick Actions</h2>
               <div className="space-y-2">
-                <Link href="/campaigns" className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm text-slate-700 hover:bg-violet-50 hover:border-violet-200 hover:text-violet-700 transition-colors group">
-                  <span className="w-7 h-7 rounded-lg bg-violet-100 text-violet-600 flex items-center justify-center flex-shrink-0 group-hover:bg-violet-200 transition-colors">
-                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg>
-                  </span>
-                  <span>New Campaign</span>
-                </Link>
-                <Link href="/customers" className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm text-slate-700 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 transition-colors group">
-                  <span className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-200 transition-colors">
-                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" /></svg>
-                  </span>
-                  <span>View Contacts</span>
-                </Link>
-                <Link href="/surveys" className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm text-slate-700 hover:bg-sky-50 hover:border-sky-200 hover:text-sky-700 transition-colors group">
-                  <span className="w-7 h-7 rounded-lg bg-sky-100 text-sky-600 flex items-center justify-center flex-shrink-0 group-hover:bg-sky-200 transition-colors">
-                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" /><path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5z" clipRule="evenodd" /></svg>
-                  </span>
-                  <span>Send Survey</span>
-                </Link>
-                <Link href="/website" className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm text-slate-700 hover:bg-amber-50 hover:border-amber-200 hover:text-amber-700 transition-colors group">
-                  <span className="w-7 h-7 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0 group-hover:bg-amber-200 transition-colors">
-                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.498-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C4.772 13.97 4.478 12.546 4.39 11H2.443a6.004 6.004 0 002.783 4.118z" clipRule="evenodd" /></svg>
-                  </span>
-                  <span>View Website</span>
-                </Link>
+                {[
+                  { href: '/campaigns', label: 'New Campaign', color: 'violet', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg> },
+                  { href: '/customers', label: 'View Contacts', color: 'emerald', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" /></svg> },
+                  { href: '/surveys', label: 'Send Survey', color: 'sky', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" /><path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5z" clipRule="evenodd" /></svg> },
+                  { href: '/website', label: 'View Website', color: 'amber', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16z" clipRule="evenodd" /></svg> },
+                ].map((a) => (
+                  <Link key={a.href} href={a.href} className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm text-slate-700 hover:bg-${a.color}-50 hover:border-${a.color}-200 hover:text-${a.color}-700 transition-colors group`}>
+                    <span className={`w-7 h-7 rounded-lg bg-${a.color}-100 text-${a.color}-600 flex items-center justify-center flex-shrink-0 group-hover:bg-${a.color}-200 transition-colors`}>
+                      {a.icon}
+                    </span>
+                    <span>{a.label}</span>
+                  </Link>
+                ))}
               </div>
             </div>
           </div>
@@ -283,18 +328,14 @@ export default function DashboardOverview() {
               </div>
               <div className="divide-y divide-slate-50">
                 {activityFeed.length === 0 ? (
-                  <p className="px-5 py-10 text-center text-sm text-slate-400">
-                    Activity will appear here as your customers interact with your business.
-                  </p>
+                  <p className="px-5 py-10 text-center text-sm text-slate-400">Activity will appear here as your customers interact with your business.</p>
                 ) : (
                   activityFeed.slice(0, 15).map((item) => {
                     const icon = ACTIVITY_ICONS[item.type] ?? ACTIVITY_ICONS['CHAT'];
                     const color = ACTIVITY_COLORS[item.type] ?? 'bg-slate-100 text-slate-500';
                     const Inner = (
                       <div className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50/50 transition-colors">
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${color}`}>
-                          {icon}
-                        </div>
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${color}`}>{icon}</div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-slate-700 truncate">{item.label}</p>
                           <p className="text-[11px] text-slate-400">{item.sub}</p>
@@ -302,17 +343,13 @@ export default function DashboardOverview() {
                         <span className="text-[11px] text-slate-400 flex-shrink-0">{formatRelative(item.time)}</span>
                       </div>
                     );
-                    return item.href ? (
-                      <Link key={item.key} href={item.href}>{Inner}</Link>
-                    ) : (
-                      <div key={item.key}>{Inner}</div>
-                    );
+                    return item.href ? <Link key={item.key} href={item.href}>{Inner}</Link> : <div key={item.key}>{Inner}</div>;
                   })
                 )}
               </div>
             </div>
 
-            {/* Upcoming Appointments */}
+            {/* Right column */}
             <div className="space-y-6">
               <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
                 <div className="px-5 py-4 border-b border-slate-100">
@@ -337,26 +374,20 @@ export default function DashboardOverview() {
                 </div>
               </div>
 
-              {/* Quick Stats */}
               <div className="bg-white border border-slate-200 rounded-xl p-5">
                 <h2 className="text-sm font-semibold text-slate-700 mb-3">This Month</h2>
                 <div className="space-y-2.5">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-slate-500">New contacts</span>
-                    <span className="text-sm font-semibold text-slate-700">{dashboard?.newContactsThisMonth ?? 0}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-slate-500">Phone calls</span>
-                    <span className="text-sm font-semibold text-slate-700">{counts.callLogs}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-slate-500">Chat sessions</span>
-                    <span className="text-sm font-semibold text-slate-700">{counts.chatSessions}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-slate-500">Appointments</span>
-                    <span className="text-sm font-semibold text-slate-700">{counts.appointments}</span>
-                  </div>
+                  {[
+                    { label: 'New contacts', value: dashboard?.newContactsThisMonth ?? 0 },
+                    { label: 'Phone calls', value: counts.callLogs },
+                    { label: 'Chat sessions', value: counts.chatSessions },
+                    { label: 'Appointments', value: counts.appointments },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="flex justify-between items-center">
+                      <span className="text-xs text-slate-500">{label}</span>
+                      <span className="text-sm font-semibold text-slate-700">{value}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -384,15 +415,6 @@ export default function DashboardOverview() {
                 icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>} />
             </div>
           </div>
-
-          {!business && (
-            <div>
-              <h2 className="text-sm font-semibold text-slate-700 mb-4">Getting Started</h2>
-              <div className="bg-white border border-slate-200 rounded-xl p-8 text-center">
-                <p className="text-slate-400 text-sm">Your business profile is being set up. Refresh to see your dashboard.</p>
-              </div>
-            </div>
-          )}
         </>
       )}
     </div>
