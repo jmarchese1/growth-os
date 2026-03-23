@@ -34,6 +34,7 @@ export const chatbotEnvSchema = baseEnvSchema.extend({
   PORT: z.coerce.number().default(3003),
   ANTHROPIC_API_KEY: z.string().min(1, 'ANTHROPIC_API_KEY is required'),
   CHATBOT_API_URL: z.string().url().default('http://localhost:3003'),
+  API_GATEWAY_URL: z.string().url().default('http://localhost:3000'),
 });
 
 // ─── Lead Engine env ──────────────────────────────────────────────────────────

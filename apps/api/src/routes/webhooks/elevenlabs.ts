@@ -211,6 +211,41 @@ export async function elevenLabsWebhookRoutes(app: FastifyInstance): Promise<voi
         }
       }
 
+      // Parse RESERVATION_DATA from transcript
+      if (transcript) {
+        const resMatch = transcript.match(/RESERVATION_DATA:\s*(\{[\s\S]*?\})/);
+        if (resMatch?.[1]) {
+          try {
+            const rData = JSON.parse(resMatch[1]) as { guestName?: string; guestPhone?: string; guestEmail?: string; partySize?: number; date?: string; time?: string; specialRequests?: string };
+            if (rData.guestName && rData.partySize && rData.date && rData.time) {
+              await db.reservation.create({
+                data: { businessId: business.id, guestName: rData.guestName, guestPhone: rData.guestPhone, guestEmail: rData.guestEmail, partySize: rData.partySize, date: new Date(rData.date), time: rData.time, specialRequests: rData.specialRequests, source: 'VOICE_AGENT', status: 'CONFIRMED' },
+              });
+              log.info({ businessId: business.id, conversationId: data.conversation_id }, 'Reservation created from voice agent');
+            }
+          } catch (err) { log.warn({ err, conversationId: data.conversation_id }, 'Failed to parse RESERVATION_DATA'); }
+        }
+      }
+
+      // Parse FEEDBACK_DATA from transcript
+      if (transcript) {
+        const fbMatch = transcript.match(/FEEDBACK_DATA:\s*(\{[\s\S]*?\})/);
+        if (fbMatch?.[1]) {
+          try {
+            const fbData = JSON.parse(fbMatch[1]) as { customerName?: string; customerPhone?: string; rating?: string; comment?: string };
+            if (fbData.rating && fbData.comment) {
+              const tool = await db.businessTool.findUnique({ where: { businessId_type: { businessId: business.id, type: 'FEEDBACK_COLLECTION' } } });
+              if (tool?.enabled) {
+                await db.feedbackEntry.create({
+                  data: { businessId: business.id, customerName: fbData.customerName, customerPhone: fbData.customerPhone, rating: fbData.rating, comment: fbData.comment, triggerType: 'VOICE_AGENT', voiceCallLogId: data.conversation_id },
+                });
+                log.info({ businessId: business.id, conversationId: data.conversation_id }, 'Feedback entry created from voice agent');
+              }
+            }
+          } catch (err) { log.warn({ err, conversationId: data.conversation_id }, 'Failed to parse FEEDBACK_DATA'); }
+        }
+      }
+
       return reply.code(200).send({ received: true });
     },
   );
