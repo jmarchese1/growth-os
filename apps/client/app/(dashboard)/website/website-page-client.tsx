@@ -120,11 +120,11 @@ function ColorWheelPopup({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 z-50" onClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="absolute top-14 right-48 bg-white border border-slate-200 rounded-2xl shadow-2xl shadow-slate-200/80 p-5 w-[280px] animate-fade-up"
+        className="absolute top-14 right-48 bg-white dark:bg-[#1a1730] border border-slate-200 dark:border-white/[0.08] rounded-2xl shadow-2xl shadow-slate-200/80 dark:shadow-black/40 p-5 w-[280px] animate-fade-up"
       >
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-bold text-slate-700">Color Picker</p>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+          <p className="text-xs font-bold text-slate-700 dark:text-slate-200">Color Picker</p>
+          <button onClick={onClose} className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/></svg>
           </button>
         </div>
@@ -143,12 +143,12 @@ function ColorWheelPopup({ onClose }: { onClose: () => void }) {
         {/* Sliders */}
         <div className="space-y-2.5 mb-4">
           <div>
-            <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Saturation</label>
-            <input type="range" min="0" max="100" value={saturation} onChange={(e) => { setSaturation(Number(e.target.value)); setHexInput(''); }} className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-violet-600 bg-slate-200" />
+            <label className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Saturation</label>
+            <input type="range" min="0" max="100" value={saturation} onChange={(e) => { setSaturation(Number(e.target.value)); setHexInput(''); }} className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-violet-600 bg-slate-200 dark:bg-white/[0.06]" />
           </div>
           <div>
-            <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Lightness</label>
-            <input type="range" min="0" max="100" value={lightness} onChange={(e) => { setLightness(Number(e.target.value)); setHexInput(''); }} className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-violet-600 bg-slate-200" />
+            <label className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Lightness</label>
+            <input type="range" min="0" max="100" value={lightness} onChange={(e) => { setLightness(Number(e.target.value)); setHexInput(''); }} className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-violet-600 bg-slate-200 dark:bg-white/[0.06]" />
           </div>
         </div>
 
@@ -160,9 +160,9 @@ function ColorWheelPopup({ onClose }: { onClose: () => void }) {
               value={hexInput || hex}
               onChange={(e) => handleHexChange(e.target.value)}
               placeholder="#a855f7"
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-400"
+              className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm font-mono text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-400"
             />
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-md border border-slate-200" style={{ background: hex }} />
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-md border border-slate-200 dark:border-white/[0.08]" style={{ background: hex }} />
           </div>
           <button
             onClick={copyHex}
@@ -173,8 +173,8 @@ function ColorWheelPopup({ onClose }: { onClose: () => void }) {
         </div>
 
         {/* Usage hint */}
-        <div className="bg-violet-50 border border-violet-100 rounded-lg p-3">
-          <p className="text-[10px] text-violet-700 leading-relaxed">
+        <div className="bg-violet-50 dark:bg-violet-500/15 border border-violet-100 dark:border-violet-500/20 rounded-lg p-3">
+          <p className="text-[10px] text-violet-700 dark:text-violet-300 leading-relaxed">
             <span className="font-bold">How to use:</span> Find a color you like, copy the hex code, then tell the AI editor something like: <span className="italic">&quot;Change the hero background to {hex}&quot;</span> or <span className="italic">&quot;Use {hex} as the accent color&quot;</span>
           </p>
         </div>
@@ -269,14 +269,14 @@ function ImageGeneratorPopup({
     <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)' }} onClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-2xl shadow-2xl w-[520px] max-h-[90vh] overflow-y-auto animate-fade-up"
+        className="bg-white dark:bg-[#1a1730] rounded-2xl shadow-2xl w-[520px] max-h-[90vh] overflow-y-auto animate-fade-up"
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-white/[0.06]">
           <div>
-            <p className="text-sm font-bold text-slate-800">AI Image Generator</p>
-            <p className="text-[11px] text-slate-400 mt-0.5">Create images with DALL-E 3, then tell the AI editor to use them</p>
+            <p className="text-sm font-bold text-slate-800 dark:text-white">AI Image Generator</p>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Create images with DALL-E 3, then tell the AI editor to use them</p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+          <button onClick={onClose} className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/></svg>
           </button>
         </div>
@@ -284,26 +284,26 @@ function ImageGeneratorPopup({
         <div className="px-6 py-5 space-y-4">
           {/* Prompt */}
           <div>
-            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Describe your image</label>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">Describe your image</label>
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="A beautifully plated pasta dish on a dark marble table, overhead shot, warm lighting, restaurant ambiance..."
               rows={3}
-              className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none"
+              className="w-full px-4 py-3 border border-slate-200 dark:border-white/[0.08] rounded-xl text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none"
             />
           </div>
 
           {/* Options */}
           <div className="flex gap-4">
             <div className="flex-1">
-              <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Size</label>
+              <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Size</label>
               <div className="flex gap-1.5">
                 {([['1024x1024', 'Square'], ['1792x1024', 'Wide'], ['1024x1792', 'Tall']] as const).map(([val, label]) => (
                   <button
                     key={val}
                     onClick={() => setSize(val)}
-                    className={`flex-1 px-2 py-1.5 text-[10px] font-semibold rounded-lg border transition-colors ${size === val ? 'border-violet-500 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                    className={`flex-1 px-2 py-1.5 text-[10px] font-semibold rounded-lg border transition-colors ${size === val ? 'border-violet-500 bg-violet-50 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400' : 'border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/[0.12]'}`}
                   >
                     {label}
                   </button>
@@ -311,13 +311,13 @@ function ImageGeneratorPopup({
               </div>
             </div>
             <div className="flex-1">
-              <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Quality</label>
+              <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Quality</label>
               <div className="flex gap-1.5">
                 {([['standard', 'Standard'], ['hd', 'HD']] as const).map(([val, label]) => (
                   <button
                     key={val}
                     onClick={() => setQuality(val)}
-                    className={`flex-1 px-2 py-1.5 text-[10px] font-semibold rounded-lg border transition-colors ${quality === val ? 'border-violet-500 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                    className={`flex-1 px-2 py-1.5 text-[10px] font-semibold rounded-lg border transition-colors ${quality === val ? 'border-violet-500 bg-violet-50 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400' : 'border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/[0.12]'}`}
                   >
                     {label}
                   </button>
@@ -345,16 +345,16 @@ function ImageGeneratorPopup({
           {/* Result */}
           {imageUrl && (
             <div className="space-y-3">
-              <div className="bg-slate-50 rounded-xl overflow-hidden border border-slate-200">
+              <div className="bg-slate-50 dark:bg-white/[0.06] rounded-xl overflow-hidden border border-slate-200 dark:border-white/[0.08]">
                 <img src={imageUrl} alt="Generated" className="w-full" />
               </div>
               {revisedPrompt && (
-                <p className="text-[10px] text-slate-400 italic leading-relaxed">DALL-E interpreted: &quot;{revisedPrompt}&quot;</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 italic leading-relaxed">DALL-E interpreted: &quot;{revisedPrompt}&quot;</p>
               )}
               <div className="flex gap-2">
                 <button
                   onClick={copyUrl}
-                  className="flex-1 py-2.5 border border-slate-200 text-slate-600 font-medium rounded-xl text-xs hover:bg-slate-50 transition-colors"
+                  className="flex-1 py-2.5 border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 font-medium rounded-xl text-xs hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors"
                 >
                   {copied ? 'Copied URL!' : 'Copy Image URL'}
                 </button>
@@ -365,8 +365,8 @@ function ImageGeneratorPopup({
                   Use as Hero Image
                 </button>
               </div>
-              <div className="bg-violet-50 border border-violet-100 rounded-lg p-3">
-                <p className="text-[10px] text-violet-700 leading-relaxed">
+              <div className="bg-violet-50 dark:bg-violet-500/15 border border-violet-100 dark:border-violet-500/20 rounded-lg p-3">
+                <p className="text-[10px] text-violet-700 dark:text-violet-300 leading-relaxed">
                   <span className="font-bold">Tip:</span> Copy the URL and tell the AI editor: <span className="italic">&quot;Use this image as the hero background: {imageUrl.slice(0, 50)}...&quot;</span> or <span className="italic">&quot;Add this to the gallery section&quot;</span>
                 </p>
               </div>
@@ -382,7 +382,7 @@ function ImageGeneratorPopup({
 function UserGuideModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-8" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto my-auto">
+      <div onClick={(e) => e.stopPropagation()} className="relative bg-white dark:bg-[#1a1730] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto my-auto">
         {/* Close */}
         <button onClick={onClose} className="absolute top-4 right-4 z-10 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-800 transition-colors">
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/></svg>

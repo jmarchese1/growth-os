@@ -59,17 +59,17 @@ function formatDate(iso: string): string {
 }
 
 const SENTIMENT_COLORS: Record<string, string> = {
-  POSITIVE: 'bg-emerald-100 text-emerald-700',
-  NEUTRAL: 'bg-slate-100 text-slate-600',
-  NEGATIVE: 'bg-rose-100 text-rose-700',
+  POSITIVE: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400',
+  NEUTRAL: 'bg-slate-100 text-slate-600 dark:bg-white/[0.06] dark:text-slate-300',
+  NEGATIVE: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400',
 };
 
 const INTENT_COLORS: Record<string, string> = {
-  RESERVATION: 'bg-violet-100 text-violet-700',
-  INQUIRY: 'bg-sky-100 text-sky-700',
-  COMPLAINT: 'bg-rose-100 text-rose-700',
-  GENERAL: 'bg-slate-100 text-slate-600',
-  UNKNOWN: 'bg-slate-50 text-slate-400',
+  RESERVATION: 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-400',
+  INQUIRY: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-400',
+  COMPLAINT: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400',
+  GENERAL: 'bg-slate-100 text-slate-600 dark:bg-white/[0.06] dark:text-slate-300',
+  UNKNOWN: 'bg-slate-50 text-slate-400 dark:bg-white/[0.04] dark:text-slate-500',
 };
 
 /* ── Provisioning Hero ──────────────────────────────────────────── */
@@ -109,8 +109,8 @@ function ProvisioningHero({ businessId, onProvisioned }: { businessId: string; o
   return (
     <div className="p-8 animate-fade-up">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Phone Agent</h1>
-        <p className="text-sm text-slate-500 mt-1">AI receptionist — handles calls, takes reservations, captures leads</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Phone Agent</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">AI receptionist — handles calls, takes reservations, captures leads</p>
       </div>
 
       {/* Hero CTA */}
@@ -162,16 +162,16 @@ function ProvisioningHero({ businessId, onProvisioned }: { businessId: string; o
           { title: 'Reservation Handling', desc: 'Takes reservation details — name, party size, date, time — and confirms with callers' },
           { title: 'Lead Capture', desc: 'Extracts caller info and sends it to your CRM automatically — never lose a potential customer' },
         ].map(({ title, desc }) => (
-          <div key={title} className="bg-white border border-slate-200 rounded-xl p-5">
-            <h3 className="text-sm font-semibold text-slate-800 mb-1.5">{title}</h3>
-            <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>
+          <div key={title} className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-5">
+            <h3 className="text-sm font-semibold text-slate-800 dark:text-white mb-1.5">{title}</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{desc}</p>
           </div>
         ))}
       </div>
 
       {/* How it works */}
-      <div className="bg-white border border-slate-200 rounded-xl p-6">
-        <h3 className="text-sm font-semibold text-slate-700 mb-4">How it works</h3>
+      <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-6">
+        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">How it works</h3>
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           {[
             { step: '1', title: 'Deploy', desc: 'Click "Deploy Agent" and we provision your AI voice agent and phone number' },
@@ -180,9 +180,9 @@ function ProvisioningHero({ businessId, onProvisioned }: { businessId: string; o
             { step: '4', title: 'Leads Flow', desc: 'Call transcripts, reservations, and captured leads appear in your dashboard' },
           ].map(({ step, title, desc }) => (
             <div key={step} className="text-center">
-              <div className="w-8 h-8 rounded-full bg-violet-100 text-violet-700 text-sm font-bold flex items-center justify-center mx-auto mb-2">{step}</div>
-              <h4 className="text-sm font-semibold text-slate-800 mb-1">{title}</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>
+              <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400 text-sm font-bold flex items-center justify-center mx-auto mb-2">{step}</div>
+              <h4 className="text-sm font-semibold text-slate-800 dark:text-white mb-1">{title}</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{desc}</p>
             </div>
           ))}
         </div>
@@ -252,16 +252,16 @@ function SettingsPanel({ businessId, settings, onSaved }: {
     }
   }
 
-  const inputClass = 'w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300';
+  const inputClass = 'w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300';
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-6">
-      <h3 className="text-sm font-semibold text-slate-700">Agent Settings</h3>
+    <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-6 space-y-6">
+      <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Agent Settings</h3>
 
       {/* Basic settings */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Personality / Persona</label>
+          <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Personality / Persona</label>
           <input
             type="text"
             value={persona}
@@ -271,7 +271,7 @@ function SettingsPanel({ businessId, settings, onSaved }: {
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Cuisine Type</label>
+          <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Cuisine Type</label>
           <input
             type="text"
             value={cuisine}
@@ -281,7 +281,7 @@ function SettingsPanel({ businessId, settings, onSaved }: {
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Max Party Size</label>
+          <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Max Party Size</label>
           <input
             type="number"
             value={maxParty}
@@ -294,18 +294,18 @@ function SettingsPanel({ businessId, settings, onSaved }: {
 
       {/* Hours editor */}
       <div>
-        <label className="block text-xs font-medium text-slate-500 mb-3">Business Hours</label>
+        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-3">Business Hours</label>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
           {DAYS.map((day) => {
             const isClosed = hours[day] === null;
             return (
-              <div key={day} className={`rounded-lg border p-3 transition-colors ${isClosed ? 'bg-slate-50 border-slate-200' : 'bg-white border-slate-200'}`}>
+              <div key={day} className={`rounded-lg border p-3 transition-colors ${isClosed ? 'bg-slate-50 dark:bg-white/[0.04] border-slate-200 dark:border-white/[0.08]' : 'bg-white dark:bg-white/[0.04] border-slate-200 dark:border-white/[0.08]'}`}>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-slate-600">{day}</span>
+                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">{day}</span>
                   <button
                     type="button"
                     onClick={() => toggleClosed(day)}
-                    className={`text-[10px] font-medium px-2 py-0.5 rounded-full transition-colors ${isClosed ? 'bg-slate-200 text-slate-500 hover:bg-slate-300' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}`}
+                    className={`text-[10px] font-medium px-2 py-0.5 rounded-full transition-colors ${isClosed ? 'bg-slate-200 dark:bg-white/[0.08] text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-white/[0.12]' : 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/25'}`}
                   >
                     {isClosed ? 'Closed' : 'Open'}
                   </button>
@@ -316,18 +316,18 @@ function SettingsPanel({ businessId, settings, onSaved }: {
                       type="time"
                       value={hours[day]?.open ?? DEFAULT_OPEN}
                       onChange={(e) => setDayHours(day, 'open', e.target.value)}
-                      className="flex-1 px-2 py-1 border border-slate-200 rounded text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-violet-400"
+                      className="flex-1 px-2 py-1 border border-slate-200 dark:border-white/[0.08] rounded text-xs text-slate-700 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-1 focus:ring-violet-400"
                     />
-                    <span className="text-[10px] text-slate-400">—</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500">—</span>
                     <input
                       type="time"
                       value={hours[day]?.close ?? DEFAULT_CLOSE}
                       onChange={(e) => setDayHours(day, 'close', e.target.value)}
-                      className="flex-1 px-2 py-1 border border-slate-200 rounded text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-violet-400"
+                      className="flex-1 px-2 py-1 border border-slate-200 dark:border-white/[0.08] rounded text-xs text-slate-700 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-1 focus:ring-violet-400"
                     />
                   </div>
                 )}
-                {isClosed && <p className="text-[10px] text-slate-400">Closed all day</p>}
+                {isClosed && <p className="text-[10px] text-slate-400 dark:text-slate-500">Closed all day</p>}
               </div>
             );
           })}
@@ -342,7 +342,7 @@ function SettingsPanel({ businessId, settings, onSaved }: {
         >
           {saving ? 'Saving...' : 'Save & Update Agent'}
         </button>
-        {saved && <span className="text-xs text-emerald-600 font-medium">Settings saved — agent prompt updated</span>}
+        {saved && <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Settings saved — agent prompt updated</span>}
       </div>
     </div>
   );

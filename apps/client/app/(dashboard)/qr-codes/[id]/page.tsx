@@ -141,7 +141,7 @@ export default function QrCodeDetailPage({ params }: { params: Promise<{ id: str
       </button>
 
       {/* Header */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 flex gap-6">
+      <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-6 flex gap-6">
         {/* QR image */}
         <div className="shrink-0">
           <img
@@ -217,15 +217,15 @@ export default function QrCodeDetailPage({ params }: { params: Promise<{ id: str
 
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 text-center">
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 text-center">
           <div className="text-3xl font-bold text-slate-900">{qr.scanCount}</div>
           <div className="text-sm text-slate-500 mt-1">Total Scans</div>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 text-center">
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 text-center">
           <div className="text-3xl font-bold text-slate-900">{uniqueContacts.size}</div>
           <div className="text-sm text-slate-500 mt-1">Contacts Captured</div>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 text-center">
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 text-center">
           <div className="text-3xl font-bold text-slate-900">
             {qr.scanCount > 0 ? Math.round((uniqueContacts.size / qr.scanCount) * 100) : 0}%
           </div>
@@ -235,7 +235,7 @@ export default function QrCodeDetailPage({ params }: { params: Promise<{ id: str
 
       {/* Spin prizes */}
       {qr.spinPrizes && qr.spinPrizes.length > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5">
           <h2 className="text-sm font-semibold text-slate-700 mb-3">Spin Wheel Prizes</h2>
           <div className="flex flex-wrap gap-2">
             {qr.spinPrizes.map((p, i) => (
@@ -250,7 +250,7 @@ export default function QrCodeDetailPage({ params }: { params: Promise<{ id: str
 
       {/* Contacts captured */}
       {uniqueContacts.size > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5">
           <h2 className="text-sm font-semibold text-slate-700 mb-3">Contacts Captured ({uniqueContacts.size})</h2>
           <div className="space-y-2">
             {[...uniqueContacts.values()].map((c) => (
@@ -269,7 +269,7 @@ export default function QrCodeDetailPage({ params }: { params: Promise<{ id: str
       )}
 
       {/* Scan log */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-5">
+      <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5">
         <h2 className="text-sm font-semibold text-slate-700 mb-3">Scan History {qr.scans.length > 0 ? `(last ${qr.scans.length})` : ''}</h2>
         {qr.scans.length === 0 ? (
           <p className="text-sm text-slate-400 py-4 text-center">No scans yet. Share your QR code to start collecting data.</p>

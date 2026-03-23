@@ -37,13 +37,13 @@ const SOURCE_LABELS: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  LEAD: { label: 'Lead', color: 'bg-amber-50 text-amber-600' },
-  PROSPECT: { label: 'Prospect', color: 'bg-violet-50 text-violet-600' },
-  CUSTOMER: { label: 'Customer', color: 'bg-emerald-50 text-emerald-600' },
-  CHURNED: { label: 'Churned', color: 'bg-slate-100 text-slate-500' },
+  LEAD: { label: 'Lead', color: 'bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400' },
+  PROSPECT: { label: 'Prospect', color: 'bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400' },
+  CUSTOMER: { label: 'Customer', color: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400' },
+  CHURNED: { label: 'Churned', color: 'bg-slate-100 text-slate-500 dark:bg-white/[0.06] dark:text-slate-400' },
 };
 
-const inputClass = 'w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300';
+const inputClass = 'w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300';
 
 /* ─── Modal Backdrop ─────────────────────────────────────────────────────── */
 
@@ -51,7 +51,7 @@ function ModalBackdrop({ children, onClose, wide }: { children: React.ReactNode;
   if (typeof document === 'undefined') return null;
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className={`bg-white rounded-2xl shadow-2xl w-full ${wide ? 'max-w-2xl' : 'max-w-md'} overflow-hidden max-h-[90vh] flex flex-col`} onClick={(e) => e.stopPropagation()}>
+      <div className={`bg-white dark:bg-[#1a1730] rounded-2xl shadow-2xl w-full ${wide ? 'max-w-2xl' : 'max-w-md'} overflow-hidden max-h-[90vh] flex flex-col`} onClick={(e) => e.stopPropagation()}>
         {children}
       </div>
     </div>,
@@ -102,39 +102,39 @@ function AddContactModal({ businessId, onDone, onClose }: { businessId: string; 
 
   return (
     <ModalBackdrop onClose={onClose}>
-      <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-800">Add Contact</h3>
-        <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
+      <div className="px-6 py-4 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-slate-800 dark:text-white">Add Contact</h3>
+        <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-500 transition-colors">
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
         </button>
       </div>
       <div className="px-6 py-5 space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">First Name</label>
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">First Name</label>
             <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Jane" className={inputClass} />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">Last Name</label>
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Last Name</label>
             <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Smith" className={inputClass} />
           </div>
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Email</label>
+          <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Email</label>
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="jane@example.com" className={inputClass} />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Phone</label>
+          <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Phone</label>
           <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 555 000 0000" className={inputClass} />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Notes (optional)</label>
+          <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Notes (optional)</label>
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder="VIP customer, weekly regular..." className={`${inputClass} resize-none`} />
         </div>
         {error && <p className="text-xs text-red-500">{error}</p>}
       </div>
-      <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex gap-2 justify-end">
-        <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
+      <div className="px-6 py-4 bg-slate-50 dark:bg-white/[0.04] border-t border-slate-200 dark:border-white/[0.08] flex gap-2 justify-end">
+        <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">Cancel</button>
         <button onClick={handleSave} disabled={saving}
           className="px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 transition-colors flex items-center gap-2">
           {saving && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
@@ -372,18 +372,18 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
     return (
       <ModalBackdrop onClose={() => { onDone(); onClose(); }} wide>
         <div className="px-6 py-8 text-center">
-          <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-7 h-7 text-emerald-600"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+          <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center mx-auto mb-4">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-7 h-7 text-emerald-600 dark:text-emerald-400"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
           </div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-1">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">
             {success.mode === 'single' ? 'Campaign Sent' : 'Sequence Launched'}
           </h3>
-          <p className="text-sm text-slate-500 mb-1">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
             {success.sent} email{success.sent !== 1 ? 's' : ''} sent successfully
             {success.skipped > 0 && <>, {success.skipped} skipped</>}
           </p>
           {success.mode === 'sequence' && steps.length > 1 && (
-            <p className="text-xs text-slate-400 mb-4">{steps.length - 1} follow-up{steps.length > 2 ? 's' : ''} scheduled. Manage in any contact&apos;s Email Sequences section.</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">{steps.length - 1} follow-up{steps.length > 2 ? 's' : ''} scheduled. Manage in any contact&apos;s Email Sequences section.</p>
           )}
           <button onClick={() => { onDone(); onClose(); }} className="px-6 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-500 transition-colors mt-2">Done</button>
         </div>
@@ -394,17 +394,17 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
   if (showPreview && previewHtml) {
     return (
       <ModalBackdrop onClose={() => setShowPreview(false)} wide>
-        <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-800">Email Preview</h3>
-          <button onClick={() => setShowPreview(false)} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400">
+        <div className="px-5 py-3 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-slate-800 dark:text-white">Email Preview</h3>
+          <button onClick={() => setShowPreview(false)} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-500">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
           </button>
         </div>
         <div className="flex-1 overflow-auto">
           <iframe srcDoc={previewHtml} className="w-full h-[500px] border-0" title="Email preview" />
         </div>
-        <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex justify-end">
-          <button onClick={() => setShowPreview(false)} className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800">Back to editor</button>
+        <div className="px-5 py-3 bg-slate-50 dark:bg-white/[0.04] border-t border-slate-200 dark:border-white/[0.08] flex justify-end">
+          <button onClick={() => setShowPreview(false)} className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white">Back to editor</button>
         </div>
       </ModalBackdrop>
     );
@@ -412,12 +412,12 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
 
   return (
     <ModalBackdrop onClose={onClose} wide>
-      <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
+      <div className="px-5 py-3 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-slate-800">Email Campaign</h3>
-          <p className="text-xs text-slate-400 mt-0.5">Send a one-off email or build a multi-step sequence</p>
+          <h3 className="text-sm font-semibold text-slate-800 dark:text-white">Email Campaign</h3>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Send a one-off email or build a multi-step sequence</p>
         </div>
-        <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400">
+        <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-500">
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
         </button>
       </div>
@@ -425,43 +425,43 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
         {/* ─── Campaign Mode Toggle ────────────────────────────────── */}
         <div className="flex gap-2">
           <button onClick={() => setCampaignMode('single')}
-            className={`flex-1 py-2.5 rounded-xl border text-xs font-semibold transition-colors ${campaignMode === 'single' ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+            className={`flex-1 py-2.5 rounded-xl border text-xs font-semibold transition-colors ${campaignMode === 'single' ? 'border-violet-300 bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:border-violet-500/30 dark:text-violet-400' : 'border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/[0.04]'}`}>
             Single Email
           </button>
           <button onClick={() => setCampaignMode('sequence')}
-            className={`flex-1 py-2.5 rounded-xl border text-xs font-semibold transition-colors ${campaignMode === 'sequence' ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+            className={`flex-1 py-2.5 rounded-xl border text-xs font-semibold transition-colors ${campaignMode === 'sequence' ? 'border-violet-300 bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:border-violet-500/30 dark:text-violet-400' : 'border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/[0.04]'}`}>
             Email Sequence
           </button>
         </div>
 
         {/* ─── Recipients ──────────────────────────────────────────── */}
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-2">Recipients</label>
+          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2">Recipients</label>
 
           {/* Toggle: All vs Select individually */}
           <div className="flex gap-2 mb-3">
             <button onClick={() => setSendToAll(true)}
-              className={`flex-1 p-3 rounded-xl border text-left transition-colors ${sendToAll ? 'border-violet-300 bg-violet-50' : 'border-slate-200 hover:bg-slate-50'}`}>
-              <p className={`text-xs font-medium ${sendToAll ? 'text-violet-700' : 'text-slate-600'}`}>All with email</p>
-              <p className="text-lg font-bold text-slate-900 mt-0.5">{allContacts.filter((c) => c.email).length}</p>
+              className={`flex-1 p-3 rounded-xl border text-left transition-colors ${sendToAll ? 'border-violet-300 bg-violet-50 dark:bg-violet-500/15 dark:border-violet-500/30' : 'border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04]'}`}>
+              <p className={`text-xs font-medium ${sendToAll ? 'text-violet-700 dark:text-violet-400' : 'text-slate-600 dark:text-slate-300'}`}>All with email</p>
+              <p className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{allContacts.filter((c) => c.email).length}</p>
             </button>
             <button onClick={() => setSendToAll(false)}
-              className={`flex-1 p-3 rounded-xl border text-left transition-colors ${!sendToAll ? 'border-violet-300 bg-violet-50' : 'border-slate-200 hover:bg-slate-50'}`}>
-              <p className={`text-xs font-medium ${!sendToAll ? 'text-violet-700' : 'text-slate-600'}`}>Select individually</p>
-              <p className="text-lg font-bold text-slate-900 mt-0.5">{pickedIds.size > 0 ? allContacts.filter((c) => pickedIds.has(c.id) && c.email).length : '—'}</p>
+              className={`flex-1 p-3 rounded-xl border text-left transition-colors ${!sendToAll ? 'border-violet-300 bg-violet-50 dark:bg-violet-500/15 dark:border-violet-500/30' : 'border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-white/[0.04]'}`}>
+              <p className={`text-xs font-medium ${!sendToAll ? 'text-violet-700 dark:text-violet-400' : 'text-slate-600 dark:text-slate-300'}`}>Select individually</p>
+              <p className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{pickedIds.size > 0 ? allContacts.filter((c) => pickedIds.has(c.id) && c.email).length : '—'}</p>
             </button>
           </div>
 
           {/* Individual picker */}
           {!sendToAll && (
-            <div className="border border-slate-200 rounded-xl overflow-hidden">
-              <div className="px-3 py-2 bg-slate-50 border-b border-slate-100">
+            <div className="border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
+              <div className="px-3 py-2 bg-slate-50 dark:bg-white/[0.06] border-b border-slate-100 dark:border-white/[0.06]">
                 <input value={recipientSearch} onChange={(e) => setRecipientSearch(e.target.value)} placeholder="Search contacts..."
-                  className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-violet-400/30 bg-white" />
+                  className="w-full px-2.5 py-1.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-violet-400/30 bg-white dark:bg-white/[0.06] dark:text-white" />
               </div>
-              <div className="max-h-[180px] overflow-y-auto divide-y divide-slate-50">
+              <div className="max-h-[180px] overflow-y-auto divide-y divide-slate-50 dark:divide-white/[0.06]">
                 {filteredContacts.map((c) => (
-                  <label key={c.id} className={`flex items-center gap-2.5 px-3 py-2 hover:bg-slate-50 cursor-pointer transition-colors ${!c.email ? 'opacity-40' : ''}`}>
+                  <label key={c.id} className={`flex items-center gap-2.5 px-3 py-2 hover:bg-slate-50 dark:hover:bg-white/[0.04] cursor-pointer transition-colors ${!c.email ? 'opacity-40' : ''}`}>
                     <input type="checkbox" checked={pickedIds.has(c.id)} onChange={() => togglePick(c.id)} disabled={!c.email}
                       className="w-3.5 h-3.5 rounded border-slate-300 text-violet-600 focus:ring-violet-500 shrink-0" />
                     <div className="w-6 h-6 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 text-[9px] font-bold shrink-0">
@@ -508,11 +508,11 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">Subject</label>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Subject</label>
               <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Email subject line..." className={inputClass} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">Body</label>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Body</label>
               <textarea value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={6} placeholder="<p>Hi {{firstName}},</p><p>Your email content here...</p>" className={inputClass} />
               <p className="text-[10px] text-slate-400 mt-1">Use {'{{firstName}}'} and {'{{business}}'} as variables. HTML supported.</p>
             </div>
@@ -534,7 +534,7 @@ function CampaignModal({ businessId, contacts, selectedIds, allContacts, onDone,
         {campaignMode === 'sequence' && (
           <>
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">Sequence Name</label>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Sequence Name</label>
               <input value={seqName} onChange={(e) => setSeqName(e.target.value)} placeholder="e.g. Win-back series, Post-visit follow-up..." className={inputClass} />
             </div>
 

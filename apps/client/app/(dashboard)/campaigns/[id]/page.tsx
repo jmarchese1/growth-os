@@ -24,9 +24,9 @@ interface Campaign {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  DRAFT: 'bg-slate-100 text-slate-500',
-  SCHEDULED: 'bg-amber-100 text-amber-700',
-  SENT: 'bg-emerald-100 text-emerald-700',
+  DRAFT: 'bg-slate-100 text-slate-500 dark:bg-white/[0.06] dark:text-slate-400',
+  SCHEDULED: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
+  SENT: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400',
 };
 
 const SOURCE_OPTIONS = [
@@ -154,30 +154,30 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
     </div>
   );
 
-  if (error || !campaign) return <div className="p-8 text-slate-500">{error || 'Not found'}</div>;
+  if (error || !campaign) return <div className="p-8 text-slate-500 dark:text-slate-400">{error || 'Not found'}</div>;
 
   const isDraft = campaign.status === 'DRAFT';
   const isSent = campaign.status === 'SENT';
   const openRate = isSent && campaign.sentCount > 0
     ? `${Math.round((campaign.openCount / campaign.sentCount) * 100)}%` : null;
 
-  const inputClass = 'w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300';
+  const inputClass = 'w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 placeholder:text-slate-400 dark:placeholder:text-slate-500';
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       {/* Confirm Send Modal */}
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
-            <h2 className="text-lg font-semibold text-slate-900">Confirm Send</h2>
-            <p className="text-sm text-slate-600">
-              This will immediately send <span className="font-semibold text-slate-900">
+          <div className="bg-white dark:bg-[#1a1730] rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Confirm Send</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              This will immediately send <span className="font-semibold text-slate-900 dark:text-white">
                 {recipientLoading ? '...' : `${recipientCount ?? 0} recipient${recipientCount !== 1 ? 's' : ''}`}
               </span> your campaign <span className="font-semibold">"{campaign.name}"</span>. This cannot be undone.
             </p>
-            {sendError && <p className="text-sm text-red-500">{sendError}</p>}
+            {sendError && <p className="text-sm text-red-500 dark:text-red-400">{sendError}</p>}
             <div className="flex gap-3">
-              <button onClick={() => setShowConfirm(false)} className="flex-1 px-4 py-2 rounded-xl border border-slate-200 text-sm text-slate-600 hover:bg-slate-50">Cancel</button>
+              <button onClick={() => setShowConfirm(false)} className="flex-1 px-4 py-2 rounded-xl border border-slate-200 dark:border-white/[0.08] text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04]">Cancel</button>
               <button onClick={() => void handleSend()} disabled={sending} className="flex-1 px-4 py-2 rounded-xl bg-violet-600 text-white text-sm font-medium hover:bg-violet-700 disabled:opacity-60">
                 {sending ? 'Sending...' : 'Send Now'}
               </button>
@@ -187,41 +187,41 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
       )}
 
       {/* Back */}
-      <button onClick={() => router.push('/campaigns')} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors">
+      <button onClick={() => router.push('/campaigns')} className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors">
         <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" /></svg>
         Back to Campaigns
       </button>
 
       {/* Header */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6">
+      <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS_COLORS[campaign.status]}`}>{campaign.status}</span>
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-100 text-sky-700 font-medium">{campaign.type}</span>
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-400 font-medium">{campaign.type}</span>
             </div>
-            <h1 className="text-xl font-bold text-slate-900">{campaign.name}</h1>
-            <p className="text-xs text-slate-400 mt-1">
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white">{campaign.name}</h1>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
               Created {new Date(campaign.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               {campaign.sentAt ? ` · Sent ${new Date(campaign.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}
             </p>
           </div>
           {isDraft && (
-            <button onClick={() => { setEditing(!editing); setSaveError(''); }} className="px-4 py-2 rounded-xl border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 transition-colors">
+            <button onClick={() => { setEditing(!editing); setSaveError(''); }} className="px-4 py-2 rounded-xl border border-slate-200 dark:border-white/[0.08] text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors">
               {editing ? 'Cancel Edit' : 'Edit'}
             </button>
           )}
         </div>
         {isSent && (
-          <div className="mt-4 grid grid-cols-3 gap-4 pt-4 border-t border-slate-100">
+          <div className="mt-4 grid grid-cols-3 gap-4 pt-4 border-t border-slate-100 dark:border-white/[0.06]">
             {[
               { label: 'Sent to', value: campaign.sentCount },
               { label: 'Opens', value: campaign.openCount },
               { label: 'Open rate', value: openRate ?? '—' },
             ].map(({ label, value }) => (
               <div key={label} className="text-center">
-                <div className="text-xl font-bold text-slate-900">{value}</div>
-                <div className="text-xs text-slate-500 mt-0.5">{label}</div>
+                <div className="text-xl font-bold text-slate-900 dark:text-white">{value}</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{label}</div>
               </div>
             ))}
           </div>
@@ -230,24 +230,24 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
 
       {/* Edit form */}
       {editing && isDraft && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
-          <h2 className="text-sm font-semibold text-slate-700">Edit Campaign</h2>
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-6 space-y-4">
+          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Edit Campaign</h2>
           <div>
-            <label className="text-xs text-slate-500 font-medium">Name</label>
+            <label className="text-xs text-slate-500 dark:text-slate-400 font-medium">Name</label>
             <input value={editName} onChange={(e) => setEditName(e.target.value)} className={`mt-1 ${inputClass}`} />
           </div>
           {campaign.type === 'EMAIL' && (
             <>
               <div>
-                <label className="text-xs text-slate-500 font-medium">Subject line</label>
+                <label className="text-xs text-slate-500 dark:text-slate-400 font-medium">Subject line</label>
                 <input value={editSubject} onChange={(e) => setEditSubject(e.target.value)} className={`mt-1 ${inputClass}`} />
               </div>
             </>
           )}
           <div>
-            <label className="text-xs text-slate-500 font-medium">{campaign.type === 'EMAIL' ? 'Email body (HTML)' : 'Message'}</label>
+            <label className="text-xs text-slate-500 dark:text-slate-400 font-medium">{campaign.type === 'EMAIL' ? 'Email body (HTML)' : 'Message'}</label>
             <textarea value={editBody} onChange={(e) => setEditBody(e.target.value)} rows={8} className={`mt-1 ${inputClass} resize-none font-mono text-xs`} />
-            {campaign.type === 'SMS' && <p className="text-[10px] text-slate-400 mt-1">{editBody.length}/160 characters</p>}
+            {campaign.type === 'SMS' && <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">{editBody.length}/160 characters</p>}
           </div>
           {campaign.type === 'EMAIL' && (
             <EmailStylePicker
@@ -263,8 +263,8 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
           )}
           {campaign.type === 'EMAIL' && editBody.trim() && (
             <div>
-              <label className="text-xs text-slate-500 font-medium">Preview</label>
-              <div className="mt-1 bg-white border border-slate-200 rounded-xl overflow-hidden">
+              <label className="text-xs text-slate-500 dark:text-slate-400 font-medium">Preview</label>
+              <div className="mt-1 bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
                 <iframe
                   srcDoc={getStyleById(selectedStyle).wrap(editBody + buildAttachmentsHtml(attachments, styleOptions), styleOptions)}
                   className="w-full border-0"
@@ -275,9 +275,9 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
               </div>
             </div>
           )}
-          {saveError && <p className="text-sm text-red-500">{saveError}</p>}
+          {saveError && <p className="text-sm text-red-500 dark:text-red-400">{saveError}</p>}
           <div className="flex justify-end gap-2">
-            <button onClick={() => setEditing(false)} className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700">Cancel</button>
+            <button onClick={() => setEditing(false)} className="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">Cancel</button>
             <button onClick={() => void handleSaveEdit()} disabled={saving || !editName.trim() || !editBody.trim()} className="px-5 py-2 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-700 disabled:opacity-50 transition-colors">
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
@@ -287,19 +287,19 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
 
       {/* Preview */}
       {!editing && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6">
-          <h2 className="text-sm font-semibold text-slate-700 mb-3">{campaign.type === 'EMAIL' ? 'Email Preview' : 'Message Preview'}</h2>
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-6">
+          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">{campaign.type === 'EMAIL' ? 'Email Preview' : 'Message Preview'}</h2>
           {campaign.type === 'EMAIL' && campaign.subject && (
-            <p className="text-xs text-slate-500 mb-3 pb-3 border-b border-slate-100">Subject: <span className="font-medium text-slate-700">{campaign.subject}</span></p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 pb-3 border-b border-slate-100 dark:border-white/[0.06]">Subject: <span className="font-medium text-slate-700 dark:text-slate-200">{campaign.subject}</span></p>
           )}
           {campaign.type === 'EMAIL' ? (
-            <div className="border border-slate-100 rounded-xl overflow-hidden bg-white">
+            <div className="border border-slate-100 dark:border-white/[0.06] rounded-xl overflow-hidden bg-white dark:bg-white/[0.04]">
               <iframe srcDoc={campaign.body} className="w-full border-0" style={{ height: '360px' }} title="Email preview" sandbox="allow-same-origin" />
             </div>
           ) : (
             <div className="max-w-xs">
-              <div className="bg-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 text-sm text-slate-700">{campaign.body}</div>
-              <p className="text-[10px] text-slate-400 mt-1">{campaign.body.length}/160 chars</p>
+              <div className="bg-slate-100 dark:bg-white/[0.06] rounded-2xl rounded-tl-sm px-4 py-3 text-sm text-slate-700 dark:text-slate-200">{campaign.body}</div>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">{campaign.body.length}/160 chars</p>
             </div>
           )}
         </div>
@@ -307,27 +307,27 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
 
       {/* Send section */}
       {isDraft && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-6 space-y-4">
           <div className="flex items-start justify-between">
             <div>
-              <h2 className="text-sm font-semibold text-slate-700">Send to Contacts</h2>
-              <p className="text-xs text-slate-400 mt-0.5">Filter which contacts receive this campaign</p>
+              <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Send to Contacts</h2>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Filter which contacts receive this campaign</p>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold text-slate-900">{recipientLoading ? '...' : (recipientCount ?? '—')}</p>
-              <p className="text-xs text-slate-400">recipients</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{recipientLoading ? '...' : (recipientCount ?? '—')}</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500">recipients</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-slate-500 font-medium">Status</label>
-              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={`mt-1 ${inputClass} bg-white`}>
+              <label className="text-xs text-slate-500 dark:text-slate-400 font-medium">Status</label>
+              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={`mt-1 ${inputClass} bg-white dark:bg-white/[0.06]`}>
                 {STATUS_TARGET_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-xs text-slate-500 font-medium">Source</label>
-              <select value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value)} className={`mt-1 ${inputClass} bg-white`}>
+              <label className="text-xs text-slate-500 dark:text-slate-400 font-medium">Source</label>
+              <select value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value)} className={`mt-1 ${inputClass} bg-white dark:bg-white/[0.06]`}>
                 {SOURCE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>

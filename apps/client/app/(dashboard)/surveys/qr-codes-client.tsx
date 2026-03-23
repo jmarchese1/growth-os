@@ -276,7 +276,7 @@ function LivePreview({ purpose, accentColor, bgColor, fontFamily, heading, subhe
 
   return (
     <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm">
-      <div className="px-3 py-1.5 bg-slate-100 border-b border-slate-200 flex items-center gap-1.5">
+      <div className="px-3 py-1.5 bg-slate-100 dark:bg-white/[0.06] border-b border-slate-200 dark:border-white/[0.08] flex items-center gap-1.5">
         <div className="w-2 h-2 rounded-full bg-red-400" />
         <div className="w-2 h-2 rounded-full bg-amber-400" />
         <div className="w-2 h-2 rounded-full bg-emerald-400" />
@@ -399,7 +399,7 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white dark:bg-[#1a1730] rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
           <h3 className="text-sm font-semibold text-slate-800">{step === 'form' ? 'Create QR Code' : 'Preview & Download'}</h3>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
@@ -655,7 +655,7 @@ function QrCodeCard({ qr, onDelete }: { qr: QrCode; onDelete: () => void }) {
       className={`bg-white border rounded-xl p-4 flex gap-4 items-start cursor-pointer hover:border-violet-300 hover:shadow-sm transition-all ${isExpired ? 'border-red-200 opacity-60' : 'border-slate-200'}`}
       onClick={() => router.push(`/qr-codes/${qr.id}`)}
     >
-      <div className="bg-slate-50 rounded-lg p-2 flex-shrink-0">
+      <div className="bg-slate-50 dark:bg-white/[0.06] rounded-lg p-2 flex-shrink-0">
         <img src={qrImageUrl(url, 80)} alt={qr.label} width={80} height={80} className="rounded" />
       </div>
       <div className="flex-1 min-w-0">
@@ -778,7 +778,7 @@ export default function QrCodesTab() {
       </div>
 
       {/* QR Code list */}
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+      <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-700">Your QR Codes</h2>
           {qrCodes.length > 0 && <span className="text-xs text-slate-400">{qrCodes.length} total</span>}

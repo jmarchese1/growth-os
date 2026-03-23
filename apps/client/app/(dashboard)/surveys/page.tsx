@@ -220,11 +220,11 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
     const url = qrPublicUrl(created.token);
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 text-center my-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="bg-white dark:bg-[#1a1730] rounded-2xl shadow-2xl w-full max-w-md p-8 text-center my-auto" onClick={(e) => e.stopPropagation()}>
           <img src={qrImageUrl(url)} alt="QR Code" className="w-48 h-48 mx-auto mb-4 rounded-lg" />
           <h3 className="text-lg font-bold text-slate-900 mb-1">{created.label}</h3>
           <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-100 text-violet-700 mb-3">{created.purpose}</span>
-          <p className="text-xs text-slate-400 font-mono bg-slate-50 rounded-lg px-3 py-2 mb-4 break-all">{url}</p>
+          <p className="text-xs text-slate-400 font-mono bg-slate-50 dark:bg-white/[0.06] rounded-lg px-3 py-2 mb-4 break-all">{url}</p>
           <div className="flex gap-3 justify-center">
             <button onClick={onClose} className="px-5 py-2 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-500 transition-colors">Done</button>
             <a href={qrImageUrl(url)} download={`${created.label.replace(/\s+/g, '-').toLowerCase()}-qr.png`} className="px-5 py-2 border border-slate-200 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-50 transition-colors">Download PNG</a>
@@ -236,7 +236,7 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white dark:bg-[#1a1730] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="px-6 py-5 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
           <h2 className="text-lg font-bold text-slate-900">Create QR Code</h2>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400"><svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
@@ -455,7 +455,7 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
 
                   {/* Live preview */}
                   <div className="rounded-lg overflow-hidden border border-slate-200">
-                    <div className="px-2 py-1 bg-slate-100 border-b border-slate-200 flex items-center gap-1">
+                    <div className="px-2 py-1 bg-slate-100 dark:bg-white/[0.06] border-b border-slate-200 dark:border-white/[0.08] flex items-center gap-1">
                       <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
                       <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
@@ -501,7 +501,7 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
         </div>
         {purpose && (
           <div className="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 flex-shrink-0">
-            <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg transition-colors">Cancel</button>
+            <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 dark:bg-white/[0.06] rounded-lg transition-colors">Cancel</button>
             <button onClick={handleCreate} disabled={!canCreate || creating} className="px-5 py-2 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-500 disabled:opacity-50 transition-colors">
               {creating ? 'Creating...' : 'Generate QR Code'}
             </button>
@@ -613,7 +613,7 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
   const previewReward = tab === 'spin_prize' ? '10% Off' : tab === 'discount' ? '$5 Off' : 'Free Dessert';
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden mb-6">
+    <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl overflow-hidden mb-6">
       <button onClick={() => setOpen(!open)} className="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
@@ -695,7 +695,7 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
               </div>
 
               {/* Type tabs */}
-              <div className="flex gap-1 bg-slate-100 rounded-lg p-0.5">
+              <div className="flex gap-1 bg-slate-100 dark:bg-white/[0.06] rounded-lg p-0.5">
                 {(Object.entries(tabLabels) as [typeof tab, string][]).map(([key, label]) => (
                   <button key={key} onClick={() => setTab(key)} className={`flex-1 px-3 py-1.5 text-[11px] font-medium rounded-md transition-all ${tab === key ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
                     {label}
@@ -775,7 +775,7 @@ function QrCard({ qr, onDelete }: { qr: QrCode; onDelete: () => void }) {
   function copyLink() { navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); }
 
   return (
-    <div className={`bg-white border rounded-2xl p-4 transition-all hover:shadow-md hover:-translate-y-0.5 duration-200 ${expired ? 'border-rose-200 opacity-60' : 'border-slate-200'}`}>
+    <div className={`bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border rounded-2xl p-4 transition-all hover:shadow-md hover:-translate-y-0.5 duration-200 ${expired ? 'border-rose-200 opacity-60' : 'border-slate-200'}`}>
       <div className="flex gap-4">
         <img src={qrImageUrl(url, 100)} alt="QR" className="w-20 h-20 rounded-lg flex-shrink-0" />
         <div className="flex-1 min-w-0">
@@ -888,7 +888,7 @@ export default function QrCodesPage() {
       {loading ? (
         <div className="flex items-center justify-center py-20"><div className="w-8 h-8 border-3 border-violet-300 border-t-violet-600 rounded-full animate-spin" /></div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 bg-white border border-slate-200 rounded-2xl">
+        <div className="text-center py-16 bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl">
           <p className="text-3xl mb-3">{filter !== 'ALL' ? PURPOSES.find((p) => p.value === filter)?.icon : '\uD83D\uDCF1'}</p>
           <p className="text-sm text-slate-500 mb-4">{filter !== 'ALL' ? `No ${PURPOSES.find((p) => p.value === filter)?.label} QR codes yet` : 'No QR codes yet'}</p>
           <button onClick={() => setShowCreate(true)} className="px-5 py-2 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-500 transition-colors">Create Your First QR Code</button>

@@ -20,14 +20,14 @@ interface Campaign {
 }
 
 const TYPE_BADGES: Record<string, string> = {
-  EMAIL: 'bg-sky-100 text-sky-700',
-  SMS: 'bg-emerald-100 text-emerald-700',
+  EMAIL: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-400',
+  SMS: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400',
 };
 
 const STATUS_BADGES: Record<string, string> = {
-  DRAFT: 'bg-slate-100 text-slate-500',
-  SCHEDULED: 'bg-amber-100 text-amber-700',
-  SENT: 'bg-emerald-100 text-emerald-700',
+  DRAFT: 'bg-slate-100 text-slate-500 dark:bg-white/[0.06] dark:text-slate-400',
+  SCHEDULED: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
+  SENT: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400',
 };
 
 /* ── Create Campaign Modal ──────────────────────────────────────── */
@@ -50,41 +50,41 @@ function CreateCampaignModal({ onClose, onCreate }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-800">New Campaign</h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
+      <div className="bg-white dark:bg-[#1a1730] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="px-6 py-4 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-slate-800 dark:text-white">New Campaign</h3>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
           </button>
         </div>
         <div className="px-6 py-5 space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-2">Campaign Type</label>
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Campaign Type</label>
             <div className="flex gap-2">
               {(['EMAIL', 'SMS'] as const).map((t) => (
-                <button key={t} onClick={() => setType(t)} className={`flex-1 py-2.5 rounded-lg border text-sm font-medium transition-colors ${type === t ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+                <button key={t} onClick={() => setType(t)} className={`flex-1 py-2.5 rounded-lg border text-sm font-medium transition-colors ${type === t ? 'border-violet-300 bg-violet-50 text-violet-700 dark:border-violet-500/40 dark:bg-violet-500/15 dark:text-violet-400' : 'border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/[0.04]'}`}>
                   {t === 'EMAIL' ? 'Email Campaign' : 'SMS Campaign'}
                 </button>
               ))}
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">Campaign Name</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. March Happy Hour Promo" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Campaign Name</label>
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. March Happy Hour Promo" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
           </div>
           {type === 'EMAIL' && (
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">Email Subject</label>
-              <input type="text" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="e.g. This week only: 20% off dinner" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Email Subject</label>
+              <input type="text" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="e.g. This week only: 20% off dinner" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
             </div>
           )}
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">{type === 'EMAIL' ? 'Email Body' : 'Message'}</label>
-            <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={4} placeholder={type === 'EMAIL' ? 'Write your email content here...' : 'Keep it under 160 characters for best results'} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
-            {type === 'SMS' && <p className="text-[10px] text-slate-400 mt-1">{body.length}/160 characters</p>}
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{type === 'EMAIL' ? 'Email Body' : 'Message'}</label>
+            <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={4} placeholder={type === 'EMAIL' ? 'Write your email content here...' : 'Keep it under 160 characters for best results'} className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
+            {type === 'SMS' && <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">{body.length}/160 characters</p>}
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <button onClick={onClose} className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
+            <button onClick={onClose} className="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">Cancel</button>
             <button onClick={handleCreate} disabled={saving || !name.trim() || !body.trim()} className="px-5 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 transition-colors flex items-center gap-2">
               {saving && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
               {saving ? 'Saving...' : 'Create Draft'}
@@ -164,8 +164,8 @@ export default function CampaignsPage() {
     <div className="p-8 animate-fade-up">
       <div className="mb-8 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Campaigns</h1>
-          <p className="text-sm text-slate-500 mt-1">Email and SMS marketing to your existing customers</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Campaigns</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Email and SMS marketing to your existing customers</p>
         </div>
         <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors">New Campaign</button>
       </div>
@@ -178,40 +178,40 @@ export default function CampaignsPage() {
       </div>
 
       {sendError && (
-        <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 flex items-center justify-between">
+        <div className="mb-4 px-4 py-3 bg-red-50 dark:bg-red-500/15 border border-red-200 dark:border-red-500/20 rounded-xl text-sm text-red-600 dark:text-red-400 flex items-center justify-between">
           <span>{sendError}</span>
-          <button onClick={() => setSendError(null)} className="text-red-400 hover:text-red-600 ml-4">✕</button>
+          <button onClick={() => setSendError(null)} className="text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-300 ml-4">&#x2715;</button>
         </div>
       )}
 
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-700">Your Campaigns</h2>
-          {campaigns.length > 0 && <span className="text-xs text-slate-400">{campaigns.length} total</span>}
+      <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
+        <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Your Campaigns</h2>
+          {campaigns.length > 0 && <span className="text-xs text-slate-400 dark:text-slate-500">{campaigns.length} total</span>}
         </div>
 
         {loading ? (
           <div className="px-5 py-12 flex justify-center"><div className="w-6 h-6 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" /></div>
         ) : campaigns.length === 0 ? (
-          <div className="px-5 py-12 text-center text-sm text-slate-400">No campaigns yet. Create your first campaign to start reaching your customers.</div>
+          <div className="px-5 py-12 text-center text-sm text-slate-400 dark:text-slate-500">No campaigns yet. Create your first campaign to start reaching your customers.</div>
         ) : (
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-100">
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Name</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Type</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Status</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Created</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Reach</th>
+              <tr className="border-b border-slate-100 dark:border-white/[0.06] bg-slate-50/50 dark:bg-white/[0.06]">
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Name</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Type</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Status</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Created</th>
+                <th className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">Reach</th>
                 <th className="px-5 py-3" />
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-50 dark:divide-white/[0.06]">
               {campaigns.map((c) => (
-                <tr key={c.id} onClick={() => router.push(`/campaigns/${c.id}`)} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors cursor-pointer">
+                <tr key={c.id} onClick={() => router.push(`/campaigns/${c.id}`)} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.04] transition-colors cursor-pointer">
                   <td className="px-5 py-3">
-                    <p className="text-sm font-medium text-slate-800">{c.name}</p>
-                    {c.subject && <p className="text-xs text-slate-400 truncate max-w-xs">{c.subject}</p>}
+                    <p className="text-sm font-medium text-slate-800 dark:text-white">{c.name}</p>
+                    {c.subject && <p className="text-xs text-slate-400 dark:text-slate-500 truncate max-w-xs">{c.subject}</p>}
                   </td>
                   <td className="px-5 py-3">
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${TYPE_BADGES[c.type]}`}>{c.type.toLowerCase()}</span>
@@ -219,8 +219,8 @@ export default function CampaignsPage() {
                   <td className="px-5 py-3">
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${STATUS_BADGES[c.status]}`}>{c.status.toLowerCase()}</span>
                   </td>
-                  <td className="px-5 py-3 text-sm text-slate-500">{new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
-                  <td className="px-5 py-3 text-sm text-slate-500">
+                  <td className="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">{new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
+                  <td className="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">
                     {c.status === 'SENT' ? `${c.sentCount} sent` : '—'}
                   </td>
                   <td className="px-5 py-3">
@@ -229,13 +229,13 @@ export default function CampaignsPage() {
                         <button
                           onClick={(e) => { e.stopPropagation(); handleSend(c.id); }}
                           disabled={sendingId === c.id}
-                          className="text-xs font-medium text-violet-600 hover:text-violet-800 disabled:opacity-50 transition-colors flex items-center gap-1"
+                          className="text-xs font-medium text-violet-600 hover:text-violet-800 dark:text-violet-400 dark:hover:text-violet-300 disabled:opacity-50 transition-colors flex items-center gap-1"
                         >
                           {sendingId === c.id && <div className="w-3 h-3 border border-violet-400 border-t-transparent rounded-full animate-spin" />}
                           {sendingId === c.id ? 'Sending...' : 'Send now'}
                         </button>
                       )}
-                      <button onClick={(e) => { e.stopPropagation(); handleDelete(c.id); }} className="text-xs text-slate-400 hover:text-red-500 font-medium transition-colors">Delete</button>
+                      <button onClick={(e) => { e.stopPropagation(); handleDelete(c.id); }} className="text-xs text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 font-medium transition-colors">Delete</button>
                     </div>
                   </td>
                 </tr>
