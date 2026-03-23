@@ -26,9 +26,16 @@ function buildSystemPrompt(business: { name: string; phone: string | null; addre
     ? Object.values(business.address as Record<string, string>).filter(Boolean).join(', ')
     : 'See our website for address';
 
+  // Resolve enabled tools
   const takeoutTool = tools?.find(t => t.type === 'TAKEOUT_ORDERS' && t.enabled);
-  const menuItems = takeoutTool?.config?.['menuItems'] as Array<{ name: string; price: number; category: string; available: boolean }> | undefined;
+  const waitlistTool = tools?.find(t => t.type === 'WAITLIST' && t.enabled);
+  const dailySpecialsTool = tools?.find(t => t.type === 'DAILY_SPECIALS' && t.enabled);
+  const cateringTool = tools?.find(t => t.type === 'CATERING_REQUESTS' && t.enabled);
+  const giftCardTool = tools?.find(t => t.type === 'GIFT_CARD_LOYALTY' && t.enabled);
+  const promoTool = tools?.find(t => t.type === 'PROMO_ALERTS' && t.enabled);
+  const tableTool = tools?.find(t => t.type === 'TABLE_TURNOVER' && t.enabled);
 
+  let capNum = 4;
   let capabilities = `YOUR CAPABILITIES:
 1. Answer questions about the restaurant (hours, location, menu, specials)
 2. Take reservation requests — collect: name, party size, date/time, phone number
@@ -41,8 +48,11 @@ function buildSystemPrompt(business: { name: string; phone: string | null; addre
 - If the guest asks for a specific time that may not be available, offer to check nearby time slots.
 - Always confirm the reservation details back to the guest before finalizing.`;
 
+  // ── Takeout Orders ──
   if (takeoutTool) {
-    capabilities += `\n5. Take takeout orders — collect: name, phone, items, special instructions, pickup time`;
+    const menuItems = takeoutTool.config?.['menuItems'] as Array<{ name: string; price: number; category: string; available: boolean }> | undefined;
+    capNum++;
+    capabilities += `\n${capNum}. Take takeout orders — collect: name, phone, items, special instructions, pickup time`;
 
     let menuText = '';
     if (menuItems && menuItems.length > 0) {
@@ -66,6 +76,83 @@ TAKEOUT ORDER INSTRUCTIONS:
 - Ask for their preferred pickup time, or suggest approximately ${(takeoutTool.config?.['prepTimeMinutes'] as number) ?? 20} minutes from now.
 - Repeat the full order back to the customer before confirming.
 - When the order is confirmed, output: ORDER_DATA: {"name":"...","phone":"...","items":[{"name":"...","quantity":1,"price":0.00,"notes":"..."}],"specialNotes":"...","pickupTime":"HH:mm"}${menuText}`;
+  }
+
+  // ── Waitlist ──
+  if (waitlistTool) {
+    const avgWait = (waitlistTool.config?.['avgWaitMinutes'] as number) ?? 15;
+    capNum++;
+    capabilities += `\n${capNum}. Add callers to the waitlist — collect: name, party size, phone number`;
+    instructions += `
+WAITLIST INSTRUCTIONS:
+- If the restaurant is full or the caller asks about wait times, offer to add them to the waitlist.
+- Collect the guest's name, party size, and phone number.
+- Tell them the estimated wait is approximately ${avgWait} minutes per party ahead of them.
+- Let them know they'll receive a text message when their table is ready.
+- When confirmed, output: WAITLIST_DATA: {"name":"...","phone":"...","partySize":...,"notes":"..."}`;
+  }
+
+  // ── Daily Specials ──
+  if (dailySpecialsTool) {
+    const specials = dailySpecialsTool.config?.['specials'] as Array<{ name: string; description: string; price: number }> | undefined;
+    const eightySixed = dailySpecialsTool.config?.['eightySixedItems'] as string[] | undefined;
+    capNum++;
+    capabilities += `\n${capNum}. Inform callers about today's specials and unavailable items`;
+
+    if (specials && specials.length > 0) {
+      instructions += `\nTODAY'S SPECIALS:\n${specials.map(s => `- ${s.name}${s.price ? ` ($${s.price.toFixed(2)})` : ''}: ${s.description}`).join('\n')}`;
+    }
+    if (eightySixed && eightySixed.length > 0) {
+      instructions += `\nSOLD OUT / UNAVAILABLE TODAY: ${eightySixed.join(', ')}
+- If a customer tries to order any of these items, politely let them know it's unavailable today and suggest alternatives.`;
+    }
+  }
+
+  // ── Catering ──
+  if (cateringTool) {
+    const minHead = (cateringTool.config?.['minimumHeadcount'] as number) ?? 10;
+    capNum++;
+    capabilities += `\n${capNum}. Take catering inquiries — collect: name, phone, event date, headcount, dietary needs, budget`;
+    instructions += `
+CATERING INSTRUCTIONS:
+- If someone asks about catering, event ordering, or large orders (${minHead}+ people), take their inquiry.
+- Collect: name, phone number, event date and time, headcount, event type, dietary restrictions, and budget if they have one.
+- Let them know someone will follow up with a custom quote.
+- When confirmed, output: CATERING_DATA: {"name":"...","phone":"...","email":"...","eventDate":"YYYY-MM-DD","eventTime":"HH:mm","eventType":"...","headcount":...,"budget":...,"dietaryNotes":"...","menuRequests":"..."}`;
+  }
+
+  // ── Gift Cards ──
+  if (giftCardTool) {
+    const denominations = (giftCardTool.config?.['denominations'] as number[]) ?? [25, 50, 75, 100];
+    capNum++;
+    capabilities += `\n${capNum}. Sell gift cards over the phone`;
+    instructions += `
+GIFT CARD INSTRUCTIONS:
+- Available denominations: ${denominations.map(d => `$${d}`).join(', ')}.
+- Collect: purchaser's name and phone, recipient's name (if different), gift amount, and a personal message if they want one.
+- Let them know the gift card code will be texted to them after purchase.
+- When confirmed, output: GIFTCARD_DATA: {"purchaserName":"...","purchaserPhone":"...","recipientName":"...","amount":...,"personalMessage":"..."}`;
+  }
+
+  // ── Promos / Happy Hour ──
+  if (promoTool) {
+    const promos = promoTool.config?.['promos'] as Array<{ name: string; description: string; days?: string[] }> | undefined;
+    if (promos && promos.length > 0) {
+      capNum++;
+      capabilities += `\n${capNum}. Tell callers about current promotions and deals`;
+      instructions += `\nCURRENT PROMOTIONS:\n${promos.map(p => `- ${p.name}: ${p.description}${p.days ? ` (${p.days.join(', ')})` : ''}`).join('\n')}
+- Mention relevant promotions when appropriate (e.g. if someone calls on a day with a special deal).`;
+    }
+  }
+
+  // ── Table Turnover (for wait time accuracy) ──
+  if (tableTool) {
+    capNum++;
+    capabilities += `\n${capNum}. Provide accurate table availability and wait time estimates`;
+    instructions += `
+TABLE AVAILABILITY:
+- When asked about wait times or table availability, provide accurate estimates.
+- If no tables are available, offer to add them to the waitlist${waitlistTool ? ' (see waitlist instructions above)' : ''} or take a reservation for later.`;
   }
 
   instructions += `\nIMPORTANT: Keep responses concise — this is a phone call. Never make up information you don't know.

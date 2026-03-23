@@ -321,9 +321,22 @@ export default function ToolsPage() {
                         className="px-4 py-2 text-sm font-medium text-rose-600 bg-rose-50 dark:bg-rose-500/10 dark:text-rose-400 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-500/20 transition-colors disabled:opacity-50">
                         Disable
                       </button>
-                      <a href="/orders" className="ml-auto px-4 py-2 text-sm font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors">
-                        View Orders →
-                      </a>
+                      {(() => {
+                        const links: Record<string, { href: string; label: string }> = {
+                          TAKEOUT_ORDERS: { href: '/orders', label: 'View Orders' },
+                          WAITLIST: { href: '/waitlist', label: 'View Waitlist' },
+                          CATERING_REQUESTS: { href: '/catering', label: 'View Requests' },
+                          FEEDBACK_COLLECTION: { href: '/feedback', label: 'View Feedback' },
+                          TABLE_TURNOVER: { href: '/tables', label: 'View Tables' },
+                          GIFT_CARD_LOYALTY: { href: '/gift-cards', label: 'View Cards' },
+                        };
+                        const link = links[tool.type];
+                        return link ? (
+                          <a href={link.href} className="ml-auto px-4 py-2 text-sm font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors">
+                            {link.label} →
+                          </a>
+                        ) : null;
+                      })()}
                     </>
                   ) : (
                     <button onClick={() => enableTool(tool.type, tool.defaultConfig)} disabled={saving}
@@ -340,12 +353,12 @@ export default function ToolsPage() {
 
       {/* Coming Soon Section */}
       <div className="mt-12">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Coming Soon</h2>
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Coming Soon — Other Industries</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
             { name: 'Appointment Booking', desc: 'AI schedules appointments for service businesses', industry: 'Barber Shops, Salons, Spas' },
-            { name: 'Waitlist Manager', desc: 'Automated waitlist with SMS notifications', industry: 'Restaurants, Clinics' },
             { name: 'Class & Session Booking', desc: 'Book fitness classes, sessions, and memberships', industry: 'Gyms, Studios, Training' },
+            { name: 'Service Quotes', desc: 'AI collects job details and generates service quotes', industry: 'Contractors, Auto Shops' },
           ].map(item => (
             <div key={item.name} className="bg-white dark:bg-white/[0.04] border border-dashed border-slate-200 dark:border-white/[0.08] rounded-xl p-5 opacity-60">
               <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">{item.name}</h3>

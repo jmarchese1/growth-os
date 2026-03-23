@@ -149,6 +149,68 @@ export async function elevenLabsWebhookRoutes(app: FastifyInstance): Promise<voi
         }
       }
 
+      // Parse WAITLIST_DATA from transcript
+      if (transcript) {
+        const waitlistMatch = transcript.match(/WAITLIST_DATA:\s*(\{[\s\S]*?\})/);
+        if (waitlistMatch?.[1]) {
+          try {
+            const wData = JSON.parse(waitlistMatch[1]) as { name?: string; phone?: string; partySize?: number; notes?: string };
+            if (wData.name && wData.partySize) {
+              const tool = await db.businessTool.findUnique({ where: { businessId_type: { businessId: business.id, type: 'WAITLIST' } } });
+              if (tool?.enabled) {
+                const currentWaiting = await db.waitlistEntry.count({ where: { businessId: business.id, status: 'WAITING' } });
+                const avgWait = ((tool.config as Record<string, unknown>)?.['avgWaitMinutes'] as number) ?? 15;
+                await db.waitlistEntry.create({
+                  data: { businessId: business.id, guestName: wData.name, guestPhone: wData.phone, partySize: wData.partySize, position: currentWaiting + 1, estimatedWait: (currentWaiting + 1) * avgWait, notes: wData.notes, source: 'VOICE_AGENT' },
+                });
+                log.info({ businessId: business.id, conversationId: data.conversation_id }, 'Waitlist entry created from voice agent');
+              }
+            }
+          } catch (err) { log.warn({ err, conversationId: data.conversation_id }, 'Failed to parse WAITLIST_DATA'); }
+        }
+      }
+
+      // Parse CATERING_DATA from transcript
+      if (transcript) {
+        const cateringMatch = transcript.match(/CATERING_DATA:\s*(\{[\s\S]*?\})/);
+        if (cateringMatch?.[1]) {
+          try {
+            const cData = JSON.parse(cateringMatch[1]) as { name?: string; phone?: string; email?: string; eventDate?: string; eventTime?: string; eventType?: string; headcount?: number; budget?: number; dietaryNotes?: string; menuRequests?: string };
+            if (cData.name && cData.headcount) {
+              const tool = await db.businessTool.findUnique({ where: { businessId_type: { businessId: business.id, type: 'CATERING_REQUESTS' } } });
+              if (tool?.enabled) {
+                await db.cateringInquiry.create({
+                  data: { businessId: business.id, customerName: cData.name, customerPhone: cData.phone, customerEmail: cData.email, eventDate: cData.eventDate ? new Date(cData.eventDate) : undefined, eventTime: cData.eventTime, eventType: cData.eventType, headcount: cData.headcount, budget: cData.budget, dietaryNotes: cData.dietaryNotes, menuRequests: cData.menuRequests, source: 'VOICE_AGENT', voiceCallLogId: data.conversation_id },
+                });
+                log.info({ businessId: business.id, conversationId: data.conversation_id }, 'Catering inquiry created from voice agent');
+              }
+            }
+          } catch (err) { log.warn({ err, conversationId: data.conversation_id }, 'Failed to parse CATERING_DATA'); }
+        }
+      }
+
+      // Parse GIFTCARD_DATA from transcript
+      if (transcript) {
+        const gcMatch = transcript.match(/GIFTCARD_DATA:\s*(\{[\s\S]*?\})/);
+        if (gcMatch?.[1]) {
+          try {
+            const gcData = JSON.parse(gcMatch[1]) as { purchaserName?: string; purchaserPhone?: string; recipientName?: string; amount?: number; personalMessage?: string };
+            if (gcData.amount && gcData.amount > 0) {
+              const tool = await db.businessTool.findUnique({ where: { businessId_type: { businessId: business.id, type: 'GIFT_CARD_LOYALTY' } } });
+              if (tool?.enabled) {
+                const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+                let code = 'GC-';
+                for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+                await db.giftCard.create({
+                  data: { businessId: business.id, code, initialAmount: gcData.amount, currentBalance: gcData.amount, purchaserName: gcData.purchaserName, purchaserPhone: gcData.purchaserPhone, recipientName: gcData.recipientName, personalMessage: gcData.personalMessage, source: 'VOICE_AGENT' },
+                });
+                log.info({ businessId: business.id, code, conversationId: data.conversation_id }, 'Gift card created from voice agent');
+              }
+            }
+          } catch (err) { log.warn({ err, conversationId: data.conversation_id }, 'Failed to parse GIFTCARD_DATA'); }
+        }
+      }
+
       return reply.code(200).send({ received: true });
     },
   );

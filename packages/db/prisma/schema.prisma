@@ -249,6 +249,11 @@ model Business {
   reservations    Reservation[]
   orders          Order[]
   tools           BusinessTool[]
+  waitlistEntries WaitlistEntry[]
+  cateringInquiries CateringInquiry[]
+  feedbackEntries FeedbackEntry[]
+  tableSessions   TableSession[]
+  giftCards       GiftCard[]
   onboardingLog   OnboardingLog[]
   subscription    Subscription?
 
@@ -287,6 +292,10 @@ model Contact {
   chatSessions    ChatSession[]
   callLogs        VoiceCallLog[]
   orders          Order[]
+  waitlistEntries WaitlistEntry[]
+  cateringInquiries CateringInquiry[]
+  feedbackEntries FeedbackEntry[]
+  giftCards       GiftCard[]
   qrScans         QrCodeScan[]
 
   createdAt DateTime @default(now())
@@ -971,7 +980,15 @@ model Reservation {
 
 enum ToolType {
   TAKEOUT_ORDERS
-  // Future: APPOINTMENT_BOOKING, WAITLIST, LOYALTY_PUNCH, etc.
+  WAITLIST
+  DAILY_SPECIALS
+  CATERING_REQUESTS
+  REVIEW_RESPONSE
+  FEEDBACK_COLLECTION
+  PROMO_ALERTS
+  TABLE_TURNOVER
+  DELIVERY_TRACKING
+  GIFT_CARD_LOYALTY
 }
 
 model BusinessTool {
@@ -1060,4 +1077,217 @@ model OrderItem {
   createdAt DateTime @default(now())
 
   @@index([orderId])
+}
+
+// ─── Waitlist Manager ─────────────────────────────────────────────────────────
+
+enum WaitlistStatus {
+  WAITING
+  NOTIFIED      // SMS sent, table is ready
+  SEATED
+  NO_SHOW
+  CANCELLED
+}
+
+model WaitlistEntry {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  contactId  String?
+  contact    Contact? @relation(fields: [contactId], references: [id])
+
+  guestName   String
+  guestPhone  String?
+  partySize   Int
+  position    Int         // Queue position at time of entry
+  estimatedWait Int?      // Minutes estimated at time of entry
+  notes       String?     // e.g. "birthday", "high chair needed"
+
+  status      WaitlistStatus @default(WAITING)
+
+  // Source tracking
+  source      OrderSource @default(MANUAL)  // Reuse: VOICE_AGENT, CHATBOT, WEBSITE, MANUAL
+
+  notifiedAt  DateTime?   // When "table ready" SMS was sent
+  seatedAt    DateTime?
+  cancelledAt DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ─── Catering Requests ────────────────────────────────────────────────────────
+
+enum CateringStatus {
+  NEW
+  CONTACTED
+  QUOTED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+model CateringInquiry {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  contactId  String?
+  contact    Contact? @relation(fields: [contactId], references: [id])
+
+  // Customer info
+  customerName  String
+  customerPhone String?
+  customerEmail String?
+
+  // Event details
+  eventDate   DateTime?
+  eventTime   String?      // "HH:mm"
+  eventType   String?      // "corporate lunch", "wedding", "birthday party"
+  headcount   Int
+  budget      Float?       // Customer's stated budget
+  location    String?      // Delivery address or "pickup"
+
+  // Requirements
+  dietaryNotes String?     // "3 vegetarian, 1 gluten-free"
+  menuRequests String?     // What they want
+  notes        String?
+
+  // Quote
+  quotedAmount Float?
+  quoteNotes   String?
+
+  status      CateringStatus @default(NEW)
+  source      OrderSource    @default(MANUAL)
+
+  voiceCallLogId String?
+  chatSessionId  String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([status])
+  @@index([eventDate])
+}
+
+// ─── Feedback Collection ──────────────────────────────────────────────────────
+
+enum FeedbackRating {
+  TERRIBLE
+  POOR
+  OKAY
+  GOOD
+  EXCELLENT
+}
+
+model FeedbackEntry {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  contactId  String?
+  contact    Contact? @relation(fields: [contactId], references: [id])
+
+  customerName  String?
+  customerPhone String?
+
+  // What triggered the feedback
+  triggerType String?    // "order", "reservation", "visit"
+  triggerId  String?    // orderId or reservationId
+
+  rating     FeedbackRating?
+  comment    String?
+  isPublic   Boolean @default(false)  // Can be shown on website
+
+  // For follow-up
+  responded    Boolean  @default(false)
+  responseText String?
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([rating])
+  @@index([createdAt])
+}
+
+// ─── Table Turnover Tracker ───────────────────────────────────────────────────
+
+enum TableStatus {
+  AVAILABLE
+  OCCUPIED
+  RESERVED
+  CLEANING
+}
+
+model TableSession {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  tableNumber   String       // e.g. "1", "Patio-3", "Bar-2"
+  tableCapacity Int?         // Max seats
+  status        TableStatus  @default(AVAILABLE)
+
+  // Current session
+  partySize     Int?
+  guestName     String?
+  seatedAt      DateTime?
+  estimatedDone DateTime?    // Estimated time they'll finish
+  clearedAt     DateTime?
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([businessId, tableNumber])
+  @@index([businessId])
+  @@index([status])
+}
+
+// ─── Gift Cards & Loyalty ─────────────────────────────────────────────────────
+
+enum GiftCardStatus {
+  ACTIVE
+  REDEEMED
+  EXPIRED
+  CANCELLED
+}
+
+model GiftCard {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  contactId  String?
+  contact    Contact? @relation(fields: [contactId], references: [id])
+
+  code           String   @unique  // Redemption code, e.g. "GC-A3F9K2"
+  initialAmount  Float
+  currentBalance Float
+  status         GiftCardStatus @default(ACTIVE)
+
+  // Buyer info
+  purchaserName  String?
+  purchaserEmail String?
+  purchaserPhone String?
+
+  // Recipient info
+  recipientName  String?
+  recipientEmail String?
+  recipientPhone String?
+  personalMessage String?
+
+  expiresAt   DateTime?
+  redeemedAt  DateTime?
+
+  source      OrderSource @default(MANUAL)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([code])
+  @@index([status])
 }

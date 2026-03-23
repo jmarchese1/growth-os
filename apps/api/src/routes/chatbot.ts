@@ -261,8 +261,15 @@ export async function chatbotRoutes(app: FastifyInstance): Promise<void> {
             config: t.config,
           })),
           capabilities: {
-            takeOrders: !!takeoutTool,
-            menuItems: takeoutTool ? (takeoutTool.config as Record<string, unknown>)?.['menuItems'] ?? [] : [],
+            takeOrders: !!tools.find(t => t.type === 'TAKEOUT_ORDERS'),
+            waitlist: !!tools.find(t => t.type === 'WAITLIST'),
+            dailySpecials: !!tools.find(t => t.type === 'DAILY_SPECIALS'),
+            catering: !!tools.find(t => t.type === 'CATERING_REQUESTS'),
+            giftCards: !!tools.find(t => t.type === 'GIFT_CARD_LOYALTY'),
+            promoAlerts: !!tools.find(t => t.type === 'PROMO_ALERTS'),
+            feedback: !!tools.find(t => t.type === 'FEEDBACK_COLLECTION'),
+            tableTracking: !!tools.find(t => t.type === 'TABLE_TURNOVER'),
+            deliveryTracking: !!tools.find(t => t.type === 'DELIVERY_TRACKING'),
           },
         },
       };
