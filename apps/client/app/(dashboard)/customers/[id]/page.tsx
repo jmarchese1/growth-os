@@ -648,11 +648,11 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           <div className="px-5 py-3 border-b border-slate-200 dark:border-white/[0.08]"><h2 className="text-sm font-semibold text-slate-900 dark:text-white">Send Survey</h2></div>
           <div className="px-5 py-4 space-y-3">
             {surveySuccess ? (
-              <div className="text-center py-6"><div className="text-4xl mb-2">✓</div><p className="text-slate-700 font-medium">Survey sent successfully</p></div>
+              <div className="text-center py-6"><div className="text-4xl mb-2">✓</div><p className="text-slate-700 dark:text-slate-200 font-medium">Survey sent successfully</p></div>
             ) : (<>
               <div>
                 <label className="text-xs text-slate-500 dark:text-slate-400 font-medium">Survey</label>
-                {surveys.length === 0 ? <p className="mt-2 text-sm text-slate-400">Loading surveys...</p> : (
+                {surveys.length === 0 ? <p className="mt-2 text-sm text-slate-400 dark:text-slate-500">Loading surveys...</p> : (
                   <select value={selectedSurveyId} onChange={(e) => setSelectedSurveyId(e.target.value)} className={`mt-1 ${inputClass}`}>
                     {surveys.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}
                   </select>
@@ -661,7 +661,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
               <div>
                 <label className="text-xs text-slate-500 dark:text-slate-400 font-medium">Send via</label>
                 <div className="mt-1">
-                  <button className="w-full py-2 rounded-lg border border-violet-500 bg-violet-50 text-violet-700 text-sm font-medium">Email</button>
+                  <button className="w-full py-2 rounded-lg border border-violet-500 bg-violet-50 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400 text-sm font-medium">Email</button>
                 </div>
                 {!contact?.email && <p className="text-xs text-amber-600 mt-1">Contact has no email address</p>}
               </div>
@@ -743,19 +743,19 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           { label: 'QR Scans', value: contact.qrScans.length },
           { label: 'Appointments', value: contact.appointments.length },
         ].map(({ label, value }) => (
-          <div key={label} className="bg-white rounded-2xl border border-slate-200 p-4 text-center">
-            <div className="text-2xl font-bold text-slate-900">{value}</div>
-            <div className="text-xs text-slate-500 mt-0.5">{label}</div>
+          <div key={label} className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-4 text-center">
+            <div className="text-2xl font-bold text-slate-900 dark:text-white">{value}</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{label}</div>
           </div>
         ))}
       </div>
 
       {/* ─── Email Sequences ─────────────────────────────────────────────── */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-5">
+      <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-sm font-semibold text-slate-700">Email Sequences</h2>
-            <p className="text-[10px] text-slate-400 mt-0.5">Automated multi-step email campaigns to keep customers engaged</p>
+            <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Email Sequences</h2>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Automated multi-step email campaigns to keep customers engaged</p>
           </div>
         </div>
 
@@ -763,32 +763,32 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           <div className="flex justify-center py-6"><div className="w-5 h-5 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" /></div>
         ) : sequences.length === 0 ? (
           <div className="text-center py-6">
-            <p className="text-sm text-slate-400 mb-1">No sequences yet</p>
-            <p className="text-xs text-slate-400">Create automated email sequences to re-engage customers</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500 mb-1">No sequences yet</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500">Create automated email sequences to re-engage customers</p>
           </div>
         ) : (
           <div className="space-y-2">
             {sequences.map((seq) => (
-              <div key={seq.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition-colors">
+              <div key={seq.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-white/[0.06] border border-slate-100 dark:border-white/[0.06] hover:border-slate-200 dark:hover:border-white/[0.1] transition-colors">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold bg-violet-100 text-violet-600">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold bg-violet-100 dark:bg-violet-500/15 text-violet-600 dark:text-violet-400">
                     ✉️
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-800 truncate">{seq.name}</p>
+                    <p className="text-sm font-medium text-slate-800 dark:text-white truncate">{seq.name}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[10px] text-slate-400">{seq.stepCount} step{seq.stepCount !== 1 ? 's' : ''}</span>
-                      <span className="text-[10px] text-slate-400">{seq.triggerLabel}</span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500">{seq.stepCount} step{seq.stepCount !== 1 ? 's' : ''}</span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500">{seq.triggerLabel}</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   <button onClick={() => void handleToggleSequence(seq)}
-                    className={`px-2 py-1 text-[10px] font-medium rounded-lg transition-colors ${seq.active ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
+                    className={`px-2 py-1 text-[10px] font-medium rounded-lg transition-colors ${seq.active ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-500/15 dark:text-emerald-400 dark:hover:bg-emerald-500/25' : 'bg-slate-100 dark:bg-white/[0.06] text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.1]'}`}>
                     {seq.active ? 'Active' : 'Paused'}
                   </button>
                   <button onClick={() => void handleEditSequence(seq)}
-                    className="px-2 py-1 text-[10px] font-medium text-slate-500 border border-slate-200 rounded-lg hover:bg-slate-50">Edit</button>
+                    className="px-2 py-1 text-[10px] font-medium text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/[0.08] rounded-lg hover:bg-slate-50 dark:hover:bg-white/[0.04]">Edit</button>
                   <button onClick={() => void handleDeleteSequence(seq)}
                     className="px-2 py-1 text-[10px] font-medium text-red-400 hover:text-red-600 rounded-lg hover:bg-red-50">Delete</button>
                 </div>
@@ -800,26 +800,26 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Activity timeline */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <h2 className="text-sm font-semibold text-slate-700 mb-3">Activity Timeline</h2>
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5">
+          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">Activity Timeline</h2>
           <div className="flex gap-2 mb-4">
             <input value={noteText} onChange={(e) => setNoteText(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void handleAddNote(); } }}
-              placeholder="Add a note..." className="flex-1 px-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-400" />
+              placeholder="Add a note..." className="flex-1 px-3 py-1.5 text-sm border border-slate-200 dark:border-white/[0.08] rounded-lg dark:bg-white/[0.06] dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-400" />
             <button onClick={() => void handleAddNote()} disabled={noteSaving || !noteText.trim()}
               className="px-3 py-1.5 bg-violet-600 text-white text-xs font-medium rounded-lg hover:bg-violet-700 disabled:opacity-50 transition-colors">{noteSaving ? '...' : 'Add'}</button>
           </div>
           {contact.activities.length === 0 ? (
-            <p className="text-sm text-slate-400 text-center py-6">No activity recorded yet</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-6">No activity recorded yet</p>
           ) : (
             <div className="space-y-3">
               {contact.activities.map((a) => (
                 <div key={a.id} className="flex gap-3">
                   <div className="text-base shrink-0 mt-0.5">{ACTIVITY_ICONS[a.type] ?? '•'}</div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-800">{a.type === 'NOTE' ? a.description : a.title}</p>
-                    {a.type !== 'NOTE' && a.description && <p className="text-xs text-slate-400 mt-0.5 truncate">{a.description}</p>}
-                    <p className="text-[10px] text-slate-300 mt-0.5">{formatDateTime(a.createdAt)}</p>
+                    <p className="text-sm font-medium text-slate-800 dark:text-white">{a.type === 'NOTE' ? a.description : a.title}</p>
+                    {a.type !== 'NOTE' && a.description && <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate">{a.description}</p>}
+                    <p className="text-[10px] text-slate-300 dark:text-slate-600 mt-0.5">{formatDateTime(a.createdAt)}</p>
                   </div>
                 </div>
               ))}
@@ -828,17 +828,17 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         </div>
 
         {/* Appointments */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <h2 className="text-sm font-semibold text-slate-700 mb-4">Appointments</h2>
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5">
+          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">Appointments</h2>
           {contact.appointments.length === 0 ? (
-            <p className="text-sm text-slate-400 text-center py-6">No appointments</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-6">No appointments</p>
           ) : (
             <div className="space-y-2">
               {contact.appointments.map((a) => (
-                <div key={a.id} className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                  <p className="text-sm font-medium text-slate-800">{a.title}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{formatDateTime(a.startTime)}</p>
-                  <span className={`inline-block mt-1.5 text-[11px] px-2 py-0.5 rounded-full font-medium ${a.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700' : a.status === 'CANCELLED' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700'}`}>{a.status.toLowerCase()}</span>
+                <div key={a.id} className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.06] border border-slate-100 dark:border-white/[0.06]">
+                  <p className="text-sm font-medium text-slate-800 dark:text-white">{a.title}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{formatDateTime(a.startTime)}</p>
+                  <span className={`inline-block mt-1.5 text-[11px] px-2 py-0.5 rounded-full font-medium ${a.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400' : a.status === 'CANCELLED' ? 'bg-red-100 text-red-600 dark:bg-red-500/15 dark:text-red-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400'}`}>{a.status.toLowerCase()}</span>
                 </div>
               ))}
             </div>
@@ -847,17 +847,17 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
         {/* Survey responses */}
         {contact.surveyResponses.length > 0 && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-5">
-            <h2 className="text-sm font-semibold text-slate-700 mb-4">Survey Responses</h2>
+          <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5">
+            <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">Survey Responses</h2>
             <div className="space-y-2">
               {contact.surveyResponses.map((r) => (
-                <div key={r.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <div key={r.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-white/[0.06] border border-slate-100 dark:border-white/[0.06]">
                   <div>
-                    <p className="text-sm font-medium text-slate-800">{r.survey?.title ?? 'Survey'}</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">{formatDateTime(r.createdAt)}</p>
+                    <p className="text-sm font-medium text-slate-800 dark:text-white">{r.survey?.title ?? 'Survey'}</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">{formatDateTime(r.createdAt)}</p>
                   </div>
                   {r.score !== null && (
-                    <div className="flex gap-0.5">{[1, 2, 3, 4, 5].map((s) => <span key={s} className={`text-sm ${s <= r.score! ? 'text-amber-400' : 'text-slate-200'}`}>★</span>)}</div>
+                    <div className="flex gap-0.5">{[1, 2, 3, 4, 5].map((s) => <span key={s} className={`text-sm ${s <= r.score! ? 'text-amber-400' : 'text-slate-200 dark:text-slate-600'}`}>★</span>)}</div>
                   )}
                 </div>
               ))}
@@ -867,16 +867,16 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
         {/* QR scans */}
         {contact.qrScans.length > 0 && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-5">
-            <h2 className="text-sm font-semibold text-slate-700 mb-4">QR Code Scans</h2>
+          <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5">
+            <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">QR Code Scans</h2>
             <div className="space-y-2">
               {contact.qrScans.map((s) => (
-                <div key={s.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <div key={s.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-white/[0.06] border border-slate-100 dark:border-white/[0.06]">
                   <div>
-                    <p className="text-sm font-medium text-slate-800">{s.qrCode?.label ?? 'QR Code'}</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">{s.qrCode ? QR_PURPOSE_LABELS[s.qrCode.purpose] : ''} · {formatDateTime(s.createdAt)}</p>
+                    <p className="text-sm font-medium text-slate-800 dark:text-white">{s.qrCode?.label ?? 'QR Code'}</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">{s.qrCode ? QR_PURPOSE_LABELS[s.qrCode.purpose] : ''} · {formatDateTime(s.createdAt)}</p>
                   </div>
-                  {s.outcome && <span className="text-[11px] px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full">{s.outcome}</span>}
+                  {s.outcome && <span className="text-[11px] px-2 py-0.5 bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-300 rounded-full">{s.outcome}</span>}
                 </div>
               ))}
             </div>
@@ -885,18 +885,18 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
         {/* Call logs */}
         {contact.callLogs.length > 0 && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-5">
-            <h2 className="text-sm font-semibold text-slate-700 mb-4">Call History</h2>
+          <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5">
+            <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">Call History</h2>
             <div className="space-y-2">
               {contact.callLogs.map((c) => (
-                <div key={c.id} className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <div key={c.id} className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.06] border border-slate-100 dark:border-white/[0.06]">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-slate-800 capitalize">{c.direction.toLowerCase()} · {c.intent.toLowerCase()}</span>
-                    {c.duration && <span className="text-xs text-slate-400">{Math.round(c.duration / 60)}m</span>}
+                    {c.duration && <span className="text-xs text-slate-400 dark:text-slate-500">{Math.round(c.duration / 60)}m</span>}
                   </div>
-                  {c.summary && <p className="text-xs text-slate-500 mt-1 line-clamp-2">{c.summary}</p>}
-                  {c.sentiment && <span className={`inline-block mt-1 text-[11px] px-2 py-0.5 rounded-full ${c.sentiment === 'POSITIVE' ? 'bg-emerald-100 text-emerald-700' : c.sentiment === 'NEGATIVE' ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-500'}`}>{c.sentiment.toLowerCase()}</span>}
-                  <p className="text-[10px] text-slate-300 mt-1">{formatDateTime(c.createdAt)}</p>
+                  {c.summary && <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{c.summary}</p>}
+                  {c.sentiment && <span className={`inline-block mt-1 text-[11px] px-2 py-0.5 rounded-full ${c.sentiment === 'POSITIVE' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400' : c.sentiment === 'NEGATIVE' ? 'bg-red-100 text-red-600 dark:bg-red-500/15 dark:text-red-400' : 'bg-slate-100 text-slate-500 dark:bg-white/[0.06] dark:text-slate-400'}`}>{c.sentiment.toLowerCase()}</span>}
+                  <p className="text-[10px] text-slate-300 dark:text-slate-600 mt-1">{formatDateTime(c.createdAt)}</p>
                 </div>
               ))}
             </div>
@@ -905,16 +905,16 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
         {/* Chat sessions */}
         {contact.chatSessions.length > 0 && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-5">
-            <h2 className="text-sm font-semibold text-slate-700 mb-4">Chat Sessions</h2>
+          <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5">
+            <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">Chat Sessions</h2>
             <div className="space-y-2">
               {contact.chatSessions.map((s) => (
-                <div key={s.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <div key={s.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-white/[0.06] border border-slate-100 dark:border-white/[0.06]">
                   <div>
                     <p className="text-sm font-medium text-slate-800 capitalize">{s.channel.toLowerCase()} chat</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">{formatDateTime(s.createdAt)}</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">{formatDateTime(s.createdAt)}</p>
                   </div>
-                  {s.leadCaptured && <span className="text-[11px] px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full">Lead captured</span>}
+                  {s.leadCaptured && <span className="text-[11px] px-2 py-0.5 bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 rounded-full">Lead captured</span>}
                 </div>
               ))}
             </div>

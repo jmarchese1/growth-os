@@ -627,12 +627,12 @@ export default function WebsiteBuilder({
                 placeholder="A warm, rustic Italian restaurant site with earth tones, lots of food photography, serif headings, and a cozy feel. Dark background with cream text. The menu should be prominent with categories..."
                 rows={3}
                 style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
+                className="w-full px-4 py-3 border border-slate-200 dark:border-white/[0.08] rounded-xl text-sm dark:text-white dark:bg-white/[0.06] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
               />
             </div>
 
             <div className="flex gap-3">
-              {!industryKnown && <button onClick={() => setStep(1)} className="px-5 py-3 border border-slate-200 text-slate-600 font-medium rounded-xl text-sm hover:bg-slate-50">Back</button>}
+              {!industryKnown && <button onClick={() => setStep(1)} className="px-5 py-3 border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 font-medium rounded-xl text-sm hover:bg-slate-50 dark:hover:bg-white/[0.04]">Back</button>}
               <button
                 onClick={() => void handleScrape()}
                 disabled={scraping}
@@ -654,10 +654,10 @@ export default function WebsiteBuilder({
 
         {/* ── STEP 3 — Details ── */}
         {step === 3 && (
-          <div className="bg-white border border-slate-200 rounded-2xl p-8">
+          <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl p-8">
             <div className="flex items-center gap-3 mb-6">
-              <h2 className="text-xl font-bold text-slate-900">Your {industry.label} Details</h2>
-              {scraped && <span className="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-full">Auto-filled from your site</span>}
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">Your {industry.label} Details</h2>
+              {scraped && <span className="px-2.5 py-1 bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-xs font-semibold rounded-full">Auto-filled from your site</span>}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
               <Field label="Business Name *" value={form.businessName} onChange={(v) => setForm_('businessName', v)} placeholder={`Your ${industry.label} name`} />
@@ -668,13 +668,13 @@ export default function WebsiteBuilder({
                 <Field label="Address" value={form.address} onChange={(v) => setForm_('address', v)} placeholder="123 Main St, New York, NY 10001" />
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Short Description</label>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">Short Description</label>
                 <textarea
                   value={form.description}
                   onChange={(e) => setForm_('description', e.target.value)}
                   placeholder={industry.descriptionPlaceholder}
                   rows={3}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none"
+                  className="w-full px-4 py-3 border border-slate-200 dark:border-white/[0.08] rounded-xl text-sm text-slate-900 dark:text-white dark:bg-white/[0.06] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none"
                 />
               </div>
               <Field label="Hero Image URL" value={form.heroImage} onChange={(v) => setForm_('heroImage', v)} placeholder="https://..." />
@@ -686,18 +686,18 @@ export default function WebsiteBuilder({
               </div>
             </div>
             <div className="mb-6">
-              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
                 Hours <span className="font-normal text-slate-400">(optional — AI will suggest if left blank)</span>
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
                 {DAYS.map((day) => (
                   <div key={day} className="flex items-center gap-3">
-                    <span className="text-xs text-slate-500 w-24 flex-shrink-0">{day}</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 w-24 flex-shrink-0">{day}</span>
                     <input
                       value={form.hours[day] ?? ''}
                       onChange={(e) => setForm_('hours', { ...form.hours, [day]: e.target.value })}
                       placeholder="11am – 10pm or Closed"
-                      className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-xs text-slate-700 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-violet-400"
+                      className="flex-1 px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-xs text-slate-700 dark:text-slate-200 dark:bg-white/[0.06] placeholder-slate-300 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-400"
                     />
                   </div>
                 ))}
@@ -705,7 +705,7 @@ export default function WebsiteBuilder({
             </div>
             {/* Menu / Services upload */}
             <div className="mb-6 border-t border-slate-100 dark:border-white/[0.06] pt-6">
-              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
                 {industry.defaultSections.find((s) => s.id === 'menu')?.label ?? 'Menu / Services'}{' '}
                 <span className="font-normal text-slate-400">(optional — upload to auto-populate)</span>
               </label>
@@ -714,13 +714,13 @@ export default function WebsiteBuilder({
                   <button
                     key={mode}
                     onClick={() => setMenuInputMode(menuInputMode === mode ? null : mode)}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${menuInputMode === mode ? 'border-violet-500 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${menuInputMode === mode ? 'border-violet-500 bg-violet-50 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400' : 'border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-white/[0.12]'}`}
                   >
                     {mode === 'text' ? 'Paste Text' : mode === 'image' ? 'Upload Photo' : 'Upload PDF'}
                   </button>
                 ))}
                 {form.menuItems.length > 0 && (
-                  <span className="ml-auto px-2.5 py-1 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-full">
+                  <span className="ml-auto px-2.5 py-1 bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-xs font-semibold rounded-full">
                     {form.menuItems.length} items loaded
                   </span>
                 )}
@@ -733,7 +733,7 @@ export default function WebsiteBuilder({
                     onChange={(e) => setMenuText(e.target.value)}
                     placeholder={"Paste your menu here in any format — items, prices, descriptions, categories..."}
                     rows={6}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none font-mono"
+                    className="w-full px-4 py-3 border border-slate-200 dark:border-white/[0.08] rounded-xl text-xs text-slate-800 dark:text-white dark:bg-white/[0.06] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none font-mono"
                   />
                   <button
                     onClick={() => void handleMenuTextExtract()}
@@ -771,7 +771,7 @@ export default function WebsiteBuilder({
 
             {/* Gallery Images */}
             <div className="mb-6 border-t border-slate-100 dark:border-white/[0.06] pt-6">
-              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
                 Photo Gallery <span className="font-normal text-slate-400">(paste image URLs — up to 6)</span>
               </label>
               <div className="space-y-2 mt-3">
@@ -809,7 +809,7 @@ export default function WebsiteBuilder({
               {form.galleryImages.filter(Boolean).length > 0 && (
                 <div className="grid grid-cols-3 gap-2 mt-3">
                   {form.galleryImages.filter(Boolean).map((url, i) => (
-                    <div key={i} className="aspect-square rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
+                    <div key={i} className="aspect-square rounded-lg overflow-hidden bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08]">
                       <img src={url} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                     </div>
                   ))}
@@ -819,18 +819,18 @@ export default function WebsiteBuilder({
 
             {/* Analytics (collapsible) */}
             <details className="mb-6 border-t border-slate-100 dark:border-white/[0.06] pt-6">
-              <summary className="text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer select-none">
-                Analytics & Tracking <span className="font-normal text-slate-400">(optional)</span>
+              <summary className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider cursor-pointer select-none">
+                Analytics & Tracking <span className="font-normal text-slate-400 dark:text-slate-500">(optional)</span>
               </summary>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 <Field label="Google Analytics ID" value={form.googleAnalyticsId} onChange={(v) => setForm_('googleAnalyticsId', v)} placeholder="G-XXXXXXXXXX" />
                 <Field label="Meta Pixel ID" value={form.metaPixelId} onChange={(v) => setForm_('metaPixelId', v)} placeholder="123456789012345" />
               </div>
-              <p className="text-[10px] text-slate-400 mt-2">Tracking codes will be injected into your generated website automatically.</p>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2">Tracking codes will be injected into your generated website automatically.</p>
             </details>
 
             <div className="flex gap-3">
-              <button onClick={() => setStep(2)} className="px-5 py-3 border border-slate-200 text-slate-600 font-medium rounded-xl text-sm hover:bg-slate-50">Back</button>
+              <button onClick={() => setStep(2)} className="px-5 py-3 border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 font-medium rounded-xl text-sm hover:bg-slate-50 dark:hover:bg-white/[0.04]">Back</button>
               <button onClick={() => setStep(4)} className="flex-1 py-3 bg-violet-600 text-white font-semibold rounded-xl text-sm hover:bg-violet-700">Continue to Structure</button>
             </div>
           </div>
@@ -839,22 +839,22 @@ export default function WebsiteBuilder({
         {/* ── STEP 4 — Page Structure ── */}
         {step === 4 && (
           <div className="space-y-6">
-            <div className="bg-white border border-slate-200 rounded-2xl p-8">
-              <h2 className="text-xl font-bold text-slate-900 mb-1">Page Structure</h2>
-              <p className="text-sm text-slate-500 mb-8">
+            <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl p-8">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">Page Structure</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">
                 Choose which sections to include and drag them into your preferred order. Hero is always first.
               </p>
 
               {/* Hero — locked */}
-              <div className="flex items-center gap-3 px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl mb-3 opacity-60">
-                <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center flex-shrink-0">
+              <div className="flex items-center gap-3 px-4 py-3.5 bg-slate-50 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] rounded-xl mb-3 opacity-60">
+                <div className="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-500/15 flex items-center justify-center flex-shrink-0">
                   <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-violet-600"><path fillRule="evenodd" d="M10 1a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 1zM5.05 3.05a.75.75 0 011.06 0l1.062 1.06A.75.75 0 016.11 5.173L5.05 4.11a.75.75 0 010-1.06zm9.9 0a.75.75 0 010 1.06l-1.06 1.062a.75.75 0 01-1.062-1.061l1.061-1.06a.75.75 0 011.06 0zM3 8a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5H3.75A.75.75 0 013 8zm11 0a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 0114 8z" clipRule="evenodd"/></svg>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-slate-700">Hero Banner</p>
-                  <p className="text-[11px] text-slate-400">Always first — your main headline and CTA</p>
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Hero Banner</p>
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500">Always first — your main headline and CTA</p>
                 </div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-200 px-2 py-0.5 rounded-full">Locked</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 bg-slate-200 dark:bg-white/[0.06] px-2 py-0.5 rounded-full">Locked</span>
               </div>
 
               {/* Reorderable sections */}
@@ -864,16 +864,16 @@ export default function WebsiteBuilder({
                     key={section.id}
                     className={`flex items-center gap-3 px-4 py-3.5 rounded-xl border-2 transition-all ${
                       section.isPage
-                        ? 'bg-indigo-50/60 border-indigo-200'
+                        ? 'bg-indigo-50/60 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/20'
                         : section.enabled
-                        ? 'bg-white border-slate-200 hover:border-violet-200'
-                        : 'bg-slate-50 border-slate-100 opacity-50'
+                        ? 'bg-white dark:bg-white/[0.04] border-slate-200 dark:border-white/[0.08] hover:border-violet-200'
+                        : 'bg-slate-50 dark:bg-white/[0.02] border-slate-100 dark:border-white/[0.04] opacity-50'
                     }`}
                   >
                     {/* Enable toggle */}
                     <button
                       onClick={() => toggleSection(idx)}
-                      className={`w-10 h-6 rounded-full flex-shrink-0 transition-colors relative ${section.enabled ? 'bg-violet-600' : 'bg-slate-300'}`}
+                      className={`w-10 h-6 rounded-full flex-shrink-0 transition-colors relative ${section.enabled ? 'bg-violet-600' : 'bg-slate-300 dark:bg-white/[0.12]'}`}
                     >
                       <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${section.enabled ? 'left-5' : 'left-1'}`} />
                     </button>
@@ -889,8 +889,8 @@ export default function WebsiteBuilder({
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-800">{section.label}</p>
-                      {section.hint && <p className="text-[11px] text-slate-400 mt-0.5">{section.hint}</p>}
+                      <p className="text-sm font-semibold text-slate-800 dark:text-white">{section.label}</p>
+                      {section.hint && <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">{section.hint}</p>}
                     </div>
 
                     {/* Page mode toggle */}
@@ -899,8 +899,8 @@ export default function WebsiteBuilder({
                       title={section.isPage ? 'Full-page section (click to make inline)' : 'Inline section (click to make a full page)'}
                       className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg border transition-colors ${
                         section.isPage
-                          ? 'bg-indigo-100 border-indigo-300 text-indigo-700'
-                          : 'bg-slate-50 border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600'
+                          ? 'bg-indigo-100 dark:bg-indigo-500/15 border-indigo-300 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-400'
+                          : 'bg-slate-50 dark:bg-white/[0.06] border-slate-200 dark:border-white/[0.08] text-slate-400 hover:border-slate-300 hover:text-slate-600 dark:hover:text-slate-300'
                       }`}
                     >
                       {section.isPage ? (
@@ -916,7 +916,7 @@ export default function WebsiteBuilder({
 
               {/* Additional Pages */}
               <div className="mt-6 border-t border-slate-100 dark:border-white/[0.06] pt-6">
-                <h3 className="text-sm font-bold text-slate-800 mb-1">Additional Pages</h3>
+                <h3 className="text-sm font-bold text-slate-800 dark:text-white mb-1">Additional Pages</h3>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">Standalone pages with their own nav links and AI-generated content — perfect for Contact, Careers, Team pages.</p>
                 <div className="grid grid-cols-3 gap-2">
                   {extraPages.map((page) => (
@@ -924,11 +924,11 @@ export default function WebsiteBuilder({
                       key={page.id}
                       onClick={() => toggleExtraPage(page.id)}
                       className={`px-3 py-2.5 rounded-xl border-2 text-left transition-all ${
-                        page.enabled ? 'border-violet-500 bg-violet-50' : 'border-slate-200 bg-white hover:border-slate-300'
+                        page.enabled ? 'border-violet-500 bg-violet-50 dark:bg-violet-500/15' : 'border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.04] hover:border-slate-300 dark:hover:border-white/[0.12]'
                       }`}
                     >
-                      <p className={`text-xs font-semibold ${page.enabled ? 'text-violet-700' : 'text-slate-700'}`}>{page.label}</p>
-                      <p className={`text-[10px] mt-0.5 font-mono ${page.enabled ? 'text-violet-400' : 'text-slate-400'}`}>/{page.slug}</p>
+                      <p className={`text-xs font-semibold ${page.enabled ? 'text-violet-700 dark:text-violet-400' : 'text-slate-700 dark:text-slate-200'}`}>{page.label}</p>
+                      <p className={`text-[10px] mt-0.5 font-mono ${page.enabled ? 'text-violet-400' : 'text-slate-400 dark:text-slate-500'}`}>/{page.slug}</p>
                     </button>
                   ))}
                 </div>
@@ -954,13 +954,13 @@ export default function WebsiteBuilder({
             </div>
 
             {hasInspirationUrls && (
-              <div className="bg-violet-50 border border-violet-100 rounded-xl p-4 flex gap-3 items-start">
+              <div className="bg-violet-50 dark:bg-violet-500/15 border border-violet-100 dark:border-violet-500/20 rounded-xl p-4 flex gap-3 items-start">
                 <div className="w-7 h-7 bg-violet-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                   <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-violet-600"><path d="M10 1a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 1zM5.05 3.05a.75.75 0 011.06 0l1.062 1.06A.75.75 0 016.11 5.173L5.05 4.11a.75.75 0 010-1.06zm9.9 0a.75.75 0 010 1.06l-1.06 1.062a.75.75 0 01-1.062-1.061l1.061-1.06a.75.75 0 011.06 0zM3 8a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5H3.75A.75.75 0 013 8zm11 0a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 0114 8z" clipRule="evenodd"/></svg>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-violet-800">AI will design your site from scratch</p>
-                  <p className="text-[11px] text-violet-600 mt-0.5">Since you provided inspiration URLs, the AI will generate a completely custom layout, colors, typography, and CSS — no templates. You can fine-tune everything after with the AI editor.</p>
+                  <p className="text-xs font-semibold text-violet-800 dark:text-violet-300">AI will design your site from scratch</p>
+                  <p className="text-[11px] text-violet-600 dark:text-violet-400 mt-0.5">Since you provided inspiration URLs, the AI will generate a completely custom layout, colors, typography, and CSS — no templates. You can fine-tune everything after with the AI editor.</p>
                 </div>
               </div>
             )}
@@ -968,7 +968,7 @@ export default function WebsiteBuilder({
             {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
             <div className="flex gap-3">
-              <button onClick={() => setStep(3)} className="px-5 py-3 border border-slate-200 text-slate-600 font-medium rounded-xl text-sm hover:bg-slate-50">Back</button>
+              <button onClick={() => setStep(3)} className="px-5 py-3 border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 font-medium rounded-xl text-sm hover:bg-slate-50 dark:hover:bg-white/[0.04]">Back</button>
               <button
                 onClick={() => void handleGenerate()}
                 disabled={generating}
@@ -988,15 +988,15 @@ export default function WebsiteBuilder({
         {/* ── STEP 5 — Style ── */}
         {step === 5 && (
           <div className="space-y-6">
-            <div className="bg-white border border-slate-200 rounded-2xl p-8">
-              <h2 className="text-xl font-bold text-slate-900 mb-1">Choose Your Style</h2>
-              <p className="text-sm text-slate-500 mb-8">
+            <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl p-8">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">Choose Your Style</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">
                 Pick a template, color scheme, font, and scroll animation.
               </p>
 
               {/* Template selector */}
               <div className="mb-8">
-                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-4">Template</label>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-4">Template</label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   {TEMPLATES.map((tmpl) => {
                     const selected = form.template === tmpl.id;
@@ -1004,7 +1004,7 @@ export default function WebsiteBuilder({
                       <button
                         key={tmpl.id}
                         onClick={() => setForm_('template', tmpl.id)}
-                        className={`relative p-4 rounded-xl border-2 text-left transition-all ${selected ? 'border-violet-500 bg-violet-50 shadow-md shadow-violet-100' : 'border-slate-200 hover:border-slate-300 bg-white'}`}
+                        className={`relative p-4 rounded-xl border-2 text-left transition-all ${selected ? 'border-violet-500 bg-violet-50 dark:bg-violet-500/15 shadow-md shadow-violet-100 dark:shadow-none' : 'border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.12] bg-white dark:bg-white/[0.04]'}`}
                       >
                         <div className="w-full h-16 rounded-lg mb-3 overflow-hidden" style={{ background: tmpl.id === 'premium' ? 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%)' : tmpl.id === 'minimal' ? '#fafafa' : tmpl.id === 'bold' ? 'linear-gradient(135deg, #000 0%, #1a0030 100%)' : 'linear-gradient(135deg, #f5f0e8 0%, #e8e0d0 100%)' }}>
                           <div className="flex items-end justify-center h-full pb-2">
@@ -1015,7 +1015,7 @@ export default function WebsiteBuilder({
                             </div>
                           </div>
                         </div>
-                        <p className={`text-[11px] font-bold ${selected ? 'text-violet-700' : 'text-slate-700'}`}>{tmpl.label}</p>
+                        <p className={`text-[11px] font-bold ${selected ? 'text-violet-700 dark:text-violet-400' : 'text-slate-700 dark:text-slate-200'}`}>{tmpl.label}</p>
                         <p className="text-[9px] text-slate-400 mt-0.5 leading-snug">{tmpl.desc}</p>
                         {selected && (
                           <div className="absolute top-2 right-2 w-4 h-4 bg-violet-500 rounded-full flex items-center justify-center">
@@ -1030,7 +1030,7 @@ export default function WebsiteBuilder({
 
               {/* Color schemes — 12 total in 4-col grid */}
               <div className="mb-8">
-                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-4">Color Scheme</label>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-4">Color Scheme</label>
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
                   {COLOR_SCHEMES.map((cs) => (
                     <button
@@ -1042,8 +1042,8 @@ export default function WebsiteBuilder({
                         <div style={{ background: cs.accent }} className="w-2.5 h-2.5 rounded-full" />
                         <span style={{ color: cs.accent }} className="text-[10px] font-bold">{cs.label}</span>
                       </div>
-                      <div className="px-2 py-1.5 bg-white border-t border-slate-100">
-                        <p className="text-[10px] text-slate-400">{cs.preview}</p>
+                      <div className="px-2 py-1.5 bg-white dark:bg-white/[0.04] border-t border-slate-100 dark:border-white/[0.06]">
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500">{cs.preview}</p>
                       </div>
                       {form.colorScheme === cs.id && (
                         <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-violet-500 rounded-full flex items-center justify-center">
@@ -1060,7 +1060,7 @@ export default function WebsiteBuilder({
 
               {/* Font pairings — 8 total in 2x4 grid with real font previews */}
               <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-4">Font Pairing</label>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-4">Font Pairing</label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {FONT_PAIRINGS.map((fp) => {
                     const selected = form.fontPairing === fp.id;
@@ -1069,10 +1069,10 @@ export default function WebsiteBuilder({
                       <button
                         key={fp.id}
                         onClick={() => setForm_('fontPairing', fp.id)}
-                        className={`relative p-4 rounded-xl border-2 text-left transition-all ${selected ? 'border-violet-500 bg-violet-50 shadow-md shadow-violet-100' : 'border-slate-200 hover:border-slate-300 bg-white'}`}
+                        className={`relative p-4 rounded-xl border-2 text-left transition-all ${selected ? 'border-violet-500 bg-violet-50 dark:bg-violet-500/15 shadow-md shadow-violet-100 dark:shadow-none' : 'border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.12] bg-white dark:bg-white/[0.04]'}`}
                       >
                         {/* Live font preview */}
-                        <div className="mb-3 pb-3 border-b border-slate-100">
+                        <div className="mb-3 pb-3 border-b border-slate-100 dark:border-white/[0.06]">
                           <p style={{ fontFamily: fp.headingFamily, fontSize: '15px', fontWeight: 700, lineHeight: 1.2, color: '#0f172a', marginBottom: '4px' }}>
                             The Art of Dining
                           </p>
@@ -1080,7 +1080,7 @@ export default function WebsiteBuilder({
                             Every evening becomes a memory.
                           </p>
                         </div>
-                        <p className={`text-[11px] font-bold ${selected ? 'text-violet-700' : 'text-slate-700'}`}>{fp.label}</p>
+                        <p className={`text-[11px] font-bold ${selected ? 'text-violet-700 dark:text-violet-400' : 'text-slate-700 dark:text-slate-200'}`}>{fp.label}</p>
                         <p className="text-[9px] text-slate-400 mt-0.5 leading-snug">{fp.desc}</p>
                         {selected && (
                           <div className="absolute top-2 right-2 w-4 h-4 bg-violet-500 rounded-full flex items-center justify-center">
@@ -1097,8 +1097,8 @@ export default function WebsiteBuilder({
               </div>
 
               {/* Scroll Animations */}
-              <div className="mt-8 pt-8 border-t border-slate-100">
-                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Scroll Animations</label>
+              <div className="mt-8 pt-8 border-t border-slate-100 dark:border-white/[0.06]">
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Scroll Animations</label>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">Sections animate into view as visitors scroll. Powered by native CSS scroll-driven animations.</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   {ANIMATION_PRESETS.map((ap) => {
@@ -1107,7 +1107,7 @@ export default function WebsiteBuilder({
                       <button
                         key={ap.id}
                         onClick={() => setForm_('animationPreset', ap.id)}
-                        className={`relative p-3.5 rounded-xl border-2 text-left transition-all ${selected ? 'border-violet-500 bg-violet-50 shadow-md shadow-violet-100' : 'border-slate-200 hover:border-slate-300 bg-white'}`}
+                        className={`relative p-3.5 rounded-xl border-2 text-left transition-all ${selected ? 'border-violet-500 bg-violet-50 dark:bg-violet-500/15 shadow-md shadow-violet-100 dark:shadow-none' : 'border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.12] bg-white dark:bg-white/[0.04]'}`}
                       >
                         <div className="flex items-center gap-2 mb-1.5">
                           <div className={`w-5 h-5 rounded-md flex items-center justify-center ${selected ? 'bg-violet-500' : 'bg-slate-100'}`}>
@@ -1127,7 +1127,7 @@ export default function WebsiteBuilder({
                               <svg viewBox="0 0 16 16" fill="none" className="w-3 h-3"><path d="M3 13L8 3l5 10" stroke={selected ? 'white' : '#94a3b8'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M5 9h6" stroke={selected ? 'white' : '#94a3b8'} strokeWidth="1" opacity="0.5"/></svg>
                             )}
                           </div>
-                          <span className={`text-[11px] font-bold ${selected ? 'text-violet-700' : 'text-slate-700'}`}>{ap.label}</span>
+                          <span className={`text-[11px] font-bold ${selected ? 'text-violet-700 dark:text-violet-400' : 'text-slate-700 dark:text-slate-200'}`}>{ap.label}</span>
                         </div>
                         <p className="text-[9px] text-slate-400 leading-snug">{ap.desc}</p>
                         <p className="text-[8px] text-slate-300 mt-1">{ap.preview}</p>
@@ -1146,7 +1146,7 @@ export default function WebsiteBuilder({
             {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
             <div className="flex gap-3">
-              <button onClick={() => setStep(4)} className="px-5 py-3 border border-slate-200 text-slate-600 font-medium rounded-xl text-sm hover:bg-slate-50">Back</button>
+              <button onClick={() => setStep(4)} className="px-5 py-3 border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 font-medium rounded-xl text-sm hover:bg-slate-50 dark:hover:bg-white/[0.04]">Back</button>
               <button
                 onClick={() => void handleGenerate()}
                 disabled={generating}
@@ -1166,7 +1166,7 @@ export default function WebsiteBuilder({
         {/* ── STEP 6 — Done ── */}
         {step === 6 && result && (
           <div className="space-y-6">
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 flex gap-4">
+            <div className="bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/20 rounded-xl p-5 flex gap-4">
               <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                 <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-amber-600"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/></svg>
               </div>
@@ -1203,7 +1203,7 @@ export default function WebsiteBuilder({
               </div>
             )}
 
-            <button onClick={() => { setStep(3); setResult(null); }} className="w-full py-3 border border-slate-200 text-slate-600 font-medium rounded-xl text-sm hover:bg-slate-50">
+            <button onClick={() => { setStep(3); setResult(null); }} className="w-full py-3 border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 font-medium rounded-xl text-sm hover:bg-slate-50 dark:hover:bg-white/[0.04]">
               Regenerate with different settings
             </button>
           </div>
@@ -1310,7 +1310,7 @@ function Field({ label, value, onChange, placeholder, type = 'text' }: {
 }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">{label}</label>
+      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">{label}</label>
       <input
         type={type}
         value={value}

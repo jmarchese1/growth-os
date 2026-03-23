@@ -269,8 +269,8 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
                 <div className="bg-violet-50/50 dark:bg-violet-500/5 border border-violet-200/60 dark:border-violet-500/20 rounded-xl p-4 space-y-4">
                   <div className="flex items-center gap-2">
                     <div className="flex bg-white dark:bg-white/[0.06] rounded-lg p-0.5 border border-slate-200 dark:border-white/[0.08]">
-                      <button onClick={() => setSurveyMode('new')} className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${surveyMode === 'new' ? 'bg-violet-600 text-white' : 'text-slate-500'}`}>New Survey</button>
-                      {surveys.length > 0 && <button onClick={() => setSurveyMode('existing')} className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${surveyMode === 'existing' ? 'bg-violet-600 text-white' : 'text-slate-500'}`}>Existing Survey</button>}
+                      <button onClick={() => setSurveyMode('new')} className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${surveyMode === 'new' ? 'bg-violet-600 text-white' : 'text-slate-500 dark:text-slate-400'}`}>New Survey</button>
+                      {surveys.length > 0 && <button onClick={() => setSurveyMode('existing')} className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${surveyMode === 'existing' ? 'bg-violet-600 text-white' : 'text-slate-500 dark:text-slate-400'}`}>Existing Survey</button>}
                     </div>
                   </div>
 
@@ -287,38 +287,38 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
                       {/* Question builder */}
                       <div className="space-y-3">
                         {questions.map((q, qi) => (
-                          <div key={q.id} className="bg-white rounded-lg border border-slate-200 p-3">
+                          <div key={q.id} className="bg-white dark:bg-white/[0.06] rounded-lg border border-slate-200 dark:border-white/[0.08] p-3">
                             <div className="flex items-center justify-between mb-2">
-                              <span className="text-[10px] font-semibold text-slate-400 uppercase">Question {qi + 1}</span>
-                              {questions.length > 1 && <button onClick={() => removeQuestion(q.id)} className="text-xs text-slate-400 hover:text-rose-500">Remove</button>}
+                              <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">Question {qi + 1}</span>
+                              {questions.length > 1 && <button onClick={() => removeQuestion(q.id)} className="text-xs text-slate-400 dark:text-slate-500 hover:text-rose-500">Remove</button>}
                             </div>
                             <div className="flex gap-1.5 mb-2">
                               {Q_TYPES.map((t) => (
-                                <button key={t.value} onClick={() => updateQuestion(q.id, { type: t.value as SurveyQuestion['type'] })} className={`px-2 py-1 text-[10px] font-medium rounded-md border transition-all ${q.type === t.value ? 'bg-violet-100 border-violet-300 text-violet-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+                                <button key={t.value} onClick={() => updateQuestion(q.id, { type: t.value as SurveyQuestion['type'] })} className={`px-2 py-1 text-[10px] font-medium rounded-md border transition-all ${q.type === t.value ? 'bg-violet-100 dark:bg-violet-500/15 border-violet-300 dark:border-violet-500/30 text-violet-700 dark:text-violet-300' : 'border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/[0.04]'}`}>
                                   {t.icon} {t.label}
                                 </button>
                               ))}
                             </div>
-                            <input type="text" value={q.label} onChange={(e) => updateQuestion(q.id, { label: e.target.value })} placeholder="Question text..." className="w-full px-3 py-1.5 border border-slate-200 rounded-md text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 mb-1.5" />
+                            <input type="text" value={q.label} onChange={(e) => updateQuestion(q.id, { label: e.target.value })} placeholder="Question text..." className="w-full px-3 py-1.5 border border-slate-200 dark:border-white/[0.08] rounded-md text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 mb-1.5" />
                             {q.type === 'multiple_choice' && (
                               <div className="pl-3 space-y-1">
                                 {(q.options ?? []).map((opt, oi) => (
                                   <div key={oi} className="flex items-center gap-1.5">
-                                    <span className="text-slate-300 text-xs">\u25CB</span>
-                                    <span className="text-xs text-slate-600">{opt}</span>
-                                    <button onClick={() => updateQuestion(q.id, { options: (q.options ?? []).filter((_, i) => i !== oi) })} className="text-[10px] text-slate-400 hover:text-rose-500">x</button>
+                                    <span className="text-slate-300 dark:text-slate-600 text-xs">\u25CB</span>
+                                    <span className="text-xs text-slate-600 dark:text-slate-300">{opt}</span>
+                                    <button onClick={() => updateQuestion(q.id, { options: (q.options ?? []).filter((_, i) => i !== oi) })} className="text-[10px] text-slate-400 dark:text-slate-500 hover:text-rose-500">x</button>
                                   </div>
                                 ))}
-                                <input type="text" placeholder="Add option (Enter)" className="text-xs px-2 py-1 border border-dashed border-slate-300 rounded text-slate-600 w-full" onKeyDown={(e) => { if (e.key === 'Enter') { const v = (e.target as HTMLInputElement).value.trim(); if (v) { updateQuestion(q.id, { options: [...(q.options ?? []), v] }); (e.target as HTMLInputElement).value = ''; } } }} />
+                                <input type="text" placeholder="Add option (Enter)" className="text-xs px-2 py-1 border border-dashed border-slate-300 dark:border-white/[0.08] rounded text-slate-600 dark:text-slate-300 dark:bg-white/[0.06] w-full" onKeyDown={(e) => { if (e.key === 'Enter') { const v = (e.target as HTMLInputElement).value.trim(); if (v) { updateQuestion(q.id, { options: [...(q.options ?? []), v] }); (e.target as HTMLInputElement).value = ''; } } }} />
                               </div>
                             )}
                             <label className="flex items-center gap-1.5 mt-1.5 cursor-pointer">
-                              <input type="checkbox" checked={q.required} onChange={(e) => updateQuestion(q.id, { required: e.target.checked })} className="rounded border-slate-300 text-violet-600" />
-                              <span className="text-[10px] text-slate-500">Required</span>
+                              <input type="checkbox" checked={q.required} onChange={(e) => updateQuestion(q.id, { required: e.target.checked })} className="rounded border-slate-300 dark:border-white/[0.08] text-violet-600" />
+                              <span className="text-[10px] text-slate-500 dark:text-slate-400">Required</span>
                             </label>
                           </div>
                         ))}
-                        <button onClick={addQuestion} className="w-full py-2 border border-dashed border-slate-300 rounded-lg text-xs text-slate-500 hover:border-violet-400 hover:text-violet-600 transition-colors">+ Add Question</button>
+                        <button onClick={addQuestion} className="w-full py-2 border border-dashed border-slate-300 dark:border-white/[0.08] rounded-lg text-xs text-slate-500 dark:text-slate-400 hover:border-violet-400 hover:text-violet-600 transition-colors">+ Add Question</button>
                       </div>
                     </>
                   )}
@@ -387,15 +387,15 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
 
               {/* SIGNUP info */}
               {purpose === 'SIGNUP' && (
-                <div className="bg-sky-50 border border-sky-200/60 rounded-lg px-4 py-3">
-                  <p className="text-xs text-sky-700">Customers scan \u2192 enter name + email/phone \u2192 automatically added to your Contacts list</p>
+                <div className="bg-sky-50 dark:bg-sky-500/10 border border-sky-200/60 dark:border-sky-500/20 rounded-lg px-4 py-3">
+                  <p className="text-xs text-sky-700 dark:text-sky-400">Customers scan \u2192 enter name + email/phone \u2192 automatically added to your Contacts list</p>
                 </div>
               )}
 
               {/* Page Style */}
               {['SURVEY', 'SPIN_WHEEL', 'DISCOUNT', 'SIGNUP'].includes(purpose) && (
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Page Appearance</p>
+                <div className="bg-slate-50 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] rounded-xl p-4 space-y-4">
+                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Page Appearance</p>
 
                   {/* Two color pickers: accent + background */}
                   <div className="grid grid-cols-2 gap-3">
@@ -403,7 +403,7 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
                       <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Accent Color</label>
                       <div className="flex items-center gap-1.5">
                         <input type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="w-6 h-6 rounded border-0 cursor-pointer flex-shrink-0" />
-                        <input type="text" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="w-20 px-1.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 font-mono" />
+                        <input type="text" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="w-20 px-1.5 py-1 border border-slate-200 dark:border-white/[0.08] rounded text-[10px] text-slate-700 dark:text-slate-200 dark:bg-white/[0.06] font-mono" />
                         {['#7C3AED', '#3B82F6', '#10B981', '#EF4444', '#EC4899', '#0EA5E9'].map((c) => (
                           <button key={c} onClick={() => setAccentColor(c)} className="w-3.5 h-3.5 rounded-full border transition-all hover:scale-125 flex-shrink-0" style={{ background: c, borderColor: accentColor === c ? '#333' : 'transparent' }} />
                         ))}
@@ -413,7 +413,7 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
                       <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Background Color</label>
                       <div className="flex items-center gap-1.5">
                         <input type="color" value={bgColor.startsWith('#') ? bgColor : '#f8fafc'} onChange={(e) => setBgColor(e.target.value)} className="w-6 h-6 rounded border-0 cursor-pointer flex-shrink-0" />
-                        <input type="text" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="flex-1 px-1.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 font-mono" />
+                        <input type="text" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="flex-1 px-1.5 py-1 border border-slate-200 dark:border-white/[0.08] rounded text-[10px] text-slate-700 dark:text-slate-200 dark:bg-white/[0.06] font-mono" />
                         {['#ffffff', '#0f172a', '#eff6ff', '#ecfdf5'].map((c) => (
                           <button key={c} onClick={() => setBgColor(c)} className="w-3.5 h-3.5 rounded-full border transition-all hover:scale-125 flex-shrink-0" style={{ background: c, borderColor: bgColor === c ? '#333' : c === '#ffffff' || c === '#eff6ff' || c === '#ecfdf5' ? '#e2e8f0' : 'transparent' }} />
                         ))}
@@ -454,7 +454,7 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
                   </div>
 
                   {/* Live preview */}
-                  <div className="rounded-lg overflow-hidden border border-slate-200">
+                  <div className="rounded-lg overflow-hidden border border-slate-200 dark:border-white/[0.08]">
                     <div className="px-2 py-1 bg-slate-100 dark:bg-white/[0.06] border-b border-slate-200 dark:border-white/[0.08] flex items-center gap-1">
                       <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
                       <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
@@ -500,8 +500,8 @@ function CreateQrModal({ businessId, surveys, onCreated, onClose }: {
           )}
         </div>
         {purpose && (
-          <div className="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 flex-shrink-0">
-            <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 dark:bg-white/[0.06] rounded-lg transition-colors">Cancel</button>
+          <div className="px-6 py-4 border-t border-slate-100 dark:border-white/[0.06] flex justify-end gap-3 flex-shrink-0">
+            <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04] rounded-lg transition-colors">Cancel</button>
             <button onClick={handleCreate} disabled={!canCreate || creating} className="px-5 py-2 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-500 disabled:opacity-50 transition-colors">
               {creating ? 'Creating...' : 'Generate QR Code'}
             </button>
@@ -614,21 +614,21 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
 
   return (
     <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl overflow-hidden mb-6">
-      <button onClick={() => setOpen(!open)} className="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+      <button onClick={() => setOpen(!open)} className="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-500/15 flex items-center justify-center">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-violet-600"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg>
           </div>
           <div className="text-left">
-            <p className="text-sm font-semibold text-slate-800">Reward Emails</p>
-            <p className="text-[11px] text-slate-400">Customize emails sent when customers claim rewards</p>
+            <p className="text-sm font-semibold text-slate-800 dark:text-white">Reward Emails</p>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500">Customize emails sent when customers claim rewards</p>
           </div>
         </div>
         <svg viewBox="0 0 20 20" fill="currentColor" className={`w-5 h-5 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
       </button>
 
       {open && (
-        <div className="border-t border-slate-200 px-5 py-5">
+        <div className="border-t border-slate-200 dark:border-white/[0.08] px-5 py-5">
           <div className="flex gap-6">
             {/* Left: Settings */}
             <div className="flex-1 space-y-4">
@@ -638,7 +638,7 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
                   <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Accent Color</label>
                   <div className="flex items-center gap-1.5">
                     <input type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="w-6 h-6 rounded border-0 cursor-pointer flex-shrink-0" />
-                    <input type="text" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="flex-1 px-1.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 font-mono" />
+                    <input type="text" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="flex-1 px-1.5 py-1 border border-slate-200 dark:border-white/[0.08] rounded text-[10px] text-slate-700 dark:text-slate-200 dark:bg-white/[0.06] font-mono" />
                   </div>
                 </div>
                 <div>
@@ -646,7 +646,7 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
                   <div className="relative">
                     <button
                       onClick={() => setShowImagePicker(!showImagePicker)}
-                      className="w-full flex items-center gap-2 px-2.5 py-1 border border-slate-200 rounded text-[10px] text-slate-700 hover:bg-slate-50 transition-colors text-left"
+                      className="w-full flex items-center gap-2 px-2.5 py-1 border border-slate-200 dark:border-white/[0.08] rounded text-[10px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors text-left"
                     >
                       {logoUrl ? (
                         <>
@@ -654,14 +654,14 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
                           <span className="truncate flex-1">Selected</span>
                         </>
                       ) : (
-                        <span className="text-slate-400">Choose from My Images...</span>
+                        <span className="text-slate-400 dark:text-slate-500">Choose from My Images...</span>
                       )}
                       <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-slate-400 flex-shrink-0"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
                     </button>
                     {showImagePicker && (
-                      <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                      <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white dark:bg-[#1a1730] border border-slate-200 dark:border-white/[0.08] rounded-lg shadow-lg max-h-48 overflow-y-auto">
                         {logoUrl && (
-                          <button onClick={() => { setLogoUrl(''); setShowImagePicker(false); }} className="w-full px-3 py-2 text-left text-[10px] text-slate-400 hover:bg-slate-50 border-b border-slate-100">
+                          <button onClick={() => { setLogoUrl(''); setShowImagePicker(false); }} className="w-full px-3 py-2 text-left text-[10px] text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-white/[0.04] border-b border-slate-100 dark:border-white/[0.06]">
                             Remove logo
                           </button>
                         )}
@@ -697,7 +697,7 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
               {/* Type tabs */}
               <div className="flex gap-1 bg-slate-100 dark:bg-white/[0.06] rounded-lg p-0.5">
                 {(Object.entries(tabLabels) as [typeof tab, string][]).map(([key, label]) => (
-                  <button key={key} onClick={() => setTab(key)} className={`flex-1 px-3 py-1.5 text-[11px] font-medium rounded-md transition-all ${tab === key ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                  <button key={key} onClick={() => setTab(key)} className={`flex-1 px-3 py-1.5 text-[11px] font-medium rounded-md transition-all ${tab === key ? 'bg-white dark:bg-white/[0.08] text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}>
                     {label}
                   </button>
                 ))}
@@ -708,7 +708,7 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
                 <div>
                   <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Email Subject</label>
                   <input type="text" value={cfg.subject} onChange={(e) => updateConfig('subject', e.target.value)} className="w-full px-3 py-1.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06]" />
-                  <p className="text-[9px] text-slate-400 mt-0.5">Use {'{{reward}}'} for reward name, {'{{business}}'} for business name</p>
+                  <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">Use {'{{reward}}'} for reward name, {'{{business}}'} for business name</p>
                 </div>
                 <div>
                   <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Heading</label>
@@ -716,7 +716,7 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
                 </div>
                 <div>
                   <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Body Text</label>
-                  <textarea value={cfg.bodyText} onChange={(e) => updateConfig('bodyText', e.target.value)} rows={2} className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-800 resize-none" />
+                  <textarea value={cfg.bodyText} onChange={(e) => updateConfig('bodyText', e.target.value)} rows={2} className="w-full px-3 py-1.5 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] resize-none" />
                 </div>
               </div>
 
@@ -730,8 +730,8 @@ function RewardEmailPanel({ businessId, businessName, settings }: { businessId: 
 
             {/* Right: Live email preview */}
             <div className="w-[260px] flex-shrink-0">
-              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Preview</p>
-              <div className="rounded-lg overflow-hidden border border-slate-200 shadow-sm text-[10px]" style={{ fontFamily: EMAIL_FONT_OPTIONS.find((f) => f.value === emailFont)?.stack }}>
+              <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Preview</p>
+              <div className="rounded-lg overflow-hidden border border-slate-200 dark:border-white/[0.08] shadow-sm text-[10px]" style={{ fontFamily: EMAIL_FONT_OPTIONS.find((f) => f.value === emailFont)?.stack }}>
                 {/* Header */}
                 <div style={{ backgroundColor: accentColor, padding: '14px 18px' }} className="flex items-center gap-2">
                   {logoUrl && <img src={logoUrl} alt="" className="w-6 h-6 rounded object-cover" />}
@@ -775,18 +775,18 @@ function QrCard({ qr, onDelete }: { qr: QrCode; onDelete: () => void }) {
   function copyLink() { navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); }
 
   return (
-    <div className={`bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border rounded-2xl p-4 transition-all hover:shadow-md hover:-translate-y-0.5 duration-200 ${expired ? 'border-rose-200 opacity-60' : 'border-slate-200'}`}>
+    <div className={`bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border rounded-2xl p-4 transition-all hover:shadow-md hover:-translate-y-0.5 duration-200 ${expired ? 'border-rose-200 opacity-60' : 'border-slate-200 dark:border-white/[0.08]'}`}>
       <div className="flex gap-4">
         <img src={qrImageUrl(url, 100)} alt="QR" className="w-20 h-20 rounded-lg flex-shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-sm font-semibold text-slate-800 truncate">{qr.label}</span>
-            <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium bg-violet-100 text-violet-700">{purposeInfo?.icon} {qr.purpose.replace('_', ' ')}</span>
-            {expired && <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium bg-rose-100 text-rose-700">Expired</span>}
+            <span className="text-sm font-semibold text-slate-800 dark:text-white truncate">{qr.label}</span>
+            <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">{purposeInfo?.icon} {qr.purpose.replace('_', ' ')}</span>
+            {expired && <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400">Expired</span>}
           </div>
-          {qr.survey && <p className="text-xs text-slate-500 mb-1">Survey: {qr.survey.title}</p>}
-          {qr.discountValue && <p className="text-xs text-slate-500 mb-1">Discount: {qr.discountValue}</p>}
-          <div className="flex items-center gap-3 text-[10px] text-slate-400">
+          {qr.survey && <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Survey: {qr.survey.title}</p>}
+          {qr.discountValue && <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Discount: {qr.discountValue}</p>}
+          <div className="flex items-center gap-3 text-[10px] text-slate-400 dark:text-slate-500">
             <span>{qr.scanCount} scans</span>
             <span>{new Date(qr.createdAt).toLocaleDateString()}</span>
           </div>

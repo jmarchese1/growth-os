@@ -638,16 +638,16 @@ function OptionsTab({ businessId, settings, onSaved }: {
   return (
     <div className="space-y-6">
       {/* Toggle options */}
-      <div className="bg-white border border-slate-200 rounded-xl p-6">
+      <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-6">
         <h3 className="text-sm font-semibold text-slate-700 mb-4">Behavior</h3>
         <div className="space-y-5">
           {/* Close Button */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-700">Close Button (X)</p>
-              <p className="text-xs text-slate-400 mt-0.5">Show an X button in the header to close the chat window</p>
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Close Button (X)</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Show an X button in the header to close the chat window</p>
             </div>
-            <button onClick={() => setShowCloseBtn(!showCloseBtn)} className={`relative w-11 h-6 rounded-full transition-colors ${showCloseBtn ? 'bg-violet-600' : 'bg-slate-300'}`}>
+            <button onClick={() => setShowCloseBtn(!showCloseBtn)} className={`relative w-11 h-6 rounded-full transition-colors ${showCloseBtn ? 'bg-violet-600' : 'bg-slate-300 dark:bg-white/[0.12]'}`}>
               <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${showCloseBtn ? 'left-[22px]' : 'left-0.5'}`} />
             </button>
           </div>
@@ -655,10 +655,10 @@ function OptionsTab({ businessId, settings, onSaved }: {
           {/* Sound */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-700">Sound Notification</p>
-              <p className="text-xs text-slate-400 mt-0.5">Play a subtle chime when the bot responds</p>
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Sound Notification</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Play a subtle chime when the bot responds</p>
             </div>
-            <button onClick={() => setSoundEnabled(!soundEnabled)} className={`relative w-11 h-6 rounded-full transition-colors ${soundEnabled ? 'bg-violet-600' : 'bg-slate-300'}`}>
+            <button onClick={() => setSoundEnabled(!soundEnabled)} className={`relative w-11 h-6 rounded-full transition-colors ${soundEnabled ? 'bg-violet-600' : 'bg-slate-300 dark:bg-white/[0.12]'}`}>
               <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${soundEnabled ? 'left-[22px]' : 'left-0.5'}`} />
             </button>
           </div>
@@ -666,10 +666,10 @@ function OptionsTab({ businessId, settings, onSaved }: {
           {/* Powered By */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-700">Show &quot;Powered by Embedo&quot;</p>
-              <p className="text-xs text-slate-400 mt-0.5">Display branding footer in the chat window</p>
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Show &quot;Powered by Embedo&quot;</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Display branding footer in the chat window</p>
             </div>
-            <button onClick={() => setPoweredBy(!poweredBy)} className={`relative w-11 h-6 rounded-full transition-colors ${poweredBy ? 'bg-violet-600' : 'bg-slate-300'}`}>
+            <button onClick={() => setPoweredBy(!poweredBy)} className={`relative w-11 h-6 rounded-full transition-colors ${poweredBy ? 'bg-violet-600' : 'bg-slate-300 dark:bg-white/[0.12]'}`}>
               <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${poweredBy ? 'left-[22px]' : 'left-0.5'}`} />
             </button>
           </div>
@@ -677,13 +677,13 @@ function OptionsTab({ businessId, settings, onSaved }: {
       </div>
 
       {/* Auto-Open */}
-      <div className="bg-white border border-slate-200 rounded-xl p-6">
+      <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-sm font-semibold text-slate-700">Auto-Open Chat</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Automatically open the chat window after a delay — 3-5x more engagement</p>
+            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Auto-Open Chat</h3>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Automatically open the chat window after a delay — 3-5x more engagement</p>
           </div>
-          <button onClick={() => setAutoOpenEnabled(!autoOpenEnabled)} className={`relative w-11 h-6 rounded-full transition-colors ${autoOpenEnabled ? 'bg-violet-600' : 'bg-slate-300'}`}>
+          <button onClick={() => setAutoOpenEnabled(!autoOpenEnabled)} className={`relative w-11 h-6 rounded-full transition-colors ${autoOpenEnabled ? 'bg-violet-600' : 'bg-slate-300 dark:bg-white/[0.12]'}`}>
             <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${autoOpenEnabled ? 'left-[22px]' : 'left-0.5'}`} />
           </button>
         </div>
@@ -701,13 +701,13 @@ function OptionsTab({ businessId, settings, onSaved }: {
       </div>
 
       {/* Quick Replies */}
-      <div className="bg-white border border-slate-200 rounded-xl p-6">
+      <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-sm font-semibold text-slate-700">Quick Reply Buttons</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Show clickable buttons below the welcome message — removes the &quot;what do I say?&quot; barrier</p>
+            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Quick Reply Buttons</h3>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Show clickable buttons below the welcome message — removes the &quot;what do I say?&quot; barrier</p>
           </div>
-          <button onClick={() => setQuickRepliesEnabled(!quickRepliesEnabled)} className={`relative w-11 h-6 rounded-full transition-colors ${quickRepliesEnabled ? 'bg-violet-600' : 'bg-slate-300'}`}>
+          <button onClick={() => setQuickRepliesEnabled(!quickRepliesEnabled)} className={`relative w-11 h-6 rounded-full transition-colors ${quickRepliesEnabled ? 'bg-violet-600' : 'bg-slate-300 dark:bg-white/[0.12]'}`}>
             <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${quickRepliesEnabled ? 'left-[22px]' : 'left-0.5'}`} />
           </button>
         </div>
@@ -715,7 +715,7 @@ function OptionsTab({ businessId, settings, onSaved }: {
           <div>
             <div className="flex flex-wrap gap-2 mb-3">
               {quickReplies.map((qr, i) => (
-                <div key={i} className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-violet-200 bg-violet-50 text-sm text-violet-700">
+                <div key={i} className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-violet-200 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-500/15 text-sm text-violet-700 dark:text-violet-400">
                   {qr}
                   <button onClick={() => removeQuickReply(i)} className="ml-1 text-violet-400 hover:text-violet-700 text-xs">x</button>
                 </div>
@@ -734,7 +734,7 @@ function OptionsTab({ businessId, settings, onSaved }: {
                 <button onClick={addQuickReply} disabled={!newQuickReply.trim()} className="px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-500 disabled:opacity-50 transition-colors">Add</button>
               </div>
             )}
-            <p className="text-[10px] text-slate-400 mt-2">{quickReplies.length}/6 quick replies. Keep them short and action-oriented.</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2">{quickReplies.length}/6 quick replies. Keep them short and action-oriented.</p>
             <div className="flex flex-wrap gap-1.5 mt-2">
               {['View Menu', 'Make Reservation', 'Hours & Location', 'Catering Info', 'Delivery Options', 'Special Events'].filter((s) => !quickReplies.includes(s)).slice(0, 3).map((s) => (
                 <button key={s} onClick={() => { if (quickReplies.length < 6) setQuickReplies([...quickReplies, s]); }} className="px-2 py-0.5 text-[10px] rounded border border-slate-200 text-slate-500 hover:bg-violet-50 hover:text-violet-600 transition-all">+ {s}</button>
@@ -797,7 +797,7 @@ function TestChatTab({ businessId }: { businessId: string }) {
   useEffect(() => { msgsRef.current?.scrollTo(0, msgsRef.current.scrollHeight); }, [messages]);
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+    <div className="bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
       <div className="bg-gradient-to-r from-violet-600 to-indigo-600 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
@@ -812,28 +812,28 @@ function TestChatTab({ businessId }: { businessId: string }) {
           </div>
         </div>
       </div>
-      <div ref={msgsRef} className="h-96 overflow-y-auto p-4 bg-slate-50/50 space-y-3">
+      <div ref={msgsRef} className="h-96 overflow-y-auto p-4 bg-slate-50/50 dark:bg-white/[0.02] space-y-3">
         {messages.length === 0 && (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center mx-auto mb-2">
+              <div className="w-10 h-10 rounded-full bg-violet-100 dark:bg-violet-500/15 flex items-center justify-center mx-auto mb-2">
                 <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-violet-500"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7z" clipRule="evenodd" /></svg>
               </div>
-              <p className="text-xs text-slate-400">Type a message to test your chatbot</p>
-              <p className="text-[10px] text-slate-300 mt-1">Try: &quot;What&apos;s on the menu?&quot; or &quot;I&apos;d like to book a table&quot;</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500">Type a message to test your chatbot</p>
+              <p className="text-[10px] text-slate-300 dark:text-slate-600 mt-1">Try: &quot;What&apos;s on the menu?&quot; or &quot;I&apos;d like to book a table&quot;</p>
             </div>
           </div>
         )}
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${msg.role === 'user' ? 'bg-violet-600 text-white rounded-br-md' : 'bg-white border border-slate-200 text-slate-700 rounded-bl-md shadow-sm'}`}>
+            <div className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${msg.role === 'user' ? 'bg-violet-600 text-white rounded-br-md' : 'bg-white dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] text-slate-700 dark:text-slate-200 rounded-bl-md shadow-sm'}`}>
               {msg.content}
             </div>
           </div>
         ))}
         {sending && (
           <div className="flex justify-start">
-            <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+            <div className="bg-white dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
               <div className="flex gap-1">
                 <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                 <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -843,7 +843,7 @@ function TestChatTab({ businessId }: { businessId: string }) {
           </div>
         )}
       </div>
-      <div className="px-4 py-3 border-t border-slate-100 flex items-center gap-2">
+      <div className="px-4 py-3 border-t border-slate-100 dark:border-white/[0.06] flex items-center gap-2">
         <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }} placeholder="Type a test message..." disabled={sending} className="flex-1 px-4 py-2.5 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] rounded-xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 disabled:opacity-50" />
         <button onClick={handleSend} disabled={!input.trim() || sending} className="px-4 py-2.5 bg-violet-600 text-white rounded-xl text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition-colors">Send</button>
       </div>
@@ -858,35 +858,35 @@ function HistoryTab({ sessions, totalSessions, onSelect }: {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-semibold text-slate-700">Conversations</h2>
-        {totalSessions > 0 && <span className="text-xs text-slate-400">{totalSessions} total</span>}
+        <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Conversations</h2>
+        {totalSessions > 0 && <span className="text-xs text-slate-400 dark:text-slate-500">{totalSessions} total</span>}
       </div>
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+      <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-slate-100">
+            <tr className="border-b border-slate-100 dark:border-white/[0.06]">
               {['Date', 'Visitor', 'Channel', 'Messages', 'Status', ''].map((h) => (
-                <th key={h} className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">{h}</th>
+                <th key={h} className="text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-5 py-3">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {sessions.length === 0 ? (
-              <tr><td colSpan={6} className="px-5 py-12 text-center text-sm text-slate-400">No conversations yet.</td></tr>
+              <tr><td colSpan={6} className="px-5 py-12 text-center text-sm text-slate-400 dark:text-slate-500">No conversations yet.</td></tr>
             ) : (
               sessions.map((session) => (
-                <tr key={session.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors cursor-pointer" onClick={() => onSelect(session)}>
-                  <td className="px-5 py-3 text-sm text-slate-600">{formatDate(session.createdAt)}</td>
-                  <td className="px-5 py-3 text-sm text-slate-800 font-medium">
-                    {session.contact ? `${session.contact.firstName} ${session.contact.lastName}` : <span className="text-slate-400">Anonymous</span>}
+                <tr key={session.id} className="border-b border-slate-50 dark:border-white/[0.04] hover:bg-slate-50/50 dark:hover:bg-white/[0.04] transition-colors cursor-pointer" onClick={() => onSelect(session)}>
+                  <td className="px-5 py-3 text-sm text-slate-600 dark:text-slate-300">{formatDate(session.createdAt)}</td>
+                  <td className="px-5 py-3 text-sm text-slate-800 dark:text-white font-medium">
+                    {session.contact ? `${session.contact.firstName} ${session.contact.lastName}` : <span className="text-slate-400 dark:text-slate-500">Anonymous</span>}
                   </td>
                   <td className="px-5 py-3">
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${CHANNEL_COLORS[session.channel] ?? 'bg-slate-100 text-slate-500'}`}>{session.channel.toLowerCase()}</span>
                   </td>
-                  <td className="px-5 py-3 text-sm text-slate-600 tabular-nums">{Array.isArray(session.messages) ? session.messages.length : 0}</td>
+                  <td className="px-5 py-3 text-sm text-slate-600 dark:text-slate-300 tabular-nums">{Array.isArray(session.messages) ? session.messages.length : 0}</td>
                   <td className="px-5 py-3">
-                    {session.leadCaptured && <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-100 text-emerald-700">lead</span>}
-                    {session.appointmentMade && <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-violet-100 text-violet-700 ml-1">booking</span>}
+                    {session.leadCaptured && <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">lead</span>}
+                    {session.appointmentMade && <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400 ml-1">booking</span>}
                   </td>
                   <td className="px-5 py-3"><span className="text-xs text-violet-600 font-medium">View</span></td>
                 </tr>
@@ -904,39 +904,39 @@ function ConversationModal({ session, onClose }: { session: ChatSession; onClose
   const messages = (session.messages ?? []) as ChatMessage[];
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+      <div className="bg-white dark:bg-[#1a1730] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="px-6 py-4 border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-slate-800">Conversation</h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <h3 className="text-sm font-semibold text-slate-800 dark:text-white">Conversation</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {formatDate(session.createdAt)}{' · '}
               <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${CHANNEL_COLORS[session.channel] ?? 'bg-slate-100 text-slate-500'}`}>{session.channel}</span>
               {session.contact && ` — ${session.contact.firstName} ${session.contact.lastName}`}
             </p>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
           </button>
         </div>
         <div className="px-6 py-4 overflow-y-auto max-h-[60vh] space-y-2">
           {(session.leadCaptured || session.appointmentMade) && (
             <div className="mb-4 flex gap-2">
-              {session.leadCaptured && <span className="inline-flex px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-100 text-emerald-700">Lead Captured</span>}
-              {session.appointmentMade && <span className="inline-flex px-2.5 py-1 rounded-full text-[11px] font-medium bg-violet-100 text-violet-700">Appointment Made</span>}
+              {session.leadCaptured && <span className="inline-flex px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">Lead Captured</span>}
+              {session.appointmentMade && <span className="inline-flex px-2.5 py-1 rounded-full text-[11px] font-medium bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400">Appointment Made</span>}
             </div>
           )}
           {session.contact && (
-            <div className="mb-4 p-3 bg-emerald-50 border border-emerald-100 rounded-lg">
-              <p className="text-xs font-semibold text-emerald-700 mb-1">Contact</p>
-              <p className="text-xs text-slate-600">{session.contact.firstName} {session.contact.lastName} {session.contact.email && `· ${session.contact.email}`} {session.contact.phone && `· ${session.contact.phone}`}</p>
+            <div className="mb-4 p-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 rounded-lg">
+              <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 mb-1">Contact</p>
+              <p className="text-xs text-slate-600 dark:text-slate-300">{session.contact.firstName} {session.contact.lastName} {session.contact.email && `· ${session.contact.email}`} {session.contact.phone && `· ${session.contact.phone}`}</p>
             </div>
           )}
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] px-3 py-2 rounded-xl text-sm ${msg.role === 'user' ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-700'}`}>{msg.content}</div>
+              <div className={`max-w-[80%] px-3 py-2 rounded-xl text-sm ${msg.role === 'user' ? 'bg-violet-600 text-white' : 'bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-200'}`}>{msg.content}</div>
             </div>
           ))}
-          {messages.length === 0 && <p className="text-sm text-slate-400 text-center py-8">No messages</p>}
+          {messages.length === 0 && <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-8">No messages</p>}
         </div>
       </div>
     </div>
@@ -1009,25 +1009,25 @@ function QuickSetupTemplates({ businessId, businessName, onApplied }: {
   }
 
   return (
-    <div className="bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-200/60 rounded-2xl p-6">
+    <div className="bg-gradient-to-br from-violet-50 to-indigo-50 dark:from-violet-500/5 dark:to-indigo-500/5 border border-violet-200/60 dark:border-violet-500/20 rounded-2xl p-6">
       <div className="flex items-center gap-2 mb-1">
         <span className="text-lg">&#x2728;</span>
-        <h3 className="text-sm font-bold text-violet-900">Quick Setup</h3>
+        <h3 className="text-sm font-bold text-violet-900 dark:text-violet-300">Quick Setup</h3>
       </div>
-      <p className="text-xs text-violet-600 mb-4">Pick a template to instantly configure your chatbot — system prompt, knowledge base, colors, and quick replies. You can customize everything after.</p>
+      <p className="text-xs text-violet-600 dark:text-violet-400 mb-4">Pick a template to instantly configure your chatbot — system prompt, knowledge base, colors, and quick replies. You can customize everything after.</p>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {BUSINESS_TEMPLATES.map((t) => (
           <button
             key={t.id}
             onClick={() => applyTemplate(t)}
             disabled={!!applying}
-            className="bg-white border border-violet-200/60 rounded-xl p-4 text-left hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 group"
+            className="bg-white dark:bg-white/[0.04] border border-violet-200/60 dark:border-violet-500/20 rounded-xl p-4 text-left hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 group"
           >
             <div className="text-2xl mb-2">{t.emoji}</div>
-            <p className="text-sm font-semibold text-slate-800 group-hover:text-violet-700 transition-colors">{t.label}</p>
+            <p className="text-sm font-semibold text-slate-800 dark:text-white group-hover:text-violet-700 dark:group-hover:text-violet-400 transition-colors">{t.label}</p>
             <div className="flex items-center gap-1.5 mt-2">
               <div className="w-3 h-3 rounded-full" style={{ background: t.color }} />
-              <span className="text-[10px] text-slate-400">{t.quickReplies.length} quick replies</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500">{t.quickReplies.length} quick replies</span>
             </div>
             {applying === t.id && <div className="mt-2 w-4 h-4 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" />}
           </button>
@@ -1048,13 +1048,13 @@ function EmbedSnippet({ businessId }: { businessId: string }) {
   }, [businessId]);
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-6">
+    <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-sm font-semibold text-slate-700">Embed Code</h3>
-          <p className="text-xs text-slate-400 mt-0.5">Paste before &lt;/body&gt; on your website</p>
+          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Embed Code</h3>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Paste before &lt;/body&gt; on your website</p>
         </div>
-        <button onClick={() => { navigator.clipboard.writeText(snippet); setCopied(true); setTimeout(() => setCopied(false), 2000); }} disabled={!snippet} className="px-4 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors">
+        <button onClick={() => { navigator.clipboard.writeText(snippet); setCopied(true); setTimeout(() => setCopied(false), 2000); }} disabled={!snippet} className="px-4 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.04] disabled:opacity-50 transition-colors">
           {copied ? 'Copied!' : 'Copy Code'}
         </button>
       </div>
@@ -1063,7 +1063,7 @@ function EmbedSnippet({ businessId }: { businessId: string }) {
       ) : snippet ? (
         <pre className="bg-slate-900 text-slate-300 rounded-lg p-4 text-xs overflow-x-auto font-mono leading-relaxed">{snippet}</pre>
       ) : (
-        <div className="bg-slate-50 rounded-lg p-4 text-center"><p className="text-xs text-slate-400">Snippet unavailable</p></div>
+        <div className="bg-slate-50 dark:bg-white/[0.04] rounded-lg p-4 text-center"><p className="text-xs text-slate-400 dark:text-slate-500">Snippet unavailable</p></div>
       )}
     </div>
   );
@@ -1147,18 +1147,18 @@ export default function ChatbotClient({ businessId }: { businessId: string }) {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20 dark:shadow-violet-900/30">
             <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" /></svg>
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Chat Widget</h1>
-            <p className="text-sm text-slate-500">AI chatbot — configure, customize, and monitor</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Chat Widget</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">AI chatbot — configure, customize, and monitor</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl">
+          <div className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-500/10 dark:to-teal-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-sm font-semibold text-emerald-700">Active</span>
+            <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">Active</span>
           </div>
         </div>
       </div>
