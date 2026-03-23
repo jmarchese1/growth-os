@@ -47,4 +47,7 @@ export type {
   Subscription,
   SubscriptionStatus,
   PricingTier,
+  Reservation,
+  ReservationSource,
+  ReservationStatus,
 } from '@prisma/client';
