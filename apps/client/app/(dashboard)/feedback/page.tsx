@@ -30,6 +30,21 @@ interface FeedbackEntry {
 
 interface Stats { total: number; avgRating: number; unanswered: number; byRating: Record<string, number>; }
 
+interface ReviewSettings {
+  enabled: boolean;
+  googleReviewUrl: string;
+  goodThreshold: 'GOOD' | 'EXCELLENT';
+  autoSendDelay: number;
+  goodMessage: string;
+  badMessage: string;
+}
+
+interface ReviewStats {
+  reviewRequestsSent: number;
+  badFeedbackAlerts: number;
+  period: string;
+}
+
 export default function FeedbackPage() {
   const { business, loading: bizLoading } = useBusiness();
   const [entries, setEntries] = useState<FeedbackEntry[]>([]);
@@ -38,6 +53,11 @@ export default function FeedbackPage() {
   const [toolEnabled, setToolEnabled] = useState<boolean | null>(null);
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
   const [responseText, setResponseText] = useState('');
+  const [reviewSettings, setReviewSettings] = useState<ReviewSettings | null>(null);
+  const [reviewStats, setReviewStats] = useState<ReviewStats | null>(null);
+  const [reviewDraft, setReviewDraft] = useState<Partial<ReviewSettings>>({});
+  const [reviewSaving, setReviewSaving] = useState(false);
+  const [reviewExpanded, setReviewExpanded] = useState(false);
 
   const fetchEntries = useCallback(async () => {
     if (!business?.id) return;
@@ -58,6 +78,44 @@ export default function FeedbackPage() {
     } catch { /* ignore */ }
   }, [business?.id]);
 
+  const fetchReviewSettings = useCallback(async () => {
+    if (!business?.id) return;
+    try {
+      const res = await fetch(`${API_URL}/businesses/${business.id}/review-settings`);
+      const json = await res.json();
+      if (json.success) {
+        setReviewSettings(json.settings);
+        setReviewDraft(json.settings);
+      }
+    } catch { /* ignore */ }
+  }, [business?.id]);
+
+  const fetchReviewStats = useCallback(async () => {
+    if (!business?.id) return;
+    try {
+      const res = await fetch(`${API_URL}/businesses/${business.id}/review-solicitation/stats`);
+      const json = await res.json();
+      if (json.success) setReviewStats(json.stats);
+    } catch { /* ignore */ }
+  }, [business?.id]);
+
+  const saveReviewSettings = async () => {
+    if (!business?.id) return;
+    setReviewSaving(true);
+    try {
+      const res = await fetch(`${API_URL}/businesses/${business.id}/review-settings`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reviewDraft),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setReviewSettings(json.settings);
+        setReviewDraft(json.settings);
+      }
+    } finally { setReviewSaving(false); }
+  };
+
   const checkTool = useCallback(async () => {
     if (!business?.id) return;
     try {
@@ -73,6 +131,8 @@ export default function FeedbackPage() {
   useEffect(() => { fetchEntries(); }, [fetchEntries]);
   useEffect(() => { fetchStats(); }, [fetchStats]);
   useEffect(() => { checkTool(); }, [checkTool]);
+  useEffect(() => { fetchReviewSettings(); }, [fetchReviewSettings]);
+  useEffect(() => { fetchReviewStats(); }, [fetchReviewStats]);
 
   const respond = async (id: string) => {
     if (!responseText.trim()) return;
@@ -116,6 +176,127 @@ export default function FeedbackPage() {
           <KpiCard label="Excellent" value={stats.byRating['EXCELLENT'] ?? 0} color="emerald" icon={<svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>} />
         </div>
       )}
+
+      {/* ── Review Solicitation Settings ──────────────────────────────── */}
+      <div className="bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-xl mb-8">
+        <button
+          onClick={() => setReviewExpanded(!reviewExpanded)}
+          className="w-full flex items-center justify-between p-5"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-violet-100 dark:bg-violet-500/15 flex items-center justify-center">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-violet-600 dark:text-violet-400">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">Automated Review Solicitation</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                {reviewSettings?.enabled ? 'Enabled' : 'Disabled'}
+                {reviewStats ? ` — ${reviewStats.reviewRequestsSent} review requests sent this month` : ''}
+              </p>
+            </div>
+          </div>
+          <svg viewBox="0 0 20 20" fill="currentColor" className={`w-5 h-5 text-slate-400 transition-transform ${reviewExpanded ? 'rotate-180' : ''}`}>
+            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+        </button>
+
+        {reviewExpanded && reviewSettings && (
+          <div className="px-5 pb-5 border-t border-slate-100 dark:border-white/[0.06] pt-5 space-y-5">
+            {/* Stats row */}
+            {reviewStats && (
+              <div className="flex gap-4">
+                <div className="flex-1 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg p-3 text-center">
+                  <p className="text-lg font-bold text-emerald-700 dark:text-emerald-400">{reviewStats.reviewRequestsSent}</p>
+                  <p className="text-[11px] text-emerald-600 dark:text-emerald-400/70">Review requests sent (30d)</p>
+                </div>
+                <div className="flex-1 bg-rose-50 dark:bg-rose-500/10 rounded-lg p-3 text-center">
+                  <p className="text-lg font-bold text-rose-700 dark:text-rose-400">{reviewStats.badFeedbackAlerts}</p>
+                  <p className="text-[11px] text-rose-600 dark:text-rose-400/70">Bad feedback alerts (30d)</p>
+                </div>
+              </div>
+            )}
+
+            {/* Enable toggle */}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-900 dark:text-white">Enable auto review solicitation</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Automatically send Google Review links to happy customers</p>
+              </div>
+              <button
+                onClick={() => setReviewDraft(d => ({ ...d, enabled: !d.enabled }))}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${reviewDraft.enabled ? 'bg-violet-600' : 'bg-slate-200 dark:bg-white/10'}`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${reviewDraft.enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
+
+            {/* Google Review URL */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Google Review URL</label>
+              <input
+                type="url"
+                value={reviewDraft.googleReviewUrl ?? ''}
+                onChange={e => setReviewDraft(d => ({ ...d, googleReviewUrl: e.target.value }))}
+                placeholder="https://g.page/r/..."
+                className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-white/[0.08] rounded-lg bg-white dark:bg-white/[0.04] text-slate-900 dark:text-white placeholder:text-slate-400"
+              />
+            </div>
+
+            {/* Threshold selector */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Send review request when rating is</label>
+              <select
+                value={reviewDraft.goodThreshold ?? 'GOOD'}
+                onChange={e => setReviewDraft(d => ({ ...d, goodThreshold: e.target.value as 'GOOD' | 'EXCELLENT' }))}
+                className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-white/[0.08] rounded-lg bg-white dark:bg-white/[0.04] text-slate-900 dark:text-white"
+              >
+                <option value="GOOD">GOOD or higher (4-5 stars)</option>
+                <option value="EXCELLENT">EXCELLENT only (5 stars)</option>
+              </select>
+            </div>
+
+            {/* Message templates */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                Good feedback message template
+                <span className="font-normal text-slate-400 ml-1">({'Use {reviewUrl} and {businessName} as placeholders'})</span>
+              </label>
+              <textarea
+                value={reviewDraft.goodMessage ?? ''}
+                onChange={e => setReviewDraft(d => ({ ...d, goodMessage: e.target.value }))}
+                rows={3}
+                className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-white/[0.08] rounded-lg bg-white dark:bg-white/[0.04] text-slate-900 dark:text-white placeholder:text-slate-400 resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                Bad feedback message template
+                <span className="font-normal text-slate-400 ml-1">({'Use {businessName} as placeholder'})</span>
+              </label>
+              <textarea
+                value={reviewDraft.badMessage ?? ''}
+                onChange={e => setReviewDraft(d => ({ ...d, badMessage: e.target.value }))}
+                rows={3}
+                className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-white/[0.08] rounded-lg bg-white dark:bg-white/[0.04] text-slate-900 dark:text-white placeholder:text-slate-400 resize-none"
+              />
+            </div>
+
+            {/* Save button */}
+            <div className="flex justify-end">
+              <button
+                onClick={saveReviewSettings}
+                disabled={reviewSaving}
+                className="px-5 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50"
+              >
+                {reviewSaving ? 'Saving...' : 'Save Settings'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="space-y-4">
         {loading ? (

@@ -175,6 +175,8 @@ enum ActivityType {
   NOTE
   LEAD_CREATED
   STATUS_CHANGE
+  REVIEW_REQUEST_SENT
+  BAD_FEEDBACK_ALERT
 }
 
 // ─── Core: Multi-Tenancy Anchor ───────────────────────────────────────────────
@@ -254,6 +256,7 @@ model Business {
   feedbackEntries FeedbackEntry[]
   tableSessions   TableSession[]
   giftCards       GiftCard[]
+  competitors     Competitor[]
   onboardingLog   OnboardingLog[]
   subscription    Subscription?
 
@@ -1290,4 +1293,38 @@ model GiftCard {
   @@index([businessId])
   @@index([code])
   @@index([status])
+}
+
+// ─── Competitor Monitor ──────────────────────────────────────────────────────
+
+model Competitor {
+  id            String   @id @default(cuid())
+  businessId    String
+  business      Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name          String
+  googleMapsUrl String?
+  yelpUrl       String?
+  websiteUrl    String?
+  instagramUrl  String?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  reports       CompetitorReport[]
+
+  @@index([businessId])
+}
+
+model CompetitorReport {
+  id           String   @id @default(cuid())
+  competitorId String
+  competitor   Competitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+  reportDate   DateTime @default(now())
+  summary      String   @db.Text
+  highlights   Json     // [{ type: 'new_review' | 'social_post' | 'menu_change' | 'price_change', detail: string }]
+  sentiment    String?  // POSITIVE, NEUTRAL, NEGATIVE (overall competitor health)
+  rawData      Json?    // raw scraped data for reference
+  createdAt    DateTime @default(now())
+
+  @@index([competitorId])
+  @@index([reportDate])
 }

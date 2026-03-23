@@ -117,6 +117,7 @@ export default function DashboardOverview() {
   const [dashLoading, setDashLoading] = useState(true);
   const [trends, setTrends] = useState<TrendsData | null>(null);
   const [trendMetric, setTrendMetric] = useState<string>('contacts');
+  const [trendRange, setTrendRange] = useState<number>(30);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   const counts = business?.counts ?? { contacts: 0, callLogs: 0, chatSessions: 0, appointments: 0, leads: 0 };
@@ -134,7 +135,7 @@ export default function DashboardOverview() {
     try {
       const [dashRes, trendRes] = await Promise.all([
         fetch(`${API_BASE}/businesses/${business.id}/dashboard`),
-        fetch(`${API_BASE}/businesses/${business.id}/trends`),
+        fetch(`${API_BASE}/businesses/${business.id}/trends?days=${trendRange}`),
       ]);
       if (dashRes.ok) setDashboard(await dashRes.json() as DashboardData);
       if (trendRes.ok) {
@@ -146,7 +147,7 @@ export default function DashboardOverview() {
     } finally {
       setDashLoading(false);
     }
-  }, [business?.id]);
+  }, [business?.id, trendRange]);
 
   useEffect(() => { fetchDashboard(); }, [fetchDashboard]);
 
@@ -224,7 +225,20 @@ export default function DashboardOverview() {
           {/* Trends Chart */}
           <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl p-5 mb-8">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-slate-700 dark:text-white">30-Day Trends</h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-sm font-semibold text-slate-700 dark:text-white">Trends</h2>
+                <div className="flex gap-1 bg-slate-100 dark:bg-white/[0.06] rounded-lg p-0.5">
+                  {[7, 30, 90].map((d) => (
+                    <button key={d} onClick={() => setTrendRange(d)}
+                      className={`px-2 py-1 text-[11px] font-medium rounded-md transition-all ${
+                        trendRange === d ? 'bg-white dark:bg-white/10 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white'
+                      }`}
+                    >
+                      {d}d
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div className="flex gap-1 bg-slate-100 dark:bg-white/[0.06] rounded-lg p-0.5">
                 {TREND_METRICS.map((m) => (
                   <button key={m.key} onClick={() => setTrendMetric(m.key)}
