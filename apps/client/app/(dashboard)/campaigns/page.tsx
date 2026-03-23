@@ -124,7 +124,7 @@ function CreateCampaignModal({ businessId, onClose, onDone }: {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch(`${API_URL}/contacts?businessId=${businessId}&pageSize=500`);
+        const res = await fetch(`${API_URL}/businesses/${businessId}/contacts?pageSize=500`);
         const data = await res.json() as { items?: Contact[] };
         setContacts(data.items ?? []);
       } catch { /* silent */ }
