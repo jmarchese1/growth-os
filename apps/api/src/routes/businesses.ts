@@ -136,7 +136,7 @@ export async function businessRoutes(app: FastifyInstance): Promise<void> {
     const websites = await db.generatedWebsite.findMany({
       where: { businessId: id },
       orderBy: { createdAt: 'desc' },
-      select: { id: true, deployUrl: true, status: true, createdAt: true, updatedAt: true, config: true },
+      select: { id: true, deployUrl: true, customDomain: true, status: true, createdAt: true, updatedAt: true, config: true },
     });
     return { success: true, websites };
   });

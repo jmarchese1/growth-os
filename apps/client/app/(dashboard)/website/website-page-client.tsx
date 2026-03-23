@@ -188,6 +188,7 @@ const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 interface WebsiteRecord {
   id: string;
   deployUrl: string | null;
+  customDomain: string | null;
   status: string;
   createdAt: string;
   updatedAt: string;
@@ -647,20 +648,36 @@ function WebsiteList({
                     </span>
                   </td>
                   <td className="px-4 py-4">
-                    {site.deployUrl ? (
-                      <a
-                        href={site.deployUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-xs text-violet-600 hover:text-violet-800 hover:underline flex items-center gap-1 transition-colors"
-                      >
-                        <span className="truncate max-w-[180px]">{site.deployUrl.replace(/^https?:\/\//, '')}</span>
-                        <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 flex-shrink-0">
-                          <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-                          <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
-                        </svg>
-                      </a>
+                    {site.customDomain ? (
+                      <div className="flex flex-col gap-0.5">
+                        <a
+                          href={`https://${site.customDomain}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 hover:underline flex items-center gap-1 transition-colors font-medium"
+                        >
+                          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 flex-shrink-0 text-emerald-500"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                          <span className="truncate max-w-[180px]">{site.customDomain}</span>
+                        </a>
+                      </div>
+                    ) : site.deployUrl ? (
+                      <div className="flex flex-col gap-0.5">
+                        <a
+                          href={site.deployUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-xs text-violet-600 hover:text-violet-800 hover:underline flex items-center gap-1 transition-colors"
+                        >
+                          <span className="truncate max-w-[180px]">{site.deployUrl.replace(/^https?:\/\//, '')}</span>
+                          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 flex-shrink-0">
+                            <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                            <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+                          </svg>
+                        </a>
+                        <span onClick={(e) => { e.stopPropagation(); onSelect(site); }} className="text-[10px] text-violet-500 hover:text-violet-700 cursor-pointer">Set up custom domain →</span>
+                      </div>
                     ) : (
                       <span className="text-xs text-slate-400 dark:text-slate-400">—</span>
                     )}
@@ -876,9 +893,10 @@ function WebsiteEditor({
   const [myImages, setMyImages] = useState<Array<{ id: string; url: string; alt: string | null; category?: string | null }>>([]);
   const [myImageFilter, setMyImageFilter] = useState('all');
   const filteredMyImages = myImageFilter === 'all' ? myImages : myImages.filter(img => img.category === myImageFilter);
-  const [customDomain, setCustomDomain] = useState('');
+  const [customDomain, setCustomDomain] = useState(site.customDomain ?? '');
   const [domainStatus, setDomainStatus] = useState<{ configured: boolean; dnsRecords: Array<{ type: string; name: string; value: string }> } | null>(null);
   const [domainSaving, setDomainSaving] = useState(false);
+  const [domainCopied, setDomainCopied] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [versions, setVersions] = useState<Array<{ id: string; label: string | null; createdAt: string }>>([]);
   const [reverting, setReverting] = useState<string | null>(null);
@@ -1153,58 +1171,146 @@ function WebsiteEditor({
 
       {/* Domain setup panel */}
       {showDomainSetup && (
-        <div className="bg-white dark:bg-white/[0.04] border-b border-slate-200 dark:border-white/[0.08] px-6 py-4">
-          <div className="max-w-lg">
-            <p className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-2">Connect Custom Domain</p>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={customDomain}
-                onChange={(e) => setCustomDomain(e.target.value)}
-                placeholder="www.yourbusiness.com"
-                className="flex-1 px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400"
-              />
-              <button
-                onClick={async () => {
-                  if (!customDomain.trim()) return;
-                  setDomainSaving(true);
-                  try {
-                    const res = await fetch(`${API_URL}/websites/${site.id}/domain`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ domain: customDomain.trim() }),
-                    });
-                    const data = await res.json() as { success: boolean; configured: boolean; dnsRecords: Array<{ type: string; name: string; value: string }>; error?: string };
-                    if (data.success) {
-                      setDomainStatus({ configured: data.configured, dnsRecords: data.dnsRecords });
-                    }
-                  } catch { /* silent */ }
-                  setDomainSaving(false);
-                }}
-                disabled={domainSaving || !customDomain.trim()}
-                className="px-4 py-2 bg-violet-600 text-white text-xs font-semibold rounded-lg hover:bg-violet-700 disabled:opacity-50 transition-colors"
-              >
-                {domainSaving ? 'Saving...' : 'Connect'}
-              </button>
+        <div className="bg-white dark:bg-white/[0.04] border-b border-slate-200 dark:border-white/[0.08] px-6 py-5">
+          <div className="max-w-2xl">
+            <div className="flex items-center gap-2 mb-1">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-violet-500"><path fillRule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4z" clipRule="evenodd" /></svg>
+              <p className="text-sm font-bold text-slate-800 dark:text-white">Connect Your Domain</p>
             </div>
-            {domainStatus && (
-              <div className="mt-3 bg-slate-50 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] rounded-lg p-3">
-                <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2">
-                  {domainStatus.configured ? 'Domain connected!' : 'Add these DNS records at your registrar:'}
-                </p>
-                {!domainStatus.configured && (
-                  <table className="w-full text-[11px]">
-                    <thead><tr className="text-slate-400 dark:text-slate-400"><th className="text-left pr-4">Type</th><th className="text-left pr-4">Name</th><th className="text-left">Value</th></tr></thead>
-                    <tbody>
-                      {domainStatus.dnsRecords.map((r, i) => (
-                        <tr key={i} className="text-slate-700 dark:text-slate-200 font-mono"><td className="pr-4">{r.type}</td><td className="pr-4">{r.name}</td><td>{r.value}</td></tr>
-                      ))}
-                    </tbody>
-                  </table>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Use your own domain (e.g. www.yourrestaurant.com) instead of the Vercel URL. Takes about 5 minutes.</p>
+
+            {/* Current URL display */}
+            {site.deployUrl && (
+              <div className="flex items-center gap-2 mb-4 px-3 py-2 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] rounded-lg">
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Current URL</span>
+                <a href={site.deployUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-violet-600 hover:underline font-mono">{site.deployUrl.replace(/^https?:\/\//, '')}</a>
+                {site.customDomain && (
+                  <>
+                    <span className="text-slate-300 dark:text-slate-600 mx-1">→</span>
+                    <span className="text-[10px] font-semibold text-emerald-500 uppercase tracking-wider">Custom</span>
+                    <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono">{site.customDomain}</span>
+                  </>
                 )}
-                <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-2">DNS changes can take up to 48 hours to propagate.</p>
               </div>
             )}
+
+            {/* Step 1: Enter domain */}
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-violet-600 text-white text-[11px] font-bold flex items-center justify-center mt-0.5">1</span>
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1.5">Enter your domain</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={customDomain}
+                      onChange={(e) => setCustomDomain(e.target.value)}
+                      placeholder="www.yourrestaurant.com"
+                      className="flex-1 px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400"
+                    />
+                    <button
+                      onClick={async () => {
+                        if (!customDomain.trim()) return;
+                        setDomainSaving(true);
+                        try {
+                          const res = await fetch(`${API_URL}/websites/${site.id}/domain`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ domain: customDomain.trim() }),
+                          });
+                          const data = await res.json() as { success: boolean; configured: boolean; dnsRecords: Array<{ type: string; name: string; value: string }>; error?: string };
+                          if (data.success) {
+                            setDomainStatus({ configured: data.configured, dnsRecords: data.dnsRecords });
+                          }
+                        } catch { /* silent */ }
+                        setDomainSaving(false);
+                      }}
+                      disabled={domainSaving || !customDomain.trim()}
+                      className="px-4 py-2 bg-violet-600 text-white text-xs font-semibold rounded-lg hover:bg-violet-700 disabled:opacity-50 transition-colors"
+                    >
+                      {domainSaving ? 'Connecting...' : 'Connect'}
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">We recommend using <span className="font-mono">www.yourdomain.com</span> (with www) for best results.</p>
+                </div>
+              </div>
+
+              {/* Step 2: DNS records */}
+              {domainStatus && !domainStatus.configured && (
+                <div className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-violet-600 text-white text-[11px] font-bold flex items-center justify-center mt-0.5">2</span>
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1.5">Update your DNS settings</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-3">
+                      Go to where you bought your domain (GoDaddy, Namecheap, Google Domains, etc.) and add {domainStatus.dnsRecords.length === 1 ? 'this record' : 'these records'}:
+                    </p>
+                    <div className="bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] rounded-lg overflow-hidden">
+                      {domainStatus.dnsRecords.map((r, i) => (
+                        <div key={i} className={`flex items-center justify-between px-4 py-3 ${i > 0 ? 'border-t border-slate-200 dark:border-white/[0.06]' : ''}`}>
+                          <div className="flex items-center gap-4">
+                            <div>
+                              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Type</p>
+                              <p className="text-sm font-mono font-semibold text-slate-800 dark:text-white">{r.type}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Name / Host</p>
+                              <p className="text-sm font-mono text-slate-700 dark:text-slate-200">{r.name}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Value / Points to</p>
+                              <p className="text-sm font-mono text-slate-700 dark:text-slate-200">{r.value}</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => {
+                              void navigator.clipboard.writeText(r.value);
+                              setDomainCopied(r.value);
+                              setTimeout(() => setDomainCopied(null), 2000);
+                            }}
+                            className="text-[10px] font-medium text-violet-600 hover:text-violet-800 transition-colors"
+                          >
+                            {domainCopied === r.value ? 'Copied!' : 'Copy value'}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Quick guides per registrar */}
+                    <div className="mt-3 text-[11px] text-slate-500 dark:text-slate-400">
+                      <p className="font-semibold text-slate-600 dark:text-slate-300 mb-1">Quick guide for popular registrars:</p>
+                      <ul className="space-y-0.5 list-disc list-inside">
+                        <li><span className="font-medium">GoDaddy:</span> My Products → DNS → Add Record → paste the values above</li>
+                        <li><span className="font-medium">Namecheap:</span> Domain List → Manage → Advanced DNS → Add New Record</li>
+                        <li><span className="font-medium">Google Domains:</span> My Domains → DNS → Custom Records → Manage</li>
+                        <li><span className="font-medium">Cloudflare:</span> Select domain → DNS → Add Record (turn off proxy/orange cloud)</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Wait for propagation */}
+              {domainStatus && !domainStatus.configured && (
+                <div className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-300 dark:bg-slate-600 text-white text-[11px] font-bold flex items-center justify-center mt-0.5">3</span>
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">Wait for DNS to propagate</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Usually takes 5-30 minutes, but can take up to 48 hours. Once it&apos;s live, your site will automatically get a free SSL certificate (https).</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Success state */}
+              {domainStatus?.configured && (
+                <div className="flex items-center gap-3 px-4 py-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-lg">
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-emerald-500 flex-shrink-0"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                  <div>
+                    <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">Domain connected!</p>
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400">Your site is now live at <span className="font-mono font-semibold">{customDomain}</span></p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
