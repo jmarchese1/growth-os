@@ -242,7 +242,7 @@ export async function chatbotRoutes(app: FastifyInstance): Promise<void> {
       });
 
       const settings = (business.settings as Record<string, unknown>) ?? {};
-      const takeoutTool = tools.find(t => t.type === 'TAKEOUT_ORDERS');
+      void tools.find(t => t.type === 'TAKEOUT_ORDERS');
 
       return {
         success: true,

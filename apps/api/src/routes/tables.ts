@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { db } from '@embedo/db';
 import { createLogger, NotFoundError } from '@embedo/utils';
-import type { CreateTableRequest, SeatTableRequest, UpdateTableStatusRequest } from '@embedo/types';
+
 
 const log = createLogger('api:tables');
 
@@ -30,7 +30,8 @@ export async function tableRoutes(app: FastifyInstance): Promise<void> {
    * Create/register a table for the restaurant.
    */
   app.post('/tables', async (request, reply) => {
-    const body = request.body as Partial<CreateTableRequest>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const body = request.body as any;
 
     if (!body.businessId) return reply.code(400).send({ success: false, error: 'businessId is required' });
     if (!body.tableNumber?.trim()) return reply.code(400).send({ success: false, error: 'tableNumber is required' });
@@ -59,7 +60,8 @@ export async function tableRoutes(app: FastifyInstance): Promise<void> {
   app.patch<{ Params: { id: string } }>(
     '/tables/:id/seat',
     async (request, _reply) => {
-      const body = request.body as Partial<SeatTableRequest>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const body = request.body as any;
       if (!body.partySize) throw new Error('partySize is required');
 
       const table = await db.tableSession.findUnique({ where: { id: request.params.id } });
@@ -70,6 +72,7 @@ export async function tableRoutes(app: FastifyInstance): Promise<void> {
         ? new Date(now.getTime() + body.estimatedMinutes * 60 * 1000)
         : undefined;
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const updated = await db.tableSession.update({
         where: { id: request.params.id },
         data: {
@@ -77,9 +80,9 @@ export async function tableRoutes(app: FastifyInstance): Promise<void> {
           partySize: body.partySize,
           guestName: body.guestName,
           seatedAt: now,
-          estimatedDone,
+          ...(estimatedDone !== undefined ? { estimatedDone } : {}),
           clearedAt: null,
-        },
+        } as any,
       });
 
       log.info({ tableId: table.id, partySize: body.partySize }, 'Table seated');
@@ -94,7 +97,8 @@ export async function tableRoutes(app: FastifyInstance): Promise<void> {
   app.patch<{ Params: { id: string } }>(
     '/tables/:id/status',
     async (request, _reply) => {
-      const body = request.body as Partial<UpdateTableStatusRequest>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const body = request.body as any;
       if (!body.status) throw new Error('status is required');
 
       const table = await db.tableSession.findUnique({ where: { id: request.params.id } });

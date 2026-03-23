@@ -170,7 +170,8 @@ Return JSON only, no markdown: { "summary": "string", "highlights": [{ "type": "
           data: {
             competitorId: id,
             summary: parsed.summary,
-            highlights: parsed.highlights as unknown as Record<string, unknown>[],
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            highlights: parsed.highlights as any,
             sentiment: parsed.sentiment,
             rawData: { websiteHtml: websiteHtml.slice(0, 5000) },
           },

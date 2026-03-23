@@ -118,13 +118,14 @@ export async function elevenLabsWebhookRoutes(app: FastifyInstance): Promise<voi
                 const tax = Math.round(subtotal * taxRate * 100) / 100;
                 const total = Math.round((subtotal + tax) * 100) / 100;
 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 await db.order.create({
                   data: {
                     businessId: business.id,
                     customerName: orderData.name,
-                    customerPhone: orderData.phone,
-                    specialNotes: orderData.specialNotes,
-                    pickupTime: orderData.pickupTime,
+                    ...(orderData.phone != null ? { customerPhone: orderData.phone } : {}),
+                    ...(orderData.specialNotes != null ? { specialNotes: orderData.specialNotes } : {}),
+                    ...(orderData.pickupTime != null ? { pickupTime: orderData.pickupTime } : {}),
                     subtotal,
                     tax,
                     total,
@@ -135,10 +136,10 @@ export async function elevenLabsWebhookRoutes(app: FastifyInstance): Promise<voi
                         name: item.name,
                         quantity: item.quantity,
                         price: item.price,
-                        notes: item.notes,
+                        ...(item.notes != null ? { notes: item.notes } : {}),
                       })),
                     },
-                  },
+                  } as any,
                 });
                 log.info({ businessId: business.id, conversationId: data.conversation_id }, 'Order created from voice agent');
               }
@@ -160,8 +161,9 @@ export async function elevenLabsWebhookRoutes(app: FastifyInstance): Promise<voi
               if (tool?.enabled) {
                 const currentWaiting = await db.waitlistEntry.count({ where: { businessId: business.id, status: 'WAITING' } });
                 const avgWait = ((tool.config as Record<string, unknown>)?.['avgWaitMinutes'] as number) ?? 15;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 await db.waitlistEntry.create({
-                  data: { businessId: business.id, guestName: wData.name, guestPhone: wData.phone, partySize: wData.partySize, position: currentWaiting + 1, estimatedWait: (currentWaiting + 1) * avgWait, notes: wData.notes, source: 'VOICE_AGENT' },
+                  data: { businessId: business.id, guestName: wData.name, ...(wData.phone != null ? { guestPhone: wData.phone } : {}), partySize: wData.partySize, position: currentWaiting + 1, estimatedWait: (currentWaiting + 1) * avgWait, ...(wData.notes != null ? { notes: wData.notes } : {}), source: 'VOICE_AGENT' } as any,
                 });
                 log.info({ businessId: business.id, conversationId: data.conversation_id }, 'Waitlist entry created from voice agent');
               }
@@ -179,8 +181,9 @@ export async function elevenLabsWebhookRoutes(app: FastifyInstance): Promise<voi
             if (cData.name && cData.headcount) {
               const tool = await db.businessTool.findUnique({ where: { businessId_type: { businessId: business.id, type: 'CATERING_REQUESTS' } } });
               if (tool?.enabled) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 await db.cateringInquiry.create({
-                  data: { businessId: business.id, customerName: cData.name, customerPhone: cData.phone, customerEmail: cData.email, eventDate: cData.eventDate ? new Date(cData.eventDate) : undefined, eventTime: cData.eventTime, eventType: cData.eventType, headcount: cData.headcount, budget: cData.budget, dietaryNotes: cData.dietaryNotes, menuRequests: cData.menuRequests, source: 'VOICE_AGENT', voiceCallLogId: data.conversation_id },
+                  data: { businessId: business.id, customerName: cData.name, ...(cData.phone != null ? { customerPhone: cData.phone } : {}), ...(cData.email != null ? { customerEmail: cData.email } : {}), ...(cData.eventDate ? { eventDate: new Date(cData.eventDate) } : {}), ...(cData.eventTime != null ? { eventTime: cData.eventTime } : {}), ...(cData.eventType != null ? { eventType: cData.eventType } : {}), headcount: cData.headcount, ...(cData.budget != null ? { budget: cData.budget } : {}), ...(cData.dietaryNotes != null ? { dietaryNotes: cData.dietaryNotes } : {}), ...(cData.menuRequests != null ? { menuRequests: cData.menuRequests } : {}), source: 'VOICE_AGENT', voiceCallLogId: data.conversation_id } as any,
                 });
                 log.info({ businessId: business.id, conversationId: data.conversation_id }, 'Catering inquiry created from voice agent');
               }
@@ -201,8 +204,9 @@ export async function elevenLabsWebhookRoutes(app: FastifyInstance): Promise<voi
                 const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
                 let code = 'GC-';
                 for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 await db.giftCard.create({
-                  data: { businessId: business.id, code, initialAmount: gcData.amount, currentBalance: gcData.amount, purchaserName: gcData.purchaserName, purchaserPhone: gcData.purchaserPhone, recipientName: gcData.recipientName, personalMessage: gcData.personalMessage, source: 'VOICE_AGENT' },
+                  data: { businessId: business.id, code, initialAmount: gcData.amount, currentBalance: gcData.amount, ...(gcData.purchaserName != null ? { purchaserName: gcData.purchaserName } : {}), ...(gcData.purchaserPhone != null ? { purchaserPhone: gcData.purchaserPhone } : {}), ...(gcData.recipientName != null ? { recipientName: gcData.recipientName } : {}), ...(gcData.personalMessage != null ? { personalMessage: gcData.personalMessage } : {}), source: 'VOICE_AGENT' } as any,
                 });
                 log.info({ businessId: business.id, code, conversationId: data.conversation_id }, 'Gift card created from voice agent');
               }
@@ -218,8 +222,9 @@ export async function elevenLabsWebhookRoutes(app: FastifyInstance): Promise<voi
           try {
             const rData = JSON.parse(resMatch[1]) as { guestName?: string; guestPhone?: string; guestEmail?: string; partySize?: number; date?: string; time?: string; specialRequests?: string };
             if (rData.guestName && rData.partySize && rData.date && rData.time) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               await db.reservation.create({
-                data: { businessId: business.id, guestName: rData.guestName, guestPhone: rData.guestPhone, guestEmail: rData.guestEmail, partySize: rData.partySize, date: new Date(rData.date), time: rData.time, specialRequests: rData.specialRequests, source: 'VOICE_AGENT', status: 'CONFIRMED' },
+                data: { businessId: business.id, guestName: rData.guestName, ...(rData.guestPhone != null ? { guestPhone: rData.guestPhone } : {}), ...(rData.guestEmail != null ? { guestEmail: rData.guestEmail } : {}), partySize: rData.partySize, date: new Date(rData.date), time: rData.time, ...(rData.specialRequests != null ? { specialRequests: rData.specialRequests } : {}), source: 'VOICE_AGENT', status: 'CONFIRMED' } as any,
               });
               log.info({ businessId: business.id, conversationId: data.conversation_id }, 'Reservation created from voice agent');
             }
@@ -236,8 +241,9 @@ export async function elevenLabsWebhookRoutes(app: FastifyInstance): Promise<voi
             if (fbData.rating && fbData.comment) {
               const tool = await db.businessTool.findUnique({ where: { businessId_type: { businessId: business.id, type: 'FEEDBACK_COLLECTION' } } });
               if (tool?.enabled) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 await db.feedbackEntry.create({
-                  data: { businessId: business.id, customerName: fbData.customerName, customerPhone: fbData.customerPhone, rating: fbData.rating, comment: fbData.comment, triggerType: 'VOICE_AGENT', voiceCallLogId: data.conversation_id },
+                  data: { businessId: business.id, ...(fbData.customerName != null ? { customerName: fbData.customerName } : {}), ...(fbData.customerPhone != null ? { customerPhone: fbData.customerPhone } : {}), rating: fbData.rating as any, comment: fbData.comment, triggerType: 'VOICE_AGENT', voiceCallLogId: data.conversation_id } as any,
                 });
                 log.info({ businessId: business.id, conversationId: data.conversation_id }, 'Feedback entry created from voice agent');
               }

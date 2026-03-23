@@ -2,7 +2,10 @@ import type { FastifyInstance } from 'fastify';
 import { db } from '@embedo/db';
 import { createLogger, NotFoundError } from '@embedo/utils';
 import { checkAvailability, bookReservation, cancelReservation } from '../services/opentable.js';
-import type { CreateReservationRequest, OpenTableConfig } from '@embedo/types';
+interface OpenTableConfig {
+  enabled: boolean;
+  restaurantId?: string;
+}
 
 const log = createLogger('api:reservations');
 
@@ -13,7 +16,7 @@ export async function reservationRoutes(app: FastifyInstance): Promise<void> {
    * If OpenTable is configured for the business, attempts to book via OpenTable stub.
    */
   app.post('/reservations', async (request, reply) => {
-    const body = request.body as Partial<CreateReservationRequest>;
+    const body = request.body as any;
 
     if (!body.businessId) return reply.code(400).send({ success: false, error: 'businessId is required' });
     if (!body.guestName?.trim()) return reply.code(400).send({ success: false, error: 'guestName is required' });
@@ -72,7 +75,7 @@ export async function reservationRoutes(app: FastifyInstance): Promise<void> {
           guestName: body.guestName.trim(),
           guestPhone: body.guestPhone ?? '',
           guestEmail: body.guestEmail ?? '',
-          specialRequests: body.specialRequests,
+          ...(body.specialRequests != null ? { specialRequests: body.specialRequests } : {}),
         });
         openTableConfirmation = booking.confirmationNumber;
         status = 'CONFIRMED';
@@ -413,7 +416,7 @@ export async function reservationRoutes(app: FastifyInstance): Promise<void> {
       guestName: body.guestName.trim(),
       guestPhone: body.guestPhone ?? '',
       guestEmail: body.guestEmail ?? '',
-      specialRequests: body.specialRequests,
+      ...(body.specialRequests != null ? { specialRequests: body.specialRequests } : {}),
     });
 
     // Create local reservation record

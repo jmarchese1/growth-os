@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { db } from '@embedo/db';
 import { createLogger, NotFoundError } from '@embedo/utils';
-import type { CreateGiftCardRequest, RedeemGiftCardRequest } from '@embedo/types';
+
 
 const log = createLogger('api:gift-cards');
 
@@ -63,7 +63,8 @@ export async function giftCardRoutes(app: FastifyInstance): Promise<void> {
    * Create/sell a gift card.
    */
   app.post('/gift-cards', async (request, reply) => {
-    const body = request.body as Partial<CreateGiftCardRequest>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const body = request.body as any;
 
     if (!body.businessId) return reply.code(400).send({ success: false, error: 'businessId is required' });
     if (!body.amount || body.amount <= 0) return reply.code(400).send({ success: false, error: 'amount must be positive' });
@@ -96,23 +97,24 @@ export async function giftCardRoutes(app: FastifyInstance): Promise<void> {
 
     const code = generateCode();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const card = await db.giftCard.create({
       data: {
         businessId: body.businessId,
-        contactId,
+        ...(contactId !== undefined ? { contactId } : {}),
         code,
         initialAmount: body.amount,
         currentBalance: body.amount,
-        purchaserName: body.purchaserName,
-        purchaserEmail: body.purchaserEmail,
-        purchaserPhone: body.purchaserPhone,
-        recipientName: body.recipientName,
-        recipientEmail: body.recipientEmail,
-        recipientPhone: body.recipientPhone,
-        personalMessage: body.personalMessage,
-        expiresAt: body.expiresAt ? new Date(body.expiresAt) : undefined,
+        ...(body.purchaserName != null ? { purchaserName: body.purchaserName } : {}),
+        ...(body.purchaserEmail != null ? { purchaserEmail: body.purchaserEmail } : {}),
+        ...(body.purchaserPhone != null ? { purchaserPhone: body.purchaserPhone } : {}),
+        ...(body.recipientName != null ? { recipientName: body.recipientName } : {}),
+        ...(body.recipientEmail != null ? { recipientEmail: body.recipientEmail } : {}),
+        ...(body.recipientPhone != null ? { recipientPhone: body.recipientPhone } : {}),
+        ...(body.personalMessage != null ? { personalMessage: body.personalMessage } : {}),
+        ...(body.expiresAt ? { expiresAt: new Date(body.expiresAt) } : {}),
         source: body.source ?? 'MANUAL',
-      },
+      } as any,
     });
 
     log.info({ cardId: card.id, code, amount: body.amount }, 'Gift card created');
@@ -126,7 +128,8 @@ export async function giftCardRoutes(app: FastifyInstance): Promise<void> {
   app.post<{ Params: { id: string } }>(
     '/gift-cards/:id/redeem',
     async (request, reply) => {
-      const body = request.body as Partial<RedeemGiftCardRequest>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const body = request.body as any;
       if (!body.amount || body.amount <= 0) return reply.code(400).send({ success: false, error: 'amount must be positive' });
 
       const card = await db.giftCard.findUnique({ where: { id: request.params.id } });

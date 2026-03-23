@@ -7,13 +7,8 @@ import { createLogger, NotFoundError, ExternalApiError } from '@embedo/utils';
 const log = createLogger('api:voice-agent');
 
 
-interface ToolConfig {
-  type: string;
-  enabled: boolean;
-  config: Record<string, unknown> | null;
-}
-
-function buildSystemPrompt(business: { name: string; phone: string | null; address: unknown; settings: unknown }, tools?: ToolConfig[]): string {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function buildSystemPrompt(business: { name: string; phone: string | null; address: unknown; settings: unknown }, tools?: Array<{ type: string; enabled: boolean; config: any }>): string {
   const settings = (business.settings as Record<string, unknown>) ?? {};
   const hours = settings['hours'] as Record<string, { open: string; close: string }> | undefined;
   const cuisine = settings['cuisine'] as string | undefined;

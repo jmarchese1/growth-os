@@ -28,7 +28,7 @@ export async function checkAvailability(params: {
   // });
 
   // Return mock availability for now
-  const requestedHour = parseInt(params.time.split(':')[0]);
+  const requestedHour = parseInt(params.time.split(':')[0] ?? '12');
   const slots: Array<{ time: string; available: boolean }> = [];
   for (let i = -2; i <= 2; i++) {
     const hour = requestedHour + i;

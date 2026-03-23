@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { db } from '@embedo/db';
 import { createLogger, NotFoundError } from '@embedo/utils';
-import type { CreateFeedbackRequest, RespondToFeedbackRequest } from '@embedo/types';
+
 
 const log = createLogger('api:feedback');
 
@@ -34,7 +34,8 @@ export async function feedbackRoutes(app: FastifyInstance): Promise<void> {
    * Create feedback — from SMS follow-up, chatbot, or manual entry.
    */
   app.post('/feedback', async (request, reply) => {
-    const body = request.body as Partial<CreateFeedbackRequest>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const body = request.body as any;
 
     if (!body.businessId) return reply.code(400).send({ success: false, error: 'businessId is required' });
 
@@ -67,7 +68,8 @@ export async function feedbackRoutes(app: FastifyInstance): Promise<void> {
   app.patch<{ Params: { id: string } }>(
     '/feedback/:id/respond',
     async (request, _reply) => {
-      const body = request.body as Partial<RespondToFeedbackRequest>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const body = request.body as any;
       if (!body.responseText?.trim()) throw new Error('responseText is required');
 
       const existing = await db.feedbackEntry.findUnique({ where: { id: request.params.id } });

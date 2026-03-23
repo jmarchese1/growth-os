@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { db } from '@embedo/db';
 import { createLogger, NotFoundError } from '@embedo/utils';
-import type { EnableToolRequest, UpdateToolConfigRequest } from '@embedo/types';
+
 
 const log = createLogger('api:business-tools');
 
@@ -30,7 +30,8 @@ export async function businessToolRoutes(app: FastifyInstance): Promise<void> {
    * Enable a tool for a business. Idempotent — if tool already exists, updates config.
    */
   app.post('/business-tools', async (request, reply) => {
-    const body = request.body as Partial<EnableToolRequest>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const body = request.body as any;
 
     if (!body.businessId) return reply.code(400).send({ success: false, error: 'businessId is required' });
     if (!body.type) return reply.code(400).send({ success: false, error: 'type is required' });
@@ -64,7 +65,8 @@ export async function businessToolRoutes(app: FastifyInstance): Promise<void> {
   app.patch<{ Params: { id: string } }>(
     '/business-tools/:id',
     async (request, _reply) => {
-      const body = request.body as Partial<UpdateToolConfigRequest> & { enabled?: boolean };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const body = request.body as any;
 
       const existing = await db.businessTool.findUnique({ where: { id: request.params.id } });
       if (!existing) throw new NotFoundError('BusinessTool', request.params.id);

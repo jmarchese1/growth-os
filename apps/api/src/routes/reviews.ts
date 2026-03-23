@@ -84,10 +84,11 @@ export async function reviewRoutes(app: FastifyInstance): Promise<void> {
       const updated = await db.business.update({
         where: { id: request.params.id },
         data: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           settings: {
             ...existingSettings,
             reviewSolicitation: merged,
-          },
+          } as any,
         },
         select: { settings: true },
       });
