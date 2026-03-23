@@ -897,6 +897,7 @@ function WebsiteEditor({
   const [domainStatus, setDomainStatus] = useState<{ configured: boolean; dnsRecords: Array<{ type: string; name: string; value: string }> } | null>(null);
   const [domainSaving, setDomainSaving] = useState(false);
   const [domainCopied, setDomainCopied] = useState<string | null>(null);
+  const [domainError, setDomainError] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [versions, setVersions] = useState<Array<{ id: string; label: string | null; createdAt: string }>>([]);
   const [reverting, setReverting] = useState<string | null>(null);
@@ -1212,6 +1213,7 @@ function WebsiteEditor({
                       onClick={async () => {
                         if (!customDomain.trim()) return;
                         setDomainSaving(true);
+                        setDomainError(null);
                         try {
                           const res = await fetch(`${API_URL}/websites/${site.id}/domain`, {
                             method: 'POST',
@@ -1221,8 +1223,13 @@ function WebsiteEditor({
                           const data = await res.json() as { success: boolean; configured: boolean; dnsRecords: Array<{ type: string; name: string; value: string }>; error?: string };
                           if (data.success) {
                             setDomainStatus({ configured: data.configured, dnsRecords: data.dnsRecords });
+                            setDomainError(null);
+                          } else {
+                            setDomainError(data.error ?? 'Failed to connect domain. Please try again.');
                           }
-                        } catch { /* silent */ }
+                        } catch {
+                          setDomainError('Could not reach the server. Make sure the website has been deployed first.');
+                        }
                         setDomainSaving(false);
                       }}
                       disabled={domainSaving || !customDomain.trim()}
@@ -1232,6 +1239,12 @@ function WebsiteEditor({
                     </button>
                   </div>
                   <p className="text-[10px] text-slate-400 mt-1">We recommend using <span className="font-mono">www.yourdomain.com</span> (with www) for best results.</p>
+                  {domainError && (
+                    <div className="mt-2 flex items-center gap-2 px-3 py-2 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-lg">
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-rose-500 flex-shrink-0"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+                      <p className="text-xs text-rose-700 dark:text-rose-300">{domainError}</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
