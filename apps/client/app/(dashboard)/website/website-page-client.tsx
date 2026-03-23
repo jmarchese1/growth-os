@@ -1195,10 +1195,29 @@ function WebsiteEditor({
               </div>
             )}
 
-            {/* Step 1: Enter domain */}
+            {/* Step 1: Buy a domain */}
             <div className="space-y-4">
               <div className="flex items-start gap-3">
                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-violet-600 text-white text-[11px] font-bold flex items-center justify-center mt-0.5">1</span>
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">Buy a domain</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2">If you don&apos;t already own a domain, purchase one first. We recommend GoDaddy — domains start at around $12/year.</p>
+                  <a
+                    href="https://www.godaddy.com/domains"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 dark:bg-white/[0.1] text-white text-xs font-medium rounded-lg hover:bg-slate-700 dark:hover:bg-white/[0.15] transition-colors"
+                  >
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" /><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" /></svg>
+                    Buy a domain on GoDaddy
+                  </a>
+                  <p className="text-[10px] text-slate-400 mt-1.5">Already have a domain? Skip to step 2.</p>
+                </div>
+              </div>
+
+              {/* Step 2: Enter domain */}
+              <div className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-violet-600 text-white text-[11px] font-bold flex items-center justify-center mt-0.5">2</span>
                 <div className="flex-1">
                   <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1.5">Enter your domain</p>
                   <div className="flex gap-2">
@@ -1248,15 +1267,24 @@ function WebsiteEditor({
                 </div>
               </div>
 
-              {/* Step 2: DNS records */}
+              {/* Step 3: DNS records */}
               {domainStatus && !domainStatus.configured && (
                 <div className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-violet-600 text-white text-[11px] font-bold flex items-center justify-center mt-0.5">2</span>
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-violet-600 text-white text-[11px] font-bold flex items-center justify-center mt-0.5">3</span>
                   <div className="flex-1">
-                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1.5">Update your DNS settings</p>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-3">
-                      Go to where you bought your domain (GoDaddy, Namecheap, Google Domains, etc.) and add {domainStatus.dnsRecords.length === 1 ? 'this record' : 'these records'}:
+                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1.5">Add DNS records on GoDaddy</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2">
+                      Go to your GoDaddy DNS settings and add {domainStatus.dnsRecords.length === 1 ? 'this record' : 'these records'}:
                     </p>
+                    <a
+                      href="https://dcc.godaddy.com/manage-dns"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 mb-3 bg-slate-800 dark:bg-white/[0.1] text-white text-xs font-medium rounded-lg hover:bg-slate-700 dark:hover:bg-white/[0.15] transition-colors"
+                    >
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" /><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" /></svg>
+                      Open GoDaddy DNS Settings
+                    </a>
                     <div className="bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] rounded-lg overflow-hidden">
                       {domainStatus.dnsRecords.map((r, i) => (
                         <div key={i} className={`flex items-center justify-between px-4 py-3 ${i > 0 ? 'border-t border-slate-200 dark:border-white/[0.06]' : ''}`}>
@@ -1288,11 +1316,20 @@ function WebsiteEditor({
                       ))}
                     </div>
 
-                    {/* Quick guides per registrar */}
                     <div className="mt-3 text-[11px] text-slate-500 dark:text-slate-400">
-                      <p className="font-semibold text-slate-600 dark:text-slate-300 mb-1">Quick guide for popular registrars:</p>
+                      <p className="font-semibold text-slate-600 dark:text-slate-300 mb-1">On GoDaddy:</p>
+                      <ol className="space-y-0.5 list-decimal list-inside">
+                        <li>Click &quot;Add New Record&quot;</li>
+                        <li>Select <span className="font-mono font-medium">{domainStatus.dnsRecords[0]?.type}</span> as the record type</li>
+                        <li>Set Name to <span className="font-mono font-medium">{domainStatus.dnsRecords[0]?.name}</span></li>
+                        <li>Set Value to <span className="font-mono font-medium">{domainStatus.dnsRecords[0]?.value}</span></li>
+                        <li>Click &quot;Save&quot;</li>
+                      </ol>
+                    </div>
+
+                    <div className="mt-3 text-[11px] text-slate-500 dark:text-slate-400">
+                      <p className="font-semibold text-slate-600 dark:text-slate-300 mb-1">Using a different registrar?</p>
                       <ul className="space-y-0.5 list-disc list-inside">
-                        <li><span className="font-medium">GoDaddy:</span> My Products → DNS → Add Record → paste the values above</li>
                         <li><span className="font-medium">Namecheap:</span> Domain List → Manage → Advanced DNS → Add New Record</li>
                         <li><span className="font-medium">Google Domains:</span> My Domains → DNS → Custom Records → Manage</li>
                         <li><span className="font-medium">Cloudflare:</span> Select domain → DNS → Add Record (turn off proxy/orange cloud)</li>
@@ -1302,13 +1339,26 @@ function WebsiteEditor({
                 </div>
               )}
 
-              {/* Step 3: Wait for propagation */}
+              {/* Step 4: Wait for propagation */}
               {domainStatus && !domainStatus.configured && (
                 <div className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-300 dark:bg-slate-600 text-white text-[11px] font-bold flex items-center justify-center mt-0.5">3</span>
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-300 dark:bg-slate-600 text-white text-[11px] font-bold flex items-center justify-center mt-0.5">4</span>
                   <div className="flex-1">
-                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">Wait for DNS to propagate</p>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Usually takes 5-30 minutes, but can take up to 48 hours. Once it&apos;s live, your site will automatically get a free SSL certificate (https).</p>
+                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">Wait for it to go live</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Usually takes 5-30 minutes, but can take up to 48 hours. Your site will automatically get a free SSL certificate (https).</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Need help */}
+              {domainStatus && !domainStatus.configured && (
+                <div className="flex items-center gap-3 px-4 py-3 bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20 rounded-lg">
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-violet-500 flex-shrink-0"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
+                  <div>
+                    <p className="text-xs font-semibold text-violet-800 dark:text-violet-300">Need help?</p>
+                    <p className="text-[11px] text-violet-700 dark:text-violet-400">
+                      Email <a href="mailto:jason@embedo.io" className="font-medium underline">jason@embedo.io</a> or call/text <a href="tel:+19177041382" className="font-medium underline">(917) 704-1382</a> and we&apos;ll set it up for you.
+                    </p>
                   </div>
                 </div>
               )}
