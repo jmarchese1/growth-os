@@ -846,7 +846,7 @@ Editable: businessName, tagline, description, cuisine, phone, address, city, hou
       const business = await db.business.findUnique({ where: { id: website.businessId } });
       const slug = (business?.name ?? 'site').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40);
 
-      log.info({ websiteId, businessId: website.businessId }, 'Auto-deploying to Vercel for custom domain');
+      logger.info({ websiteId, businessId: website.businessId }, 'Auto-deploying to Vercel for custom domain');
       const deployed = await deployToVercel({ projectName: slug, html, businessId: website.businessId });
       projectId = deployed.projectId;
 
@@ -887,7 +887,7 @@ Editable: businessName, tagline, description, cuisine, phone, address, city, hou
         const business = await db.business.findUnique({ where: { id: website.businessId } });
         const slug = (business?.name ?? 'site').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40);
 
-        log.info({ websiteId }, 'Vercel project not found, re-deploying');
+        logger.info({ websiteId }, 'Vercel project not found, re-deploying');
         const deployed = await deployToVercel({ projectName: slug, html, businessId: website.businessId });
 
         await db.generatedWebsite.update({
