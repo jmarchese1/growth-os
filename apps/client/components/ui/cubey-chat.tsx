@@ -103,7 +103,7 @@ export function CubeyChat({
           message: text,
           sessionKey,
           channel: 'WEB',
-          ...(mode === 'support' ? { test: !businessId } : {}),
+          ...(mode === 'support' ? { test: true } : {}),
           ...(!sessionKey ? {
             history: messages.map(m => ({ role: m.role, content: m.content, timestamp: m.timestamp })),
           } : {}),
@@ -139,7 +139,7 @@ export function CubeyChat({
   }, [sendMessage]);
 
   const quickReplies = mode === 'support'
-    ? ['What can Embedo do?', 'How does pricing work?', 'I need help setting up']
+    ? ['How do I set up my phone agent?', 'How do I send an email campaign?', 'What\'s the Tool Library?']
     : ['What are your hours?', 'Can I make a reservation?', 'What\'s on the menu?'];
 
   if (!mounted) return null;

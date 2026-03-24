@@ -296,12 +296,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </main>
       </div>
-      {/* Cubey — floating AI assistant */}
+      {/* Cubey — platform help assistant */}
       <CubeyChat
-        businessId={business?.id}
         mode="support"
-        headerTitle="Cubey Support"
-        welcomeMessage={`Hey${business?.name ? ` ${business.name}` : ''}! I'm Cubey, your AI assistant. Ask me anything about setting up your tools, managing contacts, or using the platform!`}
+        headerTitle="Cubey Help"
+        welcomeMessage={`Hey! I'm Cubey, your Embedo platform guide. Ask me how to set up your phone agent, generate a website, send campaigns, create QR codes — anything about using the dashboard!`}
       />
     </div>
   );

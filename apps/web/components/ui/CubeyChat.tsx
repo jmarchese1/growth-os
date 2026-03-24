@@ -116,7 +116,7 @@ export default function CubeyChat() {
     }
   }, [sendMessage]);
 
-  const quickReplies = ['What can Embedo do?', 'How does pricing work?', 'Show me a demo'];
+  const quickReplies = ['What can Embedo do?', 'How does pricing work?', 'What AI tools are included?'];
 
   if (!mounted) return null;
 
