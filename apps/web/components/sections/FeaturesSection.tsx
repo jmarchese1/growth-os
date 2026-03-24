@@ -1,5 +1,10 @@
 'use client';
 
+import { useState } from 'react';
+
+const API_BASE = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
+const APP_URL = process.env['NEXT_PUBLIC_APP_URL'] ?? 'https://app.embedo.io';
+
 /* ── Value stack items ─────────────────────────────────────────── */
 
 const OFFER_ITEMS = [
@@ -77,8 +82,6 @@ const PLANS: Plan[] = [
   },
 ];
 
-const APP_URL = process.env['NEXT_PUBLIC_APP_URL'] ?? 'https://app.embedo.io';
-
 function Check() {
   return (
     <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-violet-600 flex-shrink-0 mt-0.5">
@@ -88,8 +91,31 @@ function Check() {
 }
 
 export default function FeaturesSection() {
-  const handleStartTrial = (tier: string) => {
+  const [loadingTier, setLoadingTier] = useState<string | null>(null);
+
+  const handleCheckout = async (tier: string) => {
+    setLoadingTier(tier);
+    try {
+      const res = await fetch(`${API_BASE}/billing/public-checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tier,
+          successUrl: `${APP_URL}/login?checkout=success&tier=${tier}`,
+          cancelUrl: window.location.href,
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+    } catch {
+      // Stripe not configured — fall back to signup with plan param
+    }
+    // Fallback: redirect to signup with plan selected
     window.location.href = `${APP_URL}/login?plan=${tier}&signup=1`;
+    setLoadingTier(null);
   };
 
   return (
@@ -149,11 +175,10 @@ export default function FeaturesSection() {
               key={plan.tier}
               className={`relative rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 ${
                 plan.popular
-                  ? 'bg-white border-2 border-violet-600 shadow-xl shadow-violet-600/10 ring-0'
+                  ? 'bg-white border-2 border-violet-600 shadow-xl shadow-violet-600/10'
                   : 'bg-white border border-gray-200 shadow-md hover:shadow-lg'
               }`}
             >
-              {/* Popular badge */}
               {plan.popular && (
                 <div className="bg-violet-600 text-center py-2">
                   <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-white">Most Popular</p>
@@ -161,34 +186,37 @@ export default function FeaturesSection() {
               )}
 
               <div className={`px-7 ${plan.popular ? 'pt-7' : 'pt-8'} pb-8`}>
-                {/* Tag + name */}
                 <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-violet-600 mb-1">{plan.tagline}</p>
                 <h3 className="text-xl font-bold text-gray-900 mb-5">{plan.name}</h3>
 
-                {/* Price */}
                 <div className="flex items-baseline gap-0.5 mb-6">
                   <span className="text-sm text-gray-400 font-medium">$</span>
                   <span className="text-5xl font-extrabold text-gray-900 tracking-tight">{plan.price}</span>
                   <span className="text-sm text-gray-400 font-medium ml-1">{plan.interval}</span>
                 </div>
 
-                {/* CTA */}
                 <button
-                  onClick={() => handleStartTrial(plan.tier)}
-                  className={`w-full py-3.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${
+                  onClick={() => void handleCheckout(plan.tier)}
+                  disabled={loadingTier !== null}
+                  className={`w-full py-3.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer disabled:opacity-50 ${
                     plan.popular
                       ? 'bg-violet-600 text-white hover:bg-violet-700 shadow-md shadow-violet-600/20 hover:shadow-lg hover:-translate-y-0.5'
                       : 'bg-gray-900 text-white hover:bg-gray-800 shadow-sm hover:shadow-md hover:-translate-y-0.5'
                   }`}
                 >
-                  Start 14-Day Free Trial
+                  {loadingTier === plan.tier ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Redirecting to Stripe...
+                    </span>
+                  ) : (
+                    'Start 14-Day Free Trial'
+                  )}
                 </button>
                 <p className="text-center text-[10px] text-gray-400 mt-2.5">No credit card required</p>
 
-                {/* Divider */}
                 <div className="h-px bg-gray-100 my-6" />
 
-                {/* Features */}
                 <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4">Everything above, plus:</p>
                 <div className="space-y-2.5">
                   {plan.features.map((f) => (

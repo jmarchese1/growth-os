@@ -65,6 +65,23 @@ export default function SetupPage() {
     }
   }, [loading, business, router]);
 
+  /** Claim a Stripe checkout session that was created from the landing page */
+  const claimStripeSession = async (businessId: string) => {
+    const sessionId = sessionStorage.getItem('stripeSessionId');
+    if (!sessionId) return;
+
+    try {
+      await fetch(`${API_BASE}/billing/claim-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, businessId }),
+      });
+      sessionStorage.removeItem('stripeSessionId');
+      sessionStorage.removeItem('pendingPlan');
+    } catch { /* non-fatal — subscription can be linked manually */ }
+  };
+
+  /** Start a new Stripe checkout (when user picked a plan but hasn't paid yet) */
   const startCheckout = async (businessId: string, tier: string) => {
     try {
       const res = await fetch(`${API_BASE}/billing/checkout`, {
@@ -120,12 +137,22 @@ export default function SetupPage() {
       }
 
       const result = await res.json();
+      const newBusinessId = result.business?.id;
+
+      // If user already paid via landing page Stripe checkout, claim that session
+      if (newBusinessId && sessionStorage.getItem('stripeSessionId')) {
+        await claimStripeSession(newBusinessId);
+        await refresh();
+        router.replace('/');
+        return;
+      }
+
       await refresh();
 
-      // If user came from pricing page, redirect to Stripe checkout
-      const pendingPlan = sessionStorage.getItem('pendingPlan');
-      if (pendingPlan && result.business?.id) {
-        const redirected = await startCheckout(result.business.id, pendingPlan);
+      // If user picked a plan but hasn't paid yet, redirect to Stripe checkout
+      const pPlan = sessionStorage.getItem('pendingPlan');
+      if (pPlan && newBusinessId) {
+        const redirected = await startCheckout(newBusinessId, pPlan);
         if (redirected) return;
       }
 
@@ -156,12 +183,22 @@ export default function SetupPage() {
       }
 
       const result = await res.json();
+      const importedBusinessId = result.business?.id;
+
+      // If user already paid via landing page Stripe checkout, claim that session
+      if (importedBusinessId && sessionStorage.getItem('stripeSessionId')) {
+        await claimStripeSession(importedBusinessId);
+        await refresh();
+        router.replace('/');
+        return;
+      }
+
       await refresh();
 
-      // If user came from pricing page, redirect to Stripe checkout
-      const pendingPlan = sessionStorage.getItem('pendingPlan');
-      if (pendingPlan && result.business?.id) {
-        const redirected = await startCheckout(result.business.id, pendingPlan);
+      // If user picked a plan but hasn't paid yet, redirect to Stripe checkout
+      const importPlan = sessionStorage.getItem('pendingPlan');
+      if (importPlan && importedBusinessId) {
+        const redirected = await startCheckout(importedBusinessId, importPlan);
         if (redirected) return;
       }
 

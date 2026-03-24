@@ -122,10 +122,15 @@ export async function billingRoutes(app: FastifyInstance): Promise<void> {
       ? tierConfig.features.join(' · ')
       : undefined;
 
+    // Append session_id template to success URL so the client can claim the session later
+    const baseSuccessUrl = successUrl ?? 'https://app.embedo.io/login?checkout=success';
+    const separator = baseSuccessUrl.includes('?') ? '&' : '?';
+    const finalSuccessUrl = `${baseSuccessUrl}${separator}session_id={CHECKOUT_SESSION_ID}`;
+
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: successUrl ?? 'https://app.embedo.io?checkout=success',
+      success_url: finalSuccessUrl,
       cancel_url: cancelUrl ?? 'https://embedo.io',
       subscription_data: {
         trial_period_days: 14,
@@ -145,6 +150,100 @@ export async function billingRoutes(app: FastifyInstance): Promise<void> {
 
     log.info({ tier, sessionId: session.id }, 'Public checkout session created');
     return reply.code(200).send({ url: session.url, sessionId: session.id });
+  });
+
+  // ─── Claim a public checkout session after account creation ────────────────
+  app.post('/billing/claim-session', async (request, reply) => {
+    const { sessionId, businessId } = request.body as {
+      sessionId: string;
+      businessId: string;
+    };
+
+    if (!sessionId || !businessId) {
+      return reply.code(400).send({ error: 'sessionId and businessId required' });
+    }
+
+    const stripe = getStripe();
+    if (!stripe) {
+      return reply.code(503).send({ error: 'Stripe not configured' });
+    }
+
+    // Verify the business exists
+    const business = await db.business.findUnique({ where: { id: businessId } });
+    if (!business) {
+      return reply.code(404).send({ error: 'Business not found' });
+    }
+
+    // Check if business already has a subscription
+    const existing = await db.subscription.findUnique({ where: { businessId } });
+    if (existing && (existing.status === 'ACTIVE' || existing.status === 'TRIALING')) {
+      return reply.code(200).send({ success: true, subscription: existing, message: 'Already has subscription' });
+    }
+
+    try {
+      // Retrieve the checkout session from Stripe
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+      if (session.status !== 'complete') {
+        return reply.code(400).send({ error: 'Checkout session not completed' });
+      }
+
+      const stripeSubId = typeof session.subscription === 'string'
+        ? session.subscription
+        : (session.subscription as { id: string } | null)?.id;
+
+      if (!stripeSubId) {
+        return reply.code(400).send({ error: 'No subscription in checkout session' });
+      }
+
+      // Link Stripe customer to business
+      const stripeCustomerId = typeof session.customer === 'string'
+        ? session.customer
+        : (session.customer as { id: string } | null)?.id;
+
+      if (stripeCustomerId && !business.stripeCustomerId) {
+        await db.business.update({
+          where: { id: businessId },
+          data: { stripeCustomerId },
+        });
+      }
+
+      // Fetch full subscription details
+      const sub = await stripe.subscriptions.retrieve(stripeSubId);
+      const tier = session.metadata?.['tier'] ?? 'SOLO';
+
+      // Update subscription metadata with the businessId for future webhook events
+      await stripe.subscriptions.update(stripeSubId, {
+        metadata: { ...sub.metadata, businessId },
+      });
+
+      const subscription = await db.subscription.upsert({
+        where: { businessId },
+        create: {
+          businessId,
+          stripeSubscriptionId: stripeSubId,
+          pricingTier: (['FREE', 'SOLO', 'SMALL', 'MEDIUM', 'LARGE'].includes(tier.toUpperCase()) ? tier.toUpperCase() : 'SOLO') as 'FREE' | 'SOLO' | 'SMALL' | 'MEDIUM' | 'LARGE',
+          status: sub.status === 'trialing' ? 'TRIALING' : 'ACTIVE',
+          currentPeriodStart: new Date(sub.start_date * 1000),
+          currentPeriodEnd: new Date(sub.billing_cycle_anchor * 1000),
+          trialEndsAt: sub.trial_end ? new Date(sub.trial_end * 1000) : null,
+        },
+        update: {
+          stripeSubscriptionId: stripeSubId,
+          pricingTier: (['FREE', 'SOLO', 'SMALL', 'MEDIUM', 'LARGE'].includes(tier.toUpperCase()) ? tier.toUpperCase() : 'SOLO') as 'FREE' | 'SOLO' | 'SMALL' | 'MEDIUM' | 'LARGE',
+          status: sub.status === 'trialing' ? 'TRIALING' : 'ACTIVE',
+          currentPeriodStart: new Date(sub.start_date * 1000),
+          currentPeriodEnd: new Date(sub.billing_cycle_anchor * 1000),
+          trialEndsAt: sub.trial_end ? new Date(sub.trial_end * 1000) : null,
+        },
+      });
+
+      log.info({ businessId, tier, stripeSubId, sessionId }, 'Public checkout session claimed');
+      return reply.code(200).send({ success: true, subscription });
+    } catch (err) {
+      log.error({ err, sessionId, businessId }, 'Failed to claim checkout session');
+      return reply.code(500).send({ error: 'Failed to claim checkout session' });
+    }
   });
 
   // ─── Create checkout session (subscribe) ─────────────────────────────────

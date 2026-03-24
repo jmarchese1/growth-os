@@ -233,20 +233,28 @@ function LoginPageInner() {
   const [signupSent, setSignupSent] = useState(false);
   const [unverifiedEmail, setUnverifiedEmail] = useState('');
 
-  // Detect plan param from landing page pricing CTA
+  // Detect plan/checkout params from landing page pricing CTA
   const planFromUrl = searchParams.get('plan');
   const signupFromUrl = searchParams.get('signup');
+  const checkoutSuccess = searchParams.get('checkout');
+  const stripeSessionId = searchParams.get('session_id');
+  const tierFromUrl = searchParams.get('tier');
 
   useEffect(() => {
     // Store plan in sessionStorage so it survives through the auth flow
     if (planFromUrl) {
       sessionStorage.setItem('pendingPlan', planFromUrl);
     }
-    // Auto-show signup form when coming from pricing page
-    if (signupFromUrl === '1' || planFromUrl) {
+    // Store Stripe session info after successful checkout from landing page
+    if (checkoutSuccess === 'success' && stripeSessionId) {
+      sessionStorage.setItem('stripeSessionId', stripeSessionId);
+      if (tierFromUrl) sessionStorage.setItem('pendingPlan', tierFromUrl);
+    }
+    // Auto-show signup form when coming from pricing page or post-checkout
+    if (signupFromUrl === '1' || planFromUrl || checkoutSuccess === 'success') {
       setShowSignup(true);
     }
-  }, [planFromUrl, signupFromUrl]);
+  }, [planFromUrl, signupFromUrl, checkoutSuccess, stripeSessionId, tierFromUrl]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -379,10 +387,14 @@ function LoginPageInner() {
                 ? (planFromUrl ? 'Create your account to start your free trial' : 'Create your business account')
                 : 'Sign in to your business dashboard'}
             </p>
-            {planFromUrl && showSignup && (
+            {(planFromUrl || checkoutSuccess === 'success') && showSignup && (
               <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span className="text-[11px] font-medium text-violet-300">{planFromUrl} plan — 14-day free trial</span>
+                <span className="text-[11px] font-medium text-violet-300">
+                  {checkoutSuccess === 'success'
+                    ? 'Payment complete — create your account to get started'
+                    : `${planFromUrl} plan — 14-day free trial`}
+                </span>
               </div>
             )}
           </div>
