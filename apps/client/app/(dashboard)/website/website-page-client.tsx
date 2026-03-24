@@ -1,7 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import Link from 'next/link';
 import WebsiteBuilder from './website-builder';
+import { PLAN_LIMITS } from '../billing/billing-data';
+import type { TierKey } from '../billing/billing-data';
 
 // ── Color Wheel Popup ────────────────────────────────────────────────────────
 function ColorWheelPopup({ onClose }: { onClose: () => void }) {
@@ -560,13 +563,18 @@ function WebsiteList({
   onSelect,
   onBuildNew,
   onDelete,
+  websiteLimit,
+  planTier,
 }: {
   sites: WebsiteRecord[];
   onSelect: (site: WebsiteRecord) => void;
   onBuildNew: () => void;
   onDelete: (site: WebsiteRecord) => void;
+  websiteLimit: number;
+  planTier: TierKey;
 }) {
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const atLimit = websiteLimit !== Infinity && sites.length >= websiteLimit;
   const [showGuide, setShowGuide] = useState(false);
 
   return (
@@ -585,15 +593,32 @@ function WebsiteList({
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" /></svg>
             AI Editor Guide
           </button>
-          <button
-            onClick={onBuildNew}
-            className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-700 transition-colors"
-          >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-              <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
-            Build New Website
-          </button>
+          {atLimit ? (
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-amber-500">{sites.length}/{websiteLimit} websites</span>
+              <Link
+                href="/billing"
+                className="flex items-center gap-2 px-4 py-2 bg-amber-500/15 border border-amber-500/30 text-amber-500 text-sm font-medium rounded-xl hover:bg-amber-500/25 transition-colors"
+              >
+                Upgrade for more
+              </Link>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              {websiteLimit !== Infinity && (
+                <span className="text-xs text-slate-400">{sites.length}/{websiteLimit} websites</span>
+              )}
+              <button
+                onClick={onBuildNew}
+                className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-700 transition-colors"
+              >
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                </svg>
+                Build New Website
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -606,12 +631,24 @@ function WebsiteList({
           </div>
           <h2 className="text-base font-semibold text-slate-800 dark:text-white mb-1">No websites yet</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Generate your first AI-powered website in under 2 minutes.</p>
-          <button
-            onClick={onBuildNew}
-            className="px-6 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-700 transition-colors"
-          >
-            Build My Website
-          </button>
+          {websiteLimit === 0 ? (
+            <div>
+              <p className="text-xs text-amber-500 mb-3">Website generation is not available on the {planTier} plan.</p>
+              <Link
+                href="/billing"
+                className="px-6 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-700 transition-colors inline-block"
+              >
+                Upgrade to get started
+              </Link>
+            </div>
+          ) : (
+            <button
+              onClick={onBuildNew}
+              className="px-6 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-700 transition-colors"
+            >
+              Build My Website
+            </button>
+          )}
         </div>
       ) : (
         <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl overflow-hidden">
@@ -1623,6 +1660,24 @@ function mapBusinessType(type?: string): string | null {
 export default function WebsitePageClient({ businessId, businessType }: { businessId: string; businessType?: string }) {
   const detectedIndustry = mapBusinessType(businessType) || null;
   const [view, setView] = useState<View>({ mode: 'loading' });
+  const [planTier, setPlanTier] = useState<TierKey>('FREE');
+
+  // Fetch subscription tier
+  useEffect(() => {
+    void (async () => {
+      try {
+        const res = await fetch(`${API_URL}/billing/subscription?businessId=${businessId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.subscription?.pricingTier) {
+            setPlanTier(data.subscription.pricingTier as TierKey);
+          }
+        }
+      } catch { /* default FREE */ }
+    })();
+  }, [businessId]);
+
+  const websiteLimit = PLAN_LIMITS[planTier].websites;
 
   const loadList = useCallback(async () => {
     try {
@@ -1699,6 +1754,8 @@ export default function WebsitePageClient({ businessId, businessType }: { busine
       onSelect={(site) => { void handleSelectSite(site); }}
       onBuildNew={() => setView({ mode: 'builder' })}
       onDelete={(site) => { void handleDelete(site); }}
+      websiteLimit={websiteLimit}
+      planTier={planTier}
     />
   );
 }

@@ -95,7 +95,7 @@ export const FEATURES: FeatureRow[] = [
   { label: 'Dedicated Phone Number',   category: 'AI Tools',     values: { FREE: false,        SOLO: '1 number',   SMALL: '1 number',     MEDIUM: '3 numbers',    LARGE: '10 numbers' } },
   { label: 'AI Image Generation',      category: 'AI Tools',     values: { FREE: '5/mo',      SOLO: '50/mo',      SMALL: '200/mo',       MEDIUM: '500/mo',       LARGE: 'Unlimited' } },
   // Website & QR
-  { label: 'Custom Website',           category: 'Website & QR', values: { FREE: false,        SOLO: true,         SMALL: true,           MEDIUM: true,           LARGE: true } },
+  { label: 'Custom Website',           category: 'Website & QR', values: { FREE: false,        SOLO: '1 site',     SMALL: '3 sites',      MEDIUM: '5 sites',      LARGE: 'Unlimited' } },
   { label: 'QR Code Tools',            category: 'Website & QR', values: { FREE: '3 codes',    SOLO: '10 codes',   SMALL: '50 codes',     MEDIUM: '200 codes',    LARGE: 'Unlimited' } },
   { label: 'Spin-to-Win / Discounts',  category: 'Website & QR', values: { FREE: true,         SOLO: true,         SMALL: true,           MEDIUM: true,           LARGE: true } },
   { label: 'Surveys',                  category: 'Website & QR', values: { FREE: '1 survey',   SOLO: '5 surveys',  SMALL: 'Unlimited',    MEDIUM: 'Unlimited',    LARGE: 'Unlimited' } },
@@ -118,3 +118,20 @@ export const FEATURES: FeatureRow[] = [
 ];
 
 export const CATEGORIES = [...new Set(FEATURES.map((f) => f.category))];
+
+// ─── Plan limits (used for enforcement across the app) ──────────────────────
+export const PLAN_LIMITS: Record<TierKey, {
+  websites: number;       // 0 = not available, Infinity = unlimited
+  voiceAgents: number;
+  chatbots: number;
+  contacts: number;
+  qrCodes: number;
+  emailsPerMonth: number;
+  imagesPerMonth: number;
+}> = {
+  FREE:   { websites: 0,        voiceAgents: 0,  chatbots: 1,         contacts: 50,       qrCodes: 3,   emailsPerMonth: 0,     imagesPerMonth: 5 },
+  SOLO:   { websites: 1,        voiceAgents: 1,  chatbots: 1,         contacts: 500,      qrCodes: 10,  emailsPerMonth: 100,   imagesPerMonth: 50 },
+  SMALL:  { websites: 3,        voiceAgents: 1,  chatbots: 3,         contacts: 2000,     qrCodes: 50,  emailsPerMonth: 1000,  imagesPerMonth: 200 },
+  MEDIUM: { websites: 5,        voiceAgents: 3,  chatbots: 10,        contacts: 10000,    qrCodes: 200, emailsPerMonth: 10000, imagesPerMonth: 500 },
+  LARGE:  { websites: Infinity, voiceAgents: 10, chatbots: Infinity,  contacts: Infinity, qrCodes: Infinity, emailsPerMonth: Infinity, imagesPerMonth: Infinity },
+};

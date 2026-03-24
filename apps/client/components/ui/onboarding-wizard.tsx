@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { EmbedoCubeMascot } from './embedo-cube-mascot';
+import { PLAN_LIMITS } from '../../app/(dashboard)/billing/billing-data';
+import type { TierKey } from '../../app/(dashboard)/billing/billing-data';
 
 interface BusinessData {
   id: string;
@@ -30,12 +32,26 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 
 const API_BASE = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 
+// Color scheme options for website
+const COLOR_SCHEMES = [
+  { id: 'midnight', label: 'Midnight', colors: ['#0f172a', '#6366f1', '#818cf8'] },
+  { id: 'warm', label: 'Warm', colors: ['#451a03', '#f59e0b', '#fbbf24'] },
+  { id: 'forest', label: 'Forest', colors: ['#052e16', '#22c55e', '#4ade80'] },
+  { id: 'ocean', label: 'Ocean', colors: ['#0c4a6e', '#0ea5e9', '#38bdf8'] },
+  { id: 'rose', label: 'Rose', colors: ['#4c0519', '#f43f5e', '#fb7185'] },
+  { id: 'ivory', label: 'Ivory', colors: ['#faf5ff', '#a78bfa', '#c4b5fd'] },
+  { id: 'slate', label: 'Slate', colors: ['#1e293b', '#64748b', '#94a3b8'] },
+  { id: 'crimson', label: 'Crimson', colors: ['#450a0a', '#dc2626', '#ef4444'] },
+  { id: 'navy', label: 'Navy', colors: ['#172554', '#3b82f6', '#60a5fa'] },
+  { id: 'sage', label: 'Sage', colors: ['#1a2e05', '#84cc16', '#a3e635'] },
+] as const;
+
 // Mascot speech bubbles per step
 const MASCOT_LINES: Record<number, string> = {
   0: "Hey there! I'm Cubey, your setup buddy. Let's get you up and running!",
   1: "When are you open? Your AI agents will use this to help customers.",
   2: "Pick the tools you want. Don't worry, you can change these anytime!",
-  3: "Let's generate your website! AI will build it from your business info.",
+  3: "Tell me about your business and I'll build you a website!",
   4: "Time to set up your AI assistants. They'll handle calls and chats for you!",
   5: "You're all set! Your AI-powered business is ready to go.",
 };
@@ -46,6 +62,44 @@ export function OnboardingWizard({ business, onClose, onComplete }: Props) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
+
+  // ── Subscription state ──
+  const [planTier, setPlanTier] = useState<TierKey>('FREE');
+  const [existingWebsiteCount, setExistingWebsiteCount] = useState(0);
+
+  useEffect(() => {
+    // Fetch subscription tier
+    void (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/billing/subscription?businessId=${business.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.subscription?.pricingTier) {
+            setPlanTier(data.subscription.pricingTier as TierKey);
+          }
+        }
+      } catch {
+        // Default to FREE
+      }
+    })();
+    // Fetch existing website count
+    void (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/businesses/${business.id}/websites`);
+        if (res.ok) {
+          const data = await res.json();
+          setExistingWebsiteCount(Array.isArray(data.websites) ? data.websites.length : 0);
+        }
+      } catch {
+        // Default to 0
+      }
+    })();
+  }, [business.id]);
+
+  const websiteLimit = PLAN_LIMITS[planTier].websites;
+  const canGenerateWebsite = websiteLimit === Infinity || existingWebsiteCount < websiteLimit;
+  const voiceAgentLimit = PLAN_LIMITS[planTier].voiceAgents;
+  const canProvisionVoice = voiceAgentLimit > 0;
 
   // ── Hours state ──
   const [hours, setHours] = useState<Record<string, { open: string; close: string; closed: boolean }>>(() => {
@@ -72,8 +126,13 @@ export function OnboardingWizard({ business, onClose, onComplete }: Props) {
     return tools;
   });
 
-  // ── Website generation state ──
-  const [websiteStatus, setWebsiteStatus] = useState<'idle' | 'generating' | 'done' | 'error'>('idle');
+  // ── Website config state ──
+  const [websiteDescription, setWebsiteDescription] = useState('');
+  const [websiteCuisine, setWebsiteCuisine] = useState(
+    ((business.settings as Record<string, unknown> | null)?.['cuisine'] as string) ?? ''
+  );
+  const [websiteColorScheme, setWebsiteColorScheme] = useState('midnight');
+  const [websiteStatus, setWebsiteStatus] = useState<'idle' | 'generating' | 'done' | 'error' | 'limit'>('idle');
   const [websiteError, setWebsiteError] = useState('');
 
   // ── AI Agent setup state ──
@@ -84,6 +143,10 @@ export function OnboardingWizard({ business, onClose, onComplete }: Props) {
     (business.settings as Record<string, unknown> | null)?.['chatbotEnabled'] ? 'done' : 'idle'
   );
   const [voiceAreaCode, setVoiceAreaCode] = useState('');
+  const [voiceGreeting, setVoiceGreeting] = useState(
+    `Hi, thanks for calling ${business.name}! How can I help you today?`
+  );
+  const [voicePersonality, setVoicePersonality] = useState('friendly');
 
   // ── Confetti ──
   const [showConfetti, setShowConfetti] = useState(false);
@@ -113,40 +176,97 @@ export function OnboardingWizard({ business, onClose, onComplete }: Props) {
     });
   }, [hours, business.id, business.settings]);
 
-  // ── Website generation ──
+  // ── Website generation (runs in background) ──
   async function generateWebsite() {
+    if (!canGenerateWebsite) {
+      setWebsiteStatus('limit');
+      return;
+    }
     setWebsiteStatus('generating');
     setWebsiteError('');
+
+    // Save description + cuisine to business settings first
     try {
-      const res = await fetch(`${API_BASE}/websites/generate`, {
-        method: 'POST',
+      await fetch(`${API_BASE}/businesses/${business.id}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ businessId: business.id }),
+        body: JSON.stringify({
+          settings: {
+            ...((business.settings as Record<string, unknown>) ?? {}),
+            cuisine: websiteCuisine || undefined,
+            description: websiteDescription || undefined,
+          },
+        }),
       });
+    } catch {
+      // Non-critical — generation can still proceed
+    }
+
+    // Fire generation in background — don't await
+    fetch(`${API_BASE}/websites/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        businessId: business.id,
+        description: websiteDescription || undefined,
+        cuisine: websiteCuisine || undefined,
+        colorScheme: websiteColorScheme,
+      }),
+    }).then(async (res) => {
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? 'Failed to generate website');
       }
       setWebsiteStatus('done');
-    } catch (err) {
+      setExistingWebsiteCount((prev) => prev + 1);
+    }).catch((err) => {
       setWebsiteStatus('error');
       setWebsiteError(err instanceof Error ? err.message : 'Something went wrong');
-    }
+    });
+
+    // Auto-advance to next step after a short delay (generation continues in background)
+    // Don't auto-advance — let user see the status and click Continue
   }
 
   // ── Voice agent provisioning ──
   async function provisionVoice() {
+    if (!canProvisionVoice) return;
     setVoiceStatus('provisioning');
     try {
+      // Save personality + greeting to settings first
+      await fetch(`${API_BASE}/businesses/${business.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          settings: {
+            ...((business.settings as Record<string, unknown>) ?? {}),
+            chatbotPersona: voicePersonality,
+          },
+        }),
+      });
+
       const res = await fetch(`${API_BASE}/voice-agent/provision`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ businessId: business.id, areaCode: voiceAreaCode || undefined }),
+        body: JSON.stringify({
+          businessId: business.id,
+          areaCode: voiceAreaCode || undefined,
+        }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? 'Failed to provision voice agent');
       }
+
+      // Update first message if custom
+      if (voiceGreeting) {
+        await fetch(`${API_BASE}/voice-agent/prompt/${business.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ firstMessage: voiceGreeting }),
+        }).catch(() => { /* non-critical */ });
+      }
+
       setVoiceStatus('done');
     } catch {
       setVoiceStatus('error');
@@ -389,64 +509,134 @@ export function OnboardingWizard({ business, onClose, onComplete }: Props) {
                 </div>
               )}
 
-              {/* ── Step 3: Generate Website ── */}
+              {/* ── Step 3: Website Configuration + Generation ── */}
               {step === 3 && (
-                <div className="text-center py-2">
+                <div>
                   <h2 className="text-lg font-bold text-white mb-1">Generate Your Website</h2>
-                  <p className="text-sm text-slate-500 mb-6">
-                    AI will create a professional website using your business info. Takes about 30 seconds.
+                  <p className="text-sm text-slate-500 mb-4">
+                    Fill in a few details and AI will build you a professional site in about 30 seconds.
                   </p>
 
-                  {websiteStatus === 'idle' && (
-                    <div>
-                      <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl p-6 mb-5 max-w-sm mx-auto">
-                        <EmbedoCubeMascot size={48} mood="thinking" bounce={false} className="mx-auto mb-3" />
-                        <p className="text-xs text-slate-400">
-                          We&apos;ll use your business name, type, and location to build a custom website with AI-generated content and images.
-                        </p>
+                  {/* Plan limit check */}
+                  {!canGenerateWebsite && websiteLimit === 0 && (
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-4">
+                      <p className="text-xs text-amber-400 font-medium mb-1">Website not available on Free plan</p>
+                      <p className="text-[11px] text-slate-500">Upgrade to Solo or higher to generate a custom website.</p>
+                      <Link href="/billing" onClick={onClose} className="text-[11px] text-violet-400 hover:text-violet-300 underline mt-1 inline-block">
+                        View plans
+                      </Link>
+                    </div>
+                  )}
+
+                  {!canGenerateWebsite && websiteLimit > 0 && (
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-4">
+                      <p className="text-xs text-amber-400 font-medium mb-1">Website limit reached ({existingWebsiteCount}/{websiteLimit})</p>
+                      <p className="text-[11px] text-slate-500">Delete an existing website or upgrade your plan for more.</p>
+                      <Link href="/billing" onClick={onClose} className="text-[11px] text-violet-400 hover:text-violet-300 underline mt-1 inline-block">
+                        View plans
+                      </Link>
+                    </div>
+                  )}
+
+                  {/* Config fields — show when idle or generating */}
+                  {(websiteStatus === 'idle' || websiteStatus === 'limit') && canGenerateWebsite && selectedTools.has('website') && (
+                    <div className="space-y-4">
+                      {/* Description */}
+                      <div>
+                        <label className="block text-xs font-medium text-slate-400 mb-1.5">Describe your business</label>
+                        <textarea
+                          value={websiteDescription}
+                          onChange={(e) => setWebsiteDescription(e.target.value)}
+                          placeholder="A cozy Italian restaurant in downtown Manhattan known for handmade pasta and wood-fired pizza..."
+                          rows={3}
+                          className="w-full px-3 py-2.5 bg-white/[0.06] border border-white/[0.08] rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/30 resize-none"
+                        />
                       </div>
-                      {selectedTools.has('website') ? (
+
+                      {/* Cuisine / Business type */}
+                      <div>
+                        <label className="block text-xs font-medium text-slate-400 mb-1.5">Cuisine / Business Type</label>
+                        <input
+                          type="text"
+                          value={websiteCuisine}
+                          onChange={(e) => setWebsiteCuisine(e.target.value)}
+                          placeholder="Italian, Sushi, Mexican, Cafe, Gym, Salon..."
+                          className="w-full px-3 py-2.5 bg-white/[0.06] border border-white/[0.08] rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+                        />
+                      </div>
+
+                      {/* Color scheme picker */}
+                      <div>
+                        <label className="block text-xs font-medium text-slate-400 mb-2">Color Scheme</label>
+                        <div className="grid grid-cols-5 gap-2">
+                          {COLOR_SCHEMES.map((cs) => (
+                            <button
+                              key={cs.id}
+                              type="button"
+                              onClick={() => setWebsiteColorScheme(cs.id)}
+                              className={`p-2 rounded-lg border-2 transition-all ${
+                                websiteColorScheme === cs.id
+                                  ? 'border-violet-500 ring-1 ring-violet-500/30'
+                                  : 'border-white/[0.06] hover:border-white/[0.15]'
+                              }`}
+                            >
+                              <div className="flex gap-0.5 mb-1.5 justify-center">
+                                {cs.colors.map((c, i) => (
+                                  <div key={i} className="w-3 h-3 rounded-full" style={{ backgroundColor: c }} />
+                                ))}
+                              </div>
+                              <p className="text-[9px] text-slate-400 text-center">{cs.label}</p>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Generate button */}
+                      <div className="pt-2 text-center">
                         <button
                           onClick={generateWebsite}
                           className="px-8 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-semibold rounded-xl hover:from-violet-500 hover:to-indigo-500 transition-all shadow-lg shadow-violet-600/20"
                         >
                           Generate My Website
                         </button>
-                      ) : (
-                        <p className="text-xs text-slate-500">You skipped the website tool. You can generate one later from the dashboard.</p>
-                      )}
+                        <p className="text-[10px] text-slate-600 mt-2">You can edit everything after generation</p>
+                      </div>
                     </div>
                   )}
 
+                  {websiteStatus === 'idle' && !selectedTools.has('website') && (
+                    <p className="text-xs text-slate-500 text-center py-4">You skipped the website tool. You can generate one later from the dashboard.</p>
+                  )}
+
                   {websiteStatus === 'generating' && (
-                    <div className="py-4">
+                    <div className="text-center py-6">
                       <div className="w-12 h-12 mx-auto mb-4 relative">
                         <div className="absolute inset-0 rounded-full border-3 border-violet-500/20" />
                         <div className="absolute inset-0 rounded-full border-3 border-violet-500 border-t-transparent animate-spin" />
                       </div>
                       <p className="text-sm text-violet-400 font-medium">Generating your website...</p>
-                      <p className="text-xs text-slate-500 mt-1">This usually takes 20-40 seconds</p>
+                      <p className="text-xs text-slate-500 mt-1">This takes 20-40 seconds. You can continue setup while it builds.</p>
                     </div>
                   )}
 
                   {websiteStatus === 'done' && (
-                    <div className="py-4">
+                    <div className="text-center py-6">
                       <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-emerald-500/10 flex items-center justify-center">
                         <svg viewBox="0 0 24 24" fill="none" className="w-7 h-7 text-emerald-400" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
                       <p className="text-sm text-emerald-400 font-semibold">Website generated!</p>
-                      <p className="text-xs text-slate-500 mt-1">You can customize it from the Website tab in your dashboard.</p>
+                      <p className="text-xs text-slate-500 mt-1">Customize it anytime from the Website tab in your dashboard.</p>
                     </div>
                   )}
 
                   {websiteStatus === 'error' && (
-                    <div className="py-4">
+                    <div className="text-center py-4">
                       <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 max-w-sm mx-auto mb-4">
                         <p className="text-xs text-red-400">{websiteError || 'Something went wrong'}</p>
                       </div>
-                      <button onClick={generateWebsite} className="text-xs text-violet-400 hover:text-violet-300 underline">
+                      <button onClick={() => setWebsiteStatus('idle')} className="text-xs text-violet-400 hover:text-violet-300 underline">
                         Try again
                       </button>
                     </div>
@@ -476,35 +666,83 @@ export function OnboardingWizard({ business, onClose, onComplete }: Props) {
                       {voiceStatus === 'skipped' && <StatusBadge status="skipped" />}
                     </div>
 
-                    {voiceStatus === 'idle' && selectedTools.has('voice') && (
-                      <div>
-                        <div className="flex items-center gap-2 mb-3">
+                    {!canProvisionVoice && voiceStatus === 'idle' && (
+                      <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                        <p className="text-[11px] text-amber-400">Voice agent not available on Free plan.</p>
+                        <Link href="/billing" onClick={onClose} className="text-[11px] text-violet-400 underline">Upgrade</Link>
+                      </div>
+                    )}
+
+                    {voiceStatus === 'idle' && selectedTools.has('voice') && canProvisionVoice && (
+                      <div className="space-y-3">
+                        {/* Area code */}
+                        <div>
+                          <label className="block text-[11px] font-medium text-slate-400 mb-1">Phone Area Code</label>
                           <input
                             type="text"
                             value={voiceAreaCode}
                             onChange={(e) => setVoiceAreaCode(e.target.value.replace(/\D/g, '').slice(0, 3))}
-                            placeholder="Area code (optional, e.g. 917)"
+                            placeholder="Optional, e.g. 917 for New York"
                             maxLength={3}
-                            className="flex-1 px-3 py-2 bg-white/[0.06] border border-white/[0.08] rounded-lg text-xs text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+                            className="w-full px-3 py-2 bg-white/[0.06] border border-white/[0.08] rounded-lg text-xs text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
                           />
                         </div>
-                        <div className="flex gap-2">
+
+                        {/* Greeting */}
+                        <div>
+                          <label className="block text-[11px] font-medium text-slate-400 mb-1">Phone Greeting</label>
+                          <input
+                            type="text"
+                            value={voiceGreeting}
+                            onChange={(e) => setVoiceGreeting(e.target.value)}
+                            placeholder="Hi, thanks for calling! How can I help?"
+                            className="w-full px-3 py-2 bg-white/[0.06] border border-white/[0.08] rounded-lg text-xs text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+                          />
+                        </div>
+
+                        {/* Personality */}
+                        <div>
+                          <label className="block text-[11px] font-medium text-slate-400 mb-1.5">Agent Personality</label>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { id: 'friendly', label: 'Friendly', desc: 'Warm & casual' },
+                              { id: 'professional', label: 'Professional', desc: 'Polished & formal' },
+                              { id: 'energetic', label: 'Energetic', desc: 'Upbeat & lively' },
+                            ].map((p) => (
+                              <button
+                                key={p.id}
+                                type="button"
+                                onClick={() => setVoicePersonality(p.id)}
+                                className={`p-2.5 rounded-lg border-2 transition-all text-center ${
+                                  voicePersonality === p.id
+                                    ? 'border-violet-500/50 bg-violet-500/10'
+                                    : 'border-white/[0.06] hover:border-white/[0.12]'
+                                }`}
+                              >
+                                <p className="text-xs font-medium text-white">{p.label}</p>
+                                <p className="text-[9px] text-slate-500 mt-0.5">{p.desc}</p>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2 pt-1">
                           <button
                             onClick={provisionVoice}
-                            className="flex-1 py-2 bg-violet-600 text-white text-xs font-semibold rounded-lg hover:bg-violet-500 transition-colors"
+                            className="flex-1 py-2.5 bg-violet-600 text-white text-xs font-semibold rounded-lg hover:bg-violet-500 transition-colors"
                           >
                             Set Up Phone Agent
                           </button>
                           <button
                             onClick={() => setVoiceStatus('skipped')}
-                            className="px-3 py-2 text-xs text-slate-500 bg-white/[0.04] border border-white/[0.06] rounded-lg hover:bg-white/[0.08] transition-colors"
+                            className="px-3 py-2.5 text-xs text-slate-500 bg-white/[0.04] border border-white/[0.06] rounded-lg hover:bg-white/[0.08] transition-colors"
                           >
                             Skip
                           </button>
                         </div>
                       </div>
                     )}
-                    {voiceStatus === 'idle' && !selectedTools.has('voice') && (
+                    {voiceStatus === 'idle' && !selectedTools.has('voice') && canProvisionVoice && (
                       <p className="text-xs text-slate-600">Voice agent not selected in tools. You can enable it later.</p>
                     )}
                     {voiceStatus === 'provisioning' && (
@@ -567,6 +805,20 @@ export function OnboardingWizard({ business, onClose, onComplete }: Props) {
                       </div>
                     )}
                   </div>
+
+                  {/* Website generation status (if still running from step 3) */}
+                  {websiteStatus === 'generating' && (
+                    <div className="mt-4 bg-violet-500/10 border border-violet-500/20 rounded-xl px-4 py-3 flex items-center gap-3">
+                      <div className="w-4 h-4 border-2 border-violet-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+                      <p className="text-xs text-violet-400">Website still generating in the background...</p>
+                    </div>
+                  )}
+                  {websiteStatus === 'done' && step === 4 && (
+                    <div className="mt-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3 flex items-center gap-3">
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-emerald-400 flex-shrink-0"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                      <p className="text-xs text-emerald-400">Website generated! View it from the Website tab.</p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -636,7 +888,15 @@ export function OnboardingWizard({ business, onClose, onComplete }: Props) {
                 </button>
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              {/* Plan badge */}
+              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                planTier === 'FREE' ? 'bg-slate-500/15 text-slate-400' :
+                planTier === 'SOLO' ? 'bg-violet-500/15 text-violet-400' :
+                'bg-emerald-500/15 text-emerald-400'
+              }`}>
+                {planTier} plan
+              </span>
               <span className="text-[10px] text-slate-600">Step {step + 1} of {STEPS.length}</span>
               <button
                 onClick={next}
