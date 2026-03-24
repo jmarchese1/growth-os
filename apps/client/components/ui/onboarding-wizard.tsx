@@ -343,13 +343,13 @@ export function OnboardingWizard({ business, onClose, onComplete }: Props) {
 
   // Each step gets a distinct Cubey mood
   const mascotMood = (
-    step === 0 ? 'waving' :    // Welcome — friendly wave
-    step === 1 ? 'happy' :     // Hours — normal smile
-    step === 2 ? 'excited' :   // Choose Tools — excited about possibilities
-    step === 3 ? 'thinking' :  // Website — thoughtful while configuring
-    step === 4 ? 'love' :      // AI Agents — loves the tech
-    'excited'                  // Launch — celebration!
-  ) as 'happy' | 'thinking' | 'excited' | 'waving' | 'love';
+    step === 0 ? 'waving' :     // Welcome — friendly wave
+    step === 1 ? 'happy' :      // Hours — normal smile
+    step === 2 ? 'excited' :    // Choose Tools — excited about possibilities
+    step === 3 ? 'thinking' :   // Website — thoughtful while configuring
+    step === 4 ? 'surprised' :  // AI Agents — surprised by the power
+    'excited'                   // Launch — celebration!
+  ) as 'happy' | 'thinking' | 'excited' | 'waving' | 'surprised';
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0c0a18]/90 backdrop-blur-md p-4">

@@ -42,22 +42,19 @@ export function CubeyChat({
   const [sessionKey, setSessionKey] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [bubblePulse, setBubblePulse] = useState(true);
-  const [bubbleMood, setBubbleMood] = useState<'happy' | 'excited' | 'waving' | 'love' | 'thinking'>('happy');
+  const [bubbleMood, setBubbleMood] = useState<'happy' | 'excited' | 'waving' | 'thinking' | 'surprised'>('waving');
+  const [hovered, setHovered] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Cycle bubble mood every 6 seconds through all 5 emotions
+  // Cubey: waving by default, thinking when hovered or open
   useEffect(() => {
-    const moods: Array<'happy' | 'excited' | 'waving' | 'love' | 'thinking'> = ['happy', 'excited', 'waving', 'love', 'thinking', 'happy', 'love', 'excited'];
-    let i = 0;
-    const interval = setInterval(() => {
-      i = (i + 1) % moods.length;
-      setBubbleMood(moods[i]!);
-    }, 6000);
-    return () => clearInterval(interval);
-  }, []);
+    if (open) setBubbleMood('thinking');
+    else if (hovered) setBubbleMood('thinking');
+    else setBubbleMood('waving');
+  }, [open, hovered]);
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -263,6 +260,8 @@ export function CubeyChat({
       {/* Floating Cubey Bubble */}
       <button
         onClick={() => setOpen(!open)}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         className={`fixed bottom-5 ${posClass} z-[9999] group`}
         aria-label={open ? 'Close chat' : 'Open chat'}
       >

@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { EmbedoCubeMascot } from './embedo-cube-mascot';
+import type { CubeyMood } from './embedo-cube-mascot';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -23,22 +25,19 @@ export default function CubeyChat() {
   const [sessionKey, setSessionKey] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [bubblePulse, setBubblePulse] = useState(true);
-  const [bubbleMood, setBubbleMood] = useState<'happy' | 'excited' | 'waving' | 'love' | 'thinking'>('happy');
+  const [bubbleMood, setBubbleMood] = useState<CubeyMood>('waving');
+  const [hovered, setHovered] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Cycle bubble mood every 6 seconds through all 5 emotions
+  // Cubey is waving by default, thinking when hovered or open
   useEffect(() => {
-    const moods: Array<'happy' | 'excited' | 'waving' | 'love' | 'thinking'> = ['happy', 'excited', 'waving', 'love', 'thinking', 'happy', 'love', 'excited'];
-    let i = 0;
-    const interval = setInterval(() => {
-      i = (i + 1) % moods.length;
-      setBubbleMood(moods[i]!);
-    }, 6000);
-    return () => clearInterval(interval);
-  }, []);
+    if (open) setBubbleMood('thinking');
+    else if (hovered) setBubbleMood('thinking');
+    else setBubbleMood('waving');
+  }, [open, hovered]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -220,6 +219,8 @@ export default function CubeyChat() {
       {/* Floating Cubey Bubble */}
       <button
         onClick={() => setOpen(!open)}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         className="fixed bottom-5 right-5 z-[9999] group"
         aria-label={open ? 'Close chat' : 'Open chat'}
       >
@@ -230,13 +231,15 @@ export default function CubeyChat() {
               <div className="absolute -inset-1 rounded-full bg-violet-500/15 animate-pulse" />
             </>
           )}
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 shadow-xl shadow-violet-600/25 flex items-center justify-center transition-all group-hover:scale-110 group-hover:shadow-violet-500/40">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 shadow-xl shadow-violet-600/25 flex items-center justify-center transition-all group-hover:scale-110 group-hover:shadow-violet-500/40 overflow-hidden">
             {open ? (
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-7 h-7 text-white">
                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
             ) : (
-              <CubeyBubbleIcon mood={bubbleMood} />
+              <div className="mt-2">
+                <EmbedoCubeMascot size={40} mood={bubbleMood} bounce={false} />
+              </div>
             )}
           </div>
           {!open && bubblePulse && (
@@ -260,90 +263,12 @@ export default function CubeyChat() {
   );
 }
 
-/** Mini Cubey face for chat messages — inline SVG, no external deps */
+/** Mini Cubey face for chat messages — uses the real component */
 function CubeyMini() {
   return (
-    <div className="w-7 h-7 flex-shrink-0 relative">
-      <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-        <polygon points="16,4 28,10 16,16 4,10" fill="#8B5CF6" />
-        <polygon points="16,4 28,10 16,16 4,10" fill="white" opacity="0.08" />
-        <polygon points="4,10 16,16 16,28 4,22" fill="#4C1D95" />
-        <polygon points="28,10 16,16 16,28 28,22" fill="#6D28D9" />
-        {/* Eyes */}
-        <ellipse cx="12" cy="9.5" rx="2" ry="2.2" fill="white" />
-        <ellipse cx="12.5" cy="9.8" rx="1.1" ry="1.2" fill="#1e1b4b" />
-        <ellipse cx="20" cy="9.5" rx="2" ry="2.2" fill="white" />
-        <ellipse cx="20.5" cy="9.8" rx="1.1" ry="1.2" fill="#1e1b4b" />
-        {/* Mouth */}
-        <path d="M14 12.5 Q16 14.5 18 12.5" stroke="#1e1b4b" strokeWidth="0.8" fill="none" strokeLinecap="round" />
-        {/* Blush */}
-        <ellipse cx="10" cy="12" rx="1.5" ry="0.8" fill="#EC4899" opacity="0.2" />
-        <ellipse cx="22" cy="12" rx="1.5" ry="0.8" fill="#EC4899" opacity="0.2" />
-      </svg>
+    <div className="w-7 h-7 flex-shrink-0">
+      <EmbedoCubeMascot size={28} mood="happy" bounce={false} />
     </div>
   );
 }
 
-/** Cubey icon for the floating bubble — mood-aware (all 5 moods) */
-function CubeyBubbleIcon({ mood = 'happy' }: { mood?: 'happy' | 'excited' | 'waving' | 'love' | 'thinking' }) {
-  return (
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-      <polygon points="16,5 27,10.5 16,16 5,10.5" fill="white" opacity="0.9" />
-      <polygon points="5,10.5 16,16 16,27 5,21.5" fill="white" opacity="0.6" />
-      <polygon points="27,10.5 16,16 16,27 27,21.5" fill="white" opacity="0.75" />
-      {/* Eyes — normal for most moods, hearts for love */}
-      {mood !== 'love' && (
-        <>
-          <ellipse cx="12" cy="9.8" rx="1.5" ry="1.8" fill="white" />
-          <ellipse cx="12.3" cy="10" rx="0.9" ry="1" fill="#4C1D95" />
-          <ellipse cx="20" cy="9.8" rx="1.5" ry="1.8" fill="white" />
-          <ellipse cx="20.3" cy="10" rx="0.9" ry="1" fill="#4C1D95" />
-        </>
-      )}
-      {mood === 'love' && (
-        <>
-          <path d="M10 9 C10 7.8, 11.5 7.8, 11.5 9 C11.5 7.8, 13 7.8, 13 9 C13 10.2, 11.5 11.5, 11.5 11.5 C11.5 11.5, 10 10.2, 10 9Z" fill="#EC4899" opacity="0.9" />
-          <path d="M19 9 C19 7.8, 20.5 7.8, 20.5 9 C20.5 7.8, 22 7.8, 22 9 C22 10.2, 20.5 11.5, 20.5 11.5 C20.5 11.5, 19 10.2, 19 9Z" fill="#EC4899" opacity="0.9" />
-        </>
-      )}
-      {/* Mouth — changes by mood */}
-      {mood === 'happy' && (
-        <path d="M13.5 12.5 Q16 14.5 18.5 12.5" stroke="white" strokeWidth="0.8" fill="none" strokeLinecap="round" opacity="0.9" />
-      )}
-      {mood === 'excited' && (
-        <ellipse cx="16" cy="13" rx="2" ry="1.5" fill="white" opacity="0.85" />
-      )}
-      {mood === 'thinking' && (
-        <ellipse cx="17" cy="13" rx="1.2" ry="0.9" fill="white" opacity="0.8" />
-      )}
-      {mood === 'waving' && (
-        <>
-          <path d="M13 12.5 Q16 15 19 12.5" stroke="white" strokeWidth="0.8" fill="none" strokeLinecap="round" opacity="0.9" />
-          <path d="M27 9 Q29 5 31 8" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.7" />
-        </>
-      )}
-      {mood === 'love' && (
-        <path d="M13 12.5 Q16 15 19 12.5" stroke="white" strokeWidth="0.9" fill="none" strokeLinecap="round" opacity="0.9" />
-      )}
-      {/* Blush */}
-      <ellipse cx="10" cy="12" rx="1.5" ry="0.7" fill="#EC4899" opacity={mood === 'love' ? '0.3' : '0.15'} />
-      <ellipse cx="22" cy="12" rx="1.5" ry="0.7" fill="#EC4899" opacity={mood === 'love' ? '0.3' : '0.15'} />
-      {/* Sparkles for excited */}
-      {mood === 'excited' && (
-        <>
-          <line x1="5" y1="5" x2="5" y2="2" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.6" />
-          <line x1="3.5" y1="3.5" x2="6.5" y2="3.5" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.6" />
-          <line x1="27" y1="4" x2="27" y2="1" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.5" />
-          <line x1="25.5" y1="2.5" x2="28.5" y2="2.5" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.5" />
-        </>
-      )}
-      {/* Floating hearts for love */}
-      {mood === 'love' && (
-        <>
-          <path d="M5 5 C5 4, 6 4, 6 5 C6 4, 7 4, 7 5 C7 6, 6 7, 6 7 C6 7, 5 6, 5 5Z" fill="#F472B6" opacity="0.5" />
-          <path d="M26 3 C26 2, 27 2, 27 3 C27 2, 28 2, 28 3 C28 4, 27 5, 27 5 C27 5, 26 4, 26 3Z" fill="#F472B6" opacity="0.4" />
-        </>
-      )}
-    </svg>
-  );
-}

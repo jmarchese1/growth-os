@@ -1,7 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import Link from 'next/link';
 import KpiCard from '../../../components/ui/kpi-card';
+import { EmbedoCubeMascot } from '../../../components/ui/embedo-cube-mascot';
+import { PLAN_LIMITS } from '../billing/billing-data';
+import type { TierKey } from '../billing/billing-data';
 
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 
@@ -71,6 +75,58 @@ const INTENT_COLORS: Record<string, string> = {
   GENERAL: 'bg-slate-100 text-slate-600 dark:bg-white/[0.06] dark:text-slate-300',
   UNKNOWN: 'bg-slate-50 text-slate-400 dark:bg-white/[0.04] dark:text-slate-400',
 };
+
+/* ── Subscription Gate (explore but can't build) ────────────────── */
+function SubscriptionGate({ feature, planTier }: { feature: string; planTier: TierKey }) {
+  return (
+    <div className="p-8 animate-fade-up">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{feature}</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Explore how this tool works — upgrade to activate it</p>
+      </div>
+
+      <div className="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-2xl p-10 text-center mb-8 shadow-lg relative overflow-hidden">
+        <div className="absolute top-4 right-4">
+          <EmbedoCubeMascot size={48} mood="surprised" bounce />
+        </div>
+        <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center mx-auto mb-5">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" className="w-8 h-8">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+          </svg>
+        </div>
+        <p className="text-violet-200 text-xs font-semibold uppercase tracking-widest mb-3">{planTier} Plan</p>
+        <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">{feature} requires an upgrade</h2>
+        <p className="text-violet-200 text-base max-w-lg mx-auto mb-8 leading-relaxed">
+          The {feature} is available on Solo and higher plans. Upgrade to deploy your AI agent and start handling calls, chats, and more automatically.
+        </p>
+        <Link
+          href="/billing"
+          className="inline-flex items-center gap-2 px-8 py-3 bg-white text-violet-700 font-semibold rounded-xl hover:bg-violet-50 transition-colors shadow-lg"
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>
+          View Plans & Upgrade
+        </Link>
+      </div>
+
+      {/* Preview cards showing what they get */}
+      <div className="grid grid-cols-3 gap-4">
+        {[
+          { icon: '24/7', label: 'Always On', desc: 'AI answers every call, day or night' },
+          { icon: '#', label: 'Dedicated Number', desc: 'Local phone number for your business' },
+          { icon: 'AI', label: 'Natural Voice', desc: 'Sounds like a real person, not a robot' },
+        ].map((item) => (
+          <div key={item.label} className="bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-xl p-5 text-center">
+            <div className="w-10 h-10 rounded-lg bg-violet-100 dark:bg-violet-500/15 flex items-center justify-center mx-auto mb-3 text-violet-600 dark:text-violet-400 text-sm font-bold">
+              {item.icon}
+            </div>
+            <p className="text-sm font-semibold text-slate-800 dark:text-white mb-1">{item.label}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{item.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /* ── Provisioning Hero ──────────────────────────────────────────── */
 function ProvisioningHero({ businessId, onProvisioned }: { businessId: string; onProvisioned: () => void }) {
@@ -908,6 +964,21 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
   const [loading, setLoading] = useState(true);
   const [selectedCall, setSelectedCall] = useState<CallLog | null>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'voice' | 'prompt' | 'knowledge' | 'test' | 'history'>('dashboard');
+  const [planTier, setPlanTier] = useState<TierKey>('FREE');
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const res = await fetch(`${API_URL}/billing/subscription?businessId=${businessId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.subscription?.pricingTier) setPlanTier(data.subscription.pricingTier as TierKey);
+        }
+      } catch { /* default FREE */ }
+    })();
+  }, [businessId]);
+
+  const canProvision = PLAN_LIMITS[planTier].voiceAgents > 0;
 
   const fetchAll = useCallback(async () => {
     try {
@@ -943,7 +1014,9 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
 
   // Show provisioning hero if not set up
   if (!status?.isProvisioned) {
-    return <ProvisioningHero businessId={businessId} onProvisioned={fetchAll} />;
+    return canProvision
+      ? <ProvisioningHero businessId={businessId} onProvisioned={fetchAll} />
+      : <SubscriptionGate feature="AI Phone Agent" planTier={planTier} />;
   }
 
   const s = stats ?? { totalCalls: 0, avgDuration: 0, leadsCapture: 0, positiveRate: 0, intentBreakdown: {}, sentimentBreakdown: {} };

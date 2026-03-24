@@ -1,7 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import Link from 'next/link';
 import KpiCard from '../../../components/ui/kpi-card';
+import { EmbedoCubeMascot } from '../../../components/ui/embedo-cube-mascot';
+import { PLAN_LIMITS } from '../billing/billing-data';
+import type { TierKey } from '../billing/billing-data';
 
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 

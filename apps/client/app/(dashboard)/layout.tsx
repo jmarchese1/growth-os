@@ -9,6 +9,7 @@ import { useBusiness } from '../../components/auth/business-provider';
 import { useTheme } from '../../components/theme-provider';
 import { NotificationsBell } from '../../components/ui/notifications-bell';
 import { CubeyChat } from '../../components/ui/cubey-chat';
+import { EmbedoCubeMascot } from '../../components/ui/embedo-cube-mascot';
 import { createSupabaseBrowserClient } from '../../lib/supabase/client';
 
 const NAV = [
@@ -159,8 +160,9 @@ function Sidebar({ width, collapsed, onDragStart, onToggle, userEmail, userIniti
           {NAV.map((group) => (
             <div key={group.section}>
               {!collapsed && (
-                <p className="px-3 mb-2 text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-[0.18em]">
+                <p className="px-3 mb-2 text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-[0.18em] flex items-center gap-1.5">
                   {group.section}
+                  {group.section === 'YOUR TOOLS' && <EmbedoCubeMascot size={12} mood="excited" bounce={false} />}
                 </p>
               )}
               <div className="space-y-0.5">
@@ -172,6 +174,20 @@ function Sidebar({ width, collapsed, onDragStart, onToggle, userEmail, userIniti
             </div>
           ))}
         </nav>
+
+        {/* Cubey tip — above footer */}
+        {!collapsed ? (
+          <div className="mx-3 mb-3 px-3 py-2.5 bg-violet-50 dark:bg-violet-500/[0.08] border border-violet-200/60 dark:border-violet-500/20 rounded-xl">
+            <div className="flex items-center gap-2">
+              <EmbedoCubeMascot size={22} mood="waving" bounce={false} />
+              <p className="text-[10px] text-violet-600 dark:text-violet-300 leading-tight font-medium">Need help? Click Cubey in the corner!</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex justify-center mb-3">
+            <EmbedoCubeMascot size={20} mood="happy" bounce={false} />
+          </div>
+        )}
 
         {/* Footer */}
         <div className={`border-t border-slate-200 dark:border-white/[0.06] flex items-center ${collapsed ? 'justify-center py-4 px-2' : 'px-4 py-4 gap-2.5'}`}>

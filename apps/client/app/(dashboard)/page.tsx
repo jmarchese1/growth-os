@@ -197,16 +197,14 @@ export default function DashboardOverview() {
         {business && !!settings?.['onboardingComplete'] && (
           <button
             onClick={() => setShowOnboarding(true)}
-            className="relative group px-4 py-2 text-xs font-semibold text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-600/15 border border-violet-200 dark:border-violet-500/25 rounded-xl hover:bg-violet-100 dark:hover:bg-violet-600/25 transition-all hover:scale-[1.03] hover:shadow-md hover:shadow-violet-500/10"
+            className="group flex items-center gap-2.5 pl-1.5 pr-4 py-1.5 bg-violet-50 dark:bg-violet-600/15 border border-violet-200 dark:border-violet-500/25 rounded-full hover:bg-violet-100 dark:hover:bg-violet-600/25 transition-all hover:scale-[1.03] hover:shadow-md hover:shadow-violet-500/10"
           >
-            {/* Cubey peeking over the button */}
-            <div className="absolute -top-6 left-1/2 -translate-x-1/2 group-hover:-top-7 transition-all duration-300">
-              <EmbedoCubeMascot size={28} mood="waving" bounce={false} />
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center overflow-hidden shadow-sm">
+              <div className="mt-1">
+                <EmbedoCubeMascot size={22} mood="waving" bounce={false} />
+              </div>
             </div>
-            <span className="flex items-center gap-1.5 pt-0.5">
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>
-              Setup Guide
-            </span>
+            <span className="text-xs font-semibold text-violet-600 dark:text-violet-400">Setup Guide</span>
           </button>
         )}
       </div>
