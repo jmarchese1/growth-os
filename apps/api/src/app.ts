@@ -48,8 +48,22 @@ export async function buildApp() {
   });
 
   // ─── Plugins ────────────────────────────────────────────────────────────────
+  // Build CORS origins list — auto-include www variants for any custom domain
+  const rawOrigins = env.CORS_ORIGINS.split(',').map((o) => o.trim());
+  const origins = new Set(rawOrigins);
+  for (const o of rawOrigins) {
+    try {
+      const u = new URL(o);
+      if (u.hostname.startsWith('www.')) {
+        origins.add(o.replace('://www.', '://'));
+      } else if (!u.hostname.includes('localhost')) {
+        origins.add(o.replace('://', '://www.'));
+      }
+    } catch { /* skip invalid */ }
+  }
+
   await app.register(cors, {
-    origin: env.CORS_ORIGINS.split(',').map((o) => o.trim()),
+    origin: [...origins],
     credentials: true,
   });
 

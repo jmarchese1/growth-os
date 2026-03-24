@@ -142,7 +142,7 @@ export async function billingRoutes(app: FastifyInstance): Promise<void> {
           message: 'Your 14-day free trial starts now. You won\'t be charged until the trial ends, and you can cancel anytime.',
         },
       },
-      customer_creation: 'always',
+      // Note: customer_creation is not needed in subscription mode — Stripe always creates a customer
       consent_collection: { terms_of_service: 'none' },
       tax_id_collection: { enabled: true },
       metadata: { tier: tier.toUpperCase(), source: 'landing_page' },

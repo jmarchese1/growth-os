@@ -110,8 +110,10 @@ export default function FeaturesSection() {
         window.location.href = data.url;
         return;
       }
-    } catch {
-      // Stripe not configured — fall back to signup with plan param
+      // API returned but no URL — Stripe may not be configured, fall back to signup
+      console.error('public-checkout response:', data);
+    } catch (err) {
+      console.error('public-checkout failed:', err);
     }
     // Fallback: redirect to signup with plan selected
     window.location.href = `${APP_URL}/login?plan=${tier}&signup=1`;
