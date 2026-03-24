@@ -110,12 +110,10 @@ export default function FeaturesSection() {
         window.location.href = data.url;
         return;
       }
-      // API returned but no URL — Stripe may not be configured, fall back to signup
       console.error('public-checkout response:', data);
     } catch (err) {
       console.error('public-checkout failed:', err);
     }
-    // Fallback: redirect to signup with plan selected
     window.location.href = `${APP_URL}/login?plan=${tier}&signup=1`;
     setLoadingTier(null);
   };
@@ -137,35 +135,35 @@ export default function FeaturesSection() {
           </p>
         </div>
 
-        {/* ── Value Stack ────────────────────────────────────── */}
-        <div className="max-w-4xl mx-auto mb-20">
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            {/* Header */}
-            <div className="px-8 py-5 bg-gradient-to-r from-violet-600 to-indigo-600">
-              <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-violet-200">Included in every plan</p>
-              <h3 className="text-lg font-bold text-white mt-0.5">Here&apos;s what you&apos;re getting</h3>
-            </div>
+        {/* ── Value Stack — open layout, no box ────────────── */}
+        <div className="max-w-6xl mx-auto mb-24">
+          <div className="flex items-center gap-3 mb-10">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-violet-200 to-transparent" />
+            <p className="text-xs font-bold tracking-[0.25em] uppercase text-violet-600 whitespace-nowrap">Included in every plan</p>
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-violet-200 to-transparent" />
+          </div>
 
-            {/* Items */}
-            <div className="px-8 py-7 grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-4">
-              {OFFER_ITEMS.map((item) => (
-                <div key={item.label} className="flex items-start gap-3">
-                  <Check />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-semibold text-gray-900">{item.label}</p>
-                      <p className="text-xs text-gray-400 line-through whitespace-nowrap">{item.value}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-8">
+            {OFFER_ITEMS.map((item) => (
+              <div key={item.label} className="group">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-6 h-6 rounded-lg bg-violet-50 flex items-center justify-center group-hover:bg-violet-100 transition-colors">
+                      <Check />
                     </div>
-                    <p className="text-xs text-gray-500 leading-relaxed mt-0.5">{item.desc}</p>
+                    <p className="text-sm font-semibold text-gray-900">{item.label}</p>
                   </div>
+                  <p className="text-xs text-gray-400 line-through whitespace-nowrap">{item.value}</p>
                 </div>
-              ))}
-            </div>
+                <p className="text-xs text-gray-500 leading-relaxed pl-[34px]">{item.desc}</p>
+              </div>
+            ))}
+          </div>
 
-            {/* Total */}
-            <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total value</p>
-              <p className="text-lg font-bold text-gray-400 line-through">$13,100<span className="text-sm">/yr</span></p>
+          <div className="flex items-center justify-center mt-12">
+            <div className="flex items-center gap-4 px-6 py-3 rounded-full bg-gray-50">
+              <p className="text-sm font-medium text-gray-500">Total value</p>
+              <p className="text-xl font-bold text-gray-400 line-through">$13,100<span className="text-sm font-medium">/yr</span></p>
             </div>
           </div>
         </div>
