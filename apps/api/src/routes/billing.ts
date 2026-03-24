@@ -95,6 +95,58 @@ export async function billingRoutes(app: FastifyInstance): Promise<void> {
     return reply.code(200).send({ subscription });
   });
 
+  // ─── Public checkout — no auth needed, for landing page ──────────────────
+  app.post('/billing/public-checkout', async (request, reply) => {
+    const { tier, successUrl, cancelUrl } = request.body as {
+      tier: string;
+      successUrl?: string;
+      cancelUrl?: string;
+    };
+
+    if (!tier) {
+      return reply.code(400).send({ error: 'tier required' });
+    }
+
+    const stripe = getStripe();
+    if (!stripe) {
+      return reply.code(503).send({ error: 'Stripe not configured' });
+    }
+
+    const priceId = getPriceId(tier.toUpperCase());
+    if (!priceId) {
+      return reply.code(400).send({ error: `No Stripe price configured for tier: ${tier}` });
+    }
+
+    const tierConfig = TIER_CONFIG[tier.toUpperCase()];
+    const featuresText = tierConfig
+      ? tierConfig.features.join(' · ')
+      : undefined;
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: successUrl ?? 'https://app.embedo.io?checkout=success',
+      cancel_url: cancelUrl ?? 'https://embedo.io',
+      subscription_data: {
+        trial_period_days: 14,
+        metadata: { tier: tier.toUpperCase() },
+        ...(featuresText ? { description: featuresText } : {}),
+      },
+      custom_text: {
+        submit: {
+          message: 'Your 14-day free trial starts now. You won\'t be charged until the trial ends, and you can cancel anytime.',
+        },
+      },
+      customer_creation: 'always',
+      consent_collection: { terms_of_service: 'none' },
+      tax_id_collection: { enabled: true },
+      metadata: { tier: tier.toUpperCase(), source: 'landing_page' },
+    });
+
+    log.info({ tier, sessionId: session.id }, 'Public checkout session created');
+    return reply.code(200).send({ url: session.url, sessionId: session.id });
+  });
+
   // ─── Create checkout session (subscribe) ─────────────────────────────────
   app.post('/billing/checkout', async (request, reply) => {
     const { businessId, tier, successUrl, cancelUrl } = request.body as {
