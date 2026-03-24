@@ -96,8 +96,8 @@ export async function processMessage(params: {
     // Multi-turn conversation loop
     for (let iteration = 0; iteration < MAX_TOOL_ITERATIONS; iteration++) {
       const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 300,
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 256,
         system: systemPrompt,
         tools,
         messages,

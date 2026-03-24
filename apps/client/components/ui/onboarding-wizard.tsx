@@ -140,7 +140,11 @@ export function OnboardingWizard({ business, onClose, onComplete }: Props) {
   const [saving, setSaving] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+    // Play a welcoming chime when wizard opens
+    setTimeout(() => playSfx('success'), 300);
+  }, []);
 
   // ── Subscription state ──
   const [planTier, setPlanTier] = useState<TierKey>('FREE');

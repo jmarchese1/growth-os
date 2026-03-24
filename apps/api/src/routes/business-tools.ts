@@ -1,9 +1,40 @@
 import type { FastifyInstance } from 'fastify';
+import { ElevenLabsClient } from 'elevenlabs';
 import { db } from '@embedo/db';
 import { createLogger, NotFoundError } from '@embedo/utils';
-
+import { buildSystemPrompt } from './voice-agent.js';
 
 const log = createLogger('api:business-tools');
+
+/**
+ * After a tool is enabled, disabled, or reconfigured — push updated prompts
+ * to ElevenLabs (voice agent) so the AI immediately knows about the change.
+ * The chatbot auto-syncs on next message via the context endpoint cache (5-min TTL).
+ */
+async function syncAgentPrompts(businessId: string): Promise<void> {
+  try {
+    const business = await db.business.findUnique({ where: { id: businessId } });
+    if (!business?.elevenLabsAgentId) return; // no voice agent provisioned
+
+    const elevenLabsKey = process.env['ELEVENLABS_API_KEY'];
+    if (!elevenLabsKey) return;
+
+    const tools = await db.businessTool.findMany({
+      where: { businessId },
+      select: { type: true, enabled: true, config: true },
+    });
+
+    const el = new ElevenLabsClient({ apiKey: elevenLabsKey });
+    await el.conversationalAi.updateAgent(business.elevenLabsAgentId, {
+      conversation_config: {
+        agent: { prompt: { prompt: buildSystemPrompt(business, tools) } },
+      },
+    });
+    log.info({ businessId }, 'Voice agent prompt synced after tool change');
+  } catch (err) {
+    log.warn({ err: err instanceof Error ? err.message : String(err), businessId }, 'Failed to sync voice agent prompt');
+  }
+}
 
 export async function businessToolRoutes(app: FastifyInstance): Promise<void> {
   /**
@@ -55,6 +86,9 @@ export async function businessToolRoutes(app: FastifyInstance): Promise<void> {
 
     log.info({ toolId: tool.id, businessId: body.businessId, type: body.type }, 'Business tool enabled');
 
+    // Auto-sync AI agent prompts (voice + chatbot picks up on next message)
+    void syncAgentPrompts(body.businessId as string);
+
     return reply.code(201).send({ success: true, tool });
   });
 
@@ -81,6 +115,9 @@ export async function businessToolRoutes(app: FastifyInstance): Promise<void> {
 
       log.info({ toolId: tool.id, type: tool.type }, 'Business tool updated');
 
+      // Auto-sync AI agent prompts
+      void syncAgentPrompts(existing.businessId);
+
       return { success: true, tool };
     },
   );
@@ -98,6 +135,9 @@ export async function businessToolRoutes(app: FastifyInstance): Promise<void> {
       await db.businessTool.delete({ where: { id: request.params.id } });
 
       log.info({ toolId: request.params.id, type: existing.type }, 'Business tool removed');
+
+      // Auto-sync AI agent prompts (tool was removed)
+      void syncAgentPrompts(existing.businessId);
 
       return { success: true };
     },

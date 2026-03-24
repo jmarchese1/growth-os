@@ -8,7 +8,7 @@ const log = createLogger('api:voice-agent');
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildSystemPrompt(business: { name: string; phone: string | null; address: unknown; settings: unknown }, tools?: Array<{ type: string; enabled: boolean; config: any }>): string {
+export function buildSystemPrompt(business: { name: string; phone: string | null; address: unknown; settings: unknown }, tools?: Array<{ type: string; enabled: boolean; config: any }>): string {
   const settings = (business.settings as Record<string, unknown>) ?? {};
   const hours = settings['hours'] as Record<string, { open: string; close: string }> | undefined;
   const cuisine = settings['cuisine'] as string | undefined;

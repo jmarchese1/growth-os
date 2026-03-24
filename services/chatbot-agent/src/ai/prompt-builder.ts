@@ -60,12 +60,14 @@ HOURS:
 ${hoursText}
 
 ${knowledgeBase ? `## Knowledge Base\n${knowledgeBase}\n\n` : ''}RULES:
-- Be concise (1-3 sentences per response)
-- Be warm and helpful
+- Keep every reply to 2-3 SHORT sentences. No essays, no long paragraphs.
+- NEVER use markdown formatting — no **, no ##, no bullet points, no numbered lists. Plain conversational text only.
+- Be warm, friendly, and casual — write like you're texting a friend.
 - ALWAYS use the capture_lead tool when a visitor mentions their name, email, or phone — even casually ("I'm Jason", "email me at j@test.com", "my number is 555-1234")
 - Help book reservations when asked — use the book_appointment tool
 - Naturally try to learn the visitor's name during conversation (e.g. "By the way, who am I chatting with?")
-- If you don't know something specific, say so honestly and suggest they call or visit`;
+- If you don't know something specific, say so honestly and suggest they call or visit
+- When listing menu items or specials, weave them into conversation naturally instead of using formatted lists.`;
   }
 
   promptCache.set(businessId, { prompt, expiry: Date.now() + 5 * 60 * 1000 });
@@ -167,7 +169,30 @@ ${knowledgeBase ? `## Knowledge Base\n${knowledgeBase}\n\n` : ''}`;
     actionLines.push('- Check gift card balances (use check_gift_card_balance tool — code format: GC-XXXXX)');
   }
   if (toolTypeMap.has('DAILY_SPECIALS')) {
-    actionLines.push("- Get today's specials and unavailable items (use get_daily_specials tool)");
+    const config = toolTypeMap.get('DAILY_SPECIALS')!;
+    const specials = config['specials'] as Array<{ name: string; description: string; price: number }> | undefined;
+    const eightySixed = config['eightySixedItems'] as string[] | undefined;
+    let hint = '';
+    if (specials?.length) {
+      hint += ` — today's specials: ${specials.map(s => `${s.name}${s.price ? ` $${s.price}` : ''}`).join(', ')}`;
+    }
+    if (eightySixed?.length) {
+      hint += ` | SOLD OUT: ${eightySixed.join(', ')}`;
+    }
+    actionLines.push(`- Get today's specials and unavailable items (use get_daily_specials tool${hint})`);
+  }
+  if (toolTypeMap.has('PROMO_ALERTS')) {
+    const config = toolTypeMap.get('PROMO_ALERTS')!;
+    const promos = config['promos'] as Array<{ name: string; description: string; days?: string[] }> | undefined;
+    if (promos?.length) {
+      actionLines.push(`- Tell customers about promotions: ${promos.map(p => `${p.name} — ${p.description}${p.days ? ` (${p.days.join(', ')})` : ''}`).join('; ')}`);
+    }
+  }
+  if (toolTypeMap.has('DELIVERY_TRACKING')) {
+    const config = toolTypeMap.get('DELIVERY_TRACKING')!;
+    const fee = config['deliveryFee'] as number | undefined;
+    const mins = config['defaultDeliveryMinutes'] as number | undefined;
+    actionLines.push(`- Handle delivery orders${mins ? ` (~${mins} min delivery)` : ''}${fee ? ` $${fee} delivery fee` : ''}`);
   }
 
   prompt += `\n\n## Available Actions
@@ -175,14 +200,16 @@ You can perform these actions during the conversation:
 ${actionLines.join('\n')}
 
 ## Rules
-- Be concise (1-3 sentences per response)
-- Be warm and helpful
-- When a customer wants to perform an action, use the appropriate tool immediately
-- Confirm the result with the customer after the tool executes
-- ALWAYS capture contact info when mentioned — even casually ("I'm Jason" → capture_lead)
-- Always collect name and phone when taking orders or reservations
-- Naturally try to learn the visitor's name (e.g. "By the way, who am I chatting with?")
-- If you don't know something specific, say so honestly and suggest they call or visit`;
+- Keep every reply to 2-3 SHORT sentences. No essays, no long paragraphs.
+- NEVER use markdown formatting — no **, no ##, no bullet points, no numbered lists. Plain conversational text only.
+- Be warm, friendly, and casual — write like you're texting a friend, not writing an email.
+- When a customer wants to perform an action, use the appropriate tool immediately.
+- Confirm the result with the customer after the tool executes.
+- ALWAYS capture contact info when mentioned — even casually ("I'm Jason" → capture_lead).
+- Always collect name and phone when taking orders or reservations.
+- Naturally try to learn the visitor's name (e.g. "By the way, who am I chatting with?").
+- If you don't know something specific, say so honestly and suggest they call or visit.
+- When listing menu items or specials, weave them into the conversation naturally instead of using formatted lists.`;
 
   if (capabilities.length > 0) {
     prompt += `\n\n## Enabled Capabilities\n${capabilities.join(', ')}`;
