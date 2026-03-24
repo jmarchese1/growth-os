@@ -141,12 +141,26 @@ export async function businessRoutes(app: FastifyInstance): Promise<void> {
     return { success: true, websites };
   });
 
-  // DELETE /businesses/:id/websites/:websiteId — delete a generated website
+  // DELETE /businesses/:id/websites/:websiteId — delete a generated website + Vercel project
   app.delete('/businesses/:id/websites/:websiteId', async (request) => {
     const { id, websiteId } = request.params as { id: string; websiteId: string };
     const website = await db.generatedWebsite.findUnique({ where: { id: websiteId } });
     if (!website) throw new NotFoundError('GeneratedWebsite', websiteId);
     if (website.businessId !== id) throw new NotFoundError('GeneratedWebsite', websiteId);
+
+    // Delete the Vercel project if it exists
+    if (website.vercelProjectId && process.env['VERCEL_API_TOKEN']) {
+      try {
+        const teamQuery = process.env['VERCEL_TEAM_ID'] ? `?teamId=${process.env['VERCEL_TEAM_ID']}` : '';
+        await fetch(`https://api.vercel.com/v9/projects/${website.vercelProjectId}${teamQuery}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${process.env['VERCEL_API_TOKEN']}` },
+        });
+      } catch {
+        // Best effort — don't block DB deletion if Vercel cleanup fails
+      }
+    }
+
     await db.generatedWebsite.delete({ where: { id: websiteId } });
     return { success: true };
   });
