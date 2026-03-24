@@ -56,6 +56,85 @@ const MASCOT_LINES: Record<number, string> = {
   5: "Amazing! You're all set. Your AI-powered business is live!",
 };
 
+// ── Sound effects (Web Audio API — no external files) ─────────────────────
+function playSfx(type: 'advance' | 'back' | 'toggle' | 'success' | 'celebrate') {
+  try {
+    const ctx = new AudioContext();
+    const g = ctx.createGain();
+    g.connect(ctx.destination);
+
+    if (type === 'advance') {
+      // Quick ascending whoosh
+      g.gain.setValueAtTime(0.06, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+      const o = ctx.createOscillator();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(400, ctx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.15);
+      o.connect(g);
+      o.start(ctx.currentTime);
+      o.stop(ctx.currentTime + 0.25);
+    } else if (type === 'back') {
+      // Soft descending
+      g.gain.setValueAtTime(0.04, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+      const o = ctx.createOscillator();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(600, ctx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(350, ctx.currentTime + 0.15);
+      o.connect(g);
+      o.start(ctx.currentTime);
+      o.stop(ctx.currentTime + 0.2);
+    } else if (type === 'toggle') {
+      // Light pop
+      g.gain.setValueAtTime(0.05, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+      const o = ctx.createOscillator();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(700, ctx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(1000, ctx.currentTime + 0.06);
+      o.connect(g);
+      o.start(ctx.currentTime);
+      o.stop(ctx.currentTime + 0.12);
+    } else if (type === 'success') {
+      // Two-note chime
+      g.gain.setValueAtTime(0.07, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+      const o1 = ctx.createOscillator();
+      o1.type = 'sine';
+      o1.frequency.setValueAtTime(660, ctx.currentTime);
+      o1.connect(g);
+      o1.start(ctx.currentTime);
+      o1.stop(ctx.currentTime + 0.2);
+      const g2 = ctx.createGain();
+      g2.connect(ctx.destination);
+      g2.gain.setValueAtTime(0.07, ctx.currentTime + 0.15);
+      g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+      const o2 = ctx.createOscillator();
+      o2.type = 'sine';
+      o2.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
+      o2.connect(g2);
+      o2.start(ctx.currentTime + 0.15);
+      o2.stop(ctx.currentTime + 0.6);
+    } else if (type === 'celebrate') {
+      // Three-note ascending fanfare
+      [0, 0.12, 0.24].forEach((delay, i) => {
+        const freq = [523, 659, 784][i]!;
+        const gn = ctx.createGain();
+        gn.connect(ctx.destination);
+        gn.gain.setValueAtTime(0.06, ctx.currentTime + delay);
+        gn.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.4);
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+        osc.connect(gn);
+        osc.start(ctx.currentTime + delay);
+        osc.stop(ctx.currentTime + delay + 0.4);
+      });
+    }
+  } catch { /* audio not available */ }
+}
+
 export function OnboardingWizard({ business, onClose, onComplete }: Props) {
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -152,6 +231,7 @@ export function OnboardingWizard({ business, onClose, onComplete }: Props) {
   const [showConfetti, setShowConfetti] = useState(false);
 
   function toggleTool(tool: string) {
+    playSfx('toggle');
     setSelectedTools((prev) => {
       const next = new Set(prev);
       if (next.has(tool)) next.delete(tool);
@@ -218,6 +298,7 @@ export function OnboardingWizard({ business, onClose, onComplete }: Props) {
         throw new Error(data.error ?? 'Failed to generate website');
       }
       setWebsiteStatus('done');
+      playSfx('success');
       setExistingWebsiteCount((prev) => prev + 1);
     }).catch((err) => {
       setWebsiteStatus('error');
@@ -317,15 +398,20 @@ export function OnboardingWizard({ business, onClose, onComplete }: Props) {
 
   function next() {
     if (step === STEPS.length - 1) {
+      playSfx('celebrate');
       void completeOnboarding();
     } else {
+      playSfx('advance');
       if (step === 1) void saveHours();
       setStep(step + 1);
     }
   }
 
   function back() {
-    if (step > 0) setStep(step - 1);
+    if (step > 0) {
+      playSfx('back');
+      setStep(step - 1);
+    }
   }
 
   const progress = ((step + 1) / STEPS.length) * 100;

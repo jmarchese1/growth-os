@@ -50,7 +50,7 @@ function contactName(c: { firstName: string | null; lastName: string | null; ema
   return parts.length > 0 ? parts.join(' ') : (c.email ?? 'Unknown');
 }
 
-// Tiny chime using Web Audio API
+// Tiny chime using Web Audio API — for new notification arrivals
 function playChime() {
   try {
     const ctx = new AudioContext();
@@ -66,6 +66,26 @@ function playChime() {
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.5);
+  } catch {
+    // Audio not available
+  }
+}
+
+// Subtle bell tap — for clicking the bell icon
+function playBellTap() {
+  try {
+    const ctx = new AudioContext();
+    const g = ctx.createGain();
+    g.connect(ctx.destination);
+    g.gain.setValueAtTime(0.05, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    const o = ctx.createOscillator();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(1200, ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.15);
+    o.connect(g);
+    o.start(ctx.currentTime);
+    o.stop(ctx.currentTime + 0.3);
   } catch {
     // Audio not available
   }
@@ -196,7 +216,7 @@ export function NotificationsBell() {
       {/* Bell button */}
       <button
         ref={bellRef}
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => { playBellTap(); setOpen((o) => !o); }}
         className="relative p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-white/[0.06] dark:hover:text-white transition-colors"
         title="Notifications"
       >
