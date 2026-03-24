@@ -27,15 +27,9 @@ export default function Home() {
         <SystemOverview />
       </ScrollReveal>
 
-      {/* white → dark pricing */}
-      <SectionBleed from="#ffffff" to="#0c0a1a" height={80} />
-
       <ScrollReveal>
         <FeaturesSection />
       </ScrollReveal>
-
-      {/* dark pricing → white */}
-      <SectionBleed from="#0c0a1a" to="#ffffff" height={80} />
 
       <CalendlySection />
 

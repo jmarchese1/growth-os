@@ -15,7 +15,7 @@ const API_BASE = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 
 /**
  * CubeyChat for the Embedo landing page.
- * Light + dark themed, self-contained with inline SVG mascot.
+ * Dark-themed to match the in-app Cubey experience.
  */
 export default function CubeyChat() {
   const [open, setOpen] = useState(false);
@@ -32,7 +32,6 @@ export default function CubeyChat() {
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Cubey is waving by default, thinking when hovered or open
   useEffect(() => {
     if (open) setBubbleMood('thinking');
     else if (hovered) setBubbleMood('thinking');
@@ -150,36 +149,43 @@ export default function CubeyChat() {
 
   return createPortal(
     <>
-      {/* Chat Window */}
+      {/* Chat Window — dark theme matching in-app Cubey */}
       {open && (
-        <div className="fixed bottom-[88px] right-5 z-[9998] w-[380px] max-w-[calc(100vw-2rem)]" style={{ maxHeight: 'calc(100vh - 140px)', animation: 'cubey-slide-up 0.25s ease-out' }}>
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col" style={{ height: '520px' }}>
+        <div
+          className="fixed bottom-[88px] right-5 z-[9998] w-[380px] max-w-[calc(100vw-2rem)]"
+          style={{ maxHeight: 'calc(100vh - 140px)', animation: 'cubey-slide-up 0.25s ease-out' }}
+        >
+          <div className="bg-[#0f0d1a] border border-white/[0.08] rounded-2xl shadow-2xl overflow-hidden flex flex-col" style={{ height: '520px' }}>
             {/* Header */}
-            <div className="px-4 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 flex items-center gap-3">
-              <CubeyMini />
+            <div className="px-4 py-3 bg-gradient-to-r from-violet-600/20 to-indigo-600/20 border-b border-white/[0.06] flex items-center gap-3">
+              <EmbedoCubeMascot size={36} mood="happy" bounce={false} />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-white">Cubey</p>
                 <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
-                  <span className="text-[10px] text-white/70">Online</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[10px] text-slate-400">Online</span>
                 </div>
               </div>
-              <button onClick={() => setOpen(false)} className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
-                <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-white/80">
+              <button onClick={() => setOpen(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-colors">
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-slate-400">
                   <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
               </button>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 bg-slate-50">
+            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
               {messages.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} gap-2`}>
-                  {msg.role === 'assistant' && <CubeyMini />}
+                  {msg.role === 'assistant' && (
+                    <div className="flex-shrink-0 mt-1">
+                      <EmbedoCubeMascot size={24} mood="happy" bounce={false} />
+                    </div>
+                  )}
                   <div className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
                     msg.role === 'user'
                       ? 'bg-violet-600 text-white rounded-br-sm'
-                      : 'bg-white text-slate-700 rounded-bl-sm border border-slate-200 shadow-sm'
+                      : 'bg-white/[0.06] text-slate-200 rounded-bl-sm border border-white/[0.06]'
                   }`}>
                     {msg.content}
                   </div>
@@ -188,8 +194,8 @@ export default function CubeyChat() {
 
               {sending && (
                 <div className="flex items-center gap-2">
-                  <CubeyMini />
-                  <div className="bg-white border border-slate-200 px-4 py-2.5 rounded-2xl rounded-bl-sm shadow-sm">
+                  <EmbedoCubeMascot size={24} mood="thinking" bounce={false} />
+                  <div className="bg-white/[0.06] border border-white/[0.06] px-4 py-2.5 rounded-2xl rounded-bl-sm">
                     <div className="flex gap-1">
                       <div className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '0ms' }} />
                       <div className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -205,7 +211,7 @@ export default function CubeyChat() {
                     <button
                       key={qr}
                       onClick={() => { setInput(qr); setTimeout(() => void sendMessage(), 50); }}
-                      className="px-3.5 py-2 text-xs text-violet-600 bg-violet-50 border border-violet-200 rounded-2xl rounded-br-sm hover:bg-violet-100 transition-colors text-right"
+                      className="px-3.5 py-2 text-xs text-violet-300 bg-violet-500/10 border border-violet-500/20 rounded-2xl rounded-br-sm hover:bg-violet-500/20 transition-colors text-right"
                     >
                       {qr}
                     </button>
@@ -217,7 +223,7 @@ export default function CubeyChat() {
             </div>
 
             {/* Input */}
-            <div className="px-3 py-3 border-t border-slate-200 bg-white">
+            <div className="px-3 py-3 border-t border-white/[0.06] bg-white/[0.02]">
               <div className="flex items-center gap-2">
                 <input
                   ref={inputRef}
@@ -227,7 +233,7 @@ export default function CubeyChat() {
                   onKeyDown={handleKeyDown}
                   placeholder="Type a message..."
                   disabled={sending}
-                  className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-400/30 focus:border-violet-300 transition-all disabled:opacity-50"
+                  className="flex-1 px-4 py-2.5 bg-white/[0.06] border border-white/[0.08] rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/20 transition-all disabled:opacity-50"
                 />
                 <button
                   onClick={() => void sendMessage()}
@@ -239,7 +245,7 @@ export default function CubeyChat() {
                   </svg>
                 </button>
               </div>
-              <p className="text-center text-[9px] text-slate-400 mt-2">Powered by Embedo AI</p>
+              <p className="text-center text-[9px] text-slate-700 mt-2">Powered by Embedo AI</p>
             </div>
           </div>
         </div>
@@ -272,9 +278,9 @@ export default function CubeyChat() {
             )}
           </div>
           {!open && bubblePulse && (
-            <div className="absolute bottom-full mb-3 right-0 whitespace-nowrap bg-slate-900 text-white text-xs font-medium px-3 py-2 rounded-xl shadow-lg" style={{ animation: 'cubey-slide-up 0.3s ease-out' }}>
+            <div className="absolute bottom-full mb-3 right-0 whitespace-nowrap bg-[#0f0d1a] text-white text-xs font-medium px-3 py-2 rounded-xl shadow-lg border border-white/[0.08]" style={{ animation: 'cubey-slide-up 0.3s ease-out' }}>
               <span>Got questions? Ask me!</span>
-              <div className="absolute top-full right-5 w-2 h-2 bg-slate-900 transform rotate-45 -translate-y-1" />
+              <div className="absolute top-full right-5 w-2 h-2 bg-[#0f0d1a] border-r border-b border-white/[0.08] transform rotate-45 -translate-y-1" />
             </div>
           )}
         </div>
@@ -291,13 +297,3 @@ export default function CubeyChat() {
     document.body,
   );
 }
-
-/** Mini Cubey face for chat messages — uses the real component */
-function CubeyMini() {
-  return (
-    <div className="w-7 h-7 flex-shrink-0">
-      <EmbedoCubeMascot size={28} mood="happy" bounce={false} />
-    </div>
-  );
-}
-
