@@ -97,7 +97,7 @@ export async function processMessage(params: {
     for (let iteration = 0; iteration < MAX_TOOL_ITERATIONS; iteration++) {
       const response = await anthropic.messages.create({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1024,
+        max_tokens: 300,
         system: systemPrompt,
         tools,
         messages,
