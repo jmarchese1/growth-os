@@ -26,6 +26,7 @@ export default function SetupPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  const [pendingPlan, setPendingPlan] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: '',
     type: 'RESTAURANT',
@@ -38,6 +39,12 @@ export default function SetupPage() {
     state: '',
     zip: '',
   });
+
+  // Read pending plan from sessionStorage on mount
+  useEffect(() => {
+    const plan = sessionStorage.getItem('pendingPlan');
+    if (plan) setPendingPlan(plan);
+  }, []);
 
   // Pre-fill email once session loads
   useEffect(() => {
@@ -57,6 +64,28 @@ export default function SetupPage() {
       router.replace('/');
     }
   }, [loading, business, router]);
+
+  const startCheckout = async (businessId: string, tier: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/billing/checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessId,
+          tier,
+          successUrl: `${window.location.origin}/?checkout=success`,
+          cancelUrl: `${window.location.origin}/setup`,
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        sessionStorage.removeItem('pendingPlan');
+        window.location.href = data.url;
+        return true;
+      }
+    } catch { /* fall through to dashboard */ }
+    return false;
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,7 +119,16 @@ export default function SetupPage() {
         return;
       }
 
+      const result = await res.json();
       await refresh();
+
+      // If user came from pricing page, redirect to Stripe checkout
+      const pendingPlan = sessionStorage.getItem('pendingPlan');
+      if (pendingPlan && result.business?.id) {
+        const redirected = await startCheckout(result.business.id, pendingPlan);
+        if (redirected) return;
+      }
+
       router.replace('/');
     } catch {
       setError('Network error. Please try again.');
@@ -117,7 +155,16 @@ export default function SetupPage() {
         return;
       }
 
+      const result = await res.json();
       await refresh();
+
+      // If user came from pricing page, redirect to Stripe checkout
+      const pendingPlan = sessionStorage.getItem('pendingPlan');
+      if (pendingPlan && result.business?.id) {
+        const redirected = await startCheckout(result.business.id, pendingPlan);
+        if (redirected) return;
+      }
+
       router.replace('/');
     } catch {
       setError('Network error. Please try again.');
@@ -155,8 +202,16 @@ export default function SetupPage() {
             </div>
             <h1 className="text-xl font-bold text-white tracking-tight">Set up your business</h1>
             <p className="text-sm text-slate-500 mt-1.5">
-              Tell us about your business so we can configure your AI tools
+              {pendingPlan
+                ? 'Set up your business to activate your free trial'
+                : 'Tell us about your business so we can configure your AI tools'}
             </p>
+            {pendingPlan && (
+              <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span className="text-[11px] font-medium text-violet-300">{pendingPlan} plan — 14-day free trial</span>
+              </div>
+            )}
           </div>
 
           {/* Content */}
@@ -319,7 +374,7 @@ export default function SetupPage() {
                   className="w-full py-3 bg-violet-600 text-white text-sm font-semibold rounded-xl hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 shadow-lg shadow-violet-600/20"
                 >
                   {saving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-                  {saving ? 'Setting up...' : 'Create business & continue'}
+                  {saving ? (pendingPlan ? 'Setting up & redirecting to checkout...' : 'Setting up...') : (pendingPlan ? 'Create business & start trial' : 'Create business & continue')}
                 </button>
 
                 {matchedBusiness && !showImport && (

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createSupabaseBrowserClient } from '../../lib/supabase/client';
 import EmbedoLogo from '../../components/EmbedoLogo';
 
@@ -208,7 +208,20 @@ function PasswordStrengthBar({ password }: { password: string }) {
 
 /* ── Login page ──────────────────────────────────────────────────── */
 export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#0c0a18]">
+        <div className="w-8 h-8 border-3 border-violet-400 border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <LoginPageInner />
+    </Suspense>
+  );
+}
+
+function LoginPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -219,6 +232,21 @@ export default function LoginPage() {
   const [showSignup, setShowSignup] = useState(false);
   const [signupSent, setSignupSent] = useState(false);
   const [unverifiedEmail, setUnverifiedEmail] = useState('');
+
+  // Detect plan param from landing page pricing CTA
+  const planFromUrl = searchParams.get('plan');
+  const signupFromUrl = searchParams.get('signup');
+
+  useEffect(() => {
+    // Store plan in sessionStorage so it survives through the auth flow
+    if (planFromUrl) {
+      sessionStorage.setItem('pendingPlan', planFromUrl);
+    }
+    // Auto-show signup form when coming from pricing page
+    if (signupFromUrl === '1' || planFromUrl) {
+      setShowSignup(true);
+    }
+  }, [planFromUrl, signupFromUrl]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -347,8 +375,16 @@ export default function LoginPage() {
 
             <h1 className="text-xl font-bold text-white tracking-tight">Welcome to Embedo</h1>
             <p className="text-sm text-slate-500 mt-1.5">
-              {showSignup ? 'Create your business account' : 'Sign in to your business dashboard'}
+              {showSignup
+                ? (planFromUrl ? 'Create your account to start your free trial' : 'Create your business account')
+                : 'Sign in to your business dashboard'}
             </p>
+            {planFromUrl && showSignup && (
+              <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span className="text-[11px] font-medium text-violet-300">{planFromUrl} plan — 14-day free trial</span>
+              </div>
+            )}
           </div>
 
           {/* Form */}
