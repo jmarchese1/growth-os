@@ -9,44 +9,6 @@ const features = [
   { icon: '🚀', title: 'Live in days, not months', description: 'From onboarding to fully deployed AI infrastructure in days. No dev team, no technical knowledge required.', accent: false },
 ];
 
-const ORBIT_R = 194;
-const NODE_D  = 82;
-const DURATION = 24;
-const COUNT = 6;
-const INNER_R = 112;
-const OUTER_R = 274;
-
-const TOOLS = [
-  { name: 'Anthropic',  color: '#D97706', slug: 'anthropic'  },
-  { name: 'ElevenLabs', color: '#8B5CF6', slug: 'elevenlabs' },
-  { name: 'Twilio',     color: '#F22F46', slug: 'twilio'     },
-  { name: 'SendGrid',   color: '#1A82E2', slug: 'sendgrid'   },
-  { name: 'X',          color: '#94a3b8', slug: 'x'          },
-  { name: 'Vercel',     color: '#e2e8f0', slug: 'vercel'     },
-];
-
-// 3 inner accent dots at 0°, 120°, 240°
-const INNER_DOTS = [0, 120, 240].map((deg) => {
-  const rad = (deg * Math.PI) / 180;
-  return {
-    left: Math.round((INNER_R + INNER_R * Math.cos(rad) - 4) * 100) / 100,
-    top:  Math.round((INNER_R + INNER_R * Math.sin(rad) - 4) * 100) / 100,
-  };
-});
-
-const NODES = TOOLS.map((t, i) => {
-  const angleDeg = -90 + (i / COUNT) * 360;
-  const rad = (angleDeg * Math.PI) / 180;
-  return {
-    ...t,
-    left: Math.round((ORBIT_R + ORBIT_R * Math.cos(rad) - NODE_D / 2) * 100) / 100,
-    top:  Math.round((ORBIT_R + ORBIT_R * Math.sin(rad) - NODE_D / 2) * 100) / 100,
-  };
-});
-
-const containerMin = (ORBIT_R + NODE_D / 2) * 2 + 24;
-const PULSES = [0, 1.8, 3.6];
-
 const bullets = [
   {
     label: 'Answers every call, captures every lead',
@@ -61,6 +23,53 @@ const bullets = [
     sub: 'No dev team. No months of setup. Every module connected from day one.',
   },
 ];
+
+/* ── Grand Slam Offer ────────────────────────────────────────────── */
+
+const OFFER_ITEMS = [
+  {
+    label: 'AI Phone Receptionist',
+    value: '$2,500',
+    desc: 'Answers every call 24/7, takes orders, books reservations, captures leads',
+  },
+  {
+    label: 'AI Website Chatbot',
+    value: '$1,500',
+    desc: 'Engages every visitor, answers questions, captures contact info',
+  },
+  {
+    label: 'AI-Generated Website',
+    value: '$3,000',
+    desc: 'Professional site built and deployed in 30 seconds, fully editable',
+  },
+  {
+    label: 'Social Media Automation',
+    value: '$1,200',
+    desc: 'AI creates posts, schedules them, monitors engagement automatically',
+  },
+  {
+    label: 'QR Code & Survey System',
+    value: '$800',
+    desc: 'Smart QR codes, feedback collection, contact capture at every table',
+  },
+  {
+    label: 'CRM + Email Campaigns',
+    value: '$1,500',
+    desc: 'Unified customer database with AI-drafted email campaigns',
+  },
+  {
+    label: 'Dedicated Phone Number',
+    value: '$600',
+    desc: 'Local business number with call routing and after-hours AI backup',
+  },
+  {
+    label: 'Setup + Onboarding',
+    value: '$2,000',
+    desc: 'We configure everything for you — live in days, not months',
+  },
+];
+
+const TOTAL_VALUE = '$13,100';
 
 export default function FeaturesSection() {
   return (
@@ -92,146 +101,56 @@ export default function FeaturesSection() {
             </div>
           </div>
 
-          {/* Right: Powered-by orbital — enhanced with inner ring + signal pulses */}
-          <div className="flex flex-col items-center justify-center" style={{ animation: 'proposal-float 5s ease-in-out infinite', marginLeft: '-40px' }}>
-
-            <div
-              className="relative flex-1 flex items-center justify-center overflow-visible"
-              style={{ minHeight: containerMin }}
-            >
-              {/* Signal pulse rings expanding from center */}
-              {PULSES.map((delay, i) => (
-                <div
-                  key={i}
-                  className="absolute rounded-full pointer-events-none"
-                  style={{
-                    width: 60, height: 60,
-                    border: '1.5px solid rgba(99,102,241,0.55)',
-                    animation: `signal-pulse 3.6s ease-out infinite`,
-                    animationDelay: `${delay}s`,
-                  }}
-                />
-              ))}
-
-              {/* Outer decorative faint ring — very slow reverse spin */}
-              <div
-                className="absolute rounded-full pointer-events-none"
-                style={{
-                  width: OUTER_R * 2, height: OUTER_R * 2,
-                  border: '1px dashed rgba(99,102,241,0.07)',
-                  animation: `logo-orbit 55s linear infinite reverse`,
-                }}
-              />
-
-              {/* Center radial glow */}
-              <div
-                className="absolute rounded-full pointer-events-none"
-                style={{
-                  width: 200, height: 200,
-                  background: 'radial-gradient(circle, rgba(99,102,241,0.32) 0%, transparent 68%)',
-                  animation: 'pulse-glow 3.5s ease-in-out infinite',
-                }}
-              />
-
-              {/* Inner orbit — counter-rotating with 3 bright accent dots */}
-              <div
-                className="absolute pointer-events-none"
-                style={{
-                  width: INNER_R * 2, height: INNER_R * 2,
-                  left: '50%', top: '50%',
-                  marginLeft: -INNER_R, marginTop: -INNER_R,
-                  animation: `logo-orbit 12s linear infinite reverse`,
-                }}
-              >
-                <svg width={INNER_R * 2} height={INNER_R * 2} viewBox={`0 0 ${INNER_R * 2} ${INNER_R * 2}`} fill="none" className="absolute inset-0">
-                  <circle cx={INNER_R} cy={INNER_R} r={INNER_R - 1} stroke="rgba(99,102,241,0.13)" strokeWidth={1} strokeDasharray="4 10" />
-                </svg>
-                {INNER_DOTS.map((d, i) => (
-                  <div
-                    key={i}
-                    className="absolute rounded-full"
-                    style={{
-                      width: '8px', height: '8px',
-                      left: d.left, top: d.top,
-                      background: 'rgba(139,92,246,0.95)',
-                      boxShadow: '0 0 8px 3px rgba(139,92,246,0.65)',
-                      animation: `counter-orbit 12s linear infinite`,
-                    }}
-                  />
-                ))}
+          {/* Right: Grand Slam Offer Stack */}
+          <div className="flex flex-col justify-center">
+            <div className="bg-white rounded-2xl border border-indigo-200 shadow-lg shadow-indigo-100/50 overflow-hidden">
+              {/* Offer header */}
+              <div className="bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-5">
+                <p className="text-xs font-bold tracking-[0.15em] uppercase text-indigo-200 mb-1">Everything included</p>
+                <h3 className="text-xl font-bold text-white">Here&apos;s what you&apos;re getting</h3>
               </div>
 
-              {/* Static dashed middle orbit ring */}
-              <div
-                className="absolute rounded-full pointer-events-none"
-                style={{
-                  width: ORBIT_R * 2, height: ORBIT_R * 2,
-                  border: '1px dashed rgba(99,102,241,0.20)',
-                }}
-              />
-
-              {/* Main rotating ring with 6 tool nodes */}
-              <div
-                className="absolute pointer-events-none"
-                style={{
-                  width: ORBIT_R * 2, height: ORBIT_R * 2,
-                  left: '50%', top: '50%',
-                  marginLeft: -ORBIT_R, marginTop: -ORBIT_R,
-                  animation: `logo-orbit ${DURATION}s linear infinite`,
-                }}
-              >
-                {NODES.map((t) => (
-                  <div
-                    key={t.name}
-                    style={{
-                      position: 'absolute',
-                      left: t.left, top: t.top,
-                      width: NODE_D, height: NODE_D,
-                      animation: `counter-orbit ${DURATION}s linear infinite`,
-                    }}
-                  >
-                    <div className="absolute inset-0 rounded-full" style={{ boxShadow: `0 0 16px 4px ${t.color}55` }} />
-                    <div
-                      style={{
-                        width: NODE_D, height: NODE_D,
-                        borderRadius: '50%',
-                        background: 'rgba(10,8,35,0.97)',
-                        border: `1.5px solid ${t.color}`,
-                        display: 'flex', flexDirection: 'column',
-                        alignItems: 'center', justifyContent: 'center', gap: 4,
-                      }}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={`https://api.iconify.design/simple-icons:${t.slug}.svg`}
-                        alt={t.name}
-                        style={{ width: 20, height: 20, objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
-                      />
-                      <span style={{ fontSize: 6.5, color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 0.4, lineHeight: 1 }}>
-                        {t.name}
-                      </span>
+              {/* Value stack */}
+              <div className="px-6 py-5 space-y-3">
+                {OFFER_ITEMS.map((item) => (
+                  <div key={item.label} className="flex items-start gap-3">
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-gray-900">{item.label}</p>
+                        <p className="text-sm text-gray-400 line-through whitespace-nowrap">{item.value}</p>
+                      </div>
+                      <p className="text-xs text-gray-500 leading-snug mt-0.5">{item.desc}</p>
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* Center hub — slightly larger, brighter glow */}
-              <div
-                className="absolute z-10 flex flex-col items-center justify-center"
-                style={{
-                  width: 80, height: 80,
-                  borderRadius: '50%',
-                  background: 'rgba(10,8,35,0.97)',
-                  border: '1.5px solid rgba(99,102,241,0.75)',
-                  boxShadow: '0 0 36px rgba(99,102,241,0.50), 0 0 14px rgba(139,92,246,0.30)',
-                }}
-              >
-                <span style={{ fontSize: 8.5, fontWeight: 700, color: 'white', letterSpacing: 2 }}>
-                  EMBEDO
-                </span>
-                <span style={{ fontSize: 6.5, color: 'rgba(165,180,252,0.80)', letterSpacing: 1 }}>
-                  AI CORE
-                </span>
+              {/* Total + price */}
+              <div className="px-6 py-5 border-t border-indigo-100 bg-indigo-50/50">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-bold text-gray-900 uppercase tracking-wide">Total Value</p>
+                  <p className="text-lg font-bold text-gray-400 line-through">{TOTAL_VALUE}/yr</p>
+                </div>
+                <div className="flex items-end gap-3 mb-4">
+                  <p className="text-sm text-gray-500">Your price:</p>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-3xl font-extrabold text-indigo-600">$249</span>
+                    <span className="text-sm text-gray-500">/mo</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg">14-day free trial</div>
+                  <span className="text-xs text-gray-500">Cancel anytime. No contracts.</span>
+                </div>
+                <a
+                  href="https://app.embedo.io"
+                  className="block w-full text-center px-6 py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold rounded-xl hover:from-indigo-500 hover:to-violet-500 transition-all shadow-md shadow-indigo-600/20 hover:shadow-lg hover:shadow-indigo-600/30 hover:-translate-y-0.5"
+                >
+                  Start Your Free Trial
+                </a>
               </div>
             </div>
           </div>

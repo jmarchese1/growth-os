@@ -85,7 +85,7 @@ export default function CubeyChat() {
       hasGreeted.current = true;
       setMessages([{
         role: 'assistant',
-        content: "Hey! I'm Cubey, Embedo's AI assistant. Ask me anything about how Embedo can help your business grow!",
+        content: "Hey! I'm Cubey. Running a business is tough — I'm here to show you how Embedo makes it easier. What kind of business do you have?",
         timestamp: new Date().toISOString(),
       }]);
     }
@@ -105,7 +105,7 @@ export default function CubeyChat() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          businessId: 'embedo-platform',
+          businessId: 'embedo-sales',
           message: text,
           sessionKey,
           channel: 'WEB',
@@ -144,7 +144,7 @@ export default function CubeyChat() {
     }
   }, [sendMessage]);
 
-  const quickReplies = ['What can Embedo do?', 'How does pricing work?', 'What AI tools are included?'];
+  const quickReplies = ['I run a restaurant', 'How does the AI phone agent work?', 'What do I get for $249/mo?'];
 
   if (!mounted) return null;
 
@@ -273,7 +273,7 @@ export default function CubeyChat() {
           </div>
           {!open && bubblePulse && (
             <div className="absolute bottom-full mb-3 right-0 whitespace-nowrap bg-slate-900 text-white text-xs font-medium px-3 py-2 rounded-xl shadow-lg" style={{ animation: 'cubey-slide-up 0.3s ease-out' }}>
-              <span>Chat with Cubey!</span>
+              <span>Got questions? Ask me!</span>
               <div className="absolute top-full right-5 w-2 h-2 bg-slate-900 transform rotate-45 -translate-y-1" />
             </div>
           )}
