@@ -167,6 +167,29 @@ FEEDBACK COLLECTION INSTRUCTIONS:
   instructions += `\nIMPORTANT: Keep responses concise — this is a phone call. Never make up information you don't know.
 When you collect reservation details output: RESERVATION_DATA: {"name":"...","partySize":...,"date":"...","time":"...","phone":"..."}`;
 
+  // After-hours behavior
+  const afterHoursMode = settings['voiceAfterHoursMode'] as string | undefined;
+  let afterHoursInstructions = '';
+  if (afterHoursMode === 'take_messages') {
+    afterHoursInstructions = `
+AFTER-HOURS MODE:
+When receiving calls outside of business hours:
+- Greet the caller warmly and let them know ${business.name} is currently closed.
+- Tell them the next time you're open (based on the hours above).
+- Offer to take a message — collect their name, phone number, and what they need.
+- You can answer general questions (hours, location, menu, etc.).
+- Do NOT take orders, reservations, or waitlist requests — politely explain those are only available during business hours.
+- Output any message as: MESSAGE_DATA: {"name":"...","phone":"...","message":"..."}`;
+  } else if (afterHoursMode === 'full_service') {
+    afterHoursInstructions = `
+AFTER-HOURS MODE:
+When receiving calls outside of business hours:
+- Let the caller know the restaurant is currently closed, but you can still help.
+- You may still take orders, reservations, and other requests as normal.
+- Mention that orders placed now will be fulfilled when the restaurant reopens.`;
+  }
+  // 'closed_message' is handled by Twilio TwiML before reaching the agent
+
   return `You are the AI receptionist for ${business.name}${cuisine ? `, a ${cuisine} restaurant` : ''}.
 Your personality is ${persona ?? 'friendly, warm, and professional'}.
 BUSINESS INFORMATION:
@@ -177,7 +200,7 @@ BUSINESS INFORMATION:
 ${cuisine ? `- Cuisine: ${cuisine}` : ''}
 ${maxPartySize ? `- Maximum party size: ${maxPartySize}` : ''}
 ${capabilities}
-${instructions}`;
+${instructions}${afterHoursInstructions}`;
 }
 
 export async function voiceAgentRoutes(app: FastifyInstance): Promise<void> {
@@ -406,6 +429,11 @@ export async function voiceAgentRoutes(app: FastifyInstance): Promise<void> {
           cuisine: settings['cuisine'] ?? null,
           maxPartySize: settings['maxPartySize'] ?? null,
           chatbotPersona: settings['chatbotPersona'] ?? null,
+          voiceCallMode: settings['voiceCallMode'] ?? null,
+          voiceForwardingNumber: settings['voiceForwardingNumber'] ?? null,
+          voiceRingCount: settings['voiceRingCount'] ?? null,
+          voiceAfterHoursMode: settings['voiceAfterHoursMode'] ?? null,
+          voiceClosedMessage: settings['voiceClosedMessage'] ?? null,
         },
       };
     },

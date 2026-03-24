@@ -22,6 +22,11 @@ interface VoiceStatus {
     cuisine: string | null;
     maxPartySize: number | null;
     chatbotPersona: string | null;
+    voiceCallMode: string | null;
+    voiceForwardingNumber: string | null;
+    voiceRingCount: number | null;
+    voiceAfterHoursMode: string | null;
+    voiceClosedMessage: string | null;
   };
 }
 
@@ -274,6 +279,13 @@ function SettingsPanel({ businessId, settings, onSaved }: {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  // Call routing state
+  const [callMode, setCallMode] = useState(settings.voiceCallMode ?? 'ai_only');
+  const [forwardingNumber, setForwardingNumber] = useState(settings.voiceForwardingNumber ?? '');
+  const [ringCount, setRingCount] = useState(settings.voiceRingCount ?? 4);
+  const [afterHoursMode, setAfterHoursMode] = useState(settings.voiceAfterHoursMode ?? 'take_messages');
+  const [closedMessage, setClosedMessage] = useState(settings.voiceClosedMessage ?? '');
+
   function setDayHours(day: string, field: 'open' | 'close', value: string) {
     setHours((prev) => ({ ...prev, [day]: { ...(prev[day] ?? { open: DEFAULT_OPEN, close: DEFAULT_CLOSE }), [field]: value } }));
   }
@@ -298,6 +310,11 @@ function SettingsPanel({ businessId, settings, onSaved }: {
           cuisine: cuisine || undefined,
           maxPartySize: maxParty ? parseInt(maxParty) : undefined,
           hours: hoursPayload,
+          voiceCallMode: callMode,
+          voiceForwardingNumber: forwardingNumber || undefined,
+          voiceRingCount: ringCount,
+          voiceAfterHoursMode: afterHoursMode,
+          voiceClosedMessage: closedMessage || undefined,
         }),
       });
       setSaved(true);
@@ -388,6 +405,110 @@ function SettingsPanel({ businessId, settings, onSaved }: {
             );
           })}
         </div>
+      </div>
+
+      {/* Call Routing */}
+      <div className="border-t border-slate-200 dark:border-white/[0.06] pt-6">
+        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">Call Routing</h3>
+        <p className="text-[11px] text-slate-500 dark:text-slate-500 mb-4">Control how incoming calls are handled during and after business hours.</p>
+
+        {/* Call Mode */}
+        <div className="mb-4">
+          <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">During Business Hours</label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {[
+              { id: 'ai_only', label: 'AI Only', desc: 'AI answers every call' },
+              { id: 'forward_first', label: 'Human First', desc: 'Ring your phone, AI as backup' },
+              { id: 'after_hours_only', label: 'AI After Hours Only', desc: 'Human during hours, AI after' },
+            ].map((mode) => (
+              <button
+                key={mode.id}
+                type="button"
+                onClick={() => setCallMode(mode.id)}
+                className={`text-left p-3 rounded-xl border-2 transition-all ${
+                  callMode === mode.id
+                    ? 'border-violet-500/50 bg-violet-500/10 dark:bg-violet-500/10'
+                    : 'border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.15]'
+                }`}
+              >
+                <p className="text-xs font-semibold text-slate-700 dark:text-white">{mode.label}</p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-500 mt-0.5">{mode.desc}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Forwarding number + ring count (shown when forwarding is involved) */}
+        {(callMode === 'forward_first' || callMode === 'after_hours_only') && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 p-4 bg-slate-50 dark:bg-white/[0.02] rounded-xl border border-slate-200 dark:border-white/[0.06]">
+            <div>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Forwarding Phone Number</label>
+              <input
+                type="tel"
+                value={forwardingNumber}
+                onChange={(e) => setForwardingNumber(e.target.value)}
+                placeholder="+1 (555) 123-4567"
+                className={inputClass}
+              />
+              <p className="text-[10px] text-slate-500 mt-1">Your main business line or personal phone</p>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Rings Before AI Answers</label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="range"
+                  min={2}
+                  max={8}
+                  value={ringCount}
+                  onChange={(e) => setRingCount(parseInt(e.target.value))}
+                  className="flex-1 accent-violet-500"
+                />
+                <span className="text-sm font-semibold text-slate-700 dark:text-white w-6 text-center">{ringCount}</span>
+              </div>
+              <p className="text-[10px] text-slate-500 mt-1">{ringCount} rings (~{ringCount * 6} seconds)</p>
+            </div>
+          </div>
+        )}
+
+        {/* After Hours Mode */}
+        <div className="mb-4">
+          <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">After Hours Behavior</label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {[
+              { id: 'take_messages', label: 'Take Messages', desc: 'Answer questions, take messages, no orders' },
+              { id: 'full_service', label: 'Full Service', desc: 'Same capabilities as business hours' },
+              { id: 'closed_message', label: 'Closed Message', desc: 'Play a message and hang up' },
+            ].map((mode) => (
+              <button
+                key={mode.id}
+                type="button"
+                onClick={() => setAfterHoursMode(mode.id)}
+                className={`text-left p-3 rounded-xl border-2 transition-all ${
+                  afterHoursMode === mode.id
+                    ? 'border-violet-500/50 bg-violet-500/10 dark:bg-violet-500/10'
+                    : 'border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.15]'
+                }`}
+              >
+                <p className="text-xs font-semibold text-slate-700 dark:text-white">{mode.label}</p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-500 mt-0.5">{mode.desc}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Custom closed message */}
+        {afterHoursMode === 'closed_message' && (
+          <div className="mb-4">
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Closed Message</label>
+            <textarea
+              value={closedMessage}
+              onChange={(e) => setClosedMessage(e.target.value)}
+              placeholder="Thank you for calling. We are currently closed. Please call back during our regular business hours."
+              rows={2}
+              className={inputClass + ' resize-none'}
+            />
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-3">
