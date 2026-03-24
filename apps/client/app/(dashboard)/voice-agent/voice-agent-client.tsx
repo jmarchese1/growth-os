@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import KpiCard from '../../../components/ui/kpi-card';
+import { CapabilitiesPanel } from '../../../components/ui/capabilities-panel';
 import { EmbedoCubeMascot } from '../../../components/ui/embedo-cube-mascot';
 import { PLAN_LIMITS } from '../billing/billing-data';
 import type { TierKey } from '../billing/billing-data';
@@ -1084,7 +1085,7 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
   const [totalCalls, setTotalCalls] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedCall, setSelectedCall] = useState<CallLog | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'voice' | 'prompt' | 'knowledge' | 'test' | 'history'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'voice' | 'prompt' | 'knowledge' | 'capabilities' | 'test' | 'history'>('dashboard');
   const [planTier, setPlanTier] = useState<TierKey>('FREE');
 
   useEffect(() => {
@@ -1179,6 +1180,7 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
           { id: 'voice' as const, label: 'Voice', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" /></svg> },
           { id: 'prompt' as const, label: 'System Prompt', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" /></svg> },
           { id: 'knowledge' as const, label: 'Knowledge Base', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" /></svg> },
+          { id: 'capabilities' as const, label: 'Capabilities', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clipRule="evenodd" /></svg> },
           { id: 'test' as const, label: 'Test Call', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" /></svg> },
           { id: 'history' as const, label: 'History', icon: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clipRule="evenodd" /></svg> },
         ] as const).map(tab => {
@@ -1261,6 +1263,22 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
             </div>
           </div>
           <TestCallWidget agentId={status.agentId} />
+        </div>
+      )}
+
+      {/* Capabilities Tab */}
+      {activeTab === 'capabilities' && (
+        <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-9 h-9 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center">
+              <svg viewBox="0 0 20 20" fill="white" className="w-4 h-4"><path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clipRule="evenodd" /></svg>
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Capabilities</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Enable capabilities for your phone agent — orders, reservations, waitlist, and more. Settings are shared with your chatbot.</p>
+            </div>
+          </div>
+          <CapabilitiesPanel businessId={businessId} />
         </div>
       )}
 

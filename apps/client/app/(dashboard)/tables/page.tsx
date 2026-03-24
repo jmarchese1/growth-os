@@ -124,8 +124,8 @@ export default function TablesPage() {
       <div className="mb-8"><h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Tables</h1></div>
       <div className="bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-xl p-12 text-center">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Table Tracking Not Enabled</h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Enable Table Turnover Tracker from the Tool Library.</p>
-        <a href="/tools" className="inline-flex px-5 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors">Go to Tool Library</a>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Enable Table Turnover Tracker from the Capabilities tab in your Chat Widget or Phone Agent settings.</p>
+        <a href="/chatbot" className="inline-flex px-5 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors">Go to Chat Widget</a>
       </div>
     </div>
   );

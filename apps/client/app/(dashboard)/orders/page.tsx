@@ -163,10 +163,10 @@ export default function OrdersPage() {
           </div>
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Takeout Orders Not Enabled</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-md mx-auto">
-            Enable the Takeout Orders tool from the Tool Library to let your AI phone agent and chatbot take orders from customers.
+            Enable Takeout Orders from the Capabilities tab in your Chat Widget or Phone Agent settings.
           </p>
-          <a href="/tools" className="inline-flex px-5 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors">
-            Go to Tool Library
+          <a href="/chatbot" className="inline-flex px-5 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors">
+            Go to Chat Widget
           </a>
         </div>
       </div>

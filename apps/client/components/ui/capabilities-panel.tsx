@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useBusiness } from '../../../components/auth/business-provider';
 
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 
@@ -26,7 +25,7 @@ interface EnabledTool {
   createdAt: string;
 }
 
-/* ── Per-tool config editor components ─────────────────────────── */
+/* ── Shared config helpers ─────────────────────────────────────── */
 
 function ConfigField({ label, children }: { label: string; children: React.ReactNode }) {
   return <div><label className={labelCls}>{label}</label>{children}</div>;
@@ -60,11 +59,15 @@ function ListManager({ items, onAdd, onRemove, renderItem, addLabel, children }:
   );
 }
 
+/* ── Per-tool config editors ───────────────────────────────────── */
+
 interface MenuItem { name: string; price: number; category: string; description: string; available: boolean }
 interface Special { name: string; description: string; price: number }
 interface Promo { name: string; description: string; days: string[] }
 
-function TakeoutConfig({ config, onChange }: { config: Record<string, unknown>; onChange: (c: Record<string, unknown>) => void }) {
+type ConfigProps = { config: Record<string, unknown>; onChange: (c: Record<string, unknown>) => void };
+
+function TakeoutConfig({ config, onChange }: ConfigProps) {
   const [menuItems, setMenuItems] = useState<MenuItem[]>((config['menuItems'] as MenuItem[]) ?? []);
   const [newItem, setNewItem] = useState({ name: '', price: '', category: '', description: '' });
   const taxRate = String((config['taxRate'] as number) ?? 0);
@@ -107,7 +110,7 @@ function TakeoutConfig({ config, onChange }: { config: Record<string, unknown>; 
   );
 }
 
-function WaitlistConfig({ config, onChange }: { config: Record<string, unknown>; onChange: (c: Record<string, unknown>) => void }) {
+function WaitlistConfig({ config, onChange }: ConfigProps) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
@@ -129,7 +132,7 @@ function WaitlistConfig({ config, onChange }: { config: Record<string, unknown>;
   );
 }
 
-function DailySpecialsConfig({ config, onChange }: { config: Record<string, unknown>; onChange: (c: Record<string, unknown>) => void }) {
+function DailySpecialsConfig({ config, onChange }: ConfigProps) {
   const [specials, setSpecials] = useState<Special[]>((config['specials'] as Special[]) ?? []);
   const [eightySixed, setEightySixed] = useState<string[]>((config['eightySixedItems'] as string[]) ?? []);
   const [newSpecial, setNewSpecial] = useState({ name: '', description: '', price: '' });
@@ -163,7 +166,7 @@ function DailySpecialsConfig({ config, onChange }: { config: Record<string, unkn
           {eightySixed.map((item, i) => (
             <span key={i} className="inline-flex items-center gap-1 px-2 py-1 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-md text-xs">
               {item}
-              <button onClick={() => { const updated = eightySixed.filter((_, j) => j !== i); setEightySixed(updated); onChange({ ...config, eightySixedItems: updated }); }} className="hover:text-rose-800">×</button>
+              <button onClick={() => { const updated = eightySixed.filter((_, j) => j !== i); setEightySixed(updated); onChange({ ...config, eightySixedItems: updated }); }} className="hover:text-rose-800">x</button>
             </span>
           ))}
         </div>
@@ -176,7 +179,7 @@ function DailySpecialsConfig({ config, onChange }: { config: Record<string, unkn
   );
 }
 
-function CateringConfig({ config, onChange }: { config: Record<string, unknown>; onChange: (c: Record<string, unknown>) => void }) {
+function CateringConfig({ config, onChange }: ConfigProps) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
@@ -194,7 +197,7 @@ function CateringConfig({ config, onChange }: { config: Record<string, unknown>;
   );
 }
 
-function FeedbackConfig({ config, onChange }: { config: Record<string, unknown>; onChange: (c: Record<string, unknown>) => void }) {
+function FeedbackConfig({ config, onChange }: ConfigProps) {
   return (
     <div className="space-y-4">
       <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
@@ -211,7 +214,7 @@ function FeedbackConfig({ config, onChange }: { config: Record<string, unknown>;
   );
 }
 
-function GiftCardConfig({ config, onChange }: { config: Record<string, unknown>; onChange: (c: Record<string, unknown>) => void }) {
+function GiftCardConfig({ config, onChange }: ConfigProps) {
   const [denoms, setDenoms] = useState<number[]>((config['denominations'] as number[]) ?? [25, 50, 75, 100]);
   const [newDenom, setNewDenom] = useState('');
 
@@ -223,7 +226,7 @@ function GiftCardConfig({ config, onChange }: { config: Record<string, unknown>;
           {denoms.map((d, i) => (
             <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 rounded-md text-xs font-medium">
               ${d}
-              <button onClick={() => { const updated = denoms.filter((_, j) => j !== i); setDenoms(updated); onChange({ ...config, denominations: updated }); }} className="hover:text-emerald-900">×</button>
+              <button onClick={() => { const updated = denoms.filter((_, j) => j !== i); setDenoms(updated); onChange({ ...config, denominations: updated }); }} className="hover:text-emerald-900">x</button>
             </span>
           ))}
         </div>
@@ -243,7 +246,7 @@ function GiftCardConfig({ config, onChange }: { config: Record<string, unknown>;
   );
 }
 
-function PromoConfig({ config, onChange }: { config: Record<string, unknown>; onChange: (c: Record<string, unknown>) => void }) {
+function PromoConfig({ config, onChange }: ConfigProps) {
   const [promos, setPromos] = useState<Promo[]>((config['promos'] as Promo[]) ?? []);
   const [newPromo, setNewPromo] = useState({ name: '', description: '' });
 
@@ -277,7 +280,7 @@ function PromoConfig({ config, onChange }: { config: Record<string, unknown>; on
   );
 }
 
-function ReviewConfig({ config, onChange }: { config: Record<string, unknown>; onChange: (c: Record<string, unknown>) => void }) {
+function ReviewConfig({ config, onChange }: ConfigProps) {
   return (
     <div className="space-y-4">
       <ConfigField label="Response Tone">
@@ -287,7 +290,7 @@ function ReviewConfig({ config, onChange }: { config: Record<string, unknown>; o
           <option value="apologetic">Apologetic</option>
         </select>
       </ConfigField>
-      <ConfigField label="Alert on reviews rated ≤">
+      <ConfigField label="Alert on reviews rated &le;">
         <select defaultValue={String((config['alertOnRating'] as number) ?? 3)} onChange={e => onChange({ ...config, alertOnRating: parseInt(e.target.value) })} className={inputCls}>
           <option value="1">1 star</option>
           <option value="2">2 stars</option>
@@ -303,7 +306,7 @@ function ReviewConfig({ config, onChange }: { config: Record<string, unknown>; o
   );
 }
 
-function TableConfig({ config, onChange }: { config: Record<string, unknown>; onChange: (c: Record<string, unknown>) => void }) {
+function TableConfig({ config, onChange }: ConfigProps) {
   return (
     <div className="space-y-4">
       <ConfigField label="Average Dining Time (minutes)">
@@ -314,7 +317,7 @@ function TableConfig({ config, onChange }: { config: Record<string, unknown>; on
   );
 }
 
-function DeliveryConfig({ config, onChange }: { config: Record<string, unknown>; onChange: (c: Record<string, unknown>) => void }) {
+function DeliveryConfig({ config, onChange }: ConfigProps) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
@@ -332,7 +335,7 @@ function DeliveryConfig({ config, onChange }: { config: Record<string, unknown>;
   );
 }
 
-const CONFIG_COMPONENTS: Record<string, React.ComponentType<{ config: Record<string, unknown>; onChange: (c: Record<string, unknown>) => void }>> = {
+const CONFIG_COMPONENTS: Record<string, React.ComponentType<ConfigProps>> = {
   TAKEOUT_ORDERS: TakeoutConfig,
   WAITLIST: WaitlistConfig,
   DAILY_SPECIALS: DailySpecialsConfig,
@@ -345,10 +348,30 @@ const CONFIG_COMPONENTS: Record<string, React.ComponentType<{ config: Record<str
   DELIVERY_TRACKING: DeliveryConfig,
 };
 
-/* ── Main Page ─────────────────────────────────────────────────── */
+const TOOL_EMOJI: Record<string, string> = {
+  TAKEOUT_ORDERS: '🛒',
+  WAITLIST: '⏳',
+  DAILY_SPECIALS: '⭐',
+  CATERING_REQUESTS: '🍽️',
+  REVIEW_RESPONSE: '💬',
+  FEEDBACK_COLLECTION: '👍',
+  PROMO_ALERTS: '📢',
+  TABLE_TURNOVER: '🪑',
+  DELIVERY_TRACKING: '🚗',
+  GIFT_CARD_LOYALTY: '🎁',
+};
 
-export default function ToolsPage() {
-  const { business, loading: bizLoading } = useBusiness();
+const DATA_LINKS: Record<string, { href: string; label: string }> = {
+  TAKEOUT_ORDERS: { href: '/orders', label: 'View Orders' },
+  WAITLIST: { href: '/waitlist', label: 'View Waitlist' },
+  CATERING_REQUESTS: { href: '/catering', label: 'View Requests' },
+  FEEDBACK_COLLECTION: { href: '/feedback', label: 'View Feedback' },
+  GIFT_CARD_LOYALTY: { href: '/gift-cards', label: 'View Cards' },
+};
+
+/* ── Main component ────────────────────────────────────────────── */
+
+export function CapabilitiesPanel({ businessId }: { businessId: string }) {
   const [catalog, setCatalog] = useState<CatalogTool[]>([]);
   const [enabledTools, setEnabledTools] = useState<EnabledTool[]>([]);
   const [loading, setLoading] = useState(true);
@@ -366,16 +389,16 @@ export default function ToolsPage() {
   }, []);
 
   const fetchEnabled = useCallback(async () => {
-    if (!business?.id) return;
+    if (!businessId) return;
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/business-tools?businessId=${business.id}`);
+      const res = await fetch(`${API_URL}/business-tools?businessId=${businessId}`);
       const json = await res.json();
       if (json.success) setEnabledTools(json.tools);
     } finally {
       setLoading(false);
     }
-  }, [business?.id]);
+  }, [businessId]);
 
   useEffect(() => { fetchCatalog(); }, [fetchCatalog]);
   useEffect(() => { fetchEnabled(); }, [fetchEnabled]);
@@ -386,13 +409,13 @@ export default function ToolsPage() {
   };
 
   const enableTool = async (type: string, defaultConfig: Record<string, unknown>) => {
-    if (!business?.id) return;
+    if (!businessId) return;
     setSaving(true);
     try {
       const res = await fetch(`${API_URL}/business-tools`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ businessId: business.id, type, config: defaultConfig }),
+        body: JSON.stringify({ businessId, type, config: defaultConfig }),
       });
       const json = await res.json();
       if (json.success) {
@@ -456,167 +479,131 @@ export default function ToolsPage() {
     }
   };
 
-  if (bizLoading) return (
-    <div className="p-8 flex items-center justify-center min-h-[400px]">
-      <div className="w-8 h-8 border-3 border-violet-300 border-t-violet-600 rounded-full animate-spin" />
-    </div>
-  );
-  if (!business) return null;
-
   const getEnabledTool = (type: string) => enabledTools.find(t => t.type === type && t.enabled);
 
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="w-6 h-6 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
-    <div className="p-8 animate-fade-up">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Tool Library</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Enable AI-powered tools for your phone agent and chatbot. When you configure a tool, your AI agents automatically learn the settings.
-        </p>
-        <div className="flex items-center gap-3 mt-3">
-          <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            {enabledTools.filter(t => t.enabled).length} active
-          </span>
-          <span className="text-xs text-slate-400">{catalog.length} available</span>
-        </div>
+    <div>
+      {/* Summary bar */}
+      <div className="flex items-center gap-3 mb-6">
+        <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+          <span className="w-2 h-2 rounded-full bg-emerald-500" />
+          {enabledTools.filter(t => t.enabled).length} active
+        </span>
+        <span className="text-xs text-slate-400">{catalog.length} available</span>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="w-6 h-6 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin" />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {catalog.map(tool => {
-            const enabled = getEnabledTool(tool.type);
-            const isConfiguring = configuring === tool.type;
-            const ConfigComponent = CONFIG_COMPONENTS[tool.type];
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {catalog.map(tool => {
+          const enabled = getEnabledTool(tool.type);
+          const isConfiguring = configuring === tool.type;
+          const ConfigComponent = CONFIG_COMPONENTS[tool.type];
+          const link = DATA_LINKS[tool.type];
 
-            return (
-              <div key={tool.type} className={`bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border rounded-xl overflow-hidden transition-all duration-300 ${
-                enabled
-                  ? 'border-violet-300 dark:border-violet-500/30 shadow-sm shadow-violet-100 dark:shadow-violet-500/5'
-                  : 'border-slate-200 dark:border-white/[0.08]'
-              }`}>
-                {/* Tool Header */}
-                <div className="px-6 py-5 border-b border-slate-100 dark:border-white/[0.06]">
-                  <div className="flex items-start gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${enabled ? 'bg-violet-100 dark:bg-violet-500/15' : 'bg-slate-100 dark:bg-white/[0.06]'}`}>
-                      <span className={`text-lg ${enabled ? 'text-violet-600 dark:text-violet-400' : 'text-slate-400'}`}>
-                        {tool.type === 'TAKEOUT_ORDERS' && '🛒'}
-                        {tool.type === 'WAITLIST' && '⏳'}
-                        {tool.type === 'DAILY_SPECIALS' && '⭐'}
-                        {tool.type === 'CATERING_REQUESTS' && '🍽️'}
-                        {tool.type === 'REVIEW_RESPONSE' && '💬'}
-                        {tool.type === 'FEEDBACK_COLLECTION' && '👍'}
-                        {tool.type === 'PROMO_ALERTS' && '📢'}
-                        {tool.type === 'TABLE_TURNOVER' && '🪑'}
-                        {tool.type === 'DELIVERY_TRACKING' && '🚗'}
-                        {tool.type === 'GIFT_CARD_LOYALTY' && '🎁'}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-base font-semibold text-slate-900 dark:text-white">{tool.name}</h3>
-                        {enabled && (
-                          <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400">
-                            Active
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{tool.description}</p>
-                    </div>
+          return (
+            <div key={tool.type} className={`bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border rounded-xl overflow-hidden transition-all duration-300 ${
+              enabled
+                ? 'border-violet-300 dark:border-violet-500/30 shadow-sm shadow-violet-100 dark:shadow-violet-500/5'
+                : 'border-slate-200 dark:border-white/[0.08]'
+            }`}>
+              {/* Header */}
+              <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06]">
+                <div className="flex items-start gap-3">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${enabled ? 'bg-violet-100 dark:bg-violet-500/15' : 'bg-slate-100 dark:bg-white/[0.06]'}`}>
+                    <span className={`text-base ${enabled ? '' : 'opacity-60'}`}>{TOOL_EMOJI[tool.type]}</span>
                   </div>
-                </div>
-
-                {/* Capabilities */}
-                {!isConfiguring && (
-                  <div className="px-6 py-4">
-                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-3">What it does</p>
-                    <ul className="space-y-2">
-                      {tool.capabilities.map((cap, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
-                          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-violet-500 mt-0.5 flex-shrink-0">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                          {cap}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Config Panel — tool-specific */}
-                {isConfiguring && enabled && ConfigComponent && (
-                  <div className="px-6 py-5 border-t border-slate-100 dark:border-white/[0.06] bg-slate-50/50 dark:bg-white/[0.02]">
-                    <div className="flex items-center gap-2 mb-4">
-                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-violet-500"><path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>
-                      <p className="text-xs font-semibold text-slate-700 dark:text-white">Configure {tool.name}</p>
-                    </div>
-                    <ConfigComponent config={pendingConfig} onChange={setPendingConfig} />
-                    <div className="flex gap-2 mt-5 pt-4 border-t border-slate-100 dark:border-white/[0.06]">
-                      <button onClick={() => saveConfig(enabled.id)} disabled={saving}
-                        className="px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50">
-                        {saving ? 'Saving...' : 'Save'}
-                      </button>
-                      <button onClick={() => setConfiguring(null)}
-                        className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Footer Actions */}
-                <div className="px-6 py-4 border-t border-slate-100 dark:border-white/[0.06] flex items-center gap-2">
-                  {enabled ? (
-                    <>
-                      <button onClick={() => {
-                        if (isConfiguring) { setConfiguring(null); } else { setConfiguring(tool.type); setPendingConfig(enabled.config ?? {}); }
-                      }}
-                        className="px-4 py-2 text-sm font-medium bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300 rounded-lg hover:bg-violet-100 dark:hover:bg-violet-500/20 transition-colors">
-                        <span className="flex items-center gap-1.5">
-                          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>
-                          {isConfiguring ? 'Close' : 'Configure'}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{tool.name}</h3>
+                      {enabled && (
+                        <span className="inline-flex px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400">
+                          Active
                         </span>
-                      </button>
-                      <button onClick={() => disableTool(enabled.id)} disabled={saving}
-                        className="px-4 py-2 text-sm font-medium text-rose-600 bg-rose-50 dark:bg-rose-500/10 dark:text-rose-400 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-500/20 transition-colors disabled:opacity-50">
-                        Disable
-                      </button>
-                      {(() => {
-                        const links: Record<string, { href: string; label: string }> = {
-                          TAKEOUT_ORDERS: { href: '/orders', label: 'View Orders' },
-                          WAITLIST: { href: '/waitlist', label: 'View Waitlist' },
-                          CATERING_REQUESTS: { href: '/catering', label: 'View Requests' },
-                          FEEDBACK_COLLECTION: { href: '/feedback', label: 'View Feedback' },
-                          GIFT_CARD_LOYALTY: { href: '/gift-cards', label: 'View Cards' },
-                        };
-                        const link = links[tool.type];
-                        return link ? (
-                          <a href={link.href} className="ml-auto px-4 py-2 text-sm font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors">
-                            {link.label} →
-                          </a>
-                        ) : null;
-                      })()}
-                    </>
-                  ) : (
-                    <button onClick={() => enableTool(tool.type, tool.defaultConfig)} disabled={saving}
-                      className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-all hover:shadow-md hover:shadow-violet-600/20 disabled:opacity-50">
-                      {saving ? (
-                        <><div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Enabling...</>
-                      ) : (
-                        <><svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" /></svg> Enable for your AI agents</>
                       )}
-                    </button>
-                  )}
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">{tool.description}</p>
+                  </div>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      )}
+
+              {/* Capabilities preview (collapsed when configuring) */}
+              {!isConfiguring && (
+                <div className="px-5 py-3">
+                  <ul className="space-y-1.5">
+                    {tool.capabilities.slice(0, 3).map((cap, i) => (
+                      <li key={i} className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300">
+                        <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-violet-500 mt-0.5 flex-shrink-0">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        {cap}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Config Panel */}
+              {isConfiguring && enabled && ConfigComponent && (
+                <div className="px-5 py-4 border-t border-slate-100 dark:border-white/[0.06] bg-slate-50/50 dark:bg-white/[0.02]">
+                  <ConfigComponent config={pendingConfig} onChange={setPendingConfig} />
+                  <div className="flex gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-white/[0.06]">
+                    <button onClick={() => saveConfig(enabled.id)} disabled={saving}
+                      className="px-3 py-1.5 bg-violet-600 text-white text-xs font-medium rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50">
+                      {saving ? 'Saving...' : 'Save'}
+                    </button>
+                    <button onClick={() => setConfiguring(null)}
+                      className="px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Footer */}
+              <div className="px-5 py-3 border-t border-slate-100 dark:border-white/[0.06] flex items-center gap-2">
+                {enabled ? (
+                  <>
+                    <button onClick={() => {
+                      if (isConfiguring) { setConfiguring(null); } else { setConfiguring(tool.type); setPendingConfig(enabled.config ?? {}); }
+                    }}
+                      className="px-3 py-1.5 text-xs font-medium bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300 rounded-lg hover:bg-violet-100 dark:hover:bg-violet-500/20 transition-colors">
+                      {isConfiguring ? 'Close' : 'Configure'}
+                    </button>
+                    <button onClick={() => disableTool(enabled.id)} disabled={saving}
+                      className="px-3 py-1.5 text-xs font-medium text-rose-600 bg-rose-50 dark:bg-rose-500/10 dark:text-rose-400 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-500/20 transition-colors disabled:opacity-50">
+                      Disable
+                    </button>
+                    {link && (
+                      <a href={link.href} className="ml-auto text-xs font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors">
+                        {link.label} &rarr;
+                      </a>
+                    )}
+                  </>
+                ) : (
+                  <button onClick={() => enableTool(tool.type, tool.defaultConfig)} disabled={saving}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-violet-600 text-white text-xs font-medium rounded-lg hover:bg-violet-700 transition-all hover:shadow-md hover:shadow-violet-600/20 disabled:opacity-50">
+                    {saving ? (
+                      <><div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Enabling...</>
+                    ) : (
+                      <>
+                        <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" /></svg>
+                        Enable
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
       {/* Toast */}
       {toast && (
@@ -633,24 +620,6 @@ export default function ToolsPage() {
           {toast.message}
         </div>
       )}
-
-      {/* Coming Soon Section */}
-      <div className="mt-12">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Coming Soon — Other Industries</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[
-            { name: 'Appointment Booking', desc: 'AI schedules appointments for service businesses', industry: 'Barber Shops, Salons, Spas' },
-            { name: 'Class & Session Booking', desc: 'Book fitness classes, sessions, and memberships', industry: 'Gyms, Studios, Training' },
-            { name: 'Service Quotes', desc: 'AI collects job details and generates service quotes', industry: 'Contractors, Auto Shops' },
-          ].map(item => (
-            <div key={item.name} className="bg-white dark:bg-white/[0.04] border border-dashed border-slate-200 dark:border-white/[0.08] rounded-xl p-5 opacity-60">
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">{item.name}</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">{item.desc}</p>
-              <span className="text-[10px] text-slate-400">{item.industry}</span>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

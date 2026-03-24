@@ -252,4 +252,56 @@ export async function billingRoutes(app: FastifyInstance): Promise<void> {
     log.info({ businessId }, 'Subscription resumed');
     return reply.code(200).send({ success: true });
   });
+
+  // ─── Admin: grant a plan without Stripe (testing only) ───────────────────
+  app.post('/billing/grant', async (request, reply) => {
+    const { email, tier } = request.body as { email?: string; businessId?: string; tier?: string };
+    const pricingTier = (tier ?? 'LARGE').toUpperCase();
+
+    const validTiers = ['FREE', 'SOLO', 'SMALL', 'MEDIUM', 'LARGE'];
+    if (!validTiers.includes(pricingTier)) {
+      return reply.code(400).send({ error: `Invalid tier. Valid: ${validTiers.join(', ')}` });
+    }
+
+    let businessId = (request.body as Record<string, string>)['businessId'];
+
+    if (!businessId && email) {
+      // Try user email first, then business email
+      const user = await db.user.findUnique({ where: { email }, select: { businessId: true } });
+      if (user?.businessId) {
+        businessId = user.businessId;
+      } else {
+        const biz = await db.business.findFirst({ where: { email }, select: { id: true } });
+        if (biz) businessId = biz.id;
+      }
+    }
+
+    if (!businessId) {
+      return reply.code(404).send({ error: 'No business found for that email or businessId' });
+    }
+
+    const oneYear = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+
+    const sub = await db.subscription.upsert({
+      where: { businessId },
+      update: {
+        pricingTier: pricingTier as 'FREE' | 'SOLO' | 'SMALL' | 'MEDIUM' | 'LARGE',
+        status: 'ACTIVE',
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: oneYear,
+        cancelAtPeriodEnd: false,
+        canceledAt: null,
+      },
+      create: {
+        businessId,
+        pricingTier: pricingTier as 'FREE' | 'SOLO' | 'SMALL' | 'MEDIUM' | 'LARGE',
+        status: 'ACTIVE',
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: oneYear,
+      },
+    });
+
+    log.info({ businessId, tier: pricingTier }, 'Plan granted (admin bypass)');
+    return reply.code(200).send({ success: true, subscription: sub });
+  });
 }

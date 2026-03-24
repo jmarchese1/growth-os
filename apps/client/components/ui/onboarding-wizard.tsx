@@ -764,7 +764,7 @@ export function OnboardingWizard({ business, onClose, onComplete }: Props) {
                       { href: '/website', label: 'Customize your website', desc: 'Edit content, add images, connect domain', icon: <GlobeIcon />, done: setupProgress.website === 'done' },
                       { href: '/voice-agent', label: 'Fine-tune Phone Agent', desc: 'Adjust voice, personality, and responses', icon: <PhoneIcon />, done: setupProgress.voice === 'done' },
                       { href: '/chatbot', label: 'Configure Chat Widget', desc: 'Customize colors, embed on your site', icon: <ChatIcon />, done: setupProgress.chatbot === 'done' },
-                      { href: '/tools', label: 'Configure Tool Library', desc: 'Set up menus, waitlist, gift cards & more', icon: <ToolIcon />, done: false },
+                      { href: '/chatbot', label: 'Configure Capabilities', desc: 'Set up menus, waitlist, gift cards & more', icon: <ToolIcon />, done: false },
                       { href: '/customers', label: 'Add your first contact', desc: 'Start building your CRM', icon: <UserIcon />, done: business.counts.contacts > 0 },
                     ].map((action) => (
                       <Link
