@@ -110,14 +110,16 @@ export async function deployToVercel(params: {
       { headers },
     );
 
-    const { id: deploymentId, url } = deployRes.data as { id: string; url: string };
+    const deployData = deployRes.data as { id: string; url: string; projectId?: string };
+    const deploymentId = deployData.id;
+    const projectId = deployData.projectId ?? deploymentId;
 
-    log.info({ deploymentId, url, businessId }, 'Vercel deployment created');
+    log.info({ deploymentId, projectId, url: deployData.url, businessId }, 'Vercel deployment created');
 
     return {
-      url: `https://${url}`,
+      url: `https://${deployData.url}`,
       deploymentId,
-      projectId: deploymentId, // Vercel auto-creates project on first deploy
+      projectId,
     };
   } catch (err) {
     const message = axios.isAxiosError(err) ? JSON.stringify(err.response?.data) : String(err);

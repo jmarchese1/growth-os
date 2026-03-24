@@ -824,6 +824,7 @@ Editable: businessName, tagline, description, cuisine, phone, address, city, hou
   });
 
   // POST /websites/:websiteId/domain — add a custom domain to a website
+  // Auto-deploys to Vercel first if the site hasn't been deployed yet
   app.post<{ Params: { websiteId: string }; Body: { domain: string } }>('/websites/:websiteId/domain', async (req, reply) => {
     const { websiteId } = req.params;
     const { domain } = req.body;
@@ -832,21 +833,89 @@ Editable: businessName, tagline, description, cuisine, phone, address, city, hou
 
     const website = await db.generatedWebsite.findUnique({ where: { id: websiteId } });
     if (!website) throw new NotFoundError('GeneratedWebsite', websiteId);
-    if (!website.vercelProjectId) return reply.code(400).send({ success: false, error: 'Website must be deployed to Vercel first' });
 
-    const result = await addCustomDomain({ projectId: website.vercelProjectId, domain: domain.trim() });
+    let projectId = website.vercelProjectId;
 
-    await db.generatedWebsite.update({
-      where: { id: websiteId },
-      data: { customDomain: domain.trim() },
-    });
+    // Auto-deploy to Vercel if not deployed yet (or project was deleted)
+    if (!projectId) {
+      // Get the site HTML from config (AI-generated sites store it there)
+      const config = website.config as Record<string, unknown> | null;
+      const html = config?.['html'] as string | undefined;
+      if (!html) return reply.code(400).send({ success: false, error: 'No website HTML found. Please regenerate the site first.' });
 
-    return reply.send({
-      success: true,
-      domain: result.domain,
-      configured: result.configured,
-      dnsRecords: result.dnsRecords,
-    });
+      const business = await db.business.findUnique({ where: { id: website.businessId } });
+      const slug = (business?.name ?? 'site').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40);
+
+      log.info({ websiteId, businessId: website.businessId }, 'Auto-deploying to Vercel for custom domain');
+      const deployed = await deployToVercel({ projectName: slug, html, businessId: website.businessId });
+      projectId = deployed.projectId;
+
+      await db.generatedWebsite.update({
+        where: { id: websiteId },
+        data: {
+          vercelProjectId: projectId,
+          vercelDeploymentId: deployed.deploymentId,
+          deployUrl: deployed.url,
+          status: 'LIVE',
+        },
+      });
+    }
+
+    // Try to add the domain; if project not found (deleted), re-deploy and retry
+    try {
+      const result = await addCustomDomain({ projectId, domain: domain.trim() });
+
+      await db.generatedWebsite.update({
+        where: { id: websiteId },
+        data: { customDomain: domain.trim() },
+      });
+
+      return reply.send({
+        success: true,
+        domain: result.domain,
+        configured: result.configured,
+        dnsRecords: result.dnsRecords,
+      });
+    } catch (err) {
+      const errMsg = String(err);
+      // If project was deleted on Vercel, re-deploy and retry once
+      if (errMsg.includes('not_found') || errMsg.includes('Project not found')) {
+        const config = website.config as Record<string, unknown> | null;
+        const html = config?.['html'] as string | undefined;
+        if (!html) return reply.code(400).send({ success: false, error: 'No website HTML found. Please regenerate the site first.' });
+
+        const business = await db.business.findUnique({ where: { id: website.businessId } });
+        const slug = (business?.name ?? 'site').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40);
+
+        log.info({ websiteId }, 'Vercel project not found, re-deploying');
+        const deployed = await deployToVercel({ projectName: slug, html, businessId: website.businessId });
+
+        await db.generatedWebsite.update({
+          where: { id: websiteId },
+          data: {
+            vercelProjectId: deployed.projectId,
+            vercelDeploymentId: deployed.deploymentId,
+            deployUrl: deployed.url,
+            status: 'LIVE',
+          },
+        });
+
+        const result = await addCustomDomain({ projectId: deployed.projectId, domain: domain.trim() });
+
+        await db.generatedWebsite.update({
+          where: { id: websiteId },
+          data: { customDomain: domain.trim() },
+        });
+
+        return reply.send({
+          success: true,
+          domain: result.domain,
+          configured: result.configured,
+          dnsRecords: result.dnsRecords,
+        });
+      }
+      throw err;
+    }
   });
 
   // POST /contact-form — handle contact form submissions from generated websites
