@@ -61,13 +61,43 @@ export function CubeyChat({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Subtle chime when opening
+  const playChime = useCallback(() => {
+    try {
+      const ctx = new AudioContext();
+      const g = ctx.createGain();
+      g.connect(ctx.destination);
+      g.gain.setValueAtTime(0.08, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      const o1 = ctx.createOscillator();
+      o1.type = 'sine';
+      o1.frequency.setValueAtTime(880, ctx.currentTime);
+      o1.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.15);
+      o1.connect(g);
+      o1.start(ctx.currentTime);
+      o1.stop(ctx.currentTime + 0.4);
+      const o2 = ctx.createOscillator();
+      o2.type = 'sine';
+      o2.frequency.setValueAtTime(1320, ctx.currentTime + 0.1);
+      const g2 = ctx.createGain();
+      g2.connect(ctx.destination);
+      g2.gain.setValueAtTime(0, ctx.currentTime);
+      g2.gain.setValueAtTime(0.06, ctx.currentTime + 0.1);
+      g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+      o2.connect(g2);
+      o2.start(ctx.currentTime + 0.1);
+      o2.stop(ctx.currentTime + 0.5);
+    } catch { /* audio not available */ }
+  }, []);
+
   // Focus input when opened
   useEffect(() => {
     if (open) {
       setBubblePulse(false);
+      playChime();
       setTimeout(() => inputRef.current?.focus(), 100);
     }
-  }, [open]);
+  }, [open, playChime]);
 
   // Add welcome message on first open
   const hasGreeted = useRef(false);

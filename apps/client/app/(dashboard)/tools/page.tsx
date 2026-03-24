@@ -38,6 +38,7 @@ export default function ToolsPage() {
   const [loading, setLoading] = useState(true);
   const [configuring, setConfiguring] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
 
   // Config state for TAKEOUT_ORDERS
   const [taxRate, setTaxRate] = useState('0');
@@ -84,6 +85,7 @@ export default function ToolsPage() {
         await fetchEnabled();
         setConfiguring(type);
         loadConfig(json.tool);
+        showToast('Tool enabled! Configure it below.', 'success');
       }
     } finally {
       setSaving(false);
@@ -99,10 +101,19 @@ export default function ToolsPage() {
         body: JSON.stringify({ enabled: false }),
       });
       const json = await res.json();
-      if (json.success) await fetchEnabled();
+      if (json.success) {
+        await fetchEnabled();
+        setConfiguring(null);
+        showToast('Tool disabled.', 'info');
+      }
     } finally {
       setSaving(false);
     }
+  };
+
+  const showToast = (message: string, type: 'success' | 'info') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
   };
 
   const loadConfig = (tool: EnabledTool) => {
@@ -135,6 +146,7 @@ export default function ToolsPage() {
       if (json.success) {
         await fetchEnabled();
         setConfiguring(null);
+        showToast('Configuration saved!', 'success');
       }
     } finally {
       setSaving(false);
@@ -187,7 +199,11 @@ export default function ToolsPage() {
             const isConfiguring = configuring === tool.type;
 
             return (
-              <div key={tool.type} className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border border-slate-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
+              <div key={tool.type} className={`bg-white dark:bg-white/[0.04] dark:backdrop-blur-sm border rounded-xl overflow-hidden transition-all duration-300 ${
+                enabled
+                  ? 'border-violet-300 dark:border-violet-500/30 shadow-sm shadow-violet-100 dark:shadow-violet-500/5'
+                  : 'border-slate-200 dark:border-white/[0.08]'
+              }`}>
                 {/* Tool Header */}
                 <div className="px-6 py-5 border-b border-slate-100 dark:border-white/[0.06]">
                   <div className="flex items-start justify-between">
@@ -314,8 +330,11 @@ export default function ToolsPage() {
                   {enabled ? (
                     <>
                       <button onClick={() => { setConfiguring(isConfiguring ? null : tool.type); loadConfig(enabled); }}
-                        className="px-4 py-2 text-sm font-medium bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-white rounded-lg hover:bg-slate-200 dark:hover:bg-white/[0.1] transition-colors">
-                        {isConfiguring ? 'Close Config' : 'Configure'}
+                        className="px-4 py-2 text-sm font-medium bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300 rounded-lg hover:bg-violet-100 dark:hover:bg-violet-500/20 transition-colors">
+                        <span className="flex items-center gap-1.5">
+                          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>
+                          {isConfiguring ? 'Close' : 'Configure'}
+                        </span>
                       </button>
                       <button onClick={() => disableTool(enabled.id)} disabled={saving}
                         className="px-4 py-2 text-sm font-medium text-rose-600 bg-rose-50 dark:bg-rose-500/10 dark:text-rose-400 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-500/20 transition-colors disabled:opacity-50">
@@ -340,14 +359,34 @@ export default function ToolsPage() {
                     </>
                   ) : (
                     <button onClick={() => enableTool(tool.type, tool.defaultConfig)} disabled={saving}
-                      className="px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50">
-                      {saving ? 'Enabling...' : 'Enable Tool'}
+                      className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-all hover:shadow-md hover:shadow-violet-600/20 disabled:opacity-50">
+                      {saving ? (
+                        <><div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Enabling...</>
+                      ) : (
+                        <><svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" /></svg> Enable for your AI agents</>
+                      )}
                     </button>
                   )}
                 </div>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium animate-fade-up ${
+          toast.type === 'success'
+            ? 'bg-emerald-50 dark:bg-emerald-500/15 border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+            : 'bg-slate-50 dark:bg-white/[0.06] border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300'
+        }`}>
+          {toast.type === 'success' ? (
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4.5 h-4.5 flex-shrink-0"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+          ) : (
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4.5 h-4.5 flex-shrink-0"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
+          )}
+          {toast.message}
         </div>
       )}
 
