@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import Anthropic from '@anthropic-ai/sdk';
 import { db } from '@embedo/db';
 import { createLogger, NotFoundError } from '@embedo/utils';
 
@@ -183,12 +184,70 @@ export async function chatbotRoutes(app: FastifyInstance): Promise<void> {
    * Proxies chat messages to the chatbot-agent service.
    */
   app.post('/chatbot/chat', async (request, reply) => {
-    const body = request.body as { businessId?: string };
+    const body = request.body as {
+      businessId?: string;
+      message?: string;
+      sessionKey?: string;
+      history?: Array<{ role: string; content: string }>;
+    };
 
     if (!body.businessId) {
       return reply.code(400).send({ success: false, error: 'businessId is required' });
     }
 
+    // Handle Embedo platform support chatbot (Cubey) inline — no microservice needed
+    if (body.businessId === 'embedo-platform') {
+      try {
+        const apiKey = process.env['ANTHROPIC_API_KEY'];
+        if (!apiKey) {
+          return reply.code(500).send({ success: false, error: 'AI not configured' });
+        }
+
+        const anthropic = new Anthropic({ apiKey });
+        const messages: Anthropic.MessageParam[] = [];
+
+        // Add history if provided
+        if (body.history?.length) {
+          for (const m of body.history) {
+            if (m.role === 'user' || m.role === 'assistant') {
+              messages.push({ role: m.role, content: m.content });
+            }
+          }
+        }
+
+        // Add current message
+        if (body.message) {
+          messages.push({ role: 'user', content: body.message });
+        }
+
+        const response = await anthropic.messages.create({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 300,
+          system: EMBEDO_CUBEY_SYSTEM_PROMPT,
+          messages,
+        });
+
+        const text = response.content
+          .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+          .map((b) => b.text)
+          .join('');
+
+        return reply.send({
+          success: true,
+          reply: text || "Hmm, I'm having a moment. Try asking again!",
+          sessionKey: body.sessionKey ?? null,
+        });
+      } catch (err) {
+        log.error({ err }, 'Cubey chat failed');
+        return reply.send({
+          success: true,
+          reply: "Oops, I'm having trouble thinking right now. Try again in a sec!",
+          sessionKey: body.sessionKey ?? null,
+        });
+      }
+    }
+
+    // All other businesses — proxy to chatbot-agent service
     try {
       const res = await fetch(`${CHATBOT_URL}/chat`, {
         method: 'POST',
