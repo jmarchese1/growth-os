@@ -42,15 +42,15 @@ export function CubeyChat({
   const [sessionKey, setSessionKey] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [bubblePulse, setBubblePulse] = useState(true);
-  const [bubbleMood, setBubbleMood] = useState<'happy' | 'excited' | 'waving'>('happy');
+  const [bubbleMood, setBubbleMood] = useState<'happy' | 'excited' | 'waving' | 'love' | 'thinking'>('happy');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Cycle bubble mood every 6 seconds
+  // Cycle bubble mood every 6 seconds through all 5 emotions
   useEffect(() => {
-    const moods: Array<'happy' | 'excited' | 'waving'> = ['happy', 'excited', 'waving', 'happy', 'waving', 'excited'];
+    const moods: Array<'happy' | 'excited' | 'waving' | 'love' | 'thinking'> = ['happy', 'excited', 'waving', 'love', 'thinking', 'happy', 'love', 'excited'];
     let i = 0;
     const interval = setInterval(() => {
       i = (i + 1) % moods.length;

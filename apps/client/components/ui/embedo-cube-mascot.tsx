@@ -2,9 +2,11 @@
 
 import { useEffect, useRef } from 'react';
 
+export type CubeyMood = 'happy' | 'thinking' | 'excited' | 'waving' | 'love';
+
 interface Props {
   size?: number;
-  mood?: 'happy' | 'thinking' | 'excited' | 'waving';
+  mood?: CubeyMood;
   bounce?: boolean;
   className?: string;
 }
@@ -94,17 +96,19 @@ export function EmbedoCubeMascot({ size = 80, mood = 'happy', bounce = true, cla
         <line x1="40" y1="44" x2="40" y2="68" stroke="rgba(0,0,0,0.15)" strokeWidth="0.5" />
 
         {/* Face — on top face */}
-        <g ref={eyeRef} style={{ transition: 'transform 0.1s ease', transformOrigin: '40px 28px' }}>
-          {/* Left eye */}
-          <ellipse cx="30" cy="26" rx="5" ry="5.5" fill="white" />
-          <ellipse cx="31" cy="26.5" rx="2.8" ry="3" fill="#1e1b4b" />
-          <ellipse cx="32" cy="25.5" rx="1" ry="1.2" fill="white" />
+        {mood !== 'love' && (
+          <g ref={eyeRef} style={{ transition: 'transform 0.1s ease', transformOrigin: '40px 28px' }}>
+            {/* Left eye */}
+            <ellipse cx="30" cy="26" rx="5" ry="5.5" fill="white" />
+            <ellipse cx="31" cy="26.5" rx="2.8" ry="3" fill="#1e1b4b" />
+            <ellipse cx="32" cy="25.5" rx="1" ry="1.2" fill="white" />
 
-          {/* Right eye */}
-          <ellipse cx="50" cy="26" rx="5" ry="5.5" fill="white" />
-          <ellipse cx="51" cy="26.5" rx="2.8" ry="3" fill="#1e1b4b" />
-          <ellipse cx="52" cy="25.5" rx="1" ry="1.2" fill="white" />
-        </g>
+            {/* Right eye */}
+            <ellipse cx="50" cy="26" rx="5" ry="5.5" fill="white" />
+            <ellipse cx="51" cy="26.5" rx="2.8" ry="3" fill="#1e1b4b" />
+            <ellipse cx="52" cy="25.5" rx="1" ry="1.2" fill="white" />
+          </g>
+        )}
 
         {/* Mouth */}
         {mood === 'happy' && (
@@ -126,6 +130,19 @@ export function EmbedoCubeMascot({ size = 80, mood = 'happy', bounce = true, cla
             </g>
           </>
         )}
+        {mood === 'love' && (
+          <>
+            {/* Heart eyes */}
+            <g>
+              {/* Left heart */}
+              <path d="M26 24 C26 21, 30 21, 30 24 C30 21, 34 21, 34 24 C34 27, 30 30, 30 30 C30 30, 26 27, 26 24Z" fill="#EC4899" />
+              {/* Right heart */}
+              <path d="M46 24 C46 21, 50 21, 50 24 C50 21, 54 21, 54 24 C54 27, 50 30, 50 30 C50 30, 46 27, 46 24Z" fill="#EC4899" />
+            </g>
+            {/* Big smile */}
+            <path d="M33 33 Q40 39 47 33" stroke="#1e1b4b" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+          </>
+        )}
 
         {/* Cheek blush */}
         <ellipse cx="24" cy="32" rx="3.5" ry="2" fill="#EC4899" opacity="0.2" />
@@ -144,6 +161,19 @@ export function EmbedoCubeMascot({ size = 80, mood = 'happy', bounce = true, cla
             </g>
             <g className="animate-mascot-sparkle" style={{ animationDelay: '0.6s' }}>
               <circle cx="8" cy="22" r="1.5" fill="#A78BFA" />
+            </g>
+          </>
+        )}
+        {mood === 'love' && (
+          <>
+            <g className="animate-mascot-sparkle">
+              <path d="M16 12 C16 10.5, 17.5 10.5, 17.5 12 C17.5 10.5, 19 10.5, 19 12 C19 13.5, 17.5 15, 17.5 15 C17.5 15, 16 13.5, 16 12Z" fill="#F472B6" opacity="0.7" />
+            </g>
+            <g className="animate-mascot-sparkle" style={{ animationDelay: '0.4s' }}>
+              <path d="M62 10 C62 8.5, 63.5 8.5, 63.5 10 C63.5 8.5, 65 8.5, 65 10 C65 11.5, 63.5 13, 63.5 13 C63.5 13, 62 11.5, 62 10Z" fill="#F472B6" opacity="0.7" />
+            </g>
+            <g className="animate-mascot-sparkle" style={{ animationDelay: '0.7s' }}>
+              <path d="M6 24 C6 22.5, 7.5 22.5, 7.5 24 C7.5 22.5, 9 22.5, 9 24 C9 25.5, 7.5 27, 7.5 27 C7.5 27, 6 25.5, 6 24Z" fill="#F472B6" opacity="0.5" />
             </g>
           </>
         )}

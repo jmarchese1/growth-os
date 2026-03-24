@@ -7,6 +7,7 @@ import KpiCard from '../../components/ui/kpi-card';
 import ModuleStatus from '../../components/ui/module-status';
 import { useBusiness } from '../../components/auth/business-provider';
 import { OnboardingWizard } from '../../components/ui/onboarding-wizard';
+import { EmbedoCubeMascot } from '../../components/ui/embedo-cube-mascot';
 
 const API_BASE = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 
@@ -196,10 +197,16 @@ export default function DashboardOverview() {
         {business && !!settings?.['onboardingComplete'] && (
           <button
             onClick={() => setShowOnboarding(true)}
-            className="px-3 py-1.5 text-xs font-medium text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-600/15 border border-violet-200 dark:border-violet-500/25 rounded-lg hover:bg-violet-100 dark:hover:bg-violet-600/25 transition-colors flex items-center gap-1.5"
+            className="relative group px-4 py-2 text-xs font-semibold text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-600/15 border border-violet-200 dark:border-violet-500/25 rounded-xl hover:bg-violet-100 dark:hover:bg-violet-600/25 transition-all hover:scale-[1.03] hover:shadow-md hover:shadow-violet-500/10"
           >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>
-            Setup Guide
+            {/* Cubey peeking over the button */}
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 group-hover:-top-7 transition-all duration-300">
+              <EmbedoCubeMascot size={28} mood="waving" bounce={false} />
+            </div>
+            <span className="flex items-center gap-1.5 pt-0.5">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>
+              Setup Guide
+            </span>
           </button>
         )}
       </div>
@@ -210,6 +217,31 @@ export default function DashboardOverview() {
         </div>
       ) : (
         <>
+          {/* Cubey onboarding banner when setup is incomplete */}
+          {business && !settings?.['onboardingComplete'] && !showOnboarding && (
+            <button
+              onClick={() => setShowOnboarding(true)}
+              className="w-full mb-6 group relative bg-gradient-to-r from-violet-500/10 via-indigo-500/10 to-purple-500/10 dark:from-violet-500/15 dark:via-indigo-500/15 dark:to-purple-500/15 border-2 border-dashed border-violet-300 dark:border-violet-500/40 rounded-2xl p-5 hover:border-violet-400 dark:hover:border-violet-400/60 hover:from-violet-500/15 hover:via-indigo-500/15 hover:to-purple-500/15 transition-all hover:scale-[1.005]"
+            >
+              <div className="flex items-center gap-5">
+                <div className="relative flex-shrink-0">
+                  <EmbedoCubeMascot size={64} mood="waving" bounce />
+                </div>
+                <div className="flex-1 text-left">
+                  <h3 className="text-base font-bold text-slate-800 dark:text-white mb-0.5">
+                    Finish setting up your AI business tools
+                  </h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    Cubey will walk you through generating a website, deploying your phone agent, and enabling your chatbot in about 2 minutes.
+                  </p>
+                </div>
+                <div className="flex-shrink-0 px-5 py-2.5 bg-violet-600 text-white text-sm font-semibold rounded-xl group-hover:bg-violet-500 transition-colors shadow-lg shadow-violet-600/20">
+                  Continue Setup
+                </div>
+              </div>
+            </button>
+          )}
+
           {/* KPI Row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <KpiCard label="Total Contacts" value={counts.contacts} color="violet"
