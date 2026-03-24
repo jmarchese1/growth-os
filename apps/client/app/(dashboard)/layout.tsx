@@ -160,9 +160,8 @@ function Sidebar({ width, collapsed, onDragStart, onToggle, userEmail, userIniti
           {NAV.map((group) => (
             <div key={group.section}>
               {!collapsed && (
-                <p className="px-3 mb-2 text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-[0.18em] flex items-center gap-1.5">
+                <p className="px-3 mb-2 text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-[0.18em]">
                   {group.section}
-                  {group.section === 'YOUR TOOLS' && <EmbedoCubeMascot size={12} mood="excited" bounce={false} />}
                 </p>
               )}
               <div className="space-y-0.5">
