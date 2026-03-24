@@ -194,7 +194,7 @@ function GenerateModal({ businessId, onDone, onClose }: { businessId: string; on
     }
   }
 
-  const inputClass = 'w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300';
+  const inputClass = 'w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40';
   const platforms = ['INSTAGRAM', 'FACEBOOK'];
 
   return (
@@ -275,7 +275,7 @@ function EditModal({ businessId, post, onDone, onClose }: { businessId: string; 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const inputClass = 'w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300';
+  const inputClass = 'w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40';
   const platforms = ['INSTAGRAM', 'FACEBOOK'];
 
   async function handleSave() {

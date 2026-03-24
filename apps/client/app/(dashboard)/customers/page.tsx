@@ -43,7 +43,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   CHURNED: { label: 'Churned', color: 'bg-slate-100 text-slate-500 dark:bg-white/[0.06] dark:text-slate-400' },
 };
 
-const inputClass = 'w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300';
+const inputClass = 'w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40';
 
 /* ─── Modal Backdrop ─────────────────────────────────────────────────────── */
 
@@ -991,20 +991,20 @@ export default function CustomersPage() {
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Search name, email, or phone..."
-              className="w-full pl-9 pr-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300"
+              className="w-full pl-9 pr-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40"
             />
           </div>
           <select
             value={statusFilter}
             onChange={(e) => handleFilterChange('status', e.target.value)}
-            className="px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 bg-white dark:bg-white/[0.06]"
+            className="px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40 bg-white dark:bg-white/[0.06]"
           >
             {STATUS_FILTER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
           <select
             value={sourceFilter}
             onChange={(e) => handleFilterChange('source', e.target.value)}
-            className="px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 bg-white dark:bg-white/[0.06]"
+            className="px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40 bg-white dark:bg-white/[0.06]"
           >
             {SOURCE_FILTER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>

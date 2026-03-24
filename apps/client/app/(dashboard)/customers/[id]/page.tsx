@@ -75,7 +75,7 @@ function fullName(c: Pick<ContactDetail, 'firstName' | 'lastName' | 'email'>) { 
 function initials(c: Pick<ContactDetail, 'firstName' | 'lastName' | 'email'>) { if (c.firstName) return (c.firstName[0] ?? '') + (c.lastName?.[0] ?? ''); return (c.email?.[0] ?? '?').toUpperCase(); }
 function delayLabel(h: number) { if (h === 0) return 'Immediately'; if (h < 24) return `${h}h later`; const d = Math.round(h / 24); return `${d} day${d > 1 ? 's' : ''} later`; }
 
-const inputClass = 'w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300';
+const inputClass = 'w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40';
 
 /* ─── Modal Backdrop ─────────────────────────────────────────────────────── */
 

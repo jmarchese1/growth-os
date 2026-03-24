@@ -51,17 +51,22 @@ export default function ReservationsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [dateFilter, setDateFilter] = useState<string>('');
   const [selectedRes, setSelectedRes] = useState<Reservation | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchReservations = useCallback(async () => {
     if (!business?.id) return;
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams();
       if (statusFilter) params.set('status', statusFilter);
       if (dateFilter) params.set('date', dateFilter);
       const res = await fetch(`${API_URL}/reservations/${business.id}?${params}`);
+      if (!res.ok) throw new Error('Failed to load reservations');
       const json = await res.json();
       if (json.success) setReservations(json.reservations);
+    } catch {
+      setError('Could not load reservations. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -90,6 +95,16 @@ export default function ReservationsPage() {
     </div>
   );
   if (!business) return null;
+
+  if (error) return (
+    <div className="p-8">
+      <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl p-4 text-sm text-red-600 dark:text-red-400 flex items-center gap-3">
+        <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 flex-shrink-0"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
+        {error}
+        <button onClick={() => fetchReservations()} className="ml-auto text-xs font-medium underline hover:no-underline">Retry</button>
+      </div>
+    </div>
+  );
 
   // Stats
   const today = new Date().toISOString().split('T')[0];

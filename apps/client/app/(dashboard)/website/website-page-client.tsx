@@ -1623,7 +1623,7 @@ function WebsiteEditor({
                 placeholder="What would you like to change?"
                 rows={2}
                 disabled={editing}
-                className="flex-1 px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-xs text-slate-800 dark:text-white dark:bg-white/[0.06] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 resize-none disabled:opacity-50"
+                className="flex-1 px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-xs text-slate-800 dark:text-white dark:bg-white/[0.06] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40 resize-none disabled:opacity-50"
               />
               <button
                 onClick={() => void handleSend()}

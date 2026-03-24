@@ -432,7 +432,7 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
                 {/* Label */}
                 <div>
                   <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Internal Label</label>
-                  <input type="text" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="e.g. Table Tent — Summer Promo" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+                  <input type="text" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="e.g. Table Tent — Summer Promo" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40" />
                 </div>
 
                 {/* Purpose-specific fields */}
@@ -448,7 +448,7 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Reward After Completing (optional)</label>
-                      <input type="text" value={surveyReward} onChange={(e) => setSurveyReward(e.target.value)} placeholder="e.g. 10% off your next visit" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+                      <input type="text" value={surveyReward} onChange={(e) => setSurveyReward(e.target.value)} placeholder="e.g. 10% off your next visit" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40" />
                     </div>
                   </div>
                 )}
@@ -457,11 +457,11 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
                   <div className="space-y-3">
                     <div>
                       <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Discount Value</label>
-                      <input type="text" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} placeholder='e.g. "10% off" or "$5 off"' className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+                      <input type="text" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} placeholder='e.g. "10% off" or "$5 off"' className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40" />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Discount Code (optional)</label>
-                      <input type="text" value={discountCode} onChange={(e) => setDiscountCode(e.target.value)} placeholder="e.g. SCAN10" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+                      <input type="text" value={discountCode} onChange={(e) => setDiscountCode(e.target.value)} placeholder="e.g. SCAN10" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40" />
                     </div>
                   </div>
                 )}
@@ -474,7 +474,7 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Discount Code to Show Winners (optional)</label>
-                      <input type="text" value={discountCode} onChange={(e) => setDiscountCode(e.target.value)} placeholder="e.g. WINNER15" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+                      <input type="text" value={discountCode} onChange={(e) => setDiscountCode(e.target.value)} placeholder="e.g. WINNER15" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40" />
                     </div>
                   </div>
                 )}
@@ -484,7 +484,7 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
                     <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
                       {purpose === 'MENU' ? 'Menu URL' : purpose === 'REVIEW' ? 'Google Review URL' : 'Destination URL'}
                     </label>
-                    <input type="url" value={destinationUrl} onChange={(e) => setDestinationUrl(e.target.value)} placeholder="https://" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+                    <input type="url" value={destinationUrl} onChange={(e) => setDestinationUrl(e.target.value)} placeholder="https://" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40" />
                   </div>
                 )}
 
@@ -558,7 +558,7 @@ function CreateQrModal({ onClose, onCreate, surveys }: {
                 {/* Expiration */}
                 <div>
                   <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Expiration Date (optional)</label>
-                  <input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} min={new Date().toISOString().split('T')[0]} className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+                  <input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} min={new Date().toISOString().split('T')[0]} className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40" />
                   <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-1">Leave blank for no expiration</p>
                 </div>
 

@@ -9,7 +9,6 @@ import { useBusiness } from '../../components/auth/business-provider';
 import { useTheme } from '../../components/theme-provider';
 import { NotificationsBell } from '../../components/ui/notifications-bell';
 import { CubeyChat } from '../../components/ui/cubey-chat';
-import { EmbedoCubeMascot } from '../../components/ui/embedo-cube-mascot';
 import { createSupabaseBrowserClient } from '../../lib/supabase/client';
 
 const NAV = [
@@ -107,6 +106,7 @@ function ThemeToggle() {
       onClick={toggle}
       className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-violet-400 dark:hover:bg-white/[0.04] transition-colors"
       title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+      aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
     >
       {theme === 'light' ? (
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -174,20 +174,6 @@ function Sidebar({ width, collapsed, onDragStart, onToggle, userEmail, userIniti
           ))}
         </nav>
 
-        {/* Cubey tip — above footer */}
-        {!collapsed ? (
-          <div className="mx-3 mb-3 px-3 py-2.5 bg-violet-50 dark:bg-violet-500/[0.08] border border-violet-200/60 dark:border-violet-500/20 rounded-xl">
-            <div className="flex items-center gap-2">
-              <EmbedoCubeMascot size={22} mood="waving" bounce={false} />
-              <p className="text-[10px] text-violet-600 dark:text-violet-300 leading-tight font-medium">Need help? Click Cubey in the corner!</p>
-            </div>
-          </div>
-        ) : (
-          <div className="flex justify-center mb-3">
-            <EmbedoCubeMascot size={20} mood="happy" bounce={false} />
-          </div>
-        )}
-
         {/* Footer */}
         <div className={`border-t border-slate-200 dark:border-white/[0.06] flex items-center ${collapsed ? 'justify-center py-4 px-2' : 'px-4 py-4 gap-2.5'}`}>
           <div className="relative w-7 h-7 flex-shrink-0">
@@ -202,7 +188,7 @@ function Sidebar({ width, collapsed, onDragStart, onToggle, userEmail, userIniti
             </div>
           )}
           {!collapsed && (
-            <button onClick={onLogout} title="Sign out"
+            <button onClick={onLogout} title="Sign out" aria-label="Sign out"
               className="flex-shrink-0 p-1.5 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-500/10 transition-colors">
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
                 <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H3zm11 4.414l-4.293 4.293a1 1 0 01-1.414-1.414L11.586 7H7a1 1 0 110-2h6a1 1 0 011 1v6a1 1 0 11-2 0V7.414z" clipRule="evenodd" />

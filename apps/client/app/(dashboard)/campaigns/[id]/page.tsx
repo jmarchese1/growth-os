@@ -161,7 +161,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
   const openRate = isSent && campaign.sentCount > 0
     ? `${Math.round((campaign.openCount / campaign.sentCount) * 100)}%` : null;
 
-  const inputClass = 'w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 placeholder:text-slate-400 dark:placeholder:text-slate-500';
+  const inputClass = 'w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40 placeholder:text-slate-400 dark:placeholder:text-slate-500';
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">

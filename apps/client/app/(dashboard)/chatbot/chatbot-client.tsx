@@ -1,11 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import Link from 'next/link';
 import KpiCard from '../../../components/ui/kpi-card';
-import { EmbedoCubeMascot } from '../../../components/ui/embedo-cube-mascot';
-import { PLAN_LIMITS } from '../billing/billing-data';
-import type { TierKey } from '../billing/billing-data';
 
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3000';
 
@@ -575,7 +571,7 @@ function KnowledgeBaseTab({ businessId, settings, onSaved }: {
           onChange={(e) => setKb(e.target.value)}
           placeholder="Paste your menu, FAQ, hours, parking details, policies, and anything else your chatbot should know..."
           rows={16}
-          className="w-full px-4 py-3 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] rounded-xl text-sm text-slate-800 dark:text-white font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 resize-y"
+          className="w-full px-4 py-3 border border-slate-200 dark:border-white/[0.08] dark:bg-white/[0.06] rounded-xl text-sm text-slate-800 dark:text-white font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40 resize-y"
         />
         <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-1">{kb.length} characters · ~{Math.ceil(kb.length / 4)} tokens</p>
       </div>

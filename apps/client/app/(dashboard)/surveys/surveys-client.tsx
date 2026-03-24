@@ -72,7 +72,7 @@ function QuestionRow({ question, onChange, onRemove }: {
             value={question.label}
             onChange={(e) => onChange({ ...question, label: e.target.value })}
             placeholder="Enter your question..."
-            className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white bg-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300"
+            className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white bg-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40"
           />
           {question.type === 'multiple_choice' && (
             <div className="space-y-2">
@@ -145,11 +145,11 @@ function CreateSurveyModal({ onClose, onCreate }: {
           <div className="space-y-3">
             <div>
               <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Survey Title</label>
-              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Post-Visit Feedback" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Post-Visit Feedback" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40" />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Description (optional)</label>
-              <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="A brief description shown to customers" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300" />
+              <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="A brief description shown to customers" className="w-full px-3 py-2 border border-slate-200 dark:border-white/[0.08] rounded-lg text-sm text-slate-800 dark:text-white dark:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 dark:focus:border-violet-500/40" />
             </div>
           </div>
           <div>

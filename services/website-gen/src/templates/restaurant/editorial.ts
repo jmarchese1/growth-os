@@ -142,5 +142,16 @@ ${testimonials.length > 0 ? `
   <p style="font-size:11px;color:${c.muted};margin-top:20px;">&copy; ${new Date().getFullYear()} ${config.businessName}. Powered by <a href="https://embedo.io" style="color:${c.accent};">Embedo</a></p>
 </footer>
 
+${config.chatbotEnabled && config.chatbotBusinessId ? `
+<script>
+  window.EmbledoChatConfig = {
+    businessId: "${config.chatbotBusinessId}",
+    primaryColor: "${c.accent}",
+    businessName: "${config.businessName}",
+    welcomeMessage: "Hi! How can I help you today?"
+  };
+</script>
+<script src="${config.chatbotApiUrl ?? 'https://chat.embedo.ai'}/widget.js" async></script>` : ''}
+
 </body></html>`;
 }
