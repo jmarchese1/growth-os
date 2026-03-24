@@ -400,7 +400,11 @@ export default function ToolsPage() {
         setConfiguring(type);
         setPendingConfig(json.tool.config ?? defaultConfig);
         showToast('Tool enabled! Configure it below.', 'success');
+      } else {
+        showToast(json.error ?? 'Failed to enable tool.', 'info');
       }
+    } catch {
+      showToast('Network error — could not enable tool.', 'info');
     } finally {
       setSaving(false);
     }
@@ -419,7 +423,11 @@ export default function ToolsPage() {
         await fetchEnabled();
         setConfiguring(null);
         showToast('Tool disabled.', 'info');
+      } else {
+        showToast(json.error ?? 'Failed to disable tool.', 'info');
       }
+    } catch {
+      showToast('Network error — could not disable tool.', 'info');
     } finally {
       setSaving(false);
     }
@@ -438,7 +446,11 @@ export default function ToolsPage() {
         await fetchEnabled();
         setConfiguring(null);
         showToast('Configuration saved! Your AI agents will use these settings.', 'success');
+      } else {
+        showToast(json.error ?? 'Failed to save configuration.', 'info');
       }
+    } catch {
+      showToast('Network error — could not save configuration.', 'info');
     } finally {
       setSaving(false);
     }

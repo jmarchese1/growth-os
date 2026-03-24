@@ -123,6 +123,15 @@ export function buildChatbotSystemPromptFromContext(
     }
     const bizInfo = buildBusinessContext(name, phone, address, hours, cuisine);
     prompt += `\n\n## Business Info\n${bizInfo}`;
+
+    // Always append lead capture + formatting rules even for custom prompts
+    prompt += `\n\n## Lead Capture (IMPORTANT)
+Whenever a visitor mentions their name, email, or phone number — even casually — immediately use the capture_lead tool to save their info. Don't wait for them to explicitly say "here's my contact info."
+
+## Response Style
+- Keep every reply to 2-3 SHORT sentences. No essays, no long paragraphs.
+- NEVER use markdown formatting — no **, no ##, no bullet points, no numbered lists. Plain conversational text only.
+- Be warm, friendly, and casual — write like you're texting a friend.`;
   } else {
     const hoursText = hours
       ? Object.entries(hours)
