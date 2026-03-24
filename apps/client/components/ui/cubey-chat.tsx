@@ -42,10 +42,22 @@ export function CubeyChat({
   const [sessionKey, setSessionKey] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [bubblePulse, setBubblePulse] = useState(true);
+  const [bubbleMood, setBubbleMood] = useState<'happy' | 'excited' | 'waving'>('happy');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setMounted(true); }, []);
+
+  // Cycle bubble mood every 6 seconds
+  useEffect(() => {
+    const moods: Array<'happy' | 'excited' | 'waving'> = ['happy', 'excited', 'waving', 'happy', 'waving', 'excited'];
+    let i = 0;
+    const interval = setInterval(() => {
+      i = (i + 1) % moods.length;
+      setBubbleMood(moods[i]!);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -139,7 +151,7 @@ export function CubeyChat({
       {/* Chat Window */}
       {open && (
         <div
-          className={`fixed bottom-24 ${posClass} z-[9998] w-[380px] max-w-[calc(100vw-2rem)] animate-fade-up`}
+          className={`fixed bottom-[88px] ${posClass} z-[9998] w-[380px] max-w-[calc(100vw-2rem)] animate-fade-up`}
           style={{ maxHeight: 'calc(100vh - 140px)' }}
         >
           <div className="bg-[#0f0d1a] border border-white/[0.08] rounded-2xl shadow-2xl overflow-hidden flex flex-col" style={{ height: '520px' }}>
@@ -196,9 +208,9 @@ export function CubeyChat({
                 </div>
               )}
 
-              {/* Quick replies (show when only welcome message exists) */}
+              {/* Quick replies — vertical, right-aligned like user messages */}
               {messages.length === 1 && messages[0]?.role === 'assistant' && !sending && (
-                <div className="flex flex-wrap gap-1.5 pt-1">
+                <div className="flex flex-col items-end gap-1.5 pt-1">
                   {quickReplies.map((qr) => (
                     <button
                       key={qr}
@@ -208,7 +220,7 @@ export function CubeyChat({
                           void sendMessage();
                         }, 50);
                       }}
-                      className="px-3 py-1.5 text-xs text-violet-300 bg-violet-500/10 border border-violet-500/20 rounded-full hover:bg-violet-500/20 transition-colors"
+                      className="px-3.5 py-2 text-xs text-violet-300 bg-violet-500/10 border border-violet-500/20 rounded-2xl rounded-br-sm hover:bg-violet-500/20 transition-colors text-right"
                     >
                       {qr}
                     </button>
@@ -264,15 +276,15 @@ export function CubeyChat({
           )}
 
           {/* The bubble */}
-          <div className={`w-14 h-14 rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 shadow-xl shadow-violet-600/30 flex items-center justify-center transition-all group-hover:scale-110 group-hover:shadow-violet-500/40 ${
+          <div className={`w-16 h-16 rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 shadow-xl shadow-violet-600/30 flex items-center justify-center transition-all group-hover:scale-110 group-hover:shadow-violet-500/40 ${
             open ? 'rotate-0' : ''
           }`}>
             {open ? (
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6 text-white">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-7 h-7 text-white">
                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
             ) : (
-              <EmbedoCubeMascot size={32} mood="happy" bounce={false} />
+              <EmbedoCubeMascot size={38} mood={bubbleMood} bounce={false} />
             )}
           </div>
 

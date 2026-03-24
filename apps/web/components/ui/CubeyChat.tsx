@@ -23,10 +23,22 @@ export default function CubeyChat() {
   const [sessionKey, setSessionKey] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [bubblePulse, setBubblePulse] = useState(true);
+  const [bubbleMood, setBubbleMood] = useState<'happy' | 'excited' | 'waving'>('happy');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setMounted(true); }, []);
+
+  // Cycle bubble mood every 6 seconds
+  useEffect(() => {
+    const moods: Array<'happy' | 'excited' | 'waving'> = ['happy', 'excited', 'waving', 'happy', 'waving', 'excited'];
+    let i = 0;
+    const interval = setInterval(() => {
+      i = (i + 1) % moods.length;
+      setBubbleMood(moods[i]!);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -112,7 +124,7 @@ export default function CubeyChat() {
     <>
       {/* Chat Window */}
       {open && (
-        <div className="fixed bottom-24 right-5 z-[9998] w-[380px] max-w-[calc(100vw-2rem)]" style={{ maxHeight: 'calc(100vh - 140px)', animation: 'cubey-slide-up 0.25s ease-out' }}>
+        <div className="fixed bottom-[88px] right-5 z-[9998] w-[380px] max-w-[calc(100vw-2rem)]" style={{ maxHeight: 'calc(100vh - 140px)', animation: 'cubey-slide-up 0.25s ease-out' }}>
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col" style={{ height: '520px' }}>
             {/* Header */}
             <div className="px-4 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 flex items-center gap-3">
@@ -160,12 +172,12 @@ export default function CubeyChat() {
               )}
 
               {messages.length === 1 && messages[0]?.role === 'assistant' && !sending && (
-                <div className="flex flex-wrap gap-1.5 pt-1">
+                <div className="flex flex-col items-end gap-1.5 pt-1">
                   {quickReplies.map((qr) => (
                     <button
                       key={qr}
                       onClick={() => { setInput(qr); setTimeout(() => void sendMessage(), 50); }}
-                      className="px-3 py-1.5 text-xs text-violet-600 bg-violet-50 border border-violet-200 rounded-full hover:bg-violet-100 transition-colors"
+                      className="px-3.5 py-2 text-xs text-violet-600 bg-violet-50 border border-violet-200 rounded-2xl rounded-br-sm hover:bg-violet-100 transition-colors text-right"
                     >
                       {qr}
                     </button>
@@ -218,13 +230,13 @@ export default function CubeyChat() {
               <div className="absolute -inset-1 rounded-full bg-violet-500/15 animate-pulse" />
             </>
           )}
-          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 shadow-xl shadow-violet-600/25 flex items-center justify-center transition-all group-hover:scale-110 group-hover:shadow-violet-500/40">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 shadow-xl shadow-violet-600/25 flex items-center justify-center transition-all group-hover:scale-110 group-hover:shadow-violet-500/40">
             {open ? (
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6 text-white">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-7 h-7 text-white">
                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
             ) : (
-              <CubeyBubbleIcon />
+              <CubeyBubbleIcon mood={bubbleMood} />
             )}
           </div>
           {!open && bubblePulse && (
@@ -272,10 +284,10 @@ function CubeyMini() {
   );
 }
 
-/** Cubey icon for the floating bubble */
-function CubeyBubbleIcon() {
+/** Cubey icon for the floating bubble — mood-aware */
+function CubeyBubbleIcon({ mood = 'happy' }: { mood?: 'happy' | 'excited' | 'waving' }) {
   return (
-    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
       <polygon points="16,5 27,10.5 16,16 5,10.5" fill="white" opacity="0.9" />
       <polygon points="5,10.5 16,16 16,27 5,21.5" fill="white" opacity="0.6" />
       <polygon points="27,10.5 16,16 16,27 27,21.5" fill="white" opacity="0.75" />
@@ -284,8 +296,31 @@ function CubeyBubbleIcon() {
       <ellipse cx="12.3" cy="10" rx="0.9" ry="1" fill="#4C1D95" />
       <ellipse cx="20" cy="9.8" rx="1.5" ry="1.8" fill="white" />
       <ellipse cx="20.3" cy="10" rx="0.9" ry="1" fill="#4C1D95" />
-      {/* Smile */}
-      <path d="M13.5 12.5 Q16 14.5 18.5 12.5" stroke="white" strokeWidth="0.8" fill="none" strokeLinecap="round" opacity="0.9" />
+      {/* Mouth — changes by mood */}
+      {mood === 'happy' && (
+        <path d="M13.5 12.5 Q16 14.5 18.5 12.5" stroke="white" strokeWidth="0.8" fill="none" strokeLinecap="round" opacity="0.9" />
+      )}
+      {mood === 'excited' && (
+        <ellipse cx="16" cy="13" rx="2" ry="1.5" fill="white" opacity="0.85" />
+      )}
+      {mood === 'waving' && (
+        <>
+          <path d="M13 12.5 Q16 15 19 12.5" stroke="white" strokeWidth="0.8" fill="none" strokeLinecap="round" opacity="0.9" />
+          <path d="M27 9 Q29 5 31 8" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.7" />
+        </>
+      )}
+      {/* Blush */}
+      <ellipse cx="10" cy="12" rx="1.5" ry="0.7" fill="#EC4899" opacity="0.15" />
+      <ellipse cx="22" cy="12" rx="1.5" ry="0.7" fill="#EC4899" opacity="0.15" />
+      {/* Sparkles for excited */}
+      {mood === 'excited' && (
+        <>
+          <line x1="5" y1="5" x2="5" y2="2" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.6" />
+          <line x1="3.5" y1="3.5" x2="6.5" y2="3.5" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.6" />
+          <line x1="27" y1="4" x2="27" y2="1" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.5" />
+          <line x1="25.5" y1="2.5" x2="28.5" y2="2.5" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.5" />
+        </>
+      )}
     </svg>
   );
 }
