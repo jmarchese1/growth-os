@@ -498,21 +498,95 @@ export async function chatbotRoutes(app: FastifyInstance): Promise<void> {
 
   /**
    * GET /chatbot/widget/snippet/:businessId
-   * Proxies widget snippet request to chatbot-agent service.
+   * Generates the embeddable chatbot widget snippet for a business.
    */
   app.get<{ Params: { businessId: string } }>(
     '/chatbot/widget/snippet/:businessId',
     async (request, reply) => {
       const { businessId } = request.params;
 
-      try {
-        const res = await fetch(`${CHATBOT_URL}/widget/snippet/${businessId}`);
-        const text = await res.text();
-        return reply.code(res.status).header('Content-Type', 'text/plain').send(text);
-      } catch (err) {
-        log.error({ err }, 'Failed to reach chatbot-agent service for snippet');
-        return reply.code(502).send({ success: false, error: 'Chatbot service unavailable' });
+      const business = await db.business.findUnique({
+        where: { id: businessId },
+        select: { id: true, name: true, settings: true },
+      });
+
+      if (!business) {
+        return reply.code(404).send({ success: false, error: 'Business not found' });
       }
+
+      const settings = (business.settings ?? {}) as Record<string, unknown>;
+      const primaryColor = (settings.brandColor as string) ?? '#000000';
+      const logoUrl = settings.logoUrl as string | undefined;
+      const apiUrl = process.env['PUBLIC_API_URL'] ?? 'https://embedoapi-production.up.railway.app';
+
+      const config = JSON.stringify({
+        businessId: business.id,
+        primaryColor,
+        businessName: business.name,
+        welcomeMessage: `Hi! Welcome to ${business.name}. How can I help you today?`,
+        ...(logoUrl ? { logoUrl } : {}),
+        position: 'bottom-right',
+        apiUrl,
+      });
+
+      const snippet = `<!-- Embedo AI Chat Widget -->\n<script>\n  (function() {\n    window.EmbledoChatConfig = ${config};\n    var script = document.createElement('script');\n    script.src = '${apiUrl}/chatbot/widget.js';\n    script.async = true;\n    script.defer = true;\n    document.head.appendChild(script);\n  })();\n</script>\n<!-- End Embedo AI Chat Widget -->`;
+
+      return reply.header('Content-Type', 'text/plain').send(snippet);
+    },
+  );
+
+  /**
+   * GET /chatbot/widget.js
+   * Serves the embeddable chatbot widget JavaScript.
+   */
+  app.get('/chatbot/widget.js', async (_request, reply) => {
+    return reply
+      .header('Content-Type', 'application/javascript')
+      .header('Access-Control-Allow-Origin', '*')
+      .header('Cache-Control', 'no-cache, no-store, must-revalidate')
+      .send(buildWidgetJs());
+  });
+
+  /**
+   * GET /chatbot/widget/config/:businessId
+   * Returns live widget configuration for the embeddable chatbot.
+   */
+  app.get<{ Params: { businessId: string } }>(
+    '/chatbot/widget/config/:businessId',
+    async (request, reply) => {
+      const { businessId } = request.params;
+
+      const business = await db.business.findUnique({
+        where: { id: businessId },
+        select: { id: true, name: true, settings: true },
+      });
+
+      if (!business) {
+        return reply.code(404).send({});
+      }
+
+      const settings = (business.settings ?? {}) as Record<string, unknown>;
+      return reply.header('Access-Control-Allow-Origin', '*').send({
+        businessName: business.name,
+        primaryColor: settings.brandColor ?? settings.chatbotPrimaryColor ?? '#a855f7',
+        secondaryColor: settings.chatbotSecondaryColor ?? '#f0f0f0',
+        welcomeMessage: settings.chatbotWelcomeMessage ?? `Hi! Welcome to ${business.name}. How can I help you today?`,
+        subtitle: settings.chatbotSubtitle ?? '',
+        position: settings.chatbotPosition ?? 'bottom-right',
+        fontFamily: settings.chatbotFontFamily,
+        bubbleSize: settings.chatbotBubbleSize,
+        borderRadius: settings.chatbotBorderRadius,
+        windowWidth: settings.chatbotWindowWidth,
+        windowHeight: settings.chatbotWindowHeight,
+        showClose: settings.chatbotShowClose !== false,
+        soundEnabled: !!settings.chatbotSoundEnabled,
+        autoOpen: !!settings.chatbotAutoOpen,
+        autoOpenDelay: settings.chatbotAutoOpenDelay ?? 5,
+        quickRepliesEnabled: !!settings.chatbotQuickRepliesEnabled,
+        quickReplies: settings.chatbotQuickReplies ?? [],
+        poweredBy: settings.chatbotPoweredBy !== false,
+        logoUrl: settings.logoUrl,
+      });
     },
   );
 
@@ -618,4 +692,200 @@ export async function chatbotRoutes(app: FastifyInstance): Promise<void> {
       return { success: true, settings: newSettings };
     },
   );
+}
+
+/**
+ * Builds the embeddable chatbot widget JavaScript.
+ * Uses /chatbot/chat endpoint on the API gateway.
+ */
+function buildWidgetJs(): string {
+  return `
+(function() {
+  var base = window.EmbledoChatConfig;
+  if (!base) return;
+  if (window.__embedoChatV4) return;
+  window.__embedoChatV4 = true;
+
+  var xhr0 = new XMLHttpRequest();
+  xhr0.open('GET', base.apiUrl + '/chatbot/widget/config/' + base.businessId, true);
+  xhr0.timeout = 5000;
+  xhr0.onload = function() {
+    try { var live = JSON.parse(xhr0.responseText); boot(Object.assign({}, base, live)); }
+    catch(e) { boot(base); }
+  };
+  xhr0.onerror = function() { boot(base); };
+  xhr0.ontimeout = function() { boot(base); };
+  xhr0.send();
+
+  function boot(C) {
+    if (!document.body) return setTimeout(function(){ boot(C); }, 50);
+    if (document.getElementById('ec-bubble')) return;
+
+    var pc = C.primaryColor || '#a855f7';
+    var sc = C.secondaryColor || C.chatbotSecondaryColor || '#f0f0f0';
+    var bs = C.bubbleSize || 56;
+    var br = C.borderRadius != null ? C.borderRadius : 16;
+    var ff = C.fontFamily || C.chatbotFontFamily || '-apple-system,BlinkMacSystemFont,sans-serif';
+    var ww = C.windowWidth || C.chatbotWindowWidth || 360;
+    var wh = C.windowHeight || C.chatbotWindowHeight || 500;
+    var pos = C.position || C.chatbotPosition || 'bottom-right';
+    var wm = C.welcomeMessage || 'Hi! How can I help you today?';
+    var sub = C.subtitle || '';
+    var showClose = C.showClose !== false;
+    var soundOn = !!C.soundEnabled;
+    var autoOpen = !!C.autoOpen;
+    var autoDelay = (C.autoOpenDelay || 5) * 1000;
+    var qrEnabled = !!C.quickRepliesEnabled;
+    var qrList = (C.quickReplies && C.quickReplies.length) ? C.quickReplies : [];
+    var showPowered = C.poweredBy !== false;
+    var sk = null;
+    var busy = false;
+    var isOpen = false;
+
+    if (ff.indexOf('apple-system') === -1) {
+      var fontName = ff.replace(/'/g,'').split(',')[0].trim();
+      var link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(fontName).replace(/%20/g,'+') + ':wght@400;500;600&display=swap';
+      document.head.appendChild(link);
+    }
+
+    var bub = document.createElement('div');
+    bub.id = 'ec-bubble';
+    bub.setAttribute('style','position:fixed;'+(pos==='bottom-left'?'left':'right')+':24px;bottom:24px;width:'+bs+'px;height:'+bs+'px;border-radius:50%;background:'+pc+';cursor:pointer;box-shadow:0 4px 24px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;z-index:9999;transition:transform .2s');
+    var iconSz = Math.round(bs * 0.43);
+    bub.innerHTML='<svg width="'+iconSz+'" height="'+iconSz+'" fill="#fff" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>';
+
+    var win = document.createElement('div');
+    win.id = 'ec-win';
+    win.setAttribute('style','position:fixed;'+(pos==='bottom-left'?'left':'right')+':24px;bottom:'+(bs+40)+'px;width:'+ww+'px;height:'+wh+'px;background:#fff;border-radius:'+br+'px;box-shadow:0 8px 48px rgba(0,0,0,.15);display:none;flex-direction:column;z-index:9999;font-family:'+ff+';overflow:hidden');
+
+    var headerBr = br + 'px ' + br + 'px 0 0';
+    var inputBr = Math.max(br/2, 6);
+    var msgBr = Math.max(br*0.75, 8);
+
+    var headerHtml = '<div style="background:'+pc+';padding:16px;color:#fff;border-radius:'+headerBr+';display:flex;justify-content:space-between;align-items:flex-start">';
+    headerHtml += '<div><div style="font-weight:600;font-size:16px">'+(C.businessName||'Chat')+'</div>';
+    if (sub) headerHtml += '<div style="font-size:12px;opacity:.8;margin-top:2px">'+sub+'</div>';
+    headerHtml += '</div>';
+    if (showClose) headerHtml += '<div id="ec-close" style="cursor:pointer;padding:4px;opacity:.7;transition:opacity .2s"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>';
+    headerHtml += '</div>';
+
+    var footerHtml = '';
+    if (showPowered) footerHtml = '<div style="text-align:center;padding:4px 0;font-size:10px;color:#bbb;border-top:1px solid #f0f0f0">Powered by <a href="https://embedo.io" target="_blank" style="color:#aaa;text-decoration:none">Embedo</a></div>';
+
+    win.innerHTML = headerHtml + '<div id="ec-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px"></div>' + footerHtml + '<div style="padding:12px;border-top:1px solid #f0f0f0;display:flex;gap:8px"><input id="ec-in" type="text" placeholder="Type a message..." style="flex:1;border:1px solid #e0e0e0;border-radius:'+inputBr+'px;padding:8px 12px;outline:none;font-size:14px;font-family:'+ff+'"><button id="ec-btn" style="background:'+pc+';color:#fff;border:none;border-radius:'+inputBr+'px;padding:8px 16px;cursor:pointer;font-size:14px;font-family:'+ff+'">Send</button></div>';
+
+    document.body.appendChild(bub);
+    document.body.appendChild(win);
+
+    var msgs = document.getElementById('ec-msgs');
+    var inp = document.getElementById('ec-in');
+    var btn = document.getElementById('ec-btn');
+
+    var wmDiv = document.createElement('div');
+    wmDiv.setAttribute('style','max-width:80%;padding:8px 12px;border-radius:'+msgBr+'px;font-size:14px;line-height:1.4;word-wrap:break-word;align-self:flex-start;background:'+sc+';color:#333');
+    wmDiv.textContent = wm;
+    msgs.appendChild(wmDiv);
+
+    if (qrEnabled && qrList.length) {
+      var qrWrap = document.createElement('div');
+      qrWrap.id = 'ec-qr';
+      qrWrap.setAttribute('style','display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-top:4px');
+      for (var qi = 0; qi < qrList.length; qi++) {
+        (function(txt) {
+          var qb = document.createElement('button');
+          qb.setAttribute('style','padding:8px 16px;border-radius:'+msgBr+'px;font-size:13px;border:1.5px solid '+pc+';color:'+pc+';background:#fff;cursor:pointer;font-family:'+ff+';transition:background .15s,color .15s,transform .15s;max-width:80%');
+          qb.textContent = txt;
+          qb.onmouseover = function(){ qb.style.background=pc; qb.style.color='#fff'; qb.style.transform='scale(1.03)'; };
+          qb.onmouseout = function(){ qb.style.background='#fff'; qb.style.color=pc; qb.style.transform='scale(1)'; };
+          qb.onclick = function() {
+            var qrEl = document.getElementById('ec-qr');
+            if (qrEl) qrEl.remove();
+            inp.value = txt;
+            doSend();
+          };
+          qrWrap.appendChild(qb);
+        })(qrList[qi]);
+      }
+      msgs.appendChild(qrWrap);
+    }
+
+    function toggleChat() {
+      isOpen = !isOpen;
+      win.style.display = isOpen ? 'flex' : 'none';
+      bub.style.transform = isOpen ? 'scale(.9)' : 'scale(1)';
+      if (isOpen) inp.focus();
+    }
+
+    bub.onclick = toggleChat;
+    var closeBtn = document.getElementById('ec-close');
+    if (closeBtn) closeBtn.onclick = function() { isOpen = false; win.style.display = 'none'; bub.style.transform = 'scale(1)'; };
+    if (autoOpen) { setTimeout(function() { if (!isOpen) toggleChat(); }, autoDelay); }
+
+    function playChime() {
+      if (!soundOn) return;
+      try {
+        var ctx = new (window.AudioContext || window.webkitAudioContext)();
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 800;
+        gain.gain.value = 0.1;
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        osc.stop(ctx.currentTime + 0.3);
+      } catch(e) {}
+    }
+
+    function addMsg(txt, isUser) {
+      var d = document.createElement('div');
+      d.setAttribute('style','max-width:80%;padding:8px 12px;border-radius:'+msgBr+'px;font-size:14px;line-height:1.4;word-wrap:break-word;'+(isUser?'align-self:flex-end;background:'+pc+';color:#fff':'align-self:flex-start;background:'+sc+';color:#333'));
+      d.textContent = txt;
+      msgs.appendChild(d);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function lock() { busy=true; inp.disabled=true; btn.disabled=true; btn.textContent='...'; btn.style.opacity='.5'; }
+    function unlock() { busy=false; inp.disabled=false; btn.disabled=false; btn.textContent='Send'; btn.style.opacity='1'; inp.focus(); }
+
+    function doSend() {
+      var txt = (inp.value||'').trim();
+      if (!txt || busy) return;
+      var qrEl = document.getElementById('ec-qr');
+      if (qrEl) qrEl.remove();
+      lock(); inp.value=''; addMsg(txt, true);
+
+      var dot = document.createElement('div');
+      dot.id = 'ec-typing';
+      dot.setAttribute('style','align-self:flex-start;background:#f0f0f0;color:#999;padding:8px 16px;border-radius:16px;font-size:13px');
+      dot.textContent = 'Typing...';
+      msgs.appendChild(dot);
+      msgs.scrollTop = msgs.scrollHeight;
+
+      var body = { businessId: C.businessId, message: txt, channel: 'WEB' };
+      if (sk) body.sessionKey = sk;
+
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', C.apiUrl + '/chatbot/chat', true);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.timeout = 30000;
+
+      xhr.onload = function() {
+        var t = document.getElementById('ec-typing'); if (t) t.remove();
+        try { var d = JSON.parse(xhr.responseText); if (d.reply) { addMsg(d.reply, false); if (d.sessionKey) sk = d.sessionKey; playChime(); } else { addMsg('Sorry, something went wrong.', false); } }
+        catch(e) { addMsg('Sorry, I had trouble connecting.', false); }
+        unlock();
+      };
+      xhr.onerror = function() { var t = document.getElementById('ec-typing'); if (t) t.remove(); addMsg('Connection error.', false); unlock(); };
+      xhr.ontimeout = function() { var t = document.getElementById('ec-typing'); if (t) t.remove(); addMsg('Response took too long.', false); unlock(); };
+      xhr.send(JSON.stringify(body));
+    }
+
+    btn.onclick = doSend;
+    inp.onkeydown = function(e) { if (e.key === 'Enter') doSend(); };
+  }
+})();
+`.trim();
 }
