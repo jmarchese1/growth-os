@@ -27,6 +27,7 @@ async function screenshotUrl(_url: string): Promise<string | null> {
   return null;
 }
 
+// @ts-expect-error — kept for future use, currently unused after removing auto-deploy
 async function selfReviewAndFix(
   config: PremiumWebsiteConfig,
   deployUrl: string,
@@ -436,8 +437,6 @@ export async function websiteRoutes(app: FastifyInstance) {
       }
 
     // Always create a new GeneratedWebsite record — users manage multiple sites from the list view
-    const slug = `embedo-${body.businessName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 30)}-${body.businessId.slice(-6)}`;
-
     let websiteRecord = await db.generatedWebsite.create({
       data: {
         businessId: body.businessId,
@@ -448,52 +447,16 @@ export async function websiteRoutes(app: FastifyInstance) {
       },
     });
 
-    // Deploy to Vercel
-    let deployedUrl = '';
-    let deploymentId = '';
-    let vercelProjectId = '';
-
-    if (env.VERCEL_API_TOKEN) {
-      const deployed = await deployToVercel({ projectName: slug, html, businessId: body.businessId });
-      deployedUrl = deployed.url;
-      deploymentId = deployed.deploymentId;
-      vercelProjectId = deployed.projectId;
-    } else {
-      // No Vercel token — return the HTML for preview only
-      deployedUrl = '';
-    }
-
-    // AI Self-Review Loop — SKIP for AI-generated sites (self-review uses the old template renderer)
-    let finalHtml = html;
-    let finalUrl = deployedUrl;
-    let finalConfig = premiumConfig;
-    let reviewFixes: string[] = [];
-
-    if (deployedUrl && env.ANTHROPIC_API_KEY && !hasInspiration) {
-      try {
-        const reviewed = await selfReviewAndFix(
-          premiumConfig as unknown as PremiumWebsiteConfig,
-          deployedUrl,
-          env.ANTHROPIC_API_KEY,
-          body.businessId,
-        );
-        finalHtml = reviewed.html;
-        finalUrl = reviewed.deployUrl;
-        finalConfig = reviewed.config as unknown as typeof premiumConfig;
-        reviewFixes = reviewed.fixes;
-      } catch (err) {
-        logger.warn({ error: String(err) }, 'Self-review failed — using initial generation');
-      }
-    }
+    // Sites are NOT deployed to Vercel at generation time.
+    // Vercel deploy only happens when a customer connects a custom domain.
+    // Until then, sites are served from the database HTML via the preview endpoint.
+    const finalHtml = html;
+    const finalConfig = premiumConfig;
 
     await db.generatedWebsite.update({
       where: { id: websiteRecord.id },
       data: {
-        status: finalUrl ? 'LIVE' : 'GENERATING',
-        deployUrl: finalUrl || null,
-        vercelDeploymentId: deploymentId || null,
-        vercelProjectId: vercelProjectId || null,
-        // Store HTML in config for AI-generated sites so preview works without Vercel
+        status: 'LIVE',
         config: hasInspiration ? { html: finalHtml, ...finalConfig } as unknown as object : finalConfig as unknown as object,
       },
     });
@@ -501,9 +464,8 @@ export async function websiteRoutes(app: FastifyInstance) {
     return reply.send({
       success: true,
       websiteId: websiteRecord.id,
-      url: finalUrl,
+      url: null,
       html: finalHtml,
-      reviewFixes: reviewFixes.length > 0 ? reviewFixes : undefined,
     });
   });
 
@@ -664,28 +626,22 @@ Editable: businessName, tagline, description, cuisine, phone, address, city, hou
       },
     });
 
-    // Deploy to Vercel (non-blocking — edit works even if deploy fails)
-    let deployedUrl = website.deployUrl ?? '';
-    if (env.VERCEL_API_TOKEN) {
+    // If site has been deployed to Vercel (custom domain connected), re-deploy with updated HTML
+    if (website.vercelProjectId && env.VERCEL_API_TOKEN) {
       try {
         const bName = String(existingConfig['businessName'] ?? 'site');
         const slug = `embedo-${bName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 30)}-${website.businessId.slice(-6)}`;
         const deployed = await deployToVercel({ projectName: slug, html, businessId: website.businessId });
-        deployedUrl = deployed.url;
+        await db.generatedWebsite.update({
+          where: { id: websiteId },
+          data: { deployUrl: deployed.url, vercelDeploymentId: deployed.deploymentId },
+        });
       } catch (err) {
-        logger.warn({ error: String(err) }, 'Edit deploy failed — HTML saved to DB');
+        logger.warn({ error: String(err) }, 'Edit re-deploy failed — HTML saved to DB');
       }
     }
 
-    // Update deploy URL if it changed
-    if (deployedUrl && deployedUrl !== website.deployUrl) {
-      await db.generatedWebsite.update({
-        where: { id: websiteId },
-        data: { deployUrl: deployedUrl },
-      });
-    }
-
-    return reply.send({ success: true, html, url: deployedUrl });
+    return reply.send({ success: true, html, url: website.deployUrl ?? null });
   });
 
   // POST /generate-image — generate an image using DALL-E 3
@@ -800,27 +756,29 @@ Editable: businessName, tagline, description, cuisine, phone, address, city, hou
       html = renderRestaurantPremium(revertedData as unknown as PremiumWebsiteConfig);
     }
 
-    // Redeploy (non-blocking — revert works even if deploy fails)
-    let deployedUrl = website.deployUrl ?? '';
-    if (env.VERCEL_API_TOKEN) {
+    // Store reverted HTML in config
+    const updatedConfig = isAiGenerated ? { ...revertedData, html } : revertedData;
+    await db.generatedWebsite.update({
+      where: { id: websiteId },
+      data: { config: updatedConfig as object },
+    });
+
+    // If site has been deployed to Vercel (custom domain connected), re-deploy with reverted HTML
+    if (website.vercelProjectId && env.VERCEL_API_TOKEN) {
       try {
         const bName = String(revertedData['businessName'] ?? (website.config as Record<string, unknown>)['businessName'] ?? 'site');
         const slug = `embedo-${bName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 30)}-${website.businessId.slice(-6)}`;
         const deployed = await deployToVercel({ projectName: slug, html, businessId: website.businessId });
-        deployedUrl = deployed.url;
+        await db.generatedWebsite.update({
+          where: { id: websiteId },
+          data: { deployUrl: deployed.url, vercelDeploymentId: deployed.deploymentId },
+        });
       } catch (err) {
-        logger.warn({ error: String(err) }, 'Revert deploy failed — still reverting locally');
+        logger.warn({ error: String(err) }, 'Revert re-deploy failed — HTML saved to DB');
       }
     }
 
-    // Store reverted HTML in config for AI-generated sites
-    const updatedConfig = isAiGenerated ? { ...revertedData, html } : revertedData;
-    await db.generatedWebsite.update({
-      where: { id: websiteId },
-      data: { config: updatedConfig as object, deployUrl: deployedUrl || null },
-    });
-
-    return reply.send({ success: true, html, url: deployedUrl });
+    return reply.send({ success: true, html, url: website.deployUrl });
   });
 
   // POST /websites/:websiteId/domain — add a custom domain to a website
