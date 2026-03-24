@@ -95,6 +95,10 @@ export function buildChatbotSystemPromptFromContext(
   context: Record<string, unknown>,
   enabledTools: Array<{ type: string; config: Record<string, unknown> }>,
 ): string {
+  // Check for a top-level custom system prompt (e.g. Embedo platform Cubey)
+  const topLevelPrompt = context['customSystemPrompt'] as string | undefined;
+  if (topLevelPrompt) return topLevelPrompt;
+
   const biz = (context['business'] as Record<string, unknown>) ?? {};
   const settings = (biz['settings'] as Record<string, unknown>) ?? {};
   const capabilities = (context['capabilities'] as string[]) ?? [];

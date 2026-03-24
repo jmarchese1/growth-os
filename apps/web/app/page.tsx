@@ -10,6 +10,7 @@ import LeadCaptureSection from '@/components/lead-capture/LeadCaptureSection';
 import Footer from '@/components/shared/Footer';
 import ScrollReveal from '@/components/ui/ScrollReveal';
 import SectionBleed from '@/components/ui/SectionBleed';
+import CubeyChat from '@/components/ui/CubeyChat';
 
 export default function Home() {
   return (
@@ -51,6 +52,7 @@ export default function Home() {
       <SectionBleed from="#ffffff" to="#1e1b4b" height={80} />
 
       <Footer />
+      <CubeyChat />
     </main>
   );
 }

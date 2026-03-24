@@ -37,8 +37,10 @@ async function fetchContext(businessId: string): Promise<Record<string, unknown>
       return null;
     }
     const data = (await res.json()) as Record<string, unknown>;
-    contextCache.set(businessId, { data, expiry: Date.now() + 5 * 60 * 1000 });
-    return data;
+    // Unwrap: API returns { success, context: { business, tools, ... } }
+    const ctx = (data['context'] as Record<string, unknown>) ?? data;
+    contextCache.set(businessId, { data: ctx, expiry: Date.now() + 5 * 60 * 1000 });
+    return ctx;
   } catch (err) {
     log.warn({ err: err instanceof Error ? err.message : String(err), businessId }, 'Context fetch error');
     return null;
@@ -64,9 +66,14 @@ export async function processMessage(params: {
   const enabledTools = (context?.['tools'] as Array<{ type: string; config: Record<string, unknown> }>) ?? [];
 
   // Build system prompt — use context-based builder if we have context, fallback to DB query
-  const systemPrompt = context
-    ? buildChatbotSystemPromptFromContext(context, enabledTools)
-    : await buildChatbotSystemPrompt(businessId);
+  let systemPrompt: string;
+  if (context) {
+    systemPrompt = buildChatbotSystemPromptFromContext(context, enabledTools);
+  } else if (businessId === 'embedo-platform') {
+    systemPrompt = 'You are Cubey, a helpful AI assistant for Embedo. Help users understand the platform.';
+  } else {
+    systemPrompt = await buildChatbotSystemPrompt(businessId);
+  }
 
   // Generate Anthropic tool schemas based on enabled tools
   const tools = generateToolSchemas(enabledTools);

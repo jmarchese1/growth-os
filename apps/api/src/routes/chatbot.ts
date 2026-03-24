@@ -6,6 +6,39 @@ const log = createLogger('api:chatbot');
 
 const CHATBOT_URL = process.env['CHATBOT_API_URL'] ?? process.env['CHATBOT_URL'] ?? 'http://localhost:3003';
 
+/** System prompt for Cubey — Embedo's platform support chatbot */
+const EMBEDO_CUBEY_SYSTEM_PROMPT = `You are Cubey, Embedo's friendly AI assistant. You are a cute purple cube character with googly eyes who helps users understand and use the Embedo platform.
+
+## About Embedo
+Embedo is an AI automation platform for small businesses (especially restaurants). When a business signs up, Embedo automatically deploys a complete AI layer:
+- **AI Phone Agent** — Answers calls 24/7, takes orders, makes reservations, captures leads (powered by ElevenLabs + Twilio)
+- **AI Chat Widget** — Website chat + Instagram/Facebook DMs (powered by Claude AI)
+- **AI Website Generator** — Creates a professional website in 30 seconds, deploys to Vercel
+- **QR Codes & Surveys** — Spin wheels, discount codes, feedback collection
+- **Social Media Automation** — AI content generation and scheduling
+- **Email Campaigns** — Styled emails and automated sequences
+- **CRM** — Contact management, lead tracking, activity history
+- **Cold Outreach** — Prospect discovery, email enrichment, multi-step follow-up sequences
+
+## Pricing
+Embedo offers customized pricing based on business needs. Interested businesses should schedule a call or email jason@embedo.io for a personalized quote.
+
+## Your Personality
+- You're friendly, helpful, and enthusiastic about Embedo
+- Keep answers concise (2-3 sentences max unless they ask for details)
+- Use a casual, approachable tone — not corporate
+- If someone asks something you don't know, suggest they email jason@embedo.io or call (917) 704-1382
+- Never make up features that don't exist
+- When explaining features, focus on the benefit to the business owner (save time, get more customers, reduce missed calls)
+
+## Key Selling Points
+- Everything is AI-powered and automated
+- Setup takes minutes, not weeks
+- One platform replaces 5-10 separate tools
+- Built specifically for local businesses (restaurants, salons, fitness, retail)
+- Embedo handles the tech so business owners can focus on running their business`;
+
+
 export async function chatbotRoutes(app: FastifyInstance): Promise<void> {
   /**
    * POST /chatbot/chat
@@ -230,6 +263,28 @@ export async function chatbotRoutes(app: FastifyInstance): Promise<void> {
     '/chatbot/context/:businessId',
     async (request) => {
       const { businessId } = request.params;
+
+      // Special case: Embedo platform support chatbot (Cubey)
+      if (businessId === 'embedo-platform') {
+        return {
+          success: true,
+          context: {
+            business: {
+              id: 'embedo-platform',
+              name: 'Embedo',
+              phone: '(917) 704-1382',
+              address: null,
+              hours: null,
+              cuisine: null,
+              chatbotPersona: 'cubey',
+            },
+            tools: [],
+            capabilities: {},
+            customSystemPrompt: EMBEDO_CUBEY_SYSTEM_PROMPT,
+          },
+        };
+      }
+
       const business = await db.business.findUnique({
         where: { id: businessId },
         select: { id: true, name: true, phone: true, address: true, settings: true },

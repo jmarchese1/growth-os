@@ -8,6 +8,7 @@ import { useSession } from '../../components/auth/session-provider';
 import { useBusiness } from '../../components/auth/business-provider';
 import { useTheme } from '../../components/theme-provider';
 import { NotificationsBell } from '../../components/ui/notifications-bell';
+import { CubeyChat } from '../../components/ui/cubey-chat';
 import { createSupabaseBrowserClient } from '../../lib/supabase/client';
 
 const NAV = [
@@ -295,6 +296,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </main>
       </div>
+      {/* Cubey — floating AI assistant */}
+      <CubeyChat
+        businessId={business?.id}
+        mode="support"
+        headerTitle="Cubey Support"
+        welcomeMessage={`Hey${business?.name ? ` ${business.name}` : ''}! I'm Cubey, your AI assistant. Ask me anything about setting up your tools, managing contacts, or using the platform!`}
+      />
     </div>
   );
 }
