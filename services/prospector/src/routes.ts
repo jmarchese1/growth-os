@@ -42,7 +42,7 @@ const createCampaignSchema = z.object({
   targetIndustry: z.enum(['RESTAURANT', 'SALON', 'RETAIL', 'FITNESS', 'MEDICAL', 'OTHER']).default('RESTAURANT'),
   discoverySource: z.enum(['geoapify', 'apollo']).default('geoapify'),
   apolloIndustries: z.array(z.string()).optional(),       // Apollo industry keyword tags
-  apolloEmployeeRanges: z.array(z.string()).optional(),   // e.g. ['1,10', '11,50']
+  apolloEmployeeRanges: z.array(z.string()).optional(),   // e.g. ['1-10', '11-50']
   emailSubject: z.string().min(5),
   emailBodyHtml: z.string().min(20),
   smsBody: z.string().optional(),
@@ -247,7 +247,7 @@ Output format:
     if (parsed.apolloIndustries || parsed.apolloEmployeeRanges) {
       createData['apolloConfig'] = {
         industries: parsed.apolloIndustries ?? [],
-        employeeRanges: parsed.apolloEmployeeRanges ?? ['1,10'],
+        employeeRanges: parsed.apolloEmployeeRanges ?? ['1-10'],
       };
     }
     if (parsed.smsBody !== undefined) createData['smsBody'] = parsed.smsBody;
@@ -330,13 +330,14 @@ Output format:
       // Apollo discovery runs in background — return 202 immediately
       setImmediate(async () => {
         try {
-          const prospects = await discoverViaApollo(env.APOLLO_API_KEY!, {
+          const apolloOpts: import('./scraper/apollo.js').ApolloDiscoveryOptions = {
             city: campaign.targetCity.split(',')[0]?.trim() ?? campaign.targetCity,
-            state: campaign.targetState ?? undefined,
             industries: apolloConfig.industries ?? [],
-            employeeRanges: apolloConfig.employeeRanges ?? ['1,10'],
+            employeeRanges: apolloConfig.employeeRanges ?? ['1-10'],
             maxResults,
-          });
+          };
+          if (campaign.targetState) apolloOpts.state = campaign.targetState;
+          const prospects = await discoverViaApollo(env.APOLLO_API_KEY!, apolloOpts);
 
           let created = 0;
           for (const p of prospects) {
@@ -448,6 +449,7 @@ Output format:
     });
 
     return reply.code(202).send({ message: 'Campaign started', campaignId: id, city: campaign.targetCity, coords });
+  });
 
   // ─── Campaign stats ───────────────────────────────────────────────────────
   app.get('/campaigns/:id/stats', async (request, reply) => {

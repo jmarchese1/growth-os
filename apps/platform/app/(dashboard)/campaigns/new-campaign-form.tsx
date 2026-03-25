@@ -329,6 +329,26 @@ const US_STATES = [
   { code: 'WI', name: 'Wisconsin' }, { code: 'WY', name: 'Wyoming' }, { code: 'DC', name: 'Washington DC' },
 ];
 
+// Apollo.io industry tags — these match Apollo's organization_industry_tag_ids values.
+// Curated for SMB/restaurant outreach; add more as needed.
+const APOLLO_INDUSTRIES = [
+  { id: 'restaurants', label: 'Restaurants' },
+  { id: 'food & beverages', label: 'Food & Beverages' },
+  { id: 'hospitality', label: 'Hospitality' },
+  { id: 'food production', label: 'Food Production' },
+  { id: 'leisure, travel & tourism', label: 'Travel & Tourism' },
+  { id: 'health, wellness and fitness', label: 'Health & Fitness' },
+  { id: 'retail', label: 'Retail' },
+  { id: 'consumer services', label: 'Consumer Services' },
+  { id: 'automotive', label: 'Automotive' },
+  { id: 'real estate', label: 'Real Estate' },
+  { id: 'construction', label: 'Construction' },
+  { id: 'medical practice', label: 'Medical Practice' },
+  { id: 'beauty', label: 'Beauty & Cosmetics' },
+  { id: 'education', label: 'Education' },
+  { id: 'entertainment', label: 'Entertainment' },
+];
+
 interface CityEntry { city: string; state: string; lat: number; lon: number }
 
 export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
@@ -350,7 +370,7 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
 
   const [discoverySource, setDiscoverySource] = useState<'geoapify' | 'apollo'>('geoapify');
   const [apolloIndustries, setApolloIndustries] = useState<string[]>([]);
-  const [apolloEmployeeRange, setApolloEmployeeRange] = useState('1,10');
+  const [apolloEmployeeRange, setApolloEmployeeRange] = useState('1-10');
 
   const [form, setForm] = useState({
     name: '',
@@ -570,14 +590,28 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
             <p className="text-xs font-semibold text-violet-400 uppercase tracking-wide">Apollo Settings</p>
 
             <div>
-              <label className={labelCls}>Industry Keywords</label>
-              <input
-                value={apolloIndustries.join(', ')}
-                onChange={(e) => setApolloIndustries(e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
-                placeholder="restaurants, food service, hospitality"
-                className={inputCls}
-              />
-              <p className="text-[10px] text-slate-600 mt-1">Comma-separated. Leave blank to search all industries.</p>
+              <label className={labelCls}>Industry</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1.5">
+                {APOLLO_INDUSTRIES.map((ind) => (
+                  <button
+                    key={ind.id}
+                    type="button"
+                    onClick={() =>
+                      setApolloIndustries((prev) =>
+                        prev.includes(ind.id) ? prev.filter((i) => i !== ind.id) : [...prev, ind.id]
+                      )
+                    }
+                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
+                      apolloIndustries.includes(ind.id)
+                        ? 'bg-violet-600 text-white border-violet-500'
+                        : 'bg-white/5 text-slate-400 border-white/10 hover:border-white/20'
+                    }`}
+                  >
+                    {ind.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-slate-600 mt-1.5">Select one or more. Leave blank to search all industries.</p>
             </div>
 
             <div>
@@ -587,11 +621,11 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
                 onChange={(e) => setApolloEmployeeRange(e.target.value)}
                 className={selectCls}
               >
-                <option value="1,10" className={optionCls}>1-10 employees</option>
-                <option value="1,20" className={optionCls}>1-20 employees</option>
-                <option value="1,50" className={optionCls}>1-50 employees</option>
-                <option value="11,50" className={optionCls}>11-50 employees</option>
-                <option value="51,200" className={optionCls}>51-200 employees</option>
+                <option value="1-10" className={optionCls}>1-10 employees</option>
+                <option value="11-50" className={optionCls}>11-50 employees</option>
+                <option value="51-200" className={optionCls}>51-200 employees</option>
+                <option value="201-500" className={optionCls}>201-500 employees</option>
+                <option value="501-1000" className={optionCls}>501-1000 employees</option>
               </select>
             </div>
           </div>

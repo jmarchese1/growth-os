@@ -146,7 +146,7 @@ export interface ApolloDiscoveryOptions {
   city: string;
   state?: string;
   industries: string[];         // Apollo industry tags
-  employeeRanges: string[];     // e.g. ['1,10', '11,50']
+  employeeRanges: string[];     // e.g. ['1-10', '11-50']
   maxResults: number;
   personTitles?: string[];
 }
@@ -232,8 +232,12 @@ async function searchApolloOrganizations(
       };
 
       if (options.industries.length > 0) {
-        body['q_organization_keyword_tags'] = options.industries;
+        // Use both industry tag IDs and keywords for maximum coverage
+        body['organization_industry_tag_ids'] = options.industries;
+        body['organization_keywords'] = options.industries;
       }
+
+      log.info({ body, page }, 'Apollo org search request');
 
       const res = await fetch('https://api.apollo.io/v1/mixed_companies/search', {
         method: 'POST',
@@ -246,7 +250,8 @@ async function searchApolloOrganizations(
       });
 
       if (!res.ok) {
-        log.warn({ status: res.status, page }, 'Apollo org search failed');
+        const text = await res.text().catch(() => '');
+        log.warn({ status: res.status, page, responseBody: text }, 'Apollo org search failed');
         break;
       }
 
@@ -259,8 +264,13 @@ async function searchApolloOrganizations(
           city?: string;
           state?: string;
         }>;
-        pagination?: { total_pages?: number };
+        pagination?: { total_pages?: number; total_entries?: number };
       };
+
+      log.info(
+        { page, returned: data.organizations?.length ?? 0, totalEntries: data.pagination?.total_entries },
+        'Apollo org search response',
+      );
 
       const orgs = data.organizations ?? [];
       if (orgs.length === 0) break;
