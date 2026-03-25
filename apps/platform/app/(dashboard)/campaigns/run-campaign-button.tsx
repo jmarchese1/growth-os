@@ -95,7 +95,7 @@ export function RunCampaignButton({ campaignId, prospectorUrl, initialTotal = 0 
             Scraping{liveTotal > 0 ? ` · ${liveTotal} found` : '…'}
           </p>
           <p className="text-[9px] text-slate-500 mt-0.5">
-            Geoapify → enrich emails → queue outreach
+            Discovering prospects and enriching emails...
           </p>
         </div>
       </div>

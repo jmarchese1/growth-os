@@ -350,7 +350,6 @@ Output format:
             });
             if (existing) continue;
 
-            const baseDelayMs = 5 * 60 * 1000;
             const hasEmail = !!p.contact?.email;
 
             await db.prospectBusiness.create({
@@ -373,25 +372,9 @@ Output format:
                 contactLinkedIn: p.contact?.linkedin ?? null,
                 googlePlaceId: `apollo_${p.organizationName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${id.slice(-6)}`,
                 status: hasEmail ? 'ENRICHED' : 'NEW',
-                nextFollowUpAt: hasEmail ? new Date(Date.now() + baseDelayMs) : null,
               },
             });
             created++;
-
-            // Queue outreach for enriched prospects
-            if (hasEmail) {
-              const prospect = await db.prospectBusiness.findFirst({
-                where: { campaignId: id, name: p.organizationName },
-                select: { id: true },
-              });
-              if (prospect) {
-                await outreachSendQueue().add(
-                  `outreach:${prospect.id}:step1`,
-                  { prospectId: prospect.id, campaignId: id, channel: 'email', stepNumber: 1 },
-                  { delay: baseDelayMs },
-                );
-              }
-            }
           }
 
           log.info({ campaignId: id, discovered: prospects.length, created }, 'Apollo campaign complete');
@@ -452,6 +435,46 @@ Output format:
     });
 
     return reply.code(202).send({ message: 'Campaign started', campaignId: id, city: campaign.targetCity, coords });
+  });
+
+  // ─── Send outreach for all enriched prospects in a campaign ───────────────
+  app.post('/campaigns/:id/send', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const campaign = await db.outboundCampaign.findUnique({ where: { id } });
+    if (!campaign) throw new NotFoundError('Campaign', id);
+
+    // Find all ENRICHED prospects that haven't been contacted yet
+    const prospects = await db.prospectBusiness.findMany({
+      where: {
+        campaignId: id,
+        status: 'ENRICHED',
+        email: { not: null },
+      },
+      select: { id: true },
+    });
+
+    if (prospects.length === 0) {
+      return reply.code(400).send({ error: 'No enriched prospects ready to send' });
+    }
+
+    const baseDelayMs = 5 * 60 * 1000;
+    let queued = 0;
+    for (const p of prospects) {
+      await outreachSendQueue().add(
+        `outreach:${p.id}:step1`,
+        { prospectId: p.id, campaignId: id, channel: 'email', stepNumber: 1 },
+        { delay: baseDelayMs },
+      );
+      // Set nextFollowUpAt so the UI shows the countdown
+      await db.prospectBusiness.update({
+        where: { id: p.id },
+        data: { nextFollowUpAt: new Date(Date.now() + baseDelayMs) },
+      });
+      queued++;
+    }
+
+    log.info({ campaignId: id, queued }, 'Outreach queued for campaign');
+    return reply.send({ ok: true, queued });
   });
 
   // ─── Campaign stats ───────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { NewCampaignForm } from './new-campaign-form';
 import { RunCampaignButton } from './run-campaign-button';
+import { SendCampaignButton } from './send-campaign-button';
 import { DeleteCampaignButton } from './delete-campaign-button';
 
 const PROSPECTOR_URL = process.env['PROSPECTOR_URL'] ?? 'http://localhost:3009';
@@ -26,8 +27,21 @@ async function getCampaigns(): Promise<CampaignStats[]> {
   }
 }
 
+async function getEnrichedCount(campaignId: string): Promise<number> {
+  try {
+    const res = await fetch(`${PROSPECTOR_URL}/campaigns/${campaignId}/stats`, { cache: 'no-store' });
+    if (!res.ok) return 0;
+    const data = (await res.json()) as { byStatus?: Record<string, number> };
+    return data.byStatus?.['ENRICHED'] ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
 export default async function CampaignsPage() {
   const campaigns = await getCampaigns();
+  // Fetch enriched counts in parallel
+  const enrichedCounts = await Promise.all(campaigns.map((c) => getEnrichedCount(c.id)));
 
   return (
     <div className="p-8 space-y-8 animate-fade-up">
@@ -74,7 +88,7 @@ export default async function CampaignsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
-              {campaigns.map((c) => (
+              {campaigns.map((c, idx) => (
                 <tr key={c.id} className="hover:bg-violet-950/20 transition-colors">
                   <td className="px-6 py-4">
                     <Link href={`/campaigns/${c.id}`} className="font-semibold text-sm text-white hover:text-violet-300 transition-colors">
@@ -112,6 +126,7 @@ export default async function CampaignsPage() {
                         View →
                       </Link>
                       <RunCampaignButton campaignId={c.id} prospectorUrl={PROSPECTOR_URL} initialTotal={c._count.prospects} />
+                      <SendCampaignButton campaignId={c.id} prospectorUrl={PROSPECTOR_URL} enrichedCount={enrichedCounts[idx] ?? 0} />
                       <DeleteCampaignButton campaignId={c.id} campaignName={c.name} prospectorUrl={PROSPECTOR_URL} />
                     </div>
                   </td>
