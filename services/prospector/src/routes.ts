@@ -476,18 +476,22 @@ Output format:
       return reply.code(400).send({ error: 'No enriched prospects ready to send' });
     }
 
-    const baseDelayMs = 5 * 60 * 1000;
+    // Stagger sends: space emails 2-5 min apart to protect domain reputation.
+    // During warmup keep campaigns small (5-10/day week 1, ramp over 4 weeks).
+    const staggerMs = 3 * 60 * 1000; // 3 min between each email
+    const baseDelayMs = 5 * 60 * 1000; // first email fires 5 min from now
     let queued = 0;
     for (const p of prospects) {
+      const delay = baseDelayMs + queued * staggerMs;
       await outreachSendQueue().add(
         `outreach:${p.id}:step1`,
         { prospectId: p.id, campaignId: id, channel: 'email', stepNumber: 1 },
-        { delay: baseDelayMs },
+        { delay },
       );
       // Set nextFollowUpAt so the UI shows the countdown
       await db.prospectBusiness.update({
         where: { id: p.id },
-        data: { nextFollowUpAt: new Date(Date.now() + baseDelayMs) },
+        data: { nextFollowUpAt: new Date(Date.now() + delay) },
       });
       queued++;
     }
