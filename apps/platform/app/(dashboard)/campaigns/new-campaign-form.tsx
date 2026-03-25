@@ -329,24 +329,24 @@ const US_STATES = [
   { code: 'WI', name: 'Wisconsin' }, { code: 'WY', name: 'Wyoming' }, { code: 'DC', name: 'Washington DC' },
 ];
 
-// Apollo.io industry tags — these match Apollo's organization_industry_tag_ids values.
-// Curated for SMB/restaurant outreach; add more as needed.
+// Apollo industry options — keyword tag + SIC codes for precise filtering.
+// SIC codes: https://knowledge.apollo.io/hc/en-us/articles/4413193954189
 const APOLLO_INDUSTRIES = [
-  { id: 'restaurants', label: 'Restaurants' },
-  { id: 'food & beverages', label: 'Food & Beverages' },
-  { id: 'hospitality', label: 'Hospitality' },
-  { id: 'food production', label: 'Food Production' },
-  { id: 'leisure, travel & tourism', label: 'Travel & Tourism' },
-  { id: 'health, wellness and fitness', label: 'Health & Fitness' },
-  { id: 'retail', label: 'Retail' },
-  { id: 'consumer services', label: 'Consumer Services' },
-  { id: 'automotive', label: 'Automotive' },
-  { id: 'real estate', label: 'Real Estate' },
-  { id: 'construction', label: 'Construction' },
-  { id: 'medical practice', label: 'Medical Practice' },
-  { id: 'beauty', label: 'Beauty & Cosmetics' },
-  { id: 'education', label: 'Education' },
-  { id: 'entertainment', label: 'Entertainment' },
+  { id: 'restaurants', label: 'Restaurants', sic: ['5812'] },
+  { id: 'food & beverages', label: 'Food & Beverages', sic: ['5812', '5461', '5441'] },
+  { id: 'bars & nightlife', label: 'Bars & Nightlife', sic: ['5813'] },
+  { id: 'hospitality', label: 'Hospitality', sic: ['7011', '7041'] },
+  { id: 'health, wellness and fitness', label: 'Health & Fitness', sic: ['7991', '8049'] },
+  { id: 'retail', label: 'Retail', sic: ['5411', '5999'] },
+  { id: 'automotive', label: 'Automotive', sic: ['5511', '7538'] },
+  { id: 'real estate', label: 'Real Estate', sic: ['6512', '6531'] },
+  { id: 'construction', label: 'Construction', sic: ['1522', '1542'] },
+  { id: 'medical practice', label: 'Medical & Dental', sic: ['8011', '8021'] },
+  { id: 'beauty', label: 'Beauty & Spas', sic: ['7231', '7241'] },
+  { id: 'education', label: 'Education', sic: ['8211', '8299'] },
+  { id: 'entertainment', label: 'Entertainment', sic: ['7812', '7941'] },
+  { id: 'consumer services', label: 'Consumer Services', sic: ['7299'] },
+  { id: 'legal', label: 'Legal Services', sic: ['8111'] },
 ];
 
 interface CityEntry { city: string; state: string; lat: number; lon: number }
@@ -439,6 +439,11 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
       };
       if (discoverySource === 'apollo') {
         payload.apolloIndustries = apolloIndustries.length > 0 ? apolloIndustries : undefined;
+        // Collect SIC codes from selected industries
+        const sicCodes = apolloIndustries.flatMap(
+          (id) => APOLLO_INDUSTRIES.find((ind) => ind.id === id)?.sic ?? []
+        );
+        if (sicCodes.length > 0) payload.apolloSicCodes = sicCodes;
         payload.apolloEmployeeRanges = [apolloEmployeeRange];
       }
       const res = await fetch(`${prospectorUrl}/campaigns`, {

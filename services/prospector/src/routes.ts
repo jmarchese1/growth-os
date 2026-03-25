@@ -41,7 +41,8 @@ const createCampaignSchema = z.object({
   targetLon: z.number().optional(),
   targetIndustry: z.enum(['RESTAURANT', 'SALON', 'RETAIL', 'FITNESS', 'MEDICAL', 'OTHER']).default('RESTAURANT'),
   discoverySource: z.enum(['geoapify', 'apollo']).default('geoapify'),
-  apolloIndustries: z.array(z.string()).optional(),       // Apollo industry keyword tags
+  apolloIndustries: z.array(z.string()).optional(),       // Apollo keyword tags (e.g. ['restaurants'])
+  apolloSicCodes: z.array(z.string()).optional(),         // SIC codes (e.g. ['5812'])
   apolloEmployeeRanges: z.array(z.string()).optional(),   // e.g. ['1-10', '11-50']
   emailSubject: z.string().min(5),
   emailBodyHtml: z.string().min(20),
@@ -244,9 +245,10 @@ Output format:
     if (parsed.targetLat !== undefined) createData['targetLat'] = parsed.targetLat;
     if (parsed.targetLon !== undefined) createData['targetLon'] = parsed.targetLon;
     if (parsed.discoverySource) createData['discoverySource'] = parsed.discoverySource;
-    if (parsed.apolloIndustries || parsed.apolloEmployeeRanges) {
+    if (parsed.apolloIndustries || parsed.apolloEmployeeRanges || parsed.apolloSicCodes) {
       createData['apolloConfig'] = {
         industries: parsed.apolloIndustries ?? [],
+        sicCodes: parsed.apolloSicCodes ?? [],
         employeeRanges: parsed.apolloEmployeeRanges ?? ['1-10'],
       };
     }
@@ -322,10 +324,10 @@ Output format:
         return reply.code(400).send({ error: 'APOLLO_API_KEY not configured' });
       }
 
-      const apolloConfig = (campaign.apolloConfig as { industries?: string[]; employeeRanges?: string[] } | null) ?? {};
+      const apolloConfig = (campaign.apolloConfig as { industries?: string[]; sicCodes?: string[]; employeeRanges?: string[] } | null) ?? {};
       const maxResults = campaign.maxProspects ?? 50;
 
-      log.info({ campaignId: id, city: campaign.targetCity, source: 'apollo' }, 'Running Apollo campaign');
+      log.info({ campaignId: id, city: campaign.targetCity, apolloConfig, source: 'apollo' }, 'Running Apollo campaign');
 
       // Apollo discovery runs in background — return 202 immediately
       setImmediate(async () => {
@@ -333,6 +335,7 @@ Output format:
           const apolloOpts: import('./scraper/apollo.js').ApolloDiscoveryOptions = {
             city: campaign.targetCity.split(',')[0]?.trim() ?? campaign.targetCity,
             industries: apolloConfig.industries ?? [],
+            sicCodes: apolloConfig.sicCodes ?? [],
             employeeRanges: apolloConfig.employeeRanges ?? ['1-10'],
             maxResults,
           };

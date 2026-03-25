@@ -80,9 +80,9 @@ export async function findEmailViaApollo(
     log.warn({ domain, err }, 'Apollo people/match failed');
   }
 
-  // ── Attempt 2: Search for owner/manager at the domain ───────────────────────
+  // ── Attempt 2: Search for owner/manager at the domain via api_search + match ─
   try {
-    const res = await fetch('https://api.apollo.io/v1/mixed_people/search', {
+    const searchRes = await fetch('https://api.apollo.io/v1/mixed_people/api_search', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -93,38 +93,47 @@ export async function findEmailViaApollo(
         q_organization_domains: domain,
         page: 1,
         per_page: 5,
-        // Prefer decision-makers at local businesses
         person_titles: ['owner', 'manager', 'general manager', 'founder', 'president', 'director', 'operator'],
-        reveal_personal_emails: true,
       }),
     });
 
-    if (res.ok) {
-      const data = (await res.json()) as {
-        people?: Array<{
-          email?: string;
-          first_name?: string;
-          last_name?: string;
-          title?: string;
-          linkedin_url?: string;
-          email_status?: string;
-        }>;
+    if (searchRes.ok) {
+      const searchData = (await searchRes.json()) as {
+        people?: Array<{ id?: string; has_email?: boolean }>;
       };
-      const person = data.people?.find((p) => p.email);
-      if (person?.email) {
-        log.debug({ domain, email: person.email }, 'Apollo mixed_people/search hit');
-        return {
-          email: person.email,
-          firstName: person.first_name ?? null,
-          lastName: person.last_name ?? null,
-          position: person.title ?? null,
-          linkedin: person.linkedin_url ?? null,
-          confidence: EMAIL_STATUS_SCORE[person.email_status ?? ''] ?? 60,
-        };
+      const candidate = searchData.people?.find((p) => p.id && p.has_email);
+      if (candidate?.id) {
+        // Reveal email via people/match
+        const matchRes = await fetch('https://api.apollo.io/v1/people/match', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache',
+            'X-Api-Key': apiKey,
+          },
+          body: JSON.stringify({ id: candidate.id, reveal_personal_emails: true }),
+        });
+        if (matchRes.ok) {
+          const matchData = (await matchRes.json()) as {
+            person?: { email?: string; first_name?: string; last_name?: string; title?: string; linkedin_url?: string; email_status?: string };
+          };
+          const person = matchData.person;
+          if (person?.email) {
+            log.debug({ domain, email: person.email }, 'Apollo api_search+match hit');
+            return {
+              email: person.email,
+              firstName: person.first_name ?? null,
+              lastName: person.last_name ?? null,
+              position: person.title ?? null,
+              linkedin: person.linkedin_url ?? null,
+              confidence: EMAIL_STATUS_SCORE[person.email_status ?? ''] ?? 60,
+            };
+          }
+        }
       }
     }
   } catch (err) {
-    log.warn({ domain, err }, 'Apollo mixed_people/search failed');
+    log.warn({ domain, err }, 'Apollo api_search+match failed');
   }
 
   log.info({ domain }, 'Apollo: no contact found');
@@ -145,7 +154,8 @@ export interface ApolloProspect {
 export interface ApolloDiscoveryOptions {
   city: string;
   state?: string;
-  industries: string[];         // Apollo industry tags
+  industries: string[];         // Apollo keyword tags (e.g. ['restaurants'])
+  sicCodes?: string[];          // SIC codes (e.g. ['5812'] = Eating Places)
   employeeRanges: string[];     // e.g. ['1-10', '11-50']
   maxResults: number;
   personTitles?: string[];
@@ -232,9 +242,10 @@ async function searchApolloOrganizations(
       };
 
       if (options.industries.length > 0) {
-        // Use both industry tag IDs and keywords for maximum coverage
-        body['organization_industry_tag_ids'] = options.industries;
-        body['organization_keywords'] = options.industries;
+        body['q_organization_keyword_tags'] = options.industries;
+      }
+      if (options.sicCodes && options.sicCodes.length > 0) {
+        body['organization_sic_codes'] = options.sicCodes;
       }
 
       log.info({ body, page }, 'Apollo org search request');
@@ -308,7 +319,8 @@ async function findPersonAtOrg(
   titles: string[],
 ): Promise<ApolloContact | null> {
   try {
-    const res = await fetch('https://api.apollo.io/v1/mixed_people/search', {
+    // Step 1: Search for people at org (returns obfuscated results with person IDs)
+    const searchRes = await fetch('https://api.apollo.io/v1/mixed_people/api_search', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -320,26 +332,65 @@ async function findPersonAtOrg(
         page: 1,
         per_page: 5,
         person_titles: titles,
+      }),
+    });
+
+    if (!searchRes.ok) {
+      log.warn({ orgId, status: searchRes.status }, 'Apollo people api_search failed');
+      return null;
+    }
+
+    const searchData = (await searchRes.json()) as {
+      people?: Array<{
+        id?: string;
+        first_name?: string;
+        title?: string;
+        has_email?: boolean;
+      }>;
+    };
+
+    // Find first person with an email available
+    const candidate = searchData.people?.find((p) => p.id && p.has_email);
+    if (!candidate?.id) {
+      log.debug({ orgId, peopleCount: searchData.people?.length ?? 0 }, 'No candidate with email at org');
+      return null;
+    }
+
+    // Step 2: Reveal full contact via people/match (costs 1 credit)
+    await new Promise((r) => setTimeout(r, 200));
+    const matchRes = await fetch('https://api.apollo.io/v1/people/match', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
+        'X-Api-Key': apiKey,
+      },
+      body: JSON.stringify({
+        id: candidate.id,
         reveal_personal_emails: true,
       }),
     });
 
-    if (!res.ok) return null;
+    if (!matchRes.ok) {
+      log.warn({ orgId, personId: candidate.id, status: matchRes.status }, 'Apollo people/match failed');
+      return null;
+    }
 
-    const data = (await res.json()) as {
-      people?: Array<{
+    const matchData = (await matchRes.json()) as {
+      person?: {
         email?: string;
         first_name?: string;
         last_name?: string;
         title?: string;
         linkedin_url?: string;
         email_status?: string;
-      }>;
+      };
     };
 
-    const person = data.people?.find((p) => p.email);
+    const person = matchData.person;
     if (!person?.email) return null;
 
+    log.debug({ orgId, email: person.email }, 'Apollo contact revealed');
     return {
       email: person.email,
       firstName: person.first_name ?? null,
