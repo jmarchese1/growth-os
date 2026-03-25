@@ -333,8 +333,13 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                           {p.email}
                         </a>
                         <div className="flex items-center gap-2">
-                          {p.emailSource === 'apollo' && (
-                            <span className="text-[9px] font-semibold uppercase tracking-wider text-purple-400/60">via Apollo</span>
+                          {p.emailSource && (
+                            <span className={`text-[9px] font-semibold uppercase tracking-wider ${
+                              p.emailSource === 'apollo' ? 'text-purple-400/60' :
+                              p.emailSource === 'website' ? 'text-blue-400/60' :
+                              p.emailSource === 'brave_search' ? 'text-orange-400/60' :
+                              'text-slate-400/60'
+                            }`}>via {p.emailSource === 'brave_search' ? 'Brave' : p.emailSource}</span>
                           )}
                           {p.emailVerificationStatus && (
                             <span className="text-[9px] uppercase tracking-wider text-slate-600">

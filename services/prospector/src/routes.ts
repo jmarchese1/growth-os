@@ -340,15 +340,25 @@ Output format:
             maxResults,
           };
           if (campaign.targetState) apolloOpts.state = campaign.targetState;
+          if (env.BRAVE_SEARCH_API_KEY) apolloOpts.braveApiKey = env.BRAVE_SEARCH_API_KEY;
           const prospects = await discoverViaApollo(env.APOLLO_API_KEY!, apolloOpts);
 
           let created = 0;
+          let skippedDedup = 0;
           for (const p of prospects) {
-            // Dedup by org name + campaign
-            const existing = await db.prospectBusiness.findFirst({
-              where: { campaignId: id, name: p.organizationName },
+            // Dedup across ALL campaigns — never contact the same business twice
+            const existingByName = await db.prospectBusiness.findFirst({
+              where: { name: p.organizationName },
             });
-            if (existing) continue;
+            if (existingByName) { skippedDedup++; continue; }
+
+            // Also dedup by domain if available
+            if (p.organizationDomain) {
+              const existingByDomain = await db.prospectBusiness.findFirst({
+                where: { website: `https://${p.organizationDomain}` },
+              });
+              if (existingByDomain) { skippedDedup++; continue; }
+            }
 
             const hasEmail = !!p.contact?.email;
 
@@ -365,7 +375,7 @@ Output format:
                 phoneSource: p.organizationPhone ? 'apollo' : null,
                 website: p.organizationDomain ? `https://${p.organizationDomain}` : null,
                 email: p.contact?.email ?? null,
-                emailSource: p.contact?.email ? 'apollo' : null,
+                emailSource: p.emailSource,
                 contactFirstName: p.contact?.firstName ?? null,
                 contactLastName: p.contact?.lastName ?? null,
                 contactTitle: p.contact?.position ?? null,
@@ -386,7 +396,7 @@ Output format:
             created++;
           }
 
-          log.info({ campaignId: id, discovered: prospects.length, created }, 'Apollo campaign complete');
+          log.info({ campaignId: id, discovered: prospects.length, created, skippedDedup }, 'Apollo campaign complete');
         } catch (err) {
           log.error({ err, campaignId: id }, 'Apollo campaign failed');
         }

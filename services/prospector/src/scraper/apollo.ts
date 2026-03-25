@@ -1,4 +1,6 @@
 import { createLogger } from '@embedo/utils';
+import { extractEmailFromWebsite } from './website-email.js';
+import { findBusinessEmail } from './brave-search.js';
 
 const log = createLogger('apollo-scraper');
 
@@ -157,6 +159,7 @@ export interface ApolloProspect {
   organizationSicCodes: string[];
   organizationNaicsCodes: string[];
   contact: ApolloContact | null;
+  emailSource: 'apollo' | 'website' | 'brave_search' | null;
 }
 
 export interface ApolloDiscoveryOptions {
@@ -167,6 +170,7 @@ export interface ApolloDiscoveryOptions {
   employeeRanges: string[];     // e.g. ['1-10', '11-50']
   maxResults: number;
   personTitles?: string[];
+  braveApiKey?: string;         // Brave Search API key for email fallback
 }
 
 /**
@@ -195,7 +199,33 @@ export async function discoverViaApollo(
   for (const org of orgs) {
     if (prospects.length >= options.maxResults) break;
 
-    const contact = await findPersonAtOrg(apiKey, org.id, titles);
+    let contact = await findPersonAtOrg(apiKey, org.id, titles);
+    let emailSource: 'apollo' | 'website' | 'brave_search' | null = contact?.email ? 'apollo' : null;
+
+    // Email fallback: website scraping → Brave Search
+    if (!contact?.email && org.domain) {
+      log.debug({ orgName: org.name, domain: org.domain }, 'Apollo no email — trying website scrape');
+      const websiteEmail = await extractEmailFromWebsite(`https://${org.domain}`);
+      if (websiteEmail) {
+        log.info({ orgName: org.name, email: websiteEmail }, 'Email found via website scrape');
+        contact = contact ?? { email: '', firstName: null, lastName: null, position: null, linkedin: null, confidence: 0 };
+        contact.email = websiteEmail;
+        contact.confidence = 45;
+        emailSource = 'website';
+      }
+    }
+
+    if (!contact?.email && options.braveApiKey) {
+      log.debug({ orgName: org.name }, 'Apollo no email — trying Brave Search');
+      const braveEmail = await findBusinessEmail(org.name, options.city, options.braveApiKey);
+      if (braveEmail) {
+        log.info({ orgName: org.name, email: braveEmail }, 'Email found via Brave Search');
+        contact = contact ?? { email: '', firstName: null, lastName: null, position: null, linkedin: null, confidence: 0 };
+        contact.email = braveEmail;
+        contact.confidence = 35;
+        emailSource = 'brave_search';
+      }
+    }
 
     prospects.push({
       organizationName: org.name,
@@ -212,6 +242,7 @@ export async function discoverViaApollo(
       organizationSicCodes: org.sicCodes ?? [],
       organizationNaicsCodes: org.naicsCodes ?? [],
       contact,
+      emailSource,
     });
 
     // Rate limit: ~3 req/sec to stay within Apollo limits
