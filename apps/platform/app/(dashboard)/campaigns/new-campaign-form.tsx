@@ -3,30 +3,36 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
-const DEFAULT_SUBJECT = `quick question for {{businessName}}`;
+const DEFAULT_SUBJECT = `quick question about {{businessName}}`;
 
 const DEFAULT_BODY = `<div style="font-family: Arial, sans-serif; max-width: 540px; color: #1a1a1a; line-height: 1.65; font-size: 15px;">
   <p>Hey {{businessName}},</p>
 
   <p>
-    Came across your place in {{city}} and wanted to reach out directly.
-    I help restaurants stop losing customers to missed calls and slow follow-ups
-    using a simple AI layer that runs in the background 24/7.
+    I run an AI automation agency built specifically for restaurants. We build three things
+    for our clients: a custom AI phone receptionist, a custom AI chatbot and a professional website.
   </p>
 
   <p>
-    Takes about a week to set up and most places recover a few lost reservations
-    in the first week alone. Happy to show you exactly what it looks like for your spot.
+    Here is how it works. When a customer calls and you are busy or closed, the call automatically
+    routes to your AI phone agent. It answers questions, takes orders and books reservations just
+    like a real staff member would. On top of that, we embed an AI chatbot into your website that
+    does the same thing for online visitors.
   </p>
 
-  <table style="margin-top: 28px; padding-top: 20px; border-collapse: collapse; width: 100%;" cellpadding="0" cellspacing="0">
+  <p>
+    I would love to jump on a quick call and demo what this would look like for {{businessName}}.
+    No pressure, just want to show you what is possible.
+  </p>
+
+  <table style="margin-top: 28px; border-top: 1px solid #eee; padding-top: 20px; border-collapse: collapse; width: 100%;" cellpadding="0" cellspacing="0">
     <tr>
       <td style="padding-right: 12px; vertical-align: middle; width: 56px;">
         <img src="https://i.imgur.com/RDXkWkD.jpeg" alt="Jason" width="48" height="48" style="border-radius: 50%; display: block; object-fit: cover;" />
       </td>
       <td style="vertical-align: middle;">
         <p style="margin: 0; font-size: 14px; font-weight: 700; color: #1a1a1a;">Jason</p>
-        <p style="margin: 2px 0 0; font-size: 13px; color: #666;">Data Scientist · <a href="https://embedo.io" style="color: #4f46e5; text-decoration: none;">embedo.io</a></p>
+        <p style="margin: 2px 0 0; font-size: 13px; color: #666;">Founder · <a href="https://embedo.io" style="color: #4f46e5; text-decoration: none;">embedo.io</a></p>
       </td>
     </tr>
   </table>
