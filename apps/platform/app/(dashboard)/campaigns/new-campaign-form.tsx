@@ -348,6 +348,10 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const [discoverySource, setDiscoverySource] = useState<'geoapify' | 'apollo'>('geoapify');
+  const [apolloIndustries, setApolloIndustries] = useState<string[]>([]);
+  const [apolloEmployeeRange, setApolloEmployeeRange] = useState('1,10');
+
   const [form, setForm] = useState({
     name: '',
     targetIndustry: 'RESTAURANT',
@@ -403,7 +407,7 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
     setLoading(true);
     setError('');
     try {
-      const payload = {
+      const payload: Record<string, unknown> = {
         ...form,
         targetCity: `${selectedCity.city}, ${selectedCity.state}`,
         targetState: selectedCity.state,
@@ -411,7 +415,12 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
         targetLat: selectedCity.lat,
         targetLon: selectedCity.lon,
         maxProspects: form.maxProspects === 'unlimited' ? null : parseInt(form.maxProspects),
+        discoverySource,
       };
+      if (discoverySource === 'apollo') {
+        payload.apolloIndustries = apolloIndustries.length > 0 ? apolloIndustries : undefined;
+        payload.apolloEmployeeRanges = [apolloEmployeeRange];
+      }
       const res = await fetch(`${prospectorUrl}/campaigns`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -520,6 +529,73 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
             </select>
           </div>
         </div>
+
+        {/* Discovery Source Toggle */}
+        <div>
+          <label className={labelCls}>Discovery Source</label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setDiscoverySource('geoapify')}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                discoverySource === 'geoapify'
+                  ? 'bg-violet-600 text-white'
+                  : 'bg-white/5 text-slate-400 border border-white/10 hover:border-white/20'
+              }`}
+            >
+              Geoapify (Places)
+            </button>
+            <button
+              type="button"
+              onClick={() => setDiscoverySource('apollo')}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                discoverySource === 'apollo'
+                  ? 'bg-violet-600 text-white'
+                  : 'bg-white/5 text-slate-400 border border-white/10 hover:border-white/20'
+              }`}
+            >
+              Apollo (People)
+            </button>
+          </div>
+          <p className="text-[10px] text-slate-600 mt-1.5">
+            {discoverySource === 'geoapify'
+              ? 'Finds businesses via Google Maps data. Best for discovering local restaurants by location.'
+              : 'Finds businesses and their owners/managers via Apollo.io. Best for finding decision-makers with verified emails.'}
+          </p>
+        </div>
+
+        {/* Apollo-specific options */}
+        {discoverySource === 'apollo' && (
+          <div className="space-y-4 p-4 bg-violet-500/5 border border-violet-500/15 rounded-lg">
+            <p className="text-xs font-semibold text-violet-400 uppercase tracking-wide">Apollo Settings</p>
+
+            <div>
+              <label className={labelCls}>Industry Keywords</label>
+              <input
+                value={apolloIndustries.join(', ')}
+                onChange={(e) => setApolloIndustries(e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
+                placeholder="restaurants, food service, hospitality"
+                className={inputCls}
+              />
+              <p className="text-[10px] text-slate-600 mt-1">Comma-separated. Leave blank to search all industries.</p>
+            </div>
+
+            <div>
+              <label className={labelCls}>Employee Count</label>
+              <select
+                value={apolloEmployeeRange}
+                onChange={(e) => setApolloEmployeeRange(e.target.value)}
+                className={selectCls}
+              >
+                <option value="1,10" className={optionCls}>1-10 employees</option>
+                <option value="1,20" className={optionCls}>1-20 employees</option>
+                <option value="1,50" className={optionCls}>1-50 employees</option>
+                <option value="11,50" className={optionCls}>11-50 employees</option>
+                <option value="51,200" className={optionCls}>51-200 employees</option>
+              </select>
+            </div>
+          </div>
+        )}
 
         {/* Location */}
         <div>

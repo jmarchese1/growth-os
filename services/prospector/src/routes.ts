@@ -8,7 +8,7 @@ import { searchRestaurants, geocodeCity } from './scraper/geoapify.js';
 import { sendColdEmail } from './outreach/email-sender.js';
 import { generatePersonalizedEmail } from './outreach/ai-personalizer.js';
 import { findEmailViaHunter, extractDomain as extractHunterDomain } from './scraper/hunter.js';
-import { findEmailViaApollo, extractDomain as extractApolloDomain } from './scraper/apollo.js';
+import { findEmailViaApollo, extractDomain as extractApolloDomain, discoverViaApollo } from './scraper/apollo.js';
 import { env } from './config.js';
 
 const log = createLogger('prospector:routes');
@@ -40,6 +40,9 @@ const createCampaignSchema = z.object({
   targetLat: z.number().optional(),
   targetLon: z.number().optional(),
   targetIndustry: z.enum(['RESTAURANT', 'SALON', 'RETAIL', 'FITNESS', 'MEDICAL', 'OTHER']).default('RESTAURANT'),
+  discoverySource: z.enum(['geoapify', 'apollo']).default('geoapify'),
+  apolloIndustries: z.array(z.string()).optional(),       // Apollo industry keyword tags
+  apolloEmployeeRanges: z.array(z.string()).optional(),   // e.g. ['1,10', '11,50']
   emailSubject: z.string().min(5),
   emailBodyHtml: z.string().min(20),
   smsBody: z.string().optional(),
@@ -240,6 +243,13 @@ Output format:
     if (parsed.targetCountry !== undefined) createData['targetCountry'] = parsed.targetCountry;
     if (parsed.targetLat !== undefined) createData['targetLat'] = parsed.targetLat;
     if (parsed.targetLon !== undefined) createData['targetLon'] = parsed.targetLon;
+    if (parsed.discoverySource) createData['discoverySource'] = parsed.discoverySource;
+    if (parsed.apolloIndustries || parsed.apolloEmployeeRanges) {
+      createData['apolloConfig'] = {
+        industries: parsed.apolloIndustries ?? [],
+        employeeRanges: parsed.apolloEmployeeRanges ?? ['1,10'],
+      };
+    }
     if (parsed.smsBody !== undefined) createData['smsBody'] = parsed.smsBody;
     if (parsed.maxProspects != null) createData['maxProspects'] = parsed.maxProspects;
     if (parsed.sequenceSteps !== undefined) {
@@ -304,14 +314,99 @@ Output format:
     if (!campaign) throw new NotFoundError('Campaign', id);
     if (!campaign.active) return reply.code(400).send({ error: 'Campaign is inactive' });
 
+    const source = campaign.discoverySource ?? 'geoapify';
+
+    if (source === 'apollo') {
+      // ── Apollo Discovery Mode ──────────────────────────────────────────────
+      if (!env.APOLLO_API_KEY) {
+        return reply.code(400).send({ error: 'APOLLO_API_KEY not configured' });
+      }
+
+      const apolloConfig = (campaign.apolloConfig as { industries?: string[]; employeeRanges?: string[] } | null) ?? {};
+      const maxResults = campaign.maxProspects ?? 50;
+
+      log.info({ campaignId: id, city: campaign.targetCity, source: 'apollo' }, 'Running Apollo campaign');
+
+      // Apollo discovery runs in background — return 202 immediately
+      setImmediate(async () => {
+        try {
+          const prospects = await discoverViaApollo(env.APOLLO_API_KEY!, {
+            city: campaign.targetCity.split(',')[0]?.trim() ?? campaign.targetCity,
+            state: campaign.targetState ?? undefined,
+            industries: apolloConfig.industries ?? [],
+            employeeRanges: apolloConfig.employeeRanges ?? ['1,10'],
+            maxResults,
+          });
+
+          let created = 0;
+          for (const p of prospects) {
+            // Dedup by org name + campaign
+            const existing = await db.prospectBusiness.findFirst({
+              where: { campaignId: id, name: p.organizationName },
+            });
+            if (existing) continue;
+
+            const baseDelayMs = 5 * 60 * 1000;
+            const hasEmail = !!p.contact?.email;
+
+            await db.prospectBusiness.create({
+              data: {
+                campaignId: id,
+                name: p.organizationName,
+                address: {
+                  city: p.organizationCity,
+                  state: p.organizationState,
+                  formatted: [p.organizationName, p.organizationCity, p.organizationState].filter(Boolean).join(', '),
+                },
+                phone: p.organizationPhone,
+                phoneSource: p.organizationPhone ? 'apollo' : null,
+                website: p.organizationDomain ? `https://${p.organizationDomain}` : null,
+                email: p.contact?.email ?? null,
+                emailSource: p.contact?.email ? 'apollo' : null,
+                contactFirstName: p.contact?.firstName ?? null,
+                contactLastName: p.contact?.lastName ?? null,
+                contactTitle: p.contact?.position ?? null,
+                contactLinkedIn: p.contact?.linkedin ?? null,
+                googlePlaceId: `apollo_${p.organizationName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${id.slice(-6)}`,
+                status: hasEmail ? 'ENRICHED' : 'NEW',
+                nextFollowUpAt: hasEmail ? new Date(Date.now() + baseDelayMs) : null,
+              },
+            });
+            created++;
+
+            // Queue outreach for enriched prospects
+            if (hasEmail) {
+              const prospect = await db.prospectBusiness.findFirst({
+                where: { campaignId: id, name: p.organizationName },
+                select: { id: true },
+              });
+              if (prospect) {
+                await outreachSendQueue().add(
+                  `outreach:${prospect.id}:step1`,
+                  { prospectId: prospect.id, campaignId: id, channel: 'email', stepNumber: 1 },
+                  { delay: baseDelayMs },
+                );
+              }
+            }
+          }
+
+          log.info({ campaignId: id, discovered: prospects.length, created }, 'Apollo campaign complete');
+        } catch (err) {
+          log.error({ err, campaignId: id }, 'Apollo campaign failed');
+        }
+      });
+
+      return reply.code(202).send({ message: 'Apollo campaign started', campaignId: id, city: campaign.targetCity, source: 'apollo' });
+    }
+
+    // ── Geoapify Discovery Mode (default) ──────────────────────────────────
     if (!env.GEOAPIFY_API_KEY) {
       return reply.code(400).send({ error: 'GEOAPIFY_API_KEY not configured' });
     }
 
-    log.info({ campaignId: id, city: campaign.targetCity }, 'Running campaign');
+    log.info({ campaignId: id, city: campaign.targetCity, source: 'geoapify' }, 'Running campaign');
 
     // Use stored coords if available (set at campaign creation via autocomplete).
-    // Fall back to geocoding only for campaigns created before this feature was added.
     let coords: { lon: number; lat: number };
     if (campaign.targetLat != null && campaign.targetLon != null) {
       coords = { lon: campaign.targetLon, lat: campaign.targetLat };
@@ -329,7 +424,6 @@ Output format:
     // Scrape places in background — return 202 immediately
     setImmediate(async () => {
       try {
-        // Start from after already-scraped prospects so each run returns fresh results
         const existingCount = await db.prospectBusiness.count({ where: { campaignId: id } });
         const fetchLimit = campaign.maxProspects ?? 200;
         const allPlaces = await searchRestaurants(campaign.targetCity, env.GEOAPIFY_API_KEY!, fetchLimit, coords, existingCount);
@@ -354,7 +448,6 @@ Output format:
     });
 
     return reply.code(202).send({ message: 'Campaign started', campaignId: id, city: campaign.targetCity, coords });
-  });
 
   // ─── Campaign stats ───────────────────────────────────────────────────────
   app.get('/campaigns/:id/stats', async (request, reply) => {

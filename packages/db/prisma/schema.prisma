@@ -702,6 +702,8 @@ model OutboundCampaign {
   targetLat      Float?       // Stored at campaign creation — bypasses geocoding at run time
   targetLon      Float?
   targetIndustry BusinessType @default(RESTAURANT)
+  discoverySource String      @default("geoapify")  // "geoapify" | "apollo"
+  apolloConfig    Json?       // { industries: string[], employeeRanges: string[] }
   emailSubject   String
   emailBodyHtml  String
   smsBody        String?
