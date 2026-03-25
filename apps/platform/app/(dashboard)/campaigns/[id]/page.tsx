@@ -34,6 +34,14 @@ interface Prospect {
   googleReviewCount: number | null;
   contactFirstName: string | null;
   contactLastName: string | null;
+  contactTitle: string | null;
+  contactLinkedIn: string | null;
+  linkedinUrl: string | null;
+  facebookUrl: string | null;
+  twitterUrl: string | null;
+  logoUrl: string | null;
+  revenue: string | null;
+  foundedYear: number | null;
   emailSource: string | null;
   emailVerificationStatus: string | null;
   status: ProspectStatus;
@@ -265,12 +273,8 @@ export default async function CampaignDetailPage({ params, searchParams }: {
               <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap sticky left-0 bg-[#17132b] z-10">Company</th>
               <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Phone</th>
               <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Email</th>
-              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">
-                First <span className="text-[9px] text-slate-600 font-normal">· Apollo</span>
-              </th>
-              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">
-                Last <span className="text-[9px] text-slate-600 font-normal">· Apollo</span>
-              </th>
+              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Contact</th>
+              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Details</th>
               <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Rating</th>
               <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Status</th>
               <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Sent</th>
@@ -344,14 +348,51 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                     )}
                   </td>
 
-                  {/* First Name — Apollo */}
-                  <td className="px-4 py-3 min-w-[100px]">
-                    <span className="text-xs text-slate-300">{p.contactFirstName ?? '—'}</span>
+                  {/* Contact — name + role + LinkedIn */}
+                  <td className="px-4 py-3 min-w-[160px]">
+                    {p.contactFirstName || p.contactLastName ? (
+                      <div>
+                        <span className="text-xs font-medium text-slate-200">
+                          {[p.contactFirstName, p.contactLastName].filter(Boolean).join(' ')}
+                        </span>
+                        {p.contactTitle && (
+                          <p className="text-[10px] text-slate-500 mt-0.5">{p.contactTitle}</p>
+                        )}
+                        {p.contactLinkedIn && (
+                          <a href={p.contactLinkedIn} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-400 hover:text-blue-300 mt-0.5 block">
+                            LinkedIn
+                          </a>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-slate-700">—</span>
+                    )}
                   </td>
 
-                  {/* Last Name — Apollo */}
-                  <td className="px-4 py-3 min-w-[100px]">
-                    <span className="text-xs text-slate-300">{p.contactLastName ?? '—'}</span>
+                  {/* Details — revenue, founded, socials */}
+                  <td className="px-4 py-3 min-w-[140px]">
+                    <div className="flex flex-col gap-0.5">
+                      {p.revenue && (
+                        <span className="text-[10px] text-emerald-400">${p.revenue} rev</span>
+                      )}
+                      {p.foundedYear && (
+                        <span className="text-[10px] text-slate-500">Est. {p.foundedYear}</span>
+                      )}
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {p.linkedinUrl && (
+                          <a href={p.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-400 hover:text-blue-300">Li</a>
+                        )}
+                        {p.facebookUrl && (
+                          <a href={p.facebookUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-400 hover:text-blue-300">Fb</a>
+                        )}
+                        {p.twitterUrl && (
+                          <a href={p.twitterUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-400 hover:text-blue-300">X</a>
+                        )}
+                      </div>
+                      {!p.revenue && !p.foundedYear && !p.linkedinUrl && !p.facebookUrl && !p.twitterUrl && (
+                        <span className="text-xs text-slate-700">—</span>
+                      )}
+                    </div>
                   </td>
 
                   {/* Google Rating */}

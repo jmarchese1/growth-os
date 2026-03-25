@@ -370,6 +370,15 @@ Output format:
                 contactLastName: p.contact?.lastName ?? null,
                 contactTitle: p.contact?.position ?? null,
                 contactLinkedIn: p.contact?.linkedin ?? null,
+                linkedinUrl: p.organizationLinkedin,
+                facebookUrl: p.organizationFacebook,
+                twitterUrl: p.organizationTwitter,
+                logoUrl: p.organizationLogo,
+                revenue: p.organizationRevenue,
+                foundedYear: p.organizationFoundedYear,
+                ...(p.organizationSicCodes.length > 0 || p.organizationNaicsCodes.length > 0
+                  ? { industryCodes: { sic: p.organizationSicCodes, naics: p.organizationNaicsCodes } }
+                  : {}),
                 googlePlaceId: `apollo_${p.organizationName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${id.slice(-6)}`,
                 status: hasEmail ? 'ENRICHED' : 'NEW',
               },

@@ -148,6 +148,14 @@ export interface ApolloProspect {
   organizationPhone: string | null;
   organizationCity: string | null;
   organizationState: string | null;
+  organizationLinkedin: string | null;
+  organizationFacebook: string | null;
+  organizationTwitter: string | null;
+  organizationLogo: string | null;
+  organizationRevenue: string | null;
+  organizationFoundedYear: number | null;
+  organizationSicCodes: string[];
+  organizationNaicsCodes: string[];
   contact: ApolloContact | null;
 }
 
@@ -195,6 +203,14 @@ export async function discoverViaApollo(
       organizationPhone: org.phone ?? null,
       organizationCity: org.city ?? null,
       organizationState: org.state ?? null,
+      organizationLinkedin: org.linkedinUrl ?? null,
+      organizationFacebook: org.facebookUrl ?? null,
+      organizationTwitter: org.twitterUrl ?? null,
+      organizationLogo: org.logoUrl ?? null,
+      organizationRevenue: org.revenuePrinted ?? null,
+      organizationFoundedYear: org.foundedYear ?? null,
+      organizationSicCodes: org.sicCodes ?? [],
+      organizationNaicsCodes: org.naicsCodes ?? [],
       contact,
     });
 
@@ -217,6 +233,14 @@ interface ApolloOrg {
   domain: string | null;
   phone: string | null;
   city: string | null;
+  linkedinUrl: string | null;
+  facebookUrl: string | null;
+  twitterUrl: string | null;
+  logoUrl: string | null;
+  revenuePrinted: string | null;
+  foundedYear: number | null;
+  sicCodes: string[];
+  naicsCodes: string[];
   state: string | null;
 }
 
@@ -274,6 +298,14 @@ async function searchApolloOrganizations(
           phone?: string;
           city?: string;
           state?: string;
+          linkedin_url?: string;
+          facebook_url?: string;
+          twitter_url?: string;
+          logo_url?: string;
+          organization_revenue_printed?: string;
+          founded_year?: number;
+          sic_codes?: string[];
+          naics_codes?: string[];
         }>;
         pagination?: { total_pages?: number; total_entries?: number };
       };
@@ -296,6 +328,14 @@ async function searchApolloOrganizations(
           phone: org.phone ?? null,
           city: org.city ?? null,
           state: org.state ?? null,
+          linkedinUrl: org.linkedin_url ?? null,
+          facebookUrl: org.facebook_url ?? null,
+          twitterUrl: org.twitter_url ?? null,
+          logoUrl: org.logo_url ?? null,
+          revenuePrinted: org.organization_revenue_printed ?? null,
+          foundedYear: org.founded_year ?? null,
+          sicCodes: org.sic_codes ?? [],
+          naicsCodes: org.naics_codes ?? [],
         });
       }
 

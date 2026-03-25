@@ -735,6 +735,13 @@ model ProspectBusiness {
   contactLastName   String?
   contactTitle      String?
   contactLinkedIn   String?
+  linkedinUrl       String?  // Business LinkedIn page
+  facebookUrl       String?
+  twitterUrl        String?
+  logoUrl           String?
+  revenue           String?  // e.g. "5.6M", "1.2B"
+  foundedYear       Int?
+  industryCodes     Json?    // { sic: ["5812"], naics: ["72251"] }
   emailVerificationStatus String?
   emailVerificationScore  Int?
   emailVerifiedAt   DateTime?
