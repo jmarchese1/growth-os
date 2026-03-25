@@ -8,6 +8,7 @@ import { searchRestaurants, geocodeCity } from './scraper/geoapify.js';
 import { sendColdEmail } from './outreach/email-sender.js';
 import { generatePersonalizedEmail } from './outreach/ai-personalizer.js';
 import { findEmailViaHunter, extractDomain as extractHunterDomain } from './scraper/hunter.js';
+import { findEmailViaApollo, extractDomain as extractApolloDomain } from './scraper/apollo.js';
 import { env } from './config.js';
 
 const log = createLogger('prospector:routes');
@@ -429,6 +430,55 @@ Output format:
       log.error({ err, campaignId: id }, 'Prospects query failed');
       return reply.send({ items: [], total: 0, page: parseInt(page), pageSize: parseInt(pageSize) });
     }
+  });
+
+  // ─── Re-enrich prospects via Apollo ──────────────────────────────────────
+  app.post('/campaigns/:id/re-enrich', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    if (!env.APOLLO_API_KEY) {
+      return reply.code(400).send({ success: false, error: 'APOLLO_API_KEY not configured' });
+    }
+
+    const prospects = await db.prospectBusiness.findMany({
+      where: { campaignId: id, status: 'NEW' },
+    });
+
+    let enriched = 0;
+    let failed = 0;
+
+    for (const p of prospects) {
+      try {
+        const domain = p.website ? extractApolloDomain(p.website) : null;
+        if (!domain) { failed++; continue; }
+
+        const result = await findEmailViaApollo(domain, env.APOLLO_API_KEY!);
+        if (result) {
+          await db.prospectBusiness.update({
+            where: { id: p.id },
+            data: {
+              email: result.email,
+              emailSource: 'apollo',
+              contactFirstName: result.firstName,
+              contactLastName: result.lastName,
+              contactTitle: result.position,
+              contactLinkedIn: result.linkedin,
+              status: 'ENRICHED',
+            },
+          });
+          enriched++;
+          log.info({ prospectId: p.id, email: result.email }, 'Re-enriched via Apollo');
+        } else {
+          failed++;
+        }
+        // Rate limit — Apollo allows ~5 req/sec on Basic
+        await new Promise((r) => setTimeout(r, 300));
+      } catch (err) {
+        log.warn({ err, prospectId: p.id }, 'Re-enrich failed');
+        failed++;
+      }
+    }
+
+    return reply.send({ success: true, total: prospects.length, enriched, failed });
   });
 
   // ─── Mark prospect converted ──────────────────────────────────────────────
