@@ -8,11 +8,7 @@ COPY packages/ packages/
 COPY services/prospector/ services/prospector/
 RUN pnpm install --no-frozen-lockfile
 RUN pnpm --filter @embedo/db db:generate
-RUN pnpm --filter @embedo/db build
-RUN pnpm --filter @embedo/utils build
-RUN pnpm --filter @embedo/config build
-RUN pnpm --filter @embedo/queue build
-RUN pnpm --filter @embedo/prospector build
+RUN npx turbo run build --filter=@embedo/prospector
 
 FROM base AS runner
 WORKDIR /app
