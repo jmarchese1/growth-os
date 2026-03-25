@@ -54,20 +54,6 @@ const createCampaignSchema = z.object({
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.get('/health', async () => ({ ok: true, service: 'prospector' }));
 
-  // Temporary debug endpoint — test raw DB query
-  app.get('/debug/db', async (_request, reply) => {
-    try {
-      const count = await db.prospectBusiness.count();
-      const sample = await db.prospectBusiness.findFirst({
-        include: { messages: { take: 1 } },
-      });
-      return reply.send({ ok: true, count, hasSample: !!sample, sampleId: sample?.id });
-    } catch (err: unknown) {
-      const e = err as Error;
-      return reply.send({ ok: false, error: e.message, stack: e.stack?.split('\n').slice(0, 5) });
-    }
-  });
-
   // ─── Geocode autocomplete (proxied to keep API key server-side) ───────────
   app.get('/geocode/autocomplete', async (request, reply) => {
     const { q, state } = request.query as { q?: string; state?: string };
