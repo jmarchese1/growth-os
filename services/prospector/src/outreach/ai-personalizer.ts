@@ -20,7 +20,7 @@ const SIGNATURE_HTML = `
     </td>
     <td style="vertical-align: middle;">
       <p style="margin: 0; font-size: 14px; font-weight: 700; color: #1a1a1a;">Jason</p>
-      <p style="margin: 2px 0 0; font-size: 13px; color: #666;">Data Scientist · <a href="https://embedo.io" style="color: #4f46e5; text-decoration: none;">embedo.io</a></p>
+      <p style="margin: 2px 0 0; font-size: 13px; color: #666;">Founder · <a href="https://embedo.io" style="color: #4f46e5; text-decoration: none;">embedo.io</a></p>
     </td>
   </tr>
 </table>`;
@@ -84,35 +84,38 @@ export async function generatePersonalizedEmail(
 
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 300,
+      max_tokens: 400,
       messages: [
         {
           role: 'user',
-          content: `You are Jason Marchese, a data scientist. You're personally reaching out to a restaurant owner. This is NOT a mass email — it needs to feel like you genuinely came across their place and decided to write.
+          content: `You are Jason, founder of Embedo, an AI automation agency built specifically for restaurants. You are personally reaching out to a restaurant owner. This is NOT a mass email. It needs to feel like you genuinely came across their place and decided to write.
 
-Business context (use this to make it feel personal — do NOT recite these facts like a report):
+Business context (use to make it feel personal, do NOT recite like a report):
 ${buildContext(prospect)}
 
-What Embedo actually is (work this into the pitch naturally, do NOT list features robotically):
-Embedo embeds a full AI ecosystem directly into how the business already runs. It is not one tool. It includes: a 24/7 AI voice receptionist that answers calls and handles reservations, an AI chatbot on their website and social DMs, a lead engine that captures every inquiry from every channel and follows up automatically, social media content and scheduling running on autopilot, post-visit surveys that trigger personalized re-engagement, an AI-generated website with built-in booking and chat, appointment scheduling with automatic reminders, and automated SMS and email sequences triggered by every customer action. The whole thing is embedded into existing business processes and personalized to how that specific business operates — not a generic software subscription.
+What Embedo does (work into the pitch naturally, do NOT list robotically):
+We build three things for restaurants: a custom AI phone receptionist that answers every call when they are busy or closed (takes orders, books reservations, answers questions), a custom AI chatbot embedded into their website for online visitors, and a professional website if they need one. The whole thing runs on autopilot.
 
-Here is the exact style and length you must match — this is a real email Jason sent that got replies:
+Here is the exact style and tone you must match:
 
 ---
-Came across your place in New York and wanted to reach out directly. I help restaurants replace the gaps in their customer journey with an AI layer that runs quietly in the background — handling calls, follow-ups, bookings, and social without adding work for your team.
+I run an AI automation agency built specifically for restaurants. We build three things for our clients: a custom AI phone receptionist, a custom AI chatbot and a professional website.
 
-Takes about a week to get fully embedded and most places start recovering lost customers in the first week alone. Happy to show you what it would actually look like inside your operation.
+Here is how it works. When a customer calls and you are busy or closed, the call automatically routes to your AI phone agent. It answers questions, takes orders and books reservations just like a real staff member would. On top of that, we embed an AI chatbot into your website that does the same thing for online visitors.
+
+I would love to jump on a quick call and demo what this would look like for your restaurant. No pressure, just want to show you what is possible.
 ---
 
-Write 2 short paragraphs in that same voice. Rules:
-- Roughly 50-70 words total. No longer.
-- DO NOT include greeting, sign-off, or signature, those are added separately.
-- First paragraph: naturally reference how you found them, then describe what Embedo does in ONE sentence that captures the full scope — not just "missed calls", but the whole AI ecosystem woven into their existing operation. Use business name or city if natural, not forced. If context says they are well-regarded, imply it casually. Never mention star ratings, review counts, or any numbers.
-- Second paragraph: brief proof + soft open-ended ask. No call-to-action link. Reference that it gets embedded into how they already work, not bolted on top.
-- Sound like a real person, not a salesperson. Conversational. Short sentences.
-- Do NOT use dashes, hyphens used as dashes, or em dashes anywhere in the text.
-- If context says their phone is not findable, weave that in as one example of a gap, not the whole pitch. It is just one piece of the ecosystem.
-- Output ONLY the 2 paragraphs, separated by a blank line. Plain text only. No HTML.`,
+Write 2 to 3 short paragraphs in that same voice. Rules:
+- Roughly 60 to 90 words total. No longer.
+- DO NOT include greeting, sign-off, or signature. Those are added separately.
+- First paragraph: introduce what you do and what you build. Keep it direct and clear.
+- Second paragraph: explain how it works in plain terms. Focus on the AI phone agent and chatbot. Make it concrete.
+- Third paragraph (optional, keep short): soft ask to demo it for their specific restaurant. Use business name if natural.
+- Sound like a real person, not a salesperson. Professional but approachable.
+- Do NOT use dashes, hyphens used as dashes, em dashes, or en dashes anywhere in the text.
+- Do NOT use colons to introduce lists or explanations.
+- Output ONLY the paragraphs, separated by a blank line. Plain text only. No HTML.`,
         },
       ],
     });
