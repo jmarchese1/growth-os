@@ -362,29 +362,35 @@ Output format:
     const campaign = await db.outboundCampaign.findUnique({ where: { id } });
     if (!campaign) throw new NotFoundError('Campaign', id);
 
-    const [total, byStatus] = await Promise.all([
-      db.prospectBusiness.count({ where: { campaignId: id } }),
-      db.prospectBusiness.groupBy({
-        by: ['status'],
-        where: { campaignId: id },
-        _count: { _all: true },
-      }),
-    ]);
+    try {
+      const [total, byStatus] = await Promise.all([
+        db.prospectBusiness.count({ where: { campaignId: id } }),
+        db.prospectBusiness.groupBy({
+          by: ['status'],
+          where: { campaignId: id },
+          _count: { _all: true },
+        }),
+      ]);
 
-    const stats = Object.fromEntries(byStatus.map((s: { status: string; _count: { _all: number } }) => [s.status, s._count._all]));
+      const stats = Object.fromEntries(byStatus.map((s: { status: string; _count: { _all: number } }) => [s.status, s._count._all]));
 
-    const replies = await db.outreachMessage.count({
-      where: {
-        prospect: { campaignId: id },
-        status: 'REPLIED',
-      },
-    });
+      const replies = await db.outreachMessage.count({
+        where: {
+          prospect: { campaignId: id },
+          status: 'REPLIED',
+        },
+      });
 
-    return reply.send({ campaignId: id, total, byStatus: stats, replies });
+      return reply.send({ campaignId: id, total, byStatus: stats, replies });
+    } catch (err) {
+      log.error({ err, campaignId: id }, 'Stats query failed — returning empty stats');
+      const total = await db.prospectBusiness.count({ where: { campaignId: id } }).catch(() => 0);
+      return reply.send({ campaignId: id, total, byStatus: {}, replies: 0 });
+    }
   });
 
   // ─── List prospects (with reply filter) ───────────────────────────────────
-  app.get('/campaigns/:id/prospects', async (request) => {
+  app.get('/campaigns/:id/prospects', async (request, reply) => {
     const { id } = request.params as { id: string };
     const { status, page = '1', pageSize = '50' } = request.query as Record<string, string>;
 
@@ -400,24 +406,29 @@ Output format:
       ...statusFilter,
     };
 
-    const [items, total] = await Promise.all([
-      db.prospectBusiness.findMany({
-        where,
-        skip: (parseInt(page) - 1) * parseInt(pageSize),
-        take: parseInt(pageSize),
-        orderBy: { updatedAt: 'desc' },
-        include: {
-          messages: {
-            orderBy: { createdAt: 'desc' },
-            take: 1,
-            select: { status: true, stepNumber: true, subject: true, body: true, sentAt: true, openedAt: true, repliedAt: true, replyBody: true, replyCategory: true },
+    try {
+      const [items, total] = await Promise.all([
+        db.prospectBusiness.findMany({
+          where,
+          skip: (parseInt(page) - 1) * parseInt(pageSize),
+          take: parseInt(pageSize),
+          orderBy: { updatedAt: 'desc' },
+          include: {
+            messages: {
+              orderBy: { createdAt: 'desc' },
+              take: 1,
+              select: { status: true, stepNumber: true, subject: true, body: true, sentAt: true, openedAt: true, repliedAt: true, replyBody: true, replyCategory: true },
+            },
           },
-        },
-      }),
-      db.prospectBusiness.count({ where }),
-    ]);
+        }),
+        db.prospectBusiness.count({ where }),
+      ]);
 
-    return { items, total, page: parseInt(page), pageSize: parseInt(pageSize) };
+      return { items, total, page: parseInt(page), pageSize: parseInt(pageSize) };
+    } catch (err) {
+      log.error({ err, campaignId: id }, 'Prospects query failed');
+      return reply.send({ items: [], total: 0, page: parseInt(page), pageSize: parseInt(pageSize) });
+    }
   });
 
   // ─── Mark prospect converted ──────────────────────────────────────────────

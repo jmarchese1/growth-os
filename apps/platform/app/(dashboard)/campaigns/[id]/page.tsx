@@ -111,12 +111,17 @@ export default async function CampaignDetailPage({ params, searchParams }: {
     ),
   ]);
 
-  if (!statsRes.ok) notFound();
+  if (!statsRes.ok && !campaignRes.ok) notFound();
 
   const campaigns = (await campaignRes.json()) as Campaign[];
   const campaign = campaigns.find((c) => c.id === id);
-  const stats = (await statsRes.json()) as Stats;
-  const { items: prospects, total } = (await prospectsRes.json()) as { items: Prospect[]; total: number };
+  if (!campaign) notFound();
+  const stats: Stats = statsRes.ok
+    ? (await statsRes.json()) as Stats
+    : { campaignId: id, total: 0, byStatus: {}, replies: 0 };
+  const { items: prospects, total } = prospectsRes.ok
+    ? (await prospectsRes.json()) as { items: Prospect[]; total: number }
+    : { items: [] as Prospect[], total: 0 };
 
   const s = stats.byStatus;
   const newCount = s['NEW'] ?? 0;
