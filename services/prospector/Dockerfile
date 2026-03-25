@@ -3,12 +3,16 @@ RUN npm install -g pnpm
 
 FROM base AS builder
 WORKDIR /app
-COPY pnpm-workspace.yaml package.json turbo.json pnpm-lock.yaml tsconfig.base.json ./
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml turbo.json tsconfig.base.json ./
 COPY packages/ packages/
 COPY services/prospector/ services/prospector/
 RUN pnpm install --no-frozen-lockfile
 RUN pnpm --filter @embedo/db db:generate
-RUN pnpm turbo run build --filter=@embedo/prospector
+RUN pnpm --filter @embedo/db build
+RUN pnpm --filter @embedo/utils build
+RUN pnpm --filter @embedo/config build
+RUN pnpm --filter @embedo/queue build
+RUN pnpm --filter @embedo/prospector build
 
 FROM base AS runner
 WORKDIR /app
