@@ -7,6 +7,7 @@ COPY pnpm-workspace.yaml package.json turbo.json tsconfig.base.json ./
 COPY packages/ packages/
 COPY services/prospector/ services/prospector/
 RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @embedo/db exec prisma generate
 RUN pnpm --filter @embedo/prospector build
 
 FROM base AS runner
