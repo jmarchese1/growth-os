@@ -456,6 +456,17 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
         setError(data.error ?? 'Failed to create campaign');
         return;
       }
+      const campaign = (await res.json()) as { id: string };
+
+      // Auto-run the campaign immediately after creation
+      const runRes = await fetch(`${prospectorUrl}/campaigns/${campaign.id}/run`, { method: 'POST' });
+      if (!runRes.ok) {
+        const runData = (await runRes.json().catch(() => ({}))) as { error?: string };
+        setError(runData.error ?? 'Campaign created but failed to start discovery');
+        router.refresh();
+        return;
+      }
+
       router.refresh();
       setOpen(false);
       setForm({ ...form, name: '', maxProspects: '50' });
