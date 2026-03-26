@@ -34,7 +34,7 @@ const PREVIEW_VARS: Record<string, string> = {
   '{{company}}': 'Golden Dragon Kitchen',
   '{{businessName}}': 'Golden Dragon Kitchen',
   '{{city}}': 'New York',
-  '{{calLink}}': 'https://cal.com/jason',
+  '{{calLink}}': 'https://cal.com/jason-marchese-mkfkwl/30min',
   '{{replyEmail}}': 'jason@embedo.io',
 };
 
