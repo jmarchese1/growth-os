@@ -3,6 +3,7 @@ import { NewCampaignForm } from './new-campaign-form';
 import { RunCampaignButton } from './run-campaign-button';
 import { SendCampaignButton } from './send-campaign-button';
 import { DeleteCampaignButton } from './delete-campaign-button';
+import { CloneCampaignButton } from './clone-campaign-button';
 
 const PROSPECTOR_URL = process.env['PROSPECTOR_URL'] ?? 'http://localhost:3009';
 
@@ -206,6 +207,7 @@ export default async function CampaignsPage() {
                       </Link>
                       <RunCampaignButton campaignId={c.id} prospectorUrl={PROSPECTOR_URL} initialTotal={c._count.prospects} />
                       <SendCampaignButton campaignId={c.id} prospectorUrl={PROSPECTOR_URL} enrichedCount={enrichedCounts[idx] ?? 0} />
+                      <CloneCampaignButton campaignId={c.id} campaignName={c.name} prospectorUrl={PROSPECTOR_URL} />
                       <DeleteCampaignButton campaignId={c.id} campaignName={c.name} prospectorUrl={PROSPECTOR_URL} />
                     </div>
                   </div>

@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { createLogger, validate, NotFoundError } from '@embedo/utils';
-import { db } from '@embedo/db';
+import { db, Prisma } from '@embedo/db';
 import { prospectDiscoveredQueue, outreachSendQueue, businessOnboardedQueue } from '@embedo/queue';
 import { searchRestaurants, geocodeCity } from './scraper/geoapify.js';
 import { sendColdEmail } from './outreach/email-sender.js';
@@ -338,6 +338,39 @@ Output format:
 
     log.info({ campaignId: id }, 'Campaign deleted');
     return reply.send({ deleted: true });
+  });
+
+  // ─── Clone campaign ────────────────────────────────────────────────────────
+  app.post('/campaigns/:id/clone', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const body = request.body as { targetCity?: string; targetState?: string; name?: string } | undefined;
+
+    const campaign = await db.outboundCampaign.findUnique({ where: { id } });
+    if (!campaign) throw new NotFoundError('Campaign', id);
+
+    const cloneName = body?.name ?? `${campaign.name} (copy)`;
+    const cloned = await db.outboundCampaign.create({
+      data: {
+        name: cloneName,
+        targetCity: body?.targetCity ?? campaign.targetCity,
+        targetState: body?.targetState ?? campaign.targetState,
+        targetCountry: campaign.targetCountry,
+        targetLat: campaign.targetLat,
+        targetLon: campaign.targetLon,
+        targetIndustry: campaign.targetIndustry,
+        discoverySource: campaign.discoverySource,
+        apolloConfig: campaign.apolloConfig ?? Prisma.DbNull,
+        emailSubject: campaign.emailSubject,
+        emailBodyHtml: campaign.emailBodyHtml,
+        smsBody: campaign.smsBody,
+        maxProspects: campaign.maxProspects,
+        sequenceSteps: campaign.sequenceSteps ?? Prisma.DbNull,
+        active: true,
+      },
+    });
+
+    log.info({ originalId: id, clonedId: cloned.id, city: cloned.targetCity }, 'Campaign cloned');
+    return reply.send(cloned);
   });
 
   // ─── Run campaign (scrape + queue) ────────────────────────────────────────
@@ -1260,5 +1293,140 @@ Output format:
 
     log.info({ prospectId: prospect.id, campaignId: campaign.id }, 'Test lead seeded');
     return reply.send({ ok: true, prospectId: prospect.id, campaignId: campaign.id });
+  });
+
+  // ─── Analytics ─────────────────────────────────────────────────────────────
+  app.get('/analytics', async () => {
+    // 1. City performance ranking
+    const campaigns = await db.outboundCampaign.findMany({
+      select: {
+        id: true,
+        name: true,
+        targetCity: true,
+        targetState: true,
+        emailSubject: true,
+        emailBodyHtml: true,
+        createdAt: true,
+        _count: { select: { prospects: true } },
+      },
+    });
+
+    const cityStats: Record<string, { city: string; state: string | null; campaigns: number; prospects: number; emailed: number; opened: number; replied: number; converted: number }> = {};
+    const templateStats: Array<{ campaignId: string; name: string; city: string; subject: string; bodyPreview: string; emailed: number; opened: number; replied: number; openRate: number; replyRate: number; createdAt: string }> = [];
+
+    for (const c of campaigns) {
+      const [byStatus, openCount, replyCount] = await Promise.all([
+        db.prospectBusiness.groupBy({
+          by: ['status'],
+          where: { campaignId: c.id },
+          _count: { _all: true },
+        }),
+        db.outreachMessage.count({
+          where: { prospect: { campaignId: c.id }, openedAt: { not: null } },
+        }),
+        db.outreachMessage.count({
+          where: { prospect: { campaignId: c.id }, status: 'REPLIED' },
+        }),
+      ]);
+
+      const stats = Object.fromEntries(byStatus.map((s: { status: string; _count: { _all: number } }) => [s.status, s._count._all]));
+      const emailed = (stats['CONTACTED'] ?? 0) + (stats['OPENED'] ?? 0) + (stats['REPLIED'] ?? 0) + (stats['CONVERTED'] ?? 0);
+
+      // City aggregation
+      const cityKey = `${c.targetCity}|${c.targetState ?? ''}`;
+      if (!cityStats[cityKey]) {
+        cityStats[cityKey] = { city: c.targetCity, state: c.targetState, campaigns: 0, prospects: 0, emailed: 0, opened: 0, replied: 0, converted: 0 };
+      }
+      cityStats[cityKey].campaigns++;
+      cityStats[cityKey].prospects += c._count.prospects;
+      cityStats[cityKey].emailed += emailed;
+      cityStats[cityKey].opened += openCount;
+      cityStats[cityKey].replied += replyCount;
+      cityStats[cityKey].converted += stats['CONVERTED'] ?? 0;
+
+      // Template stats
+      const bodyPlain = c.emailBodyHtml.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+      templateStats.push({
+        campaignId: c.id,
+        name: c.name,
+        city: c.targetCity,
+        subject: c.emailSubject,
+        bodyPreview: bodyPlain.length > 120 ? bodyPlain.slice(0, 120) + '...' : bodyPlain,
+        emailed,
+        opened: openCount,
+        replied: replyCount,
+        openRate: emailed > 0 ? Math.round((openCount / emailed) * 100) : 0,
+        replyRate: emailed > 0 ? Math.round((replyCount / emailed) * 100) : 0,
+        createdAt: c.createdAt.toISOString(),
+      });
+    }
+
+    // 2. Send time analysis — which hours get the most opens
+    const openedMessages = await db.outreachMessage.findMany({
+      where: { openedAt: { not: null } },
+      select: { sentAt: true, openedAt: true },
+    });
+
+    const hourlyOpens: Record<number, { sent: number; opened: number }> = {};
+    for (let h = 0; h < 24; h++) hourlyOpens[h] = { sent: 0, opened: 0 };
+
+    const allSent = await db.outreachMessage.findMany({
+      where: { sentAt: { not: null } },
+      select: { sentAt: true },
+    });
+
+    for (const msg of allSent) {
+      if (msg.sentAt) {
+        const hour = new Date(msg.sentAt).getUTCHours();
+        hourlyOpens[hour]!.sent++;
+      }
+    }
+    for (const msg of openedMessages) {
+      if (msg.sentAt) {
+        const hour = new Date(msg.sentAt).getUTCHours();
+        hourlyOpens[hour]!.opened++;
+      }
+    }
+
+    const sendTimeAnalysis = Object.entries(hourlyOpens)
+      .map(([hour, data]) => ({
+        hour: parseInt(hour),
+        sent: data.sent,
+        opened: data.opened,
+        openRate: data.sent > 0 ? Math.round((data.opened / data.sent) * 100) : 0,
+      }))
+      .sort((a, b) => a.hour - b.hour);
+
+    // 3. Overall totals
+    const [totalProspects, totalEmailed, totalOpened, totalReplied, totalConverted, totalBounced] = await Promise.all([
+      db.prospectBusiness.count(),
+      db.prospectBusiness.count({ where: { status: { in: ['CONTACTED', 'OPENED', 'REPLIED', 'CONVERTED'] } } }),
+      db.outreachMessage.count({ where: { openedAt: { not: null } } }),
+      db.outreachMessage.count({ where: { status: 'REPLIED' } }),
+      db.prospectBusiness.count({ where: { status: 'CONVERTED' } }),
+      db.prospectBusiness.count({ where: { status: 'BOUNCED' } }),
+    ]);
+
+    return {
+      totals: {
+        prospects: totalProspects,
+        emailed: totalEmailed,
+        opened: totalOpened,
+        replied: totalReplied,
+        converted: totalConverted,
+        bounced: totalBounced,
+        openRate: totalEmailed > 0 ? Math.round((totalOpened / totalEmailed) * 100) : 0,
+        replyRate: totalEmailed > 0 ? Math.round((totalReplied / totalEmailed) * 100) : 0,
+      },
+      cityRanking: Object.values(cityStats)
+        .map((c) => ({
+          ...c,
+          openRate: c.emailed > 0 ? Math.round((c.opened / c.emailed) * 100) : 0,
+          replyRate: c.emailed > 0 ? Math.round((c.replied / c.emailed) * 100) : 0,
+        }))
+        .sort((a, b) => b.replyRate - a.replyRate),
+      templatePerformance: templateStats.sort((a, b) => b.replyRate - a.replyRate),
+      sendTimeAnalysis,
+    };
   });
 }

@@ -99,6 +99,34 @@ export async function sendgridEventRoutes(app: FastifyInstance): Promise<void> {
             create: { email, reason: 'bounce', source: 'sendgrid_events' },
           });
         }
+
+        // Auto-pause campaign if bounce rate exceeds 3%
+        try {
+          const prospect = await db.prospectBusiness.findUnique({
+            where: { id: message.prospectId },
+            select: { campaignId: true },
+          });
+          if (prospect?.campaignId) {
+            const [totalSent, totalBounced] = await Promise.all([
+              db.prospectBusiness.count({
+                where: { campaignId: prospect.campaignId, status: { in: ['CONTACTED', 'OPENED', 'REPLIED', 'CONVERTED', 'BOUNCED'] } },
+              }),
+              db.prospectBusiness.count({
+                where: { campaignId: prospect.campaignId, status: 'BOUNCED' },
+              }),
+            ]);
+            const bounceRate = totalSent > 0 ? (totalBounced / totalSent) * 100 : 0;
+            if (bounceRate >= 3 && totalSent >= 5) {
+              await db.outboundCampaign.update({
+                where: { id: prospect.campaignId },
+                data: { active: false },
+              });
+              log.warn({ campaignId: prospect.campaignId, bounceRate: Math.round(bounceRate), totalBounced, totalSent }, 'Campaign auto-paused — bounce rate exceeded 3%');
+            }
+          }
+        } catch (err) {
+          log.error({ err }, 'Bounce rate check failed');
+        }
       }
 
       if (eventType === 'spamreport' || eventType === 'unsubscribe') {

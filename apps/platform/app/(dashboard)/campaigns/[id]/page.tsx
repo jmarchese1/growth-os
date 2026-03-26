@@ -6,6 +6,7 @@ import { EditEmailButton } from './edit-email-button';
 import { ManageSequenceButton } from './manage-sequence-button';
 import { FollowUpTimer } from './follow-up-timer';
 import { EmailPreviewModal } from './email-preview-modal';
+import { CloneCampaignButton } from '../clone-campaign-button';
 
 const PROSPECTOR_URL = process.env.PROSPECTOR_URL ?? 'http://localhost:3009';
 
@@ -206,6 +207,11 @@ export default async function CampaignDetailPage({ params, searchParams }: {
               currentSubject={campaign.emailSubject}
               currentBodyHtml={campaign.emailBodyHtml}
               sequenceSteps={campaign.sequenceSteps}
+              prospectorUrl={PROSPECTOR_URL}
+            />
+            <CloneCampaignButton
+              campaignId={id}
+              campaignName={campaign.name}
               prospectorUrl={PROSPECTOR_URL}
             />
           </div>

@@ -44,6 +44,12 @@ interface ProspectDetail {
   contactLastName: string | null;
   contactTitle: string | null;
   contactLinkedIn: string | null;
+  linkedinUrl: string | null;
+  facebookUrl: string | null;
+  twitterUrl: string | null;
+  logoUrl: string | null;
+  revenue: string | null;
+  foundedYear: number | null;
   status: ProspectStatus;
   googlePlaceId: string | null;
   googleRating: number | null;
@@ -134,7 +140,12 @@ export default async function ProspectDetailPage({ params }: {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">{prospect.name}</h1>
+          <div className="flex items-center gap-3">
+            {prospect.logoUrl && (
+              <img src={prospect.logoUrl} alt="" className="w-10 h-10 rounded-lg object-contain bg-white/5" />
+            )}
+            <h1 className="text-2xl font-bold text-white tracking-tight">{prospect.name}</h1>
+          </div>
           <div className="flex items-center gap-3 mt-2">
             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${s.bg} ${s.text}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
@@ -272,6 +283,34 @@ export default async function ProspectDetailPage({ params }: {
                 </div>
               )}
             </div>
+            {prospect.revenue && (
+              <div>
+                <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Revenue</dt>
+                <dd className="text-sm text-slate-400">{prospect.revenue}</dd>
+              </div>
+            )}
+            {prospect.foundedYear && (
+              <div>
+                <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Founded</dt>
+                <dd className="text-sm text-slate-400">{prospect.foundedYear}</dd>
+              </div>
+            )}
+            {(prospect.linkedinUrl || prospect.facebookUrl || prospect.twitterUrl) && (
+              <div>
+                <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Social</dt>
+                <dd className="flex items-center gap-3">
+                  {prospect.linkedinUrl && (
+                    <a href={prospect.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-violet-400 hover:text-violet-300 transition-colors">LinkedIn</a>
+                  )}
+                  {prospect.facebookUrl && (
+                    <a href={prospect.facebookUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:text-blue-300 transition-colors">Facebook</a>
+                  )}
+                  {prospect.twitterUrl && (
+                    <a href={prospect.twitterUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-sky-400 hover:text-sky-300 transition-colors">Twitter</a>
+                  )}
+                </dd>
+              </div>
+            )}
             <div>
               <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Industry</dt>
               <dd className="text-sm text-slate-400 capitalize">{prospect.campaign.targetIndustry.toLowerCase()}</dd>
@@ -289,6 +328,47 @@ export default async function ProspectDetailPage({ params }: {
               <dd className="text-sm text-slate-500">{fmt(prospect.createdAt)}</dd>
             </div>
           </dl>
+        </div>
+      </div>
+
+      {/* Activity Timeline */}
+      <div className="bg-white/[0.03] backdrop-blur-sm rounded-2xl border border-white/[0.08] p-5 glow-card">
+        <h2 className="text-[9px] font-bold text-slate-600 uppercase tracking-[0.16em] mb-4">Activity Timeline</h2>
+        <div className="relative pl-6 space-y-0">
+          {/* Vertical line */}
+          <div className="absolute left-[9px] top-1 bottom-1 w-px bg-white/10" />
+
+          {/* Build timeline events */}
+          {(() => {
+            const events: { date: string; label: string; detail?: string; color: string }[] = [];
+            events.push({ date: prospect.createdAt, label: 'Prospect discovered', detail: `Added to ${prospect.campaign.name}`, color: 'bg-slate-500' });
+            if (prospect.email) {
+              events.push({ date: prospect.updatedAt, label: 'Email found', detail: `${prospect.email}${prospect.emailSource ? ` via ${prospect.emailSource}` : ''}`, color: 'bg-blue-400' });
+            }
+            for (const msg of prospect.messages) {
+              if (msg.sentAt) events.push({ date: msg.sentAt, label: msg.stepNumber === 1 ? 'Cold email sent' : `Follow-up ${(msg.stepNumber ?? 1) - 1} sent`, detail: msg.subject ?? undefined, color: 'bg-violet-400' });
+              if (msg.openedAt) events.push({ date: msg.openedAt, label: 'Email opened', color: 'bg-amber-400' });
+              if (msg.repliedAt) events.push({ date: msg.repliedAt, label: 'Reply received', detail: msg.replyBody?.slice(0, 80) ?? undefined, color: 'bg-emerald-400' });
+            }
+            if (prospect.status === 'BOUNCED') events.push({ date: prospect.updatedAt, label: 'Email bounced', color: 'bg-red-400' });
+            if (prospect.status === 'CONVERTED') events.push({ date: prospect.updatedAt, label: 'Converted to lead', color: 'bg-green-400' });
+            if (prospect.status === 'UNSUBSCRIBED') events.push({ date: prospect.updatedAt, label: 'Unsubscribed', color: 'bg-orange-400' });
+
+            events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+            return events.map((ev, i) => (
+              <div key={i} className="relative flex items-start gap-3 pb-4">
+                <div className={`absolute left-[-15px] top-1.5 w-2.5 h-2.5 rounded-full ${ev.color} ring-2 ring-[#0f1117]`} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-slate-300">{ev.label}</span>
+                    <span className="text-[10px] text-slate-700">{fmt(ev.date)}</span>
+                  </div>
+                  {ev.detail && <p className="text-[11px] text-slate-500 mt-0.5 truncate">{ev.detail}</p>}
+                </div>
+              </div>
+            ));
+          })()}
         </div>
       </div>
 

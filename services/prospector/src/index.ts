@@ -6,6 +6,7 @@ import { env } from './config.js';
 import { registerRoutes } from './routes.js';
 import { startProspectWorker } from './workers/prospect.worker.js';
 import { startOutreachWorker } from './workers/outreach.worker.js';
+import { sendDailyDigest } from './workers/digest.worker.js';
 
 const log = createLogger('prospector');
 
@@ -31,6 +32,19 @@ async function start() {
 
   await app.listen({ port: env.PORT, host: '0.0.0.0' });
   log.info({ port: env.PORT }, 'Prospector service started');
+
+  // Daily digest — runs every 24h, sends at ~9am EST (schedule on startup + interval)
+  const now = new Date();
+  const next9am = new Date(now);
+  next9am.setUTCHours(14, 0, 0, 0); // 9am EST = 14:00 UTC
+  if (next9am <= now) next9am.setDate(next9am.getDate() + 1);
+  const msUntil9am = next9am.getTime() - now.getTime();
+
+  setTimeout(() => {
+    sendDailyDigest();
+    setInterval(sendDailyDigest, 24 * 60 * 60 * 1000);
+  }, msUntil9am);
+  log.info({ nextDigestAt: next9am.toISOString() }, 'Daily digest scheduled');
 }
 
 start().catch((err) => {
