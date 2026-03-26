@@ -3,7 +3,7 @@ import sgMail from '@sendgrid/mail';
 import { createLogger, ExternalApiError } from '@embedo/utils';
 import { db } from '@embedo/db';
 import type { OutboundCampaign, ProspectBusiness } from '@embedo/db';
-import { renderEmailHtml } from './templates.js';
+import { renderEmailHtml, buildTemplateVars } from './templates.js';
 import { generatePersonalizedEmail } from './ai-personalizer.js';
 import { isSuppressed } from './suppression.js';
 import { env } from '../config.js';
@@ -30,9 +30,11 @@ export async function sendColdEmail(
   sgMail.setApiKey(env.SENDGRID_API_KEY);
 
   const trackingPixelId = randomUUID();
-  const city = (prospect.address as Record<string, string> | null)?.['city'] ?? campaign.targetCity;
   const replyEmail = env.REPLY_TRACKING_EMAIL ?? env.SENDGRID_FROM_EMAIL ?? 'jason@embedo.co';
   const calLink = process.env['CAL_LINK'] ?? 'https://cal.com/jason-marchese-mkfkwl/30min';
+
+  // Build variable map from prospect data (firstName, lastName, company, city, etc.)
+  const vars = buildTemplateVars(prospect, { city: campaign.targetCity, calLink, replyEmail });
 
   const subjectTemplate = options?.subjectOverride ?? campaign.emailSubject;
   const bodyTemplate = options?.bodyHtmlOverride ?? campaign.emailBodyHtml;
@@ -43,7 +45,7 @@ export async function sendColdEmail(
     const aiHtml = await generatePersonalizedEmail(
       {
         name: prospect.name,
-        city,
+        city: vars['city'] ?? campaign.targetCity,
         website: prospect.website,
         phone: prospect.phone,
         googleRating: prospect.googleRating,
@@ -53,17 +55,12 @@ export async function sendColdEmail(
       env.ANTHROPIC_API_KEY,
     );
     // Fall back to static template if AI fails
-    bodyHtml = aiHtml ?? renderEmailHtml(bodyTemplate, { businessName: prospect.name, city, calLink, replyEmail });
+    bodyHtml = aiHtml ?? renderEmailHtml(bodyTemplate, vars, { appendSignature: true, replyEmail });
   } else {
-    bodyHtml = renderEmailHtml(bodyTemplate, { businessName: prospect.name, city, calLink, replyEmail });
+    bodyHtml = renderEmailHtml(bodyTemplate, vars, { appendSignature: true, replyEmail });
   }
 
-  const subject = renderEmailHtml(subjectTemplate, {
-    businessName: prospect.name,
-    city,
-    calLink,
-    replyEmail,
-  });
+  const subject = renderEmailHtml(subjectTemplate, vars);
 
   // Append tracking pixel
   const pixelUrl = `${env.API_BASE_URL}/track/open/${trackingPixelId}`;

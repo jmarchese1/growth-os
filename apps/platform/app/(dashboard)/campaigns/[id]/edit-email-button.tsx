@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { STEP2_SUBJECT, STEP2_BODY, STEP3_SUBJECT, STEP3_BODY } from './templates';
-import { EMAIL_STYLES, getStyleById } from './email-styles';
 
 interface SequenceStep {
   stepNumber: number;
@@ -21,30 +20,77 @@ interface Props {
   prospectorUrl: string;
 }
 
-const PREVIEW_VARS = {
-  '{{businessName}}': 'Acme Restaurant',
+const TEMPLATE_VARS = [
+  { key: '{{firstName}}', label: 'First Name', desc: 'Contact first name (falls back to "there")' },
+  { key: '{{lastName}}', label: 'Last Name', desc: 'Contact last name' },
+  { key: '{{company}}', label: 'Company', desc: 'Business name in Title Case' },
+  { key: '{{city}}', label: 'City', desc: 'Target city' },
+  { key: '{{calLink}}', label: 'Cal Link', desc: 'Booking link (best for follow-ups)' },
+];
+
+const PREVIEW_VARS: Record<string, string> = {
+  '{{firstName}}': 'Michael',
+  '{{lastName}}': 'Chen',
+  '{{company}}': 'Golden Dragon Kitchen',
+  '{{businessName}}': 'Golden Dragon Kitchen',
   '{{city}}': 'New York',
   '{{calLink}}': 'https://cal.com/jason',
   '{{replyEmail}}': 'jason@embedo.io',
 };
 
-function applyPreviewVars(html: string) {
-  return Object.entries(PREVIEW_VARS).reduce((s, [k, v]) => s.replaceAll(k, v), html);
+function applyPreviewVars(text: string) {
+  return Object.entries(PREVIEW_VARS).reduce((s, [k, v]) => s.replaceAll(k, v), text);
 }
 
-/** Extract the inner content from a styled wrapper, or return as-is */
-function extractContent(html: string): string {
-  // Try to find the innermost content div — rough heuristic
-  // If it contains a signature table, strip it and the unsubscribe
-  let content = html;
-  // Remove signature block
-  content = content.replace(/<table[^>]*>[\s\S]*?<\/table>/gi, '');
-  // Remove unsubscribe
-  content = content.replace(/<p[^>]*>[\s\S]*?Unsubscribe[\s\S]*?<\/p>/gi, '');
-  // Remove outer wrappers — keep only paragraph/text content
-  const innerMatch = content.match(/<p[\s\S]*$/i);
-  if (innerMatch) content = innerMatch[0];
-  return content.trim();
+/** Convert plain text to simple HTML for preview */
+function textToHtml(text: string): string {
+  const paragraphs = text
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => `<p style="margin: 0 0 16px; color: #222;">${p.replace(/\n/g, '<br>')}</p>`)
+    .join('\n');
+
+  return `<div style="font-family: -apple-system, system-ui, sans-serif; max-width: 580px; color: #222; line-height: 1.7; font-size: 14px; padding: 20px;">
+  ${paragraphs}
+  <table style="margin-top: 28px; padding-top: 20px; border-collapse: collapse; width: 100%;" cellpadding="0" cellspacing="0"><tr><td style="padding-right: 12px; vertical-align: middle; width: 56px;"><img src="https://i.imgur.com/RDXkWkD.jpeg" alt="Jason" width="48" height="48" style="border-radius: 50%; display: block; object-fit: cover;" /></td><td style="vertical-align: middle;"><p style="margin: 0; font-size: 14px; font-weight: 700; color: #1a1a1a;">Jason</p><p style="margin: 2px 0 0; font-size: 13px; color: #666;">Founder · <a href="https://embedo.io" style="color: #4f46e5; text-decoration: none;">embedo.io</a></p></td></tr></table>
+  <p style="margin-top: 32px; font-size: 11px; color: #bbb;">Saw your restaurant in a local search. Not interested? <a href="mailto:jason@embedo.io?subject=Unsubscribe" style="color: #bbb;">Unsubscribe</a></p>
+</div>`;
+}
+
+/** Strip HTML to extract plain text (for migrating old HTML templates) */
+function htmlToPlainText(html: string): string {
+  // If it doesn't contain HTML tags, it's already plain text
+  if (!/<[a-z][\s\S]*>/i.test(html)) return html;
+  // Strip tags, decode entities, clean up whitespace
+  return html
+    .replace(/<table[\s\S]*?<\/table>/gi, '') // remove signature
+    .replace(/<p[^>]*>[\s\S]*?Unsubscribe[\s\S]*?<\/p>/gi, '') // remove unsub
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>\s*<p[^>]*>/gi, '\n\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function insertVar(textareaId: string, varKey: string, currentValue: string, setter: (v: string) => void) {
+  const textarea = document.getElementById(textareaId) as HTMLTextAreaElement | null;
+  if (textarea) {
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const newText = currentValue.slice(0, start) + varKey + currentValue.slice(end);
+    setter(newText);
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + varKey.length, start + varKey.length);
+    }, 0);
+  } else {
+    setter(currentValue + varKey);
+  }
 }
 
 export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, sequenceSteps, prospectorUrl }: Props) {
@@ -54,54 +100,35 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState(0);
   const [mounted, setMounted] = useState(false);
-  const [selectedStyle, setSelectedStyle] = useState('classic');
   useEffect(() => { setMounted(true); }, []);
 
-  // Step 1 state
+  // Step 1 state — convert HTML to plain text if needed
   const [step1Subject, setStep1Subject] = useState(currentSubject);
-  const [step1Body, setStep1Body] = useState(currentBodyHtml);
+  const [step1Body, setStep1Body] = useState(htmlToPlainText(currentBodyHtml));
 
   // Determine active follow-up steps from the campaign's sequenceSteps
   const followUps = (sequenceSteps ?? []).filter((s) => s.stepNumber > 1);
   const totalSteps = 1 + followUps.length;
 
-  // Step 2 state (only relevant if sequence >= 2)
+  // Step 2 state
   const step2Data = followUps[0];
   const [step2Subject, setStep2Subject] = useState(step2Data?.subject ?? STEP2_SUBJECT);
-  const [step2Body, setStep2Body] = useState(step2Data?.bodyHtml ?? STEP2_BODY);
+  const [step2Body, setStep2Body] = useState(htmlToPlainText(step2Data?.bodyHtml ?? STEP2_BODY));
 
-  // Step 3 state (only relevant if sequence >= 3)
+  // Step 3 state
   const step3Data = followUps[1];
   const [step3Subject, setStep3Subject] = useState(step3Data?.subject ?? STEP3_SUBJECT);
-  const [step3Body, setStep3Body] = useState(step3Data?.bodyHtml ?? STEP3_BODY);
-
-  function applyStyle(styleId: string) {
-    setSelectedStyle(styleId);
-    const style = getStyleById(styleId);
-
-    // Re-wrap each step's content in the new style
-    const bodies = [step1Body, step2Body, step3Body];
-    const setters = [setStep1Body, setStep2Body, setStep3Body];
-
-    bodies.forEach((body, i) => {
-      const inner = extractContent(body);
-      if (inner) {
-        setters[i](style.wrap(inner, {}));
-      }
-    });
-  }
+  const [step3Body, setStep3Body] = useState(htmlToPlainText(step3Data?.bodyHtml ?? STEP3_BODY));
 
   async function handleSave() {
     setLoading(true);
     setError('');
     try {
-      // Always update step 1 (emailSubject + emailBodyHtml on Campaign)
       const patch: Record<string, unknown> = {
         emailSubject: step1Subject,
-        emailBodyHtml: step1Body,
+        emailBodyHtml: step1Body, // stored as plain text now, rendered at send time
       };
 
-      // If there are follow-up steps, update their body/subject too
       if (followUps.length > 0) {
         const updatedSteps: SequenceStep[] = [
           { stepNumber: 1, delayHours: 0 },
@@ -145,6 +172,7 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
   const currentBodyValue = [step1Body, step2Body, step3Body][activeTab];
   const setCurrentSubject = [setStep1Subject, setStep2Subject, setStep3Subject][activeTab];
   const setCurrentBody = [setStep1Body, setStep2Body, setStep3Body][activeTab];
+  const textareaId = `edit-email-body-${activeTab}`;
 
   return (
     <>
@@ -165,9 +193,7 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
               <div>
                 <h2 className="text-base font-semibold text-white">Edit Campaign Emails</h2>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  {totalSteps === 1 && 'Cold email only — set sequence length to add follow-ups'}
-                  {totalSteps === 2 && '2-email sequence — cold email + 1 follow-up'}
-                  {totalSteps === 3 && '3-email sequence — cold email + 2 follow-ups'}
+                  Plain text with variables — signature and unsubscribe added automatically
                 </p>
               </div>
               <button onClick={() => setOpen(false)} className="text-slate-500 hover:text-white transition-colors text-xl leading-none">&times;</button>
@@ -198,47 +224,8 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
             {/* Body */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4 border-t border-white/10">
 
-              {/* Email Style Picker */}
               <div>
-                <label className={labelCls}>Email Style</label>
-                <div className="flex gap-2">
-                  {EMAIL_STYLES.map((style) => (
-                    <button
-                      key={style.id}
-                      onClick={() => applyStyle(style.id)}
-                      className={`flex-1 group relative px-3 py-2.5 rounded-xl border text-left transition-all ${
-                        selectedStyle === style.id
-                          ? 'bg-violet-600/15 border-violet-500/40 ring-1 ring-violet-500/30'
-                          : 'bg-white/[0.03] border-white/10 hover:bg-white/[0.06] hover:border-white/20'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold ${
-                          selectedStyle === style.id
-                            ? 'bg-violet-500/25 text-violet-300'
-                            : 'bg-white/5 text-slate-500 group-hover:text-slate-400'
-                        }`}>
-                          {style.name.charAt(0)}
-                        </span>
-                        <div>
-                          <p className={`text-xs font-semibold ${selectedStyle === style.id ? 'text-violet-300' : 'text-slate-300'}`}>
-                            {style.name}
-                          </p>
-                          <p className="text-[10px] text-slate-600 mt-0.5 leading-tight">{style.description}</p>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className={labelCls}>
-                  Subject
-                  <span className="ml-2 text-slate-600 normal-case font-normal tracking-normal">
-                    — {'{{businessName}}'} {'{{city}}'}
-                  </span>
-                </label>
+                <label className={labelCls}>Subject</label>
                 <input
                   value={currentSubjectValue}
                   onChange={(e) => setCurrentSubject(e.target.value)}
@@ -247,18 +234,31 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
               </div>
 
               <div>
-                <label className={labelCls}>
-                  Email Body HTML
-                  <span className="ml-2 text-slate-600 normal-case font-normal tracking-normal">
-                    — {'{{businessName}}'} {'{{city}}'} {'{{calLink}}'} {'{{replyEmail}}'}
-                  </span>
-                </label>
+                <label className={labelCls}>Email Body</label>
+                {/* Variable insert buttons */}
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {TEMPLATE_VARS.map((v) => (
+                    <button
+                      key={v.key}
+                      type="button"
+                      title={v.desc}
+                      onClick={() => insertVar(textareaId, v.key, currentBodyValue, setCurrentBody)}
+                      className="px-2 py-1 text-[10px] font-semibold rounded-md bg-violet-500/10 border border-violet-500/20 text-violet-300 hover:bg-violet-500/20 transition-colors"
+                    >
+                      {v.label}
+                    </button>
+                  ))}
+                </div>
                 <textarea
+                  id={textareaId}
                   rows={12}
                   value={currentBodyValue}
                   onChange={(e) => setCurrentBody(e.target.value)}
-                  className={inputCls + ' font-mono resize-y text-xs leading-relaxed'}
+                  className={inputCls + ' resize-y leading-relaxed'}
                 />
+                <p className="text-[10px] text-slate-600 mt-1">
+                  Plain text — signature and unsubscribe are added automatically at send time.
+                </p>
               </div>
 
               {currentBodyValue && (
@@ -266,7 +266,7 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
                   <label className={labelCls}>Preview</label>
                   <div className="bg-white rounded-xl overflow-hidden border border-white/10">
                     <iframe
-                      srcDoc={applyPreviewVars(currentBodyValue)}
+                      srcDoc={textToHtml(applyPreviewVars(currentBodyValue))}
                       className="w-full border-0"
                       style={{ height: '360px' }}
                       title="Email preview"

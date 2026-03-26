@@ -12,9 +12,19 @@ interface CampaignStats {
   targetCity: string;
   targetState: string | null;
   targetIndustry: string;
+  emailSubject: string;
+  emailBodyHtml: string;
   active: boolean;
   createdAt: string;
   _count: { prospects: number };
+  stats: {
+    emailed: number;
+    opened: number;
+    replied: number;
+    converted: number;
+    openRate: number;
+    replyRate: number;
+  };
 }
 
 async function getCampaigns(): Promise<CampaignStats[]> {
@@ -38,10 +48,30 @@ async function getEnrichedCount(campaignId: string): Promise<number> {
   }
 }
 
+/** Truncate email body for preview — strip HTML and show first ~80 chars */
+function emailPreview(body: string): string {
+  const plain = body
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return plain.length > 100 ? plain.slice(0, 100) + '...' : plain;
+}
+
 export default async function CampaignsPage() {
   const campaigns = await getCampaigns();
-  // Fetch enriched counts in parallel
   const enrichedCounts = await Promise.all(campaigns.map((c) => getEnrichedCount(c.id)));
+
+  // Aggregate stats across all campaigns
+  const totals = campaigns.reduce(
+    (acc, c) => ({
+      prospects: acc.prospects + c._count.prospects,
+      emailed: acc.emailed + (c.stats?.emailed ?? 0),
+      opened: acc.opened + (c.stats?.opened ?? 0),
+      replied: acc.replied + (c.stats?.replied ?? 0),
+    }),
+    { prospects: 0, emailed: 0, opened: 0, replied: 0 },
+  );
 
   return (
     <div className="p-8 space-y-8 animate-fade-up">
@@ -50,6 +80,34 @@ export default async function CampaignsPage() {
         <h1 className="text-2xl font-bold text-white tracking-tight">Campaigns</h1>
         <p className="text-slate-400 mt-1 text-sm">Scrape local businesses and send personalized cold outreach.</p>
       </div>
+
+      {/* Global Stats */}
+      {campaigns.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white/5 rounded-xl border border-white/10 p-4">
+            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Total Prospects</p>
+            <p className="text-2xl font-bold text-white mt-1">{totals.prospects}</p>
+          </div>
+          <div className="bg-white/5 rounded-xl border border-white/10 p-4">
+            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Emailed</p>
+            <p className="text-2xl font-bold text-white mt-1">{totals.emailed}</p>
+          </div>
+          <div className="bg-white/5 rounded-xl border border-white/10 p-4">
+            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Opened</p>
+            <p className="text-2xl font-bold text-white mt-1">{totals.opened}</p>
+            {totals.emailed > 0 && (
+              <p className="text-xs text-slate-500 mt-0.5">{Math.round((totals.opened / totals.emailed) * 100)}% rate</p>
+            )}
+          </div>
+          <div className="bg-white/5 rounded-xl border border-white/10 p-4">
+            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Replied</p>
+            <p className="text-2xl font-bold text-white mt-1">{totals.replied}</p>
+            {totals.emailed > 0 && (
+              <p className="text-xs text-slate-500 mt-0.5">{Math.round((totals.replied / totals.emailed) * 100)}% rate</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* New Campaign Form */}
       <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6">
@@ -73,69 +131,88 @@ export default async function CampaignsPage() {
           <div className="px-6 py-4 border-b border-white/5">
             <h2 className="text-sm font-semibold text-white">{campaigns.length} Campaign{campaigns.length !== 1 ? 's' : ''}</h2>
           </div>
-          {/* Scrollbar-on-top: rotateX flips the scrollbar up, inner div flips content back */}
-          <div className="overflow-x-auto [transform:rotateX(180deg)]">
-          <div className="[transform:rotateX(180deg)]">
-          <table className="w-full" style={{ minWidth: '720px' }}>
-            <thead>
-              <tr className="bg-white/[0.07] border-b-2 border-slate-700/40">
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-6 py-3.5">Campaign</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-6 py-3.5">City</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-6 py-3.5">Prospects</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-6 py-3.5">Status</th>
-                <th className="text-left text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-6 py-3.5">Created</th>
-                <th className="px-6 py-3.5" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60">
-              {campaigns.map((c, idx) => (
-                <tr key={c.id} className="hover:bg-violet-950/20 transition-colors">
-                  <td className="px-6 py-4">
-                    <Link href={`/campaigns/${c.id}`} className="font-semibold text-sm text-white hover:text-violet-300 transition-colors">
-                      {c.name}
-                    </Link>
-                    <p className="text-xs text-slate-500 mt-0.5">{c.targetIndustry}</p>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-slate-300">
-                    {c.targetCity}
-                    {c.targetState && <span className="text-slate-600 ml-1 text-xs">{c.targetState}</span>}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm font-semibold text-white">{c._count.prospects}</span>
-                    <span className="text-xs text-slate-500 ml-1">prospects</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                      c.active
-                        ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25'
-                        : 'bg-slate-500/10 text-slate-500 border border-slate-500/20'
-                    }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${c.active ? 'bg-emerald-400' : 'bg-slate-500'}`} />
-                      {c.active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-slate-500">
-                    {new Date(c.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center gap-2 justify-end">
+          <div className="divide-y divide-slate-800/60">
+            {campaigns.map((c, idx) => (
+              <div key={c.id} className="px-6 py-5 hover:bg-violet-950/20 transition-colors">
+                <div className="flex items-start justify-between gap-4">
+                  {/* Left: Campaign info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3">
+                      <Link href={`/campaigns/${c.id}`} className="font-semibold text-sm text-white hover:text-violet-300 transition-colors">
+                        {c.name}
+                      </Link>
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                        c.active
+                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25'
+                          : 'bg-slate-500/10 text-slate-500 border border-slate-500/20'
+                      }`}>
+                        <span className={`w-1 h-1 rounded-full ${c.active ? 'bg-emerald-400' : 'bg-slate-500'}`} />
+                        {c.active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-500">
+                      <span>{c.targetCity}{c.targetState ? `, ${c.targetState}` : ''}</span>
+                      <span>·</span>
+                      <span>{c.targetIndustry}</span>
+                      <span>·</span>
+                      <span>{new Date(c.createdAt).toLocaleDateString()}</span>
+                    </div>
+
+                    {/* Email template preview */}
+                    <div className="mt-2.5 px-3 py-2 bg-white/[0.03] border border-white/5 rounded-lg">
+                      <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Subject</p>
+                      <p className="text-xs text-slate-300">{c.emailSubject}</p>
+                      <p className="text-[10px] text-slate-600 mt-1.5 leading-relaxed">{emailPreview(c.emailBodyHtml)}</p>
+                    </div>
+
+                    {/* Performance stats row */}
+                    {c.stats && c.stats.emailed > 0 && (
+                      <div className="flex items-center gap-4 mt-2.5">
+                        <span className="text-xs text-slate-500">
+                          <span className="font-semibold text-white">{c.stats.emailed}</span> sent
+                        </span>
+                        <span className="text-xs text-slate-500">
+                          <span className={`font-semibold ${c.stats.openRate >= 20 ? 'text-emerald-400' : c.stats.openRate >= 10 ? 'text-yellow-400' : 'text-red-400'}`}>
+                            {c.stats.openRate}%
+                          </span> opens
+                        </span>
+                        <span className="text-xs text-slate-500">
+                          <span className={`font-semibold ${c.stats.replyRate >= 5 ? 'text-emerald-400' : c.stats.replyRate >= 2 ? 'text-yellow-400' : 'text-slate-400'}`}>
+                            {c.stats.replyRate}%
+                          </span> replies
+                        </span>
+                        {c.stats.converted > 0 && (
+                          <span className="text-xs text-slate-500">
+                            <span className="font-semibold text-violet-400">{c.stats.converted}</span> converted
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right: Prospect count + actions */}
+                  <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                    <div className="text-right">
+                      <span className="text-lg font-bold text-white">{c._count.prospects}</span>
+                      <span className="text-xs text-slate-500 ml-1">prospects</span>
+                    </div>
+                    <div className="flex items-center gap-2">
                       <Link
                         href={`/campaigns/${c.id}`}
                         className="text-xs px-3 py-1.5 rounded-lg bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white transition-colors border border-white/10"
                       >
-                        View →
+                        View
                       </Link>
                       <RunCampaignButton campaignId={c.id} prospectorUrl={PROSPECTOR_URL} initialTotal={c._count.prospects} />
                       <SendCampaignButton campaignId={c.id} prospectorUrl={PROSPECTOR_URL} enrichedCount={enrichedCounts[idx] ?? 0} />
                       <DeleteCampaignButton campaignId={c.id} campaignName={c.name} prospectorUrl={PROSPECTOR_URL} />
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </div>{/* end rotateX inner */}
-          </div>{/* end rotateX outer */}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

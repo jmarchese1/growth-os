@@ -3,45 +3,23 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
-const DEFAULT_SUBJECT = `quick question about {{businessName}}`;
+const DEFAULT_SUBJECT = `quick question about {{company}}`;
 
-const DEFAULT_BODY = `<div style="font-family: Arial, sans-serif; max-width: 540px; color: #1a1a1a; line-height: 1.65; font-size: 15px;">
-  <p>Hey {{businessName}},</p>
+const DEFAULT_BODY = `Hey {{firstName}},
 
-  <p>
-    I run an AI automation agency built specifically for restaurants. We build three things
-    for our clients: a custom AI phone receptionist, a custom AI chatbot and a professional website.
-  </p>
+I run an AI automation agency built specifically for restaurants. We build three things for our clients: a custom AI phone receptionist, a custom AI chatbot and a professional website.
 
-  <p>
-    Here is how it works. When a customer calls and you are busy or closed, the call automatically
-    routes to your AI phone agent. It answers questions, takes orders and books reservations just
-    like a real staff member would. On top of that, we embed an AI chatbot into your website that
-    does the same thing for online visitors.
-  </p>
+Here is how it works. When a customer calls and you are busy or closed, the call automatically routes to your AI phone agent. It answers questions, takes orders and books reservations just like a real staff member would. On top of that, we embed an AI chatbot into your website that does the same thing for online visitors.
 
-  <p>
-    I would love to jump on a quick call and demo what this would look like for {{businessName}}.
-    No pressure, just want to show you what is possible.
-  </p>
+I would love to jump on a quick call and demo what this would look like for {{company}}. No pressure, just want to show you what is possible.`;
 
-  <table style="margin-top: 28px; border-top: 1px solid #eee; padding-top: 20px; border-collapse: collapse; width: 100%;" cellpadding="0" cellspacing="0">
-    <tr>
-      <td style="padding-right: 12px; vertical-align: middle; width: 56px;">
-        <img src="https://i.imgur.com/RDXkWkD.jpeg" alt="Jason" width="48" height="48" style="border-radius: 50%; display: block; object-fit: cover;" />
-      </td>
-      <td style="vertical-align: middle;">
-        <p style="margin: 0; font-size: 14px; font-weight: 700; color: #1a1a1a;">Jason</p>
-        <p style="margin: 2px 0 0; font-size: 13px; color: #666;">Founder · <a href="https://embedo.io" style="color: #4f46e5; text-decoration: none;">embedo.io</a></p>
-      </td>
-    </tr>
-  </table>
-
-  <p style="margin-top: 32px; font-size: 11px; color: #bbb;">
-    Saw your restaurant in a local search. Not interested?
-    <a href="mailto:{{replyEmail}}?subject=Unsubscribe" style="color: #bbb;">Unsubscribe</a>
-  </p>
-</div>`;
+const TEMPLATE_VARS = [
+  { key: '{{firstName}}', label: 'First Name', desc: 'Contact first name from Apollo (falls back to "there")' },
+  { key: '{{lastName}}', label: 'Last Name', desc: 'Contact last name from Apollo' },
+  { key: '{{company}}', label: 'Company', desc: 'Business name in Title Case' },
+  { key: '{{city}}', label: 'City', desc: 'Target city' },
+  { key: '{{calLink}}', label: 'Cal Link', desc: 'Your booking link (best for follow-ups)' },
+];
 
 // Pre-validated US cities with confirmed coordinates for Geoapify Places search.
 // Lat/lon stored here — bypasses geocoding entirely at campaign run time.
@@ -734,21 +712,21 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
 
         <div>
           <label className={labelCls}>
-            Email Subject <span className="text-slate-600 normal-case font-normal tracking-normal">— use &#123;&#123;businessName&#125;&#125;</span>
+            Email Subject
           </label>
           <input
             required
             value={form.emailSubject}
             onChange={(e) => setForm({ ...form, emailSubject: e.target.value })}
             className={inputCls}
+            placeholder="quick question about {{company}}"
           />
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label className={labelCls + ' mb-0'}>
-              {aiEnabled ? 'Fallback Email Body' : 'Email Body HTML'}
-              {!aiEnabled && <span className="text-slate-600 normal-case font-normal tracking-normal ml-1">— &#123;&#123;businessName&#125;&#125;, &#123;&#123;city&#125;&#125;</span>}
+              {aiEnabled ? 'Fallback Email Body' : 'Email Body'}
             </label>
             {aiEnabled && (
               <button
@@ -764,17 +742,51 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
               </button>
             )}
           </div>
+
+          {/* Variable insert buttons */}
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {TEMPLATE_VARS.map((v) => (
+              <button
+                key={v.key}
+                type="button"
+                title={v.desc}
+                onClick={() => {
+                  const textarea = document.getElementById('email-body-textarea') as HTMLTextAreaElement | null;
+                  if (textarea) {
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const text = form.emailBodyHtml;
+                    const newText = text.slice(0, start) + v.key + text.slice(end);
+                    setForm({ ...form, emailBodyHtml: newText });
+                    setTimeout(() => {
+                      textarea.focus();
+                      textarea.setSelectionRange(start + v.key.length, start + v.key.length);
+                    }, 0);
+                  } else {
+                    setForm({ ...form, emailBodyHtml: form.emailBodyHtml + v.key });
+                  }
+                }}
+                className="px-2 py-1 text-[10px] font-semibold rounded-md bg-violet-500/10 border border-violet-500/20 text-violet-300 hover:bg-violet-500/20 transition-colors"
+              >
+                {v.label}
+              </button>
+            ))}
+          </div>
+
           <textarea
+            id="email-body-textarea"
             required
-            rows={aiEnabled ? 5 : 8}
+            rows={aiEnabled ? 5 : 10}
             value={form.emailBodyHtml}
             onChange={(e) => setForm({ ...form, emailBodyHtml: e.target.value })}
-            className={inputCls + ' font-mono resize-y' + (aiEnabled ? ' opacity-50' : '')}
-            placeholder={aiEnabled ? 'Used as fallback if AI generation fails…' : ''}
+            className={inputCls + ' resize-y leading-relaxed' + (aiEnabled ? ' opacity-50' : '')}
+            placeholder="Write your email here. Use the variable buttons above to insert dynamic fields..."
           />
-          {aiEnabled && (
-            <p className="text-[10px] text-slate-600 mt-1">This template is only sent if Claude AI is unavailable.</p>
-          )}
+          <p className="text-[10px] text-slate-600 mt-1">
+            {aiEnabled
+              ? 'This template is only sent if Claude AI is unavailable.'
+              : 'Plain text — signature and unsubscribe link are added automatically. Variables get filled from Apollo data at send time.'}
+          </p>
         </div>
 
         {error && <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}

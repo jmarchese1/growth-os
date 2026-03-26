@@ -264,10 +264,42 @@ Output format:
 
   // ─── List campaigns ───────────────────────────────────────────────────────
   app.get('/campaigns', async () => {
-    return db.outboundCampaign.findMany({
+    const campaigns = await db.outboundCampaign.findMany({
       orderBy: { createdAt: 'desc' },
       include: { _count: { select: { prospects: true } } },
     });
+
+    // Fetch stats for each campaign in parallel
+    const withStats = await Promise.all(campaigns.map(async (c) => {
+      const [byStatus, openCount, replyCount] = await Promise.all([
+        db.prospectBusiness.groupBy({
+          by: ['status'],
+          where: { campaignId: c.id },
+          _count: { _all: true },
+        }),
+        db.outreachMessage.count({
+          where: { prospect: { campaignId: c.id }, openedAt: { not: null } },
+        }),
+        db.outreachMessage.count({
+          where: { prospect: { campaignId: c.id }, status: 'REPLIED' },
+        }),
+      ]);
+      const stats = Object.fromEntries(byStatus.map((s: { status: string; _count: { _all: number } }) => [s.status, s._count._all]));
+      const emailed = (stats['CONTACTED'] ?? 0) + (stats['OPENED'] ?? 0) + (stats['REPLIED'] ?? 0) + (stats['CONVERTED'] ?? 0);
+      return {
+        ...c,
+        stats: {
+          emailed,
+          opened: openCount,
+          replied: replyCount,
+          converted: stats['CONVERTED'] ?? 0,
+          openRate: emailed > 0 ? Math.round((openCount / emailed) * 100) : 0,
+          replyRate: emailed > 0 ? Math.round((replyCount / emailed) * 100) : 0,
+        },
+      };
+    }));
+
+    return withStats;
   });
 
   // ─── Update campaign email content ────────────────────────────────────────
