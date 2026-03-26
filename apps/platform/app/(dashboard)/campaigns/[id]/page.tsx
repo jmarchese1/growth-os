@@ -4,7 +4,6 @@ import { SendButton } from './send-button';
 import { ConvertButton } from './convert-button';
 import { EditEmailButton } from './edit-email-button';
 import { ManageSequenceButton } from './manage-sequence-button';
-import { EnrichHunterButton } from './enrich-hunter-button';
 import { FollowUpTimer } from './follow-up-timer';
 import { EmailPreviewModal } from './email-preview-modal';
 
@@ -196,11 +195,6 @@ export default async function CampaignDetailPage({ params, searchParams }: {
         </div>
         {campaign && (
           <div className="flex items-center gap-2">
-            <EnrichHunterButton
-              campaignId={id}
-              prospectorUrl={PROSPECTOR_URL}
-              newCount={newCount}
-            />
             <ManageSequenceButton
               campaignId={id}
               currentSteps={campaign.sequenceSteps}
