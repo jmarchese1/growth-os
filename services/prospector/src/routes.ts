@@ -1429,4 +1429,175 @@ Output format:
       sendTimeAnalysis,
     };
   });
+
+  // ── Notifications ──────────────────────────────────────────────────────
+  app.get('/notifications', async (_request, reply) => {
+    const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // last 7 days
+    const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    const [replies, bounces, meetingsBooked, recentOpens] = await Promise.all([
+      db.outreachMessage.findMany({
+        where: { status: 'REPLIED', updatedAt: { gte: since } },
+        include: { prospect: { select: { name: true, email: true, campaignId: true } } },
+        orderBy: { updatedAt: 'desc' },
+        take: 50,
+      }),
+      db.outreachMessage.findMany({
+        where: { status: 'BOUNCED', updatedAt: { gte: since } },
+        include: { prospect: { select: { name: true, email: true, campaignId: true } } },
+        orderBy: { updatedAt: 'desc' },
+        take: 50,
+      }),
+      db.prospectBusiness.findMany({
+        where: { status: 'MEETING_BOOKED', updatedAt: { gte: since } },
+        select: { id: true, name: true, email: true, campaignId: true, updatedAt: true },
+        orderBy: { updatedAt: 'desc' },
+        take: 50,
+      }),
+      db.outreachMessage.findMany({
+        where: { status: 'OPENED', openedAt: { gte: last24h } },
+        include: { prospect: { select: { name: true, email: true, campaignId: true } } },
+        orderBy: { openedAt: 'desc' },
+        take: 50,
+      }),
+    ]);
+
+    const notifications = [
+      ...replies.map((r) => ({
+        id: r.id,
+        type: 'reply' as const,
+        title: `Reply from ${r.prospect.name}`,
+        description: r.subject ? `Re: ${r.subject}` : 'Email reply received',
+        prospectName: r.prospect.name,
+        campaignId: r.prospect.campaignId,
+        createdAt: r.updatedAt.toISOString(),
+      })),
+      ...bounces.map((b) => ({
+        id: b.id,
+        type: 'bounce' as const,
+        title: `Bounce: ${b.prospect.name}`,
+        description: b.prospect.email ? `Email to ${b.prospect.email} bounced` : 'Email bounced',
+        prospectName: b.prospect.name,
+        campaignId: b.prospect.campaignId,
+        createdAt: b.updatedAt.toISOString(),
+      })),
+      ...meetingsBooked.map((m) => ({
+        id: m.id,
+        type: 'meeting_booked' as const,
+        title: `Meeting booked: ${m.name}`,
+        description: m.email ? `${m.name} (${m.email})` : m.name,
+        prospectName: m.name,
+        campaignId: m.campaignId,
+        createdAt: m.updatedAt.toISOString(),
+      })),
+      ...recentOpens.map((o) => ({
+        id: o.id,
+        type: 'open' as const,
+        title: `Opened by ${o.prospect.name}`,
+        description: o.subject ? `Opened: ${o.subject}` : 'Email opened',
+        prospectName: o.prospect.name,
+        campaignId: o.prospect.campaignId,
+        createdAt: (o.openedAt ?? o.updatedAt).toISOString(),
+      })),
+    ]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 50);
+
+    return reply.send(notifications);
+  });
+
+  // ── Daily Report ───────────────────────────────────────────────────────
+  app.get('/daily-report', async (_request, reply) => {
+    const now = new Date();
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+    // Gather stats for last 24 hours
+    const [
+      newProspectsDiscovered,
+      emailsSent,
+      opens,
+      repliesCount,
+      bouncesCount,
+      meetingsBookedCount,
+      activeCampaigns,
+    ] = await Promise.all([
+      db.prospectBusiness.count({ where: { createdAt: { gte: yesterday } } }),
+      db.outreachMessage.count({ where: { sentAt: { gte: yesterday } } }),
+      db.outreachMessage.count({ where: { openedAt: { gte: yesterday } } }),
+      db.outreachMessage.count({ where: { status: 'REPLIED', updatedAt: { gte: yesterday } } }),
+      db.outreachMessage.count({ where: { status: 'BOUNCED', updatedAt: { gte: yesterday } } }),
+      db.prospectBusiness.count({ where: { status: 'MEETING_BOOKED', updatedAt: { gte: yesterday } } }),
+      db.outboundCampaign.findMany({
+        where: { active: true },
+        select: { id: true, name: true, targetCity: true },
+      }),
+    ]);
+
+    const stats = {
+      newProspectsDiscovered,
+      emailsSent,
+      opens,
+      replies: repliesCount,
+      bounces: bouncesCount,
+      meetingsBooked: meetingsBookedCount,
+    };
+
+    // Per-campaign stats for last 24 hours
+    const campaigns = await Promise.all(
+      activeCampaigns.map(async (c) => {
+        const [sent, campaignOpens, campaignReplies] = await Promise.all([
+          db.outreachMessage.count({ where: { prospect: { campaignId: c.id }, sentAt: { gte: yesterday } } }),
+          db.outreachMessage.count({ where: { prospect: { campaignId: c.id }, openedAt: { gte: yesterday } } }),
+          db.outreachMessage.count({ where: { prospect: { campaignId: c.id }, status: 'REPLIED', updatedAt: { gte: yesterday } } }),
+        ]);
+        return { name: c.name, sent, opens: campaignOpens, replies: campaignReplies };
+      })
+    );
+
+    // Try to generate AI summary if Anthropic key is available
+    let aiSummary: string | null = null;
+    const anthropicKey = process.env['ANTHROPIC_API_KEY'];
+    if (anthropicKey) {
+      try {
+        const Anthropic = (await import('@anthropic-ai/sdk')).default;
+        const client = new Anthropic({ apiKey: anthropicKey });
+        const prompt = `You are an outbound sales analytics assistant for Embedo, a B2B SaaS platform. Generate a brief executive summary (3-5 bullet points) with recommendations based on these last 24-hour stats:
+
+New prospects discovered: ${stats.newProspectsDiscovered}
+Emails sent: ${stats.emailsSent}
+Opens: ${stats.opens}
+Replies: ${stats.replies}
+Bounces: ${stats.bounces}
+Meetings booked: ${stats.meetingsBooked}
+
+Campaign breakdown (last 24h):
+${campaigns.map((c) => `- ${c.name}: ${c.sent} sent, ${c.opens} opens, ${c.replies} replies`).join('\n')}
+
+Include:
+1. What campaigns are performing well
+2. What to push more / scale up
+3. What to reduce or adjust
+
+Keep it concise and actionable. Use plain text, no markdown headers.`;
+
+        const response = await client.messages.create({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 500,
+          messages: [{ role: 'user', content: prompt }],
+        });
+        const textBlock = response.content.find((b) => b.type === 'text');
+        if (textBlock && textBlock.type === 'text') aiSummary = textBlock.text;
+      } catch (err) {
+        log.warn({ err }, 'Failed to generate AI daily report');
+      }
+    }
+
+    return reply.send({
+      generatedAt: now.toISOString(),
+      period: '24h',
+      stats,
+      campaigns,
+      aiSummary,
+    });
+  });
 }

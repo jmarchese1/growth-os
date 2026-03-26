@@ -38,6 +38,7 @@ import { tableRoutes } from './routes/tables.js';
 import { giftCardRoutes } from './routes/gift-cards.js';
 import { reviewRoutes } from './routes/reviews.js';
 import { competitorRoutes } from './routes/competitors.js';
+import { appointmentRoutes } from './routes/appointments.js';
 
 const log = createLogger('api:gateway');
 
@@ -151,6 +152,7 @@ export async function buildApp() {
   await app.register(giftCardRoutes);
   await app.register(reviewRoutes);
   await app.register(competitorRoutes);
+  await app.register(appointmentRoutes);
 
   log.info('API Gateway configured');
   return app;

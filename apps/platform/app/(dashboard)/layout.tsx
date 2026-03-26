@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import EmbedoLogo from '../../components/EmbedoLogo';
+import NotificationBell from '../../components/NotificationBell';
 import { useSession } from '../../components/auth/session-provider';
 import { createSupabaseBrowserClient } from '../../lib/supabase/client';
 
@@ -59,6 +60,15 @@ const NAV = [
         icon: (
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
             <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+          </svg>
+        ),
+      },
+      {
+        href: '/calendar',
+        label: 'Calendar',
+        icon: (
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+            <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
           </svg>
         ),
       },
@@ -306,9 +316,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         userInitial={userInitial}
         onLogout={handleLogout}
       />
-      <main className="relative flex-1 overflow-auto bg-grid-dark" style={{ zIndex: 2 }}>
-        {children}
-      </main>
+      <div className="relative flex-1 flex flex-col overflow-hidden" style={{ zIndex: 2 }}>
+        {/* Top header bar */}
+        <header className="flex-shrink-0 h-14 border-b border-white/[0.06] flex items-center justify-end px-6 bg-[#0c0a18]/80 backdrop-blur-sm">
+          <NotificationBell />
+        </header>
+        <main className="flex-1 overflow-auto bg-grid-dark">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
