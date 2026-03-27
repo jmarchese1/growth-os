@@ -6,6 +6,8 @@ import { EditEmailButton } from './edit-email-button';
 import { ManageSequenceButton } from './manage-sequence-button';
 import { FollowUpTimer } from './follow-up-timer';
 import { EmailPreviewModal } from './email-preview-modal';
+import { ColdEmailPreview } from './cold-email-preview';
+import { WebsiteScore } from './website-score';
 import { CloneCampaignButton } from '../clone-campaign-button';
 
 const PROSPECTOR_URL = process.env.PROSPECTOR_URL ?? 'http://localhost:3009';
@@ -276,6 +278,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
               <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Contact</th>
               <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Details</th>
               <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Rating</th>
+              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Site Score</th>
               <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Status</th>
               <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Sent</th>
               <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Opened</th>
@@ -296,6 +299,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
             )}
             {prospects.map((p) => {
               const msg = p.messages[0];
+              const step1 = campaign.sequenceSteps?.find((s) => s.stepNumber === 1) ?? null;
               const cityState = [p.address?.city, p.address?.state].filter(Boolean).join(', ');
               return (
                 <tr key={p.id} className="hover:bg-violet-950/20 transition-colors group">
@@ -412,6 +416,15 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                     )}
                   </td>
 
+                  {/* Site Score + Chatbot */}
+                  <td className="px-4 py-3 min-w-[90px]">
+                    {p.website ? (
+                      <WebsiteScore url={p.website} />
+                    ) : (
+                      <span className="text-[10px] text-slate-700">No site</span>
+                    )}
+                  </td>
+
                   {/* Status */}
                   <td className="px-4 py-3 min-w-[110px]">
                     <StatusBadge status={p.status} />
@@ -473,7 +486,14 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                   <td className="px-4 py-3 min-w-[180px] sticky right-0 bg-[#0c0a18] group-hover:bg-[#0e0c1e] z-10 transition-colors">
                     <div className="flex items-center gap-2 flex-nowrap">
                       {p.email && (p.status === 'NEW' || p.status === 'ENRICHED') && (
-                        <SendButton prospectId={p.id} prospectorUrl={PROSPECTOR_URL} />
+                        <>
+                          <SendButton prospectId={p.id} prospectorUrl={PROSPECTOR_URL} />
+                          <ColdEmailPreview
+                            subjectTemplate={step1?.subject ?? campaign.emailSubject}
+                            bodyTemplate={step1?.bodyHtml ?? campaign.emailBodyHtml}
+                            prospect={p}
+                          />
+                        </>
                       )}
                       {p.status === 'REPLIED' && (
                         <ConvertButton prospectId={p.id} prospectorUrl={PROSPECTOR_URL} />

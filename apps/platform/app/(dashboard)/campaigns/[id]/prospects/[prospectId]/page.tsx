@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { SendButton } from '../../send-button';
 import { ConvertButton } from '../../convert-button';
 import { SequenceSection } from './sequence-section';
+import { WebsiteScore } from '../../website-score';
 
 const PROSPECTOR_URL = process.env.PROSPECTOR_URL ?? 'http://localhost:3009';
 
@@ -253,8 +254,8 @@ export default async function ProspectDetailPage({ params }: {
                   <span className="text-sm text-slate-700 italic">—</span>
                 )}
                 {prospect.website && (
-                  <div className="mt-0.5">
-                    <span className="text-[9px] font-semibold uppercase tracking-wider text-sky-500/50">via Geoapify</span>
+                  <div className="mt-1.5">
+                    <WebsiteScore url={prospect.website} />
                   </div>
                 )}
               </dd>
