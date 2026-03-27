@@ -1,21 +1,20 @@
 import type { Metadata } from 'next';
-import { Plus_Jakarta_Sans, Instrument_Serif, JetBrains_Mono } from 'next/font/google';
+import { Outfit, Syne, Fira_Code } from 'next/font/google';
 import './v3.css';
 
-const jakarta = Plus_Jakarta_Sans({
+const outfit = Outfit({
   subsets: ['latin'],
   weight: ['300', '400', '500', '600', '700', '800'],
-  variable: '--font-sans',
+  variable: '--font-body',
 });
 
-const instrumentSerif = Instrument_Serif({
+const syne = Syne({
   subsets: ['latin'],
-  weight: '400',
-  style: ['normal', 'italic'],
-  variable: '--font-serif',
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-display',
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const firaCode = Fira_Code({
   subsets: ['latin'],
   weight: ['400', '500'],
   variable: '--font-mono',
@@ -28,7 +27,7 @@ export const metadata: Metadata = {
 
 export default function V3Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className={`${jakarta.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable} v3-page v3-noise`}>
+    <div className={`${outfit.variable} ${syne.variable} ${firaCode.variable} v3-page v3-noise`}>
       {children}
     </div>
   );

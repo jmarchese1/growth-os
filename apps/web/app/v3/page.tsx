@@ -9,6 +9,7 @@ import {
   ChevronRight, ExternalLink,
 } from 'lucide-react';
 import CalModal from '@/components/booking/CalendlyModal';
+import InteractiveGrid from './InteractiveGrid';
 
 /* ═══════════════════════════════════════════════════════════
    CONSTANTS
@@ -205,7 +206,8 @@ export default function V3Page() {
       </motion.nav>
 
       {/* ═══════════════════════ HERO ═══════════════════════ */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden v3-grid-bg">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <InteractiveGrid />
         <div className="v3-orb v3-orb-1" style={{ top: '-15%', right: '-5%' }} />
         <div className="v3-orb v3-orb-2" style={{ bottom: '-10%', left: '-8%' }} />
         <div className="v3-orb v3-orb-3" style={{ top: '20%', left: '50%' }} />
