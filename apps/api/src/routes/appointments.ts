@@ -130,7 +130,7 @@ export async function appointmentRoutes(app: FastifyInstance): Promise<void> {
       const res = await fetch(`${CAL_API_BASE}/bookings?status=upcoming,past,cancelled`, {
         headers: {
           'Authorization': `Bearer ${calApiKey}`,
-          'cal-api-version': '2024-08-13',
+          'cal-api-version': '2026-02-25',
           'Content-Type': 'application/json',
         },
       });
