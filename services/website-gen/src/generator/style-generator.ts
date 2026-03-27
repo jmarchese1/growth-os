@@ -26,7 +26,14 @@ export async function generateStyleOverrides(params: {
     max_tokens: 4000,
     messages: [{
       role: 'user',
-      content: `You are a world-class web designer. Your job is to generate a COMPLETE custom CSS stylesheet that transforms a base website template into something that looks inspired by the reference sites below.
+      content: `You are a world-class web designer known for creating DISTINCTIVE, memorable websites that avoid generic AI aesthetics. Your job is to generate a COMPLETE custom CSS stylesheet that transforms a base website template into something extraordinary — inspired by the reference sites below but elevated with your own creative choices.
+
+## DESIGN PHILOSOPHY
+- Typography: Use distinctive Google Fonts, never generic (Inter, Roboto, Arial). Pick characterful, unexpected pairings.
+- Color: Commit to a cohesive palette with dominant colors and sharp accents. Avoid timid, evenly-distributed palettes or cliched purple-gradient-on-white.
+- Texture: Create atmosphere with gradient meshes, noise, patterns, layered transparencies, or dramatic shadows. Never flat solid backgrounds.
+- Motion: Add CSS animations for scroll reveals, hover states, and ambient background effects. A few well-orchestrated effects over scattered micro-interactions.
+- Spatial: Unexpected layouts — asymmetry, overlap, generous negative space. Not everything centered.
 
 ## Inspiration Analysis
 ${params.inspirationStyleNotes || 'No specific inspiration — create a distinctive, high-end design for a ' + params.industryType + '.'}
@@ -125,7 +132,16 @@ Return ONLY valid JSON:
   "customCSS": "YOUR FULL CUSTOM STYLESHEET HERE — make it 30-80 lines of CSS. Override .site-nav, .hero-section, .hero-heading, .btn-primary, section backgrounds, card styles, footer, colors, shadows, borders, typography — EVERYTHING needed to match the inspiration. Use !important where needed to override inline styles on section renderers."
 }
 
-CRITICAL: The customCSS field should be SUBSTANTIAL (30-80 lines). A 2-line customCSS means you're not trying hard enough. Study the inspiration description and translate every visual detail into CSS.`,
+CRITICAL: The customCSS field should be SUBSTANTIAL (30-80 lines). A 2-line customCSS means you're not trying hard enough. Study the inspiration description and translate every visual detail into CSS.
+
+ANTI-PATTERNS TO AVOID in your CSS:
+- Generic purple-gradient-on-white color schemes
+- Inter / Roboto / Arial font imports (use distinctive Google Fonts like Playfair Display, Sora, Space Mono, Cormorant Garant, etc.)
+- Flat solid-color section backgrounds (add subtle gradients, textures, or patterns)
+- Identical section layouts (vary the visual rhythm)
+- Cookie-cutter card grids (try bento layouts, overlapping compositions, or asymmetric arrangements)
+
+Include Google Font @import in your customCSS for the distinctive fonts you choose.`,
     }],
   });
 

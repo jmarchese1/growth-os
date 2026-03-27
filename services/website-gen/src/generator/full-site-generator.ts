@@ -80,17 +80,33 @@ export async function generateFullWebsite(params: {
     max_tokens: 16000,
     messages: [{
       role: 'user',
-      content: `You are a senior front-end developer at a premium design agency. Build a complete, stunning website using Tailwind CSS.
+      content: `You are a senior front-end developer and designer at a premium agency known for creating DISTINCTIVE, memorable websites. Build a complete website using Tailwind CSS that feels genuinely hand-crafted — not generic AI output.
+
+## DESIGN PHILOSOPHY
+You must create a website with a BOLD, intentional aesthetic direction. Before writing code, commit to a clear visual identity:
+
+**Typography**: Choose distinctive Google Fonts — NEVER use generic fonts like Inter, Roboto, Arial, or system fonts. Pick unexpected, characterful pairings: a striking display font for headings with a refined body font. Examples: Playfair Display + DM Sans, Sora + Outfit, Space Mono + Satoshi, Cormorant Garant + Work Sans.
+
+**Color & Theme**: Commit to a cohesive palette with dominant colors and sharp accents. Avoid timid, evenly-distributed palettes. Avoid the cliched purple-gradient-on-white pattern. Draw colors from the business's identity and industry.
+
+**Spatial Composition**: Use unexpected layouts — asymmetry, overlap, diagonal flow, grid-breaking elements. Generous negative space OR controlled density. Not everything needs to be centered in a container.
+
+**Backgrounds & Texture**: Create atmosphere with gradient meshes, noise textures, geometric patterns, layered transparencies, or dramatic shadows. Never default to flat solid colors.
+
+**Motion**: Add CSS animations for high-impact moments — staggered reveals on scroll, hover states that surprise, subtle background animations. Focus on a few well-orchestrated effects over scattered micro-interactions.
+
+**CRITICAL**: Each website must feel uniquely designed for THIS specific business. No two sites should look the same. Vary between light and dark themes, different font pairings, different layout approaches. Make unexpected creative choices.
 
 ## TECH STACK (MANDATORY)
 - Include: <script src="https://cdn.tailwindcss.com"></script>
-- Include a <script> block to configure tailwind with custom colors/fonts
-- Use Google Fonts via <link> tag — pick fonts that match the inspiration
+- Include a <script> block to configure tailwind with custom colors/fonts matching your chosen aesthetic
+- Use Google Fonts via <link> tag — pick DISTINCTIVE fonts (never Inter/Roboto/Arial)
 - ALL styling via Tailwind utility classes — zero inline styles
 - Use semantic HTML5 (header, main, nav, section, footer)
+- Add CSS @keyframes animations in a <style> block for scroll reveals, hover effects, and ambient motion
 
-## RULE #1: MATCH THE INSPIRATION
-Study the CSS and HTML structure below. Your output must use the SAME color palette, layout approach, typography weight, and visual rhythm. If the inspiration has a light cream background — yours does too. If it has photo grids — yours does too.
+## RULE #1: MATCH THE INSPIRATION (BUT ELEVATE IT)
+Study the CSS and HTML structure below. Use it as a starting point for color palette, layout approach, and visual rhythm — but ELEVATE it with better typography, more intentional spacing, creative backgrounds, and polished micro-interactions. If the inspiration has a light cream background — yours does too but with added texture. If it has photo grids — yours does too but with unexpected compositions.
 
 ${inspirationStyleNotes}
 
@@ -132,20 +148,25 @@ ${enabledPages.length > 0 ? `\n## EXTRA PAGES (these should be full separate vie
 
 ## QUALITY CHECKLIST
 1. Tailwind CSS CDN loaded — NO inline styles
-2. Custom tailwind.config in <script> with theme colors matching inspiration
-3. Hero with background image, gradient overlay, and compelling CTA
+2. Custom tailwind.config in <script> with theme colors AND fonts matching your aesthetic
+3. Hero with background image, gradient overlay, and compelling CTA — creative composition, not just centered text on image
 4. Responsive: mobile-first with sm: md: lg: breakpoints
-5. Fixed/sticky nav with backdrop-blur-md
-6. hover: effects on buttons, cards, images (scale, opacity, shadow)
+5. Fixed/sticky nav with backdrop-blur — minimal, elegant, not generic
+6. Hover effects that surprise: scale transforms, color shifts, shadow reveals, underline animations
 7. transition-all duration-300 on interactive elements
-8. Images throughout — hero, about, features, gallery sections
-9. Proper spacing — not cramped, not too empty
-10. Footer with business name, contact info, credits
+8. Images throughout with creative treatments — overlapping, asymmetric crops, parallax hints, gradient overlays
+9. Generous, intentional spacing — use whitespace as a design element
+10. Footer that matches the overall aesthetic, not an afterthought
+11. DISTINCTIVE typography — display font for headings, body font for text, proper hierarchy
+12. At least one scroll-triggered animation (fade-up, stagger children, count-up)
 
-## DESIGN NOTES
-- Keep it clean and professional — no excessive animations or flashy transitions
-- Simple hover effects on buttons and cards (opacity change, subtle shadow) are fine
-- Focus on layout quality, typography hierarchy, and image placement over effects
+## ANTI-PATTERNS TO AVOID
+- Generic card grids with equal spacing (use bento grids, overlapping layouts, or asymmetric compositions instead)
+- Purple-gradient-on-white colorscheme (be more creative)
+- Inter / Roboto / Arial / system-ui fonts (use distinctive Google Fonts)
+- Flat solid-color backgrounds (add texture, gradients, or patterns)
+- Cookie-cutter hero with centered text (try split layouts, asymmetric positioning, or editorial styles)
+- Identical section layouts repeated (vary the visual rhythm section to section)
 
 ${siteData.googleAnalyticsId ? `Include GA: ${siteData.googleAnalyticsId}` : ''}
 ${siteData.contactFormEndpoint ? `Contact form POSTs JSON to: ${siteData.contactFormEndpoint}` : ''}
