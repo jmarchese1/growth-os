@@ -6,7 +6,7 @@ import { motion, useInView, AnimatePresence } from 'framer-motion';
 import {
   Phone, MessageSquare, Globe, Share2, QrCode,
   Mail, PhoneCall, Sparkles, ArrowRight, Shield,
-  ChevronRight, ExternalLink, Check, X, Zap, Gift, Clock, MapPin,
+  ChevronRight, ExternalLink, Check, Zap, Gift, Clock, MapPin,
 } from 'lucide-react';
 import CalModal from '@/components/booking/CalendlyModal';
 import InteractiveGrid from './InteractiveGrid';
@@ -35,24 +35,6 @@ const STATS = [
   { value: 73, suffix: '%', label: 'of calls to local businesses go unanswered' },
   { value: 15, suffix: '+', label: 'hours per week wasted on tasks AI can handle' },
   { value: 2160, suffix: '', prefix: '$', label: 'saved per month vs. buying 8 separate tools' },
-];
-
-const PAIN_POINTS = [
-  'Missed calls during rush hours losing you customers',
-  'Spending 15+ hours a week on social media, emails, and admin',
-  'Paying for 6-8 different software tools that don\u2019t talk to each other',
-  'No website or an outdated one that doesn\u2019t convert',
-  'Zero follow-up system \u2014 leads go cold in hours',
-  'Can\u2019t compete with chains that have entire marketing teams',
-];
-
-const SOLUTIONS = [
-  'AI answers every call and DM \u2014 24/7, no missed revenue',
-  'Content, emails, and follow-ups happen automatically',
-  'One platform replaces everything at 10% of the cost',
-  'Premium AI website live on your domain in 48 hours',
-  'Instant lead capture + automated nurture sequences',
-  'An entire AI team working for you, for less than one employee',
 ];
 
 interface Plan {
@@ -264,6 +246,8 @@ export default function V3Page() {
       {/* ═══════════════════════ HERO ═══════════════════════ */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <InteractiveGrid />
+        {/* Warm accent blob */}
+        <div className="absolute w-[40%] aspect-square bottom-[10%] left-[5%] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(251, 146, 60, 0.18) 0%, transparent 55%)', filter: 'blur(70px)', animation: 'v3-morph-2 14s ease-in-out infinite' }} />
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 pt-32 pb-24 text-center">
           <motion.div initial={{ opacity: 0, y: 20, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}>
@@ -391,93 +375,74 @@ export default function V3Page() {
 
       <div className="v3-divider mx-auto" style={{ maxWidth: '70%' }} />
 
-      {/* ═══════════════════════ THE OFFER (Hormozi-style) ═══════════════════════ */}
+      {/* ═══════════════════════ THE OFFER ═══════════════════════ */}
       <Section className="relative py-32 lg:py-40 px-6 overflow-hidden" id="offer">
         <div className="absolute inset-0" style={{ background: '#161B3A' }} />
         <div className="v3-mesh-blob v3-mesh-section-3" />
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 50% 60% at 50% 55%, rgba(124,58,237,0.10) 0%, transparent 55%)' }} />
+        <div className="absolute w-[35%] aspect-square top-[5%] right-[-5%] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(251,146,60,0.10) 0%, transparent 55%)', filter: 'blur(60px)' }} />
 
         <div className="relative z-10 max-w-5xl mx-auto">
           <motion.p variants={fadeUp} custom={0} className="text-xs font-[family-name:var(--font-mono)] uppercase tracking-[0.25em] text-purple-400 mb-5 text-center">The Offer</motion.p>
           <motion.h2 variants={fadeUp} custom={1} className="text-4xl sm:text-5xl lg:text-6xl font-[family-name:var(--font-serif)] italic leading-[1.05] tracking-tight mb-6 text-center text-white">
-            Be honest &mdash; how many of<br className="hidden sm:block" /> these sound like your business?
+            Here&apos;s exactly what<br className="hidden sm:block" /> you&apos;re getting.
           </motion.h2>
           <motion.p variants={fadeUp} custom={2} className="text-slate-300 text-center max-w-2xl mx-auto mb-16 text-lg">
-            If you checked even two, you&apos;re leaving money on the table every single day.
+            Not a demo. Not a trial of one feature. The full AI stack &mdash; configured, deployed, and running for your business.
           </motion.p>
 
-          {/* Before / After side by side */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 mb-20 rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
-            {/* Before */}
-            <motion.div variants={fadeScale} custom={3} className="p-8 lg:p-10" style={{ background: 'rgba(239,68,68,0.04)' }}>
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.25)' }}>
-                  <X className="w-5 h-5 text-red-400" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white">Without Embedo</h3>
-                  <p className="text-xs text-red-400/60">Where you are now</p>
-                </div>
-              </div>
-              <div className="space-y-5">
-                {PAIN_POINTS.map((point) => (
-                  <div key={point} className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgba(239,68,68,0.15)' }}>
-                      <X className="w-3 h-3 text-red-400" />
-                    </div>
-                    <span className="text-base text-slate-300 leading-relaxed">{point}</span>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* After */}
-            <motion.div variants={fadeScale} custom={4} className="p-8 lg:p-10" style={{ background: 'rgba(34,197,94,0.04)', borderLeft: '1px solid rgba(255,255,255,0.06)' }}>
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.25)' }}>
-                  <Check className="w-5 h-5 text-emerald-400" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white">With Embedo</h3>
-                  <p className="text-xs text-emerald-400/60">Where you could be in 48 hours</p>
-                </div>
-              </div>
-              <div className="space-y-5">
-                {SOLUTIONS.map((point) => (
-                  <div key={point} className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgba(34,197,94,0.15)' }}>
-                      <Check className="w-3 h-3 text-emerald-400" />
-                    </div>
-                    <span className="text-base text-slate-300 leading-relaxed">{point}</span>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
+          {/* ROI headline cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-16">
+            {[
+              { num: '$25,920', label: 'saved per year vs. separate tools', color: 'text-emerald-400' },
+              { num: '15+', label: 'hours freed up every single week', color: 'text-purple-300' },
+              { num: '48h', label: 'from signup to fully live', color: 'text-amber-400' },
+            ].map((item, i) => (
+              <motion.div key={item.label} variants={fadeScale} custom={i + 3} className="v3-glass rounded-2xl p-7 text-center">
+                <p className={`text-3xl sm:text-4xl font-extrabold tracking-tight mb-2 ${item.color}`}>{item.num}</p>
+                <p className="text-sm text-slate-300">{item.label}</p>
+              </motion.div>
+            ))}
           </div>
 
-          {/* Value Stack Summary */}
-          <motion.div variants={fadeUp} custom={5} className="v3-glass rounded-2xl p-8 lg:p-10 mb-14" style={{ borderColor: 'rgba(124,58,237,0.20)' }}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-              <div className="text-center">
-                <p className="text-xs font-[family-name:var(--font-mono)] text-slate-400 uppercase tracking-wider mb-2">8 tools separately</p>
-                <p className="text-3xl font-bold text-red-400/70 line-through">$2,400/mo</p>
-              </div>
-              <div className="text-center">
-                <p className="text-xs font-[family-name:var(--font-mono)] text-emerald-400 uppercase tracking-wider mb-2">With Embedo</p>
-                <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-4xl font-extrabold text-white">$249</span>
-                  <span className="text-sm text-slate-400">/mo</span>
+          {/* What's included stack */}
+          <motion.div variants={fadeUp} custom={6} className="rounded-2xl overflow-hidden mb-16" style={{ border: '1px solid rgba(124,58,237,0.20)', background: 'rgba(16,19,42,0.60)' }}>
+            <div className="px-8 py-5 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(124,58,237,0.06)' }}>
+              <span className="text-sm font-semibold text-white">What&apos;s included</span>
+              <span className="text-xs font-[family-name:var(--font-mono)] text-slate-400">If purchased separately</span>
+            </div>
+            {[
+              { name: 'AI Voice Agent + dedicated phone number', price: '$400/mo' },
+              { name: 'AI Chatbot (web + Instagram + Facebook)', price: '$200/mo' },
+              { name: 'AI-generated premium website', price: '$300/mo' },
+              { name: 'Social media content engine', price: '$350/mo' },
+              { name: 'CRM + email marketing automation', price: '$300/mo' },
+              { name: 'Smart surveys + QR codes', price: '$150/mo' },
+              { name: 'Dedicated AI phone line with routing', price: '$200/mo' },
+              { name: 'White-glove setup + menu training', price: '$500 one-time' },
+            ].map((item, i) => (
+              <div key={item.name} className="px-8 py-4 flex items-center justify-between" style={{ borderBottom: i < 7 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                <div className="flex items-center gap-3">
+                  <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  <span className="text-sm text-slate-200">{item.name}</span>
                 </div>
+                <span className="text-xs font-[family-name:var(--font-mono)] text-red-400/60 line-through ml-4 flex-shrink-0">{item.price}</span>
               </div>
-              <div className="text-center">
-                <p className="text-xs font-[family-name:var(--font-mono)] text-purple-400 uppercase tracking-wider mb-2">You save</p>
-                <p className="text-3xl font-bold text-emerald-400">$2,151/mo</p>
+            ))}
+            <div className="px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4" style={{ background: 'rgba(124,58,237,0.08)', borderTop: '1px solid rgba(124,58,237,0.20)' }}>
+              <div>
+                <span className="text-sm text-slate-400">Total value: </span>
+                <span className="text-lg font-bold text-red-400/70 line-through">$2,400/mo</span>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-sm text-emerald-400 font-medium">You pay:</span>
+                <span className="text-3xl font-extrabold text-white">$249</span>
+                <span className="text-sm text-slate-400">/mo</span>
               </div>
             </div>
           </motion.div>
 
           {/* Bonuses */}
-          <motion.div variants={fadeUp} custom={6} className="text-center mb-10">
+          <motion.div variants={fadeUp} custom={7} className="text-center mb-10">
             <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-yellow-300" style={{ border: '1px solid rgba(250,204,21,0.30)', background: 'rgba(250,204,21,0.08)' }}>
               <Gift className="w-4 h-4" /> Sign up this month and get $1,000 in bonuses &mdash; free
             </span>
@@ -485,7 +450,7 @@ export default function V3Page() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
             {BONUSES.map((bonus, i) => (
-              <motion.div key={bonus.name} variants={fadeScale} custom={i + 7} whileHover={{ y: -4 }} className="v3-glass rounded-2xl p-8">
+              <motion.div key={bonus.name} variants={fadeScale} custom={i + 8} whileHover={{ y: -4 }} className="v3-glass rounded-2xl p-8">
                 <div className="flex items-center gap-4 mb-5">
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(250,204,21,0.12)', border: '1px solid rgba(250,204,21,0.25)' }}>
                     {i === 0 ? <Zap className="w-5 h-5 text-yellow-400" /> : i === 1 ? <Sparkles className="w-5 h-5 text-yellow-400" /> : <Clock className="w-5 h-5 text-yellow-400" />}
@@ -501,8 +466,8 @@ export default function V3Page() {
           </div>
 
           {/* Guarantee + Scarcity */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-            <motion.div variants={fadeScale} custom={10} className="v3-glass rounded-2xl p-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            <motion.div variants={fadeScale} custom={11} className="v3-glass rounded-2xl p-8">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)' }}>
                   <Shield className="w-5 h-5 text-emerald-400" />
@@ -513,7 +478,7 @@ export default function V3Page() {
                 </div>
               </div>
             </motion.div>
-            <motion.div variants={fadeScale} custom={11} className="v3-glass rounded-2xl p-8">
+            <motion.div variants={fadeScale} custom={12} className="v3-glass rounded-2xl p-8">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.25)' }}>
                   <MapPin className="w-5 h-5 text-purple-400" />
@@ -526,7 +491,7 @@ export default function V3Page() {
             </motion.div>
           </div>
 
-          <motion.div variants={fadeUp} custom={12} className="text-center">
+          <motion.div variants={fadeUp} custom={13} className="text-center">
             <CalModal calLink={CAL_LINK}>
               <motion.span whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} className="group inline-flex items-center gap-2 px-8 py-4 text-white text-base font-semibold rounded-xl cursor-pointer v3-btn-glow" style={{ background: '#7C3AED' }}>
                 Claim Your Spot <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
