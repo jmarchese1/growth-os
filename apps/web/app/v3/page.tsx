@@ -94,7 +94,7 @@ const slideIn = {
 
 const stagger = { visible: { transition: { staggerChildren: 0.08 } } };
 
-const ROTATING_WORDS = ['runs on AI.', 'never sleeps.', 'answers every call.', 'grows itself.', 'works for you.'];
+const ROTATING_WORDS = ['never sleeps.', 'runs on AI.', 'sells while you sleep.', 'books its own calls.', 'learns every day.', 'handles the chaos.'];
 
 function RotatingText() {
   const [index, setIndex] = useState(0);
@@ -102,21 +102,25 @@ function RotatingText() {
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % ROTATING_WORDS.length);
-    }, 2800);
+    }, 3000);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <span className="relative inline-block">
+    <span className="relative inline-flex items-baseline overflow-visible" style={{ minHeight: '1.15em' }}>
       <AnimatePresence mode="wait">
         <motion.span
           key={ROTATING_WORDS[index]}
-          initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
-          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          exit={{ opacity: 0, y: -30, filter: 'blur(8px)' }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          initial={{ opacity: 0, rotateX: 70, filter: 'blur(6px)' }}
+          animate={{ opacity: 1, rotateX: 0, filter: 'blur(0px)' }}
+          exit={{ opacity: 0, rotateX: -70, filter: 'blur(6px)' }}
+          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
           className="inline-block text-transparent bg-clip-text v3-shimmer-text"
-          style={{ backgroundImage: 'linear-gradient(90deg, #C4B5FD, #7C3AED, #A78BFA, #C4B5FD)' }}
+          style={{
+            backgroundImage: 'linear-gradient(90deg, #C4B5FD, #7C3AED, #A78BFA, #C4B5FD)',
+            transformOrigin: 'center bottom',
+            paddingBottom: '0.08em',
+          }}
         >
           {ROTATING_WORDS[index]}
         </motion.span>
