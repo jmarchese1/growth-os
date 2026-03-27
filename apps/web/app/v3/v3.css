@@ -233,7 +233,7 @@
   mix-blend-mode: screen;
 }
 
-/* Hero blobs — 3 distinct purple shades */
+/* Hero blobs — purple, magenta, dark blue */
 .v3-mesh-1 {
   width: 70%;
   aspect-ratio: 1;
@@ -249,7 +249,7 @@
   aspect-ratio: 1;
   bottom: -20%;
   right: -10%;
-  background: radial-gradient(circle, rgba(79, 70, 229, 0.35) 0%, transparent 55%);
+  background: radial-gradient(circle, rgba(219, 39, 119, 0.32) 0%, transparent 55%);
   filter: blur(65px);
   animation: v3-morph-2 15s ease-in-out infinite;
 }
@@ -259,7 +259,7 @@
   aspect-ratio: 1;
   top: 20%;
   right: 5%;
-  background: radial-gradient(circle, rgba(192, 132, 252, 0.30) 0%, transparent 50%);
+  background: radial-gradient(circle, rgba(30, 58, 138, 0.45) 0%, transparent 50%);
   filter: blur(55px);
   animation: v3-morph-3 10s ease-in-out infinite;
 }
@@ -323,23 +323,6 @@
   background-size: 80px 80px;
   mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 70%);
   -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 70%);
-}
-
-/* ── Mouse-following cursor glow ───────────────────────── */
-.v3-cursor-glow {
-  position: absolute;
-  width: 600px;
-  height: 600px;
-  border-radius: 50%;
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-  background: radial-gradient(
-    circle,
-    rgba(124, 58, 237, 0.15) 0%,
-    rgba(167, 139, 250, 0.06) 35%,
-    transparent 60%
-  );
-  transition: left 0.15s ease-out, top 0.15s ease-out, opacity 0.4s ease;
 }
 
 /* ── Custom scrollbar ───────────────────────────────────── */
