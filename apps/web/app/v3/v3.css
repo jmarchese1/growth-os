@@ -233,6 +233,7 @@
   mix-blend-mode: screen;
 }
 
+/* Hero blobs — 3 distinct purple shades */
 .v3-mesh-1 {
   width: 70%;
   aspect-ratio: 1;
@@ -248,29 +249,19 @@
   aspect-ratio: 1;
   bottom: -20%;
   right: -10%;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.35) 0%, transparent 55%);
+  background: radial-gradient(circle, rgba(79, 70, 229, 0.35) 0%, transparent 55%);
   filter: blur(65px);
   animation: v3-morph-2 15s ease-in-out infinite;
 }
 
 .v3-mesh-3 {
-  width: 45%;
+  width: 50%;
   aspect-ratio: 1;
-  top: 25%;
-  right: 10%;
-  background: radial-gradient(circle, rgba(167, 139, 250, 0.30) 0%, transparent 50%);
+  top: 20%;
+  right: 5%;
+  background: radial-gradient(circle, rgba(192, 132, 252, 0.30) 0%, transparent 50%);
   filter: blur(55px);
   animation: v3-morph-3 10s ease-in-out infinite;
-}
-
-.v3-mesh-4 {
-  width: 40%;
-  aspect-ratio: 1;
-  bottom: 5%;
-  left: 15%;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.28) 0%, transparent 50%);
-  filter: blur(55px);
-  animation: v3-morph-4 18s ease-in-out infinite;
 }
 
 @keyframes v3-morph-1 {
@@ -290,10 +281,36 @@
   50% { transform: translate(-12%, 10%) scale(1.12); opacity: 1; }
 }
 
-@keyframes v3-morph-4 {
-  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
-  35% { transform: translate(10%, -12%) scale(1.2); opacity: 0.9; }
-  65% { transform: translate(-6%, 8%) scale(0.88); opacity: 0.65; }
+/* Section-level floating blobs — smaller, slower */
+.v3-mesh-section-1 {
+  width: 45%;
+  aspect-ratio: 1;
+  top: -10%;
+  right: -8%;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.22) 0%, transparent 55%);
+  filter: blur(70px);
+  animation: v3-morph-1 16s ease-in-out infinite;
+}
+
+.v3-mesh-section-2 {
+  width: 40%;
+  aspect-ratio: 1;
+  bottom: -5%;
+  left: -10%;
+  background: radial-gradient(circle, rgba(79, 70, 229, 0.20) 0%, transparent 55%);
+  filter: blur(65px);
+  animation: v3-morph-2 20s ease-in-out infinite;
+}
+
+.v3-mesh-section-3 {
+  width: 50%;
+  aspect-ratio: 1;
+  top: 15%;
+  left: 50%;
+  margin-left: -25%;
+  background: radial-gradient(circle, rgba(192, 132, 252, 0.18) 0%, transparent 55%);
+  filter: blur(70px);
+  animation: v3-morph-3 14s ease-in-out infinite;
 }
 
 /* ── Subtle grid lines ─────────────────────────────────── */

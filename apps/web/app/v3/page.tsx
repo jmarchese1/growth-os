@@ -6,10 +6,11 @@ import { motion, useInView, AnimatePresence } from 'framer-motion';
 import {
   Phone, MessageSquare, Globe, Share2, QrCode,
   Mail, PhoneCall, Sparkles, ArrowRight, Shield,
-  ChevronRight, ExternalLink,
+  ChevronRight, ExternalLink, Check, X, Zap, Gift, Clock, MapPin,
 } from 'lucide-react';
 import CalModal from '@/components/booking/CalendlyModal';
 import InteractiveGrid from './InteractiveGrid';
+import CubeyChat from '@/components/ui/CubeyChat';
 
 /* ═══════════════════════════════════════════════════════════
    CONSTANTS
@@ -20,26 +21,38 @@ const APP_URL = process.env['NEXT_PUBLIC_APP_URL'] ?? 'https://app.embedo.io';
 const CAL_LINK = process.env['NEXT_PUBLIC_CAL_LINK'] ?? 'jason-marchese-mkfkwl/30min';
 
 const MODULES = [
-  { num: '01', name: 'Voice Agent', desc: 'Answers every call 24/7. Takes orders, books reservations, captures leads — in a natural voice.', icon: Phone },
-  { num: '02', name: 'AI Chatbot', desc: 'Web widget + Instagram & Facebook DMs. Engages visitors, answers questions, never sleeps.', icon: MessageSquare },
-  { num: '03', name: 'AI Website', desc: 'Professional site generated in 30 seconds. Fully editable. Deployed to your domain instantly.', icon: Globe },
-  { num: '04', name: 'Social Media', desc: 'AI creates, schedules, and monitors posts across platforms. Hands-free content engine.', icon: Share2 },
-  { num: '05', name: 'QR + Surveys', desc: 'Smart QR codes at every table. Instant feedback collection and contact capture.', icon: QrCode },
-  { num: '06', name: 'CRM + Email', desc: 'Unified customer database with AI-drafted campaigns. Every touchpoint, one place.', icon: Mail },
-  { num: '07', name: 'Dedicated Phone', desc: 'Local number with intelligent routing. AI handles after-hours, you handle peak.', icon: PhoneCall },
-  { num: '08', name: 'White-Glove Setup', desc: 'We configure everything end-to-end. Your AI stack goes live in days, not months.', icon: Sparkles },
+  { num: '01', name: 'AI Voice Agent', desc: 'Answers every call 24/7 in a natural voice. Takes orders, books tables, captures leads while you focus on running the floor.', icon: Phone, value: '$400/mo' },
+  { num: '02', name: 'AI Chatbot', desc: 'Embedded on your website, Instagram, and Facebook. Answers questions, takes orders, and captures contact info around the clock.', icon: MessageSquare, value: '$200/mo' },
+  { num: '03', name: 'AI Website', desc: 'A premium, conversion-optimized site generated and deployed in 48 hours. Fully editable. Your domain.', icon: Globe, value: '$300/mo' },
+  { num: '04', name: 'Social Media Engine', desc: 'AI writes, designs, schedules, and posts content across all platforms. Monitors comments. Auto-replies to DMs.', icon: Share2, value: '$350/mo' },
+  { num: '05', name: 'Smart Surveys + QR', desc: 'QR codes at every table. Instant feedback, review requests, and contact capture on autopilot.', icon: QrCode, value: '$150/mo' },
+  { num: '06', name: 'CRM + Email Engine', desc: 'Every customer, every touchpoint, one place. AI-drafted campaigns, automated follow-ups, birthday specials.', icon: Mail, value: '$300/mo' },
+  { num: '07', name: 'Dedicated AI Phone', desc: 'A local phone number with intelligent routing. AI handles after-hours and overflow. You handle what matters.', icon: PhoneCall, value: '$200/mo' },
+  { num: '08', name: 'White-Glove Onboarding', desc: 'We set up everything for you. Menu training, voice calibration, social accounts, domain config. Live in 48 hours.', icon: Sparkles, value: '$500' },
 ];
 
 const STATS = [
-  { value: 73, suffix: '%', label: 'of calls to restaurants go unanswered' },
-  { value: 68, suffix: '%', label: 'of website visitors leave without engaging' },
-  { value: 4, suffix: 'x', label: 'more conversions when follow-up is under 5 min' },
+  { value: 73, suffix: '%', label: 'of calls to local businesses go unanswered' },
+  { value: 15, suffix: '+', label: 'hours per week wasted on tasks AI can handle' },
+  { value: 2160, suffix: '', prefix: '$', label: 'saved per month vs. buying 8 separate tools' },
 ];
 
-const STEPS = [
-  { num: '01', title: 'Strategy call', desc: '30 minutes with Jason. We audit your current stack and map the gaps.' },
-  { num: '02', title: 'We build your AI layer', desc: 'Voice, chat, website, social, CRM — configured for your business.' },
-  { num: '03', title: 'Go live + optimize', desc: 'Launch in days. We monitor, tune, and improve continuously.' },
+const PAIN_POINTS = [
+  'Missed calls during rush hours losing you customers',
+  'Spending 15+ hours a week on social media, emails, and admin',
+  'Paying for 6-8 different software tools that don\u2019t talk to each other',
+  'No website or an outdated one that doesn\u2019t convert',
+  'Zero follow-up system \u2014 leads go cold in hours',
+  'Can\u2019t compete with chains that have entire marketing teams',
+];
+
+const SOLUTIONS = [
+  'AI answers every call and DM \u2014 24/7, no missed revenue',
+  'Content, emails, and follow-ups happen automatically',
+  'One platform replaces everything at 10% of the cost',
+  'Premium AI website live on your domain in 48 hours',
+  'Instant lead capture + automated nurture sequences',
+  'An entire AI team working for you, for less than one employee',
 ];
 
 interface Plan {
@@ -64,6 +77,12 @@ const PLANS: Plan[] = [
     tier: 'MEDIUM', name: 'Medium', price: 549, tagline: 'For growing teams',
     features: ['10,000 contacts', '10 chatbot widgets', '3 phone numbers', '100 social posts/mo', '10,000 emails/mo', '500 AI images/mo', 'Priority support'],
   },
+];
+
+const BONUSES = [
+  { name: '48-Hour Priority Launch', value: 500, desc: 'Skip the line. Your entire AI stack goes live within 48 hours of signing up.' },
+  { name: 'Custom Menu + Business Training', value: 300, desc: 'We train your voice agent and chatbot on your actual menu, services, FAQs, and policies.' },
+  { name: 'Dedicated Onboarding Specialist', value: 200, desc: 'A real human configures everything for you. Domain, socials, voice calibration, CRM import.' },
 ];
 
 /* ═══════════════════════════════════════════════════════════ */
@@ -130,7 +149,7 @@ function RotatingText() {
   );
 }
 
-function Counter({ value, suffix }: { value: number; suffix: string }) {
+function Counter({ value, suffix, prefix }: { value: number; suffix: string; prefix?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: '-100px' });
   const [display, setDisplay] = useState(0);
@@ -148,7 +167,7 @@ function Counter({ value, suffix }: { value: number; suffix: string }) {
     requestAnimationFrame(tick);
   }, [inView, value]);
 
-  return <span ref={ref} className="tabular-nums">{display}{suffix}</span>;
+  return <span ref={ref} className="tabular-nums">{prefix}{display.toLocaleString()}{suffix}</span>;
 }
 
 function Section({ children, className = '', id }: { children: React.ReactNode; className?: string; id?: string }) {
@@ -212,7 +231,7 @@ export default function V3Page() {
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'border-b' : 'bg-transparent'}`}
         style={scrolled ? { background: 'rgba(16,19,42,0.90)', backdropFilter: 'blur(20px)', borderColor: 'rgba(255,255,255,0.08)' } : {}}
       >
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="w-full px-6 lg:px-10 h-16 flex items-center justify-between">
           <a href="#" className="flex items-center gap-2.5 group">
             <motion.svg whileHover={{ rotate: 15, scale: 1.1 }} transition={{ type: 'spring', stiffness: 300 }} width="28" height="28" viewBox="0 0 32 32" fill="none">
               <polygon points="16,4 28,10 16,16 4,10" fill="#7C3AED" />
@@ -225,6 +244,7 @@ export default function V3Page() {
           <div className="hidden md:flex items-center gap-8">
             {[
               { label: 'Platform', href: '#system' },
+              { label: 'The Offer', href: '#offer' },
               { label: 'Pricing', href: '#pricing' },
               { label: 'About', href: '#about' },
             ].map((l) => (
@@ -235,7 +255,7 @@ export default function V3Page() {
             </CalModal>
           </div>
 
-          <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} href="#pricing" className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg text-white v3-btn-glow" style={{ background: '#7C3AED' }}>
+          <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} href="#pricing" className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg text-white v3-btn-glow" style={{ background: '#7C3AED' }}>
             Get Started <ArrowRight className="w-3.5 h-3.5" />
           </motion.a>
         </div>
@@ -259,18 +279,18 @@ export default function V3Page() {
           </motion.h1>
 
           <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.5 }} className="mt-7 text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            Voice agent, chatbot, website, social media, CRM — an entire AI layer deployed to your business in days, not months.
+            Replace 8 different tools with one AI platform. Voice agent, chatbot, website, social media, CRM &mdash; deployed to your business in 48 hours.
           </motion.p>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.65 }} className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <motion.a whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} href="#pricing" className="group inline-flex items-center gap-2 px-7 py-3.5 text-white text-sm font-semibold rounded-xl v3-btn-glow" style={{ background: '#7C3AED' }}>
-              Generate Custom Proposal <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </motion.a>
             <CalModal calLink={CAL_LINK}>
-              <motion.span whileHover={{ scale: 1.04, y: -2 }} className="inline-flex items-center gap-2 px-7 py-3.5 text-sm font-semibold rounded-xl text-white cursor-pointer" style={{ border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)' }}>
-                Book a Call <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+              <motion.span whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} className="group inline-flex items-center gap-2 px-7 py-3.5 text-white text-sm font-semibold rounded-xl cursor-pointer v3-btn-glow" style={{ background: '#7C3AED' }}>
+                Book a Free Strategy Call <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </motion.span>
             </CalModal>
+            <motion.a whileHover={{ scale: 1.04, y: -2 }} href="#offer" className="inline-flex items-center gap-2 px-7 py-3.5 text-sm font-semibold rounded-xl text-white" style={{ border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)' }}>
+              See The Offer <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+            </motion.a>
           </motion.div>
 
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 1.4 }} className="mt-20 flex flex-col items-center gap-2 text-slate-500">
@@ -284,8 +304,9 @@ export default function V3Page() {
       <div className="v3-divider mx-auto" style={{ maxWidth: '70%' }} />
 
       {/* ═══════════════════════ STATS ═══════════════════════ */}
-      <Section className="relative py-28 px-6 v3-section-glow" id="stats">
+      <Section className="relative py-32 px-6 v3-section-glow" id="stats">
         <div className="absolute inset-0" style={{ background: '#161B3A' }} />
+        <div className="v3-mesh-blob v3-mesh-section-1" />
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 60% 70% at 50% 50%, rgba(124,58,237,0.12) 0%, transparent 55%)' }} />
 
         <div className="relative z-10 max-w-6xl mx-auto">
@@ -297,10 +318,10 @@ export default function V3Page() {
             {STATS.map((stat, i) => (
               <motion.div key={stat.label} variants={fadeScale} custom={i + 1} className="text-center">
                 <div className="text-6xl sm:text-7xl lg:text-8xl font-bold tracking-tight text-white mb-4 v3-stat-number">
-                  <Counter value={stat.value} suffix={stat.suffix} />
+                  <Counter value={stat.value} suffix={stat.suffix} prefix={stat.prefix} />
                 </div>
                 <div className="w-12 h-px mx-auto mb-4" style={{ background: 'rgba(124,58,237,0.6)' }} />
-                <p className="text-sm text-slate-300 max-w-[240px] mx-auto leading-relaxed">{stat.label}</p>
+                <p className="text-base text-slate-300 max-w-[280px] mx-auto leading-relaxed">{stat.label}</p>
               </motion.div>
             ))}
           </div>
@@ -310,19 +331,18 @@ export default function V3Page() {
       <div className="v3-divider mx-auto" style={{ maxWidth: '70%' }} />
 
       {/* ═══════════════════════ THE SYSTEM ═══════════════════════ */}
-      <Section className="relative py-28 lg:py-36 px-6 overflow-hidden" id="system">
+      <Section className="relative py-32 lg:py-40 px-6 overflow-hidden" id="system">
         <div className="absolute inset-0" style={{ background: '#10132A' }} />
-        <div className="v3-orb v3-orb-2" style={{ top: '5%', right: '-12%', opacity: 0.7 }} />
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 50% 60% at 75% 25%, rgba(124,58,237,0.10) 0%, transparent 55%)' }} />
+        <div className="v3-mesh-blob v3-mesh-section-2" />
 
         <div className="relative z-10 max-w-6xl mx-auto">
-          <div className="max-w-2xl mb-16">
+          <div className="max-w-2xl mb-20">
             <motion.p variants={fadeUp} custom={0} className="text-xs font-[family-name:var(--font-mono)] uppercase tracking-[0.25em] text-purple-400 mb-5">The Platform</motion.p>
             <motion.h2 variants={fadeUp} custom={1} className="text-4xl sm:text-5xl lg:text-6xl font-[family-name:var(--font-serif)] italic leading-[1.05] tracking-tight text-white mb-5">
-              Eight modules. <span className="text-slate-400">One stack.</span>
+              Eight modules. <span className="text-slate-400">One platform.</span>
             </motion.h2>
             <motion.p variants={fadeUp} custom={2} className="text-slate-300 text-lg leading-relaxed">
-              Every module works together — voice feeds the CRM, chatbot captures leads, social drives traffic, email nurtures. No duct tape.
+              Every module works together. Voice feeds the CRM. Chatbot captures leads. Social drives traffic. Email nurtures. No duct tape. No integrations. It just works.
             </motion.p>
           </div>
 
@@ -330,70 +350,146 @@ export default function V3Page() {
             {MODULES.map((mod, i) => {
               const Icon = mod.icon;
               return (
-                <motion.div key={mod.num} variants={slideIn} custom={i} className="v3-module-item group grid grid-cols-[auto_1fr] md:grid-cols-[80px_220px_1fr] gap-4 md:gap-8 items-center py-6 px-4 -mx-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                <motion.div key={mod.num} variants={slideIn} custom={i} className="v3-module-item group grid grid-cols-[auto_1fr_auto] md:grid-cols-[80px_240px_1fr_auto] gap-4 md:gap-8 items-center py-7 px-4 -mx-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                   <span className="text-xs font-[family-name:var(--font-mono)] text-slate-500">{mod.num}</span>
                   <div className="flex items-center gap-3">
-                    <div className="v3-icon-box w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.30)' }}>
-                      <Icon className="w-4 h-4 text-purple-400" />
+                    <div className="v3-icon-box w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.30)' }}>
+                      <Icon className="w-4.5 h-4.5 text-purple-400" />
                     </div>
                     <span className="text-base font-semibold text-white group-hover:text-purple-300 transition-colors duration-300">{mod.name}</span>
                   </div>
-                  <p className="text-sm text-slate-300 leading-relaxed col-start-2 md:col-start-3">{mod.desc}</p>
+                  <p className="text-sm text-slate-300 leading-relaxed col-start-2 md:col-start-3 col-span-2 md:col-span-1">{mod.desc}</p>
+                  <span className="hidden md:block text-xs font-[family-name:var(--font-mono)] text-slate-500 text-right">{mod.value}</span>
                 </motion.div>
               );
             })}
           </div>
+
+          <motion.div variants={fadeUp} custom={10} className="mt-10 flex items-center justify-between pt-6" style={{ borderTop: '1px solid rgba(124,58,237,0.25)' }}>
+            <span className="text-sm text-slate-400">Purchased separately:</span>
+            <span className="text-lg font-bold text-slate-300 line-through">$2,400/mo</span>
+          </motion.div>
         </div>
       </Section>
 
       <div className="v3-divider mx-auto" style={{ maxWidth: '70%' }} />
 
-      {/* ═══════════════════════ HOW IT WORKS ═══════════════════════ */}
-      <Section className="relative py-28 lg:py-36 px-6 overflow-hidden" id="how">
+      {/* ═══════════════════════ THE OFFER (Hormozi-style) ═══════════════════════ */}
+      <Section className="relative py-32 lg:py-40 px-6 overflow-hidden" id="offer">
         <div className="absolute inset-0" style={{ background: '#161B3A' }} />
-        <div className="v3-orb v3-orb-3" style={{ bottom: '-15%', left: '15%', opacity: 0.8 }} />
-        <div className="v3-orb v3-orb-1" style={{ top: '-20%', right: '20%', opacity: 0.3 }} />
+        <div className="v3-mesh-blob v3-mesh-section-3" />
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 50% 60% at 50% 55%, rgba(124,58,237,0.10) 0%, transparent 55%)' }} />
 
         <div className="relative z-10 max-w-5xl mx-auto">
-          <motion.p variants={fadeUp} custom={0} className="text-xs font-[family-name:var(--font-mono)] uppercase tracking-[0.25em] text-purple-400 mb-5 text-center">How it works</motion.p>
-          <motion.h2 variants={fadeUp} custom={1} className="text-4xl sm:text-5xl lg:text-6xl font-[family-name:var(--font-serif)] italic leading-[1.05] tracking-tight mb-20 text-center text-white">
-            Three steps to <span className="text-slate-400">full automation.</span>
+          <motion.p variants={fadeUp} custom={0} className="text-xs font-[family-name:var(--font-mono)] uppercase tracking-[0.25em] text-purple-400 mb-5 text-center">The Offer</motion.p>
+          <motion.h2 variants={fadeUp} custom={1} className="text-4xl sm:text-5xl lg:text-6xl font-[family-name:var(--font-serif)] italic leading-[1.05] tracking-tight mb-6 text-center text-white">
+            Be honest &mdash; how many of<br className="hidden sm:block" /> these sound like your business?
           </motion.h2>
+          <motion.p variants={fadeUp} custom={2} className="text-slate-300 text-center max-w-2xl mx-auto mb-16 text-lg">
+            If you checked even two, you&apos;re leaving money on the table every single day.
+          </motion.p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {STEPS.map((step, i) => (
-              <motion.div key={step.num} variants={fadeScale} custom={i + 2} className="relative" whileHover={{ y: -4 }}>
-                {i < STEPS.length - 1 && <div className="hidden md:block v3-step-line" />}
-                <div className="v3-glass rounded-2xl p-8 h-full">
-                  <div className="v3-icon-box w-14 h-14 rounded-xl flex items-center justify-center mb-6" style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.35)' }}>
-                    <span className="text-lg font-bold text-purple-300 font-[family-name:var(--font-mono)]">{step.num}</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-3">{step.title}</h3>
-                  <p className="text-sm text-slate-300 leading-relaxed">{step.desc}</p>
+          {/* Before / After */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-20">
+            {/* Before */}
+            <motion.div variants={fadeScale} custom={3} className="v3-glass rounded-2xl p-8 lg:p-10">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.30)' }}>
+                  <X className="w-5 h-5 text-red-400" />
                 </div>
+                <h3 className="text-xl font-bold text-white">Without Embedo</h3>
+              </div>
+              <div className="space-y-4">
+                {PAIN_POINTS.map((point) => (
+                  <div key={point} className="flex items-start gap-3">
+                    <X className="w-4 h-4 text-red-400/70 flex-shrink-0 mt-1" />
+                    <span className="text-base text-slate-300 leading-relaxed">{point}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* After */}
+            <motion.div variants={fadeScale} custom={4} className="v3-glass rounded-2xl p-8 lg:p-10" style={{ borderColor: 'rgba(124,58,237,0.25)' }}>
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.30)' }}>
+                  <Check className="w-5 h-5 text-emerald-400" />
+                </div>
+                <h3 className="text-xl font-bold text-white">With Embedo</h3>
+              </div>
+              <div className="space-y-4">
+                {SOLUTIONS.map((point) => (
+                  <div key={point} className="flex items-start gap-3">
+                    <Check className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-1" />
+                    <span className="text-base text-slate-300 leading-relaxed">{point}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Bonuses */}
+          <motion.div variants={fadeUp} custom={5} className="text-center mb-10">
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-yellow-300" style={{ border: '1px solid rgba(250,204,21,0.30)', background: 'rgba(250,204,21,0.08)' }}>
+              <Gift className="w-4 h-4" /> Sign up this month and get $1,000 in bonuses &mdash; free
+            </span>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+            {BONUSES.map((bonus, i) => (
+              <motion.div key={bonus.name} variants={fadeScale} custom={i + 6} className="v3-glass rounded-2xl p-7 text-center">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4" style={{ background: 'rgba(250,204,21,0.12)', border: '1px solid rgba(250,204,21,0.25)' }}>
+                  {i === 0 ? <Zap className="w-5 h-5 text-yellow-400" /> : i === 1 ? <Sparkles className="w-5 h-5 text-yellow-400" /> : <Clock className="w-5 h-5 text-yellow-400" />}
+                </div>
+                <p className="text-xs font-[family-name:var(--font-mono)] text-yellow-400/80 mb-2">${bonus.value} VALUE</p>
+                <h4 className="text-base font-bold text-white mb-2">{bonus.name}</h4>
+                <p className="text-sm text-slate-300 leading-relaxed">{bonus.desc}</p>
               </motion.div>
             ))}
           </div>
+
+          {/* Guarantee + Scarcity */}
+          <motion.div variants={fadeUp} custom={9} className="v3-glass rounded-2xl p-8 lg:p-10 text-center" style={{ borderColor: 'rgba(124,58,237,0.25)' }}>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-8 mb-6">
+              <div className="flex items-center gap-3">
+                <Shield className="w-6 h-6 text-emerald-400" />
+                <div className="text-left">
+                  <p className="text-base font-bold text-white">30-Day &ldquo;See It Work&rdquo; Guarantee</p>
+                  <p className="text-sm text-slate-300">If you don&apos;t see results in 30 days, you get your money back. No questions.</p>
+                </div>
+              </div>
+              <div className="hidden sm:block w-px h-12" style={{ background: 'rgba(255,255,255,0.1)' }} />
+              <div className="flex items-center gap-3">
+                <MapPin className="w-6 h-6 text-purple-400" />
+                <div className="text-left">
+                  <p className="text-base font-bold text-white">One per zip code</p>
+                  <p className="text-sm text-slate-300">We only serve one business per area so your AI doesn&apos;t compete with itself.</p>
+                </div>
+              </div>
+            </div>
+            <CalModal calLink={CAL_LINK}>
+              <motion.span whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} className="group inline-flex items-center gap-2 px-8 py-4 text-white text-base font-semibold rounded-xl cursor-pointer v3-btn-glow mt-4" style={{ background: '#7C3AED' }}>
+                Claim Your Spot <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </motion.span>
+            </CalModal>
+          </motion.div>
         </div>
       </Section>
 
       <div className="v3-divider mx-auto" style={{ maxWidth: '70%' }} />
 
       {/* ═══════════════════════ PRICING ═══════════════════════ */}
-      <Section className="relative py-28 lg:py-36 px-6 overflow-hidden" id="pricing">
+      <Section className="relative py-32 lg:py-40 px-6 overflow-hidden" id="pricing">
         <div className="absolute inset-0" style={{ background: '#10132A' }} />
-        <div className="v3-orb v3-orb-1" style={{ top: '-15%', left: '50%', marginLeft: '-350px', opacity: 0.5 }} />
-        <div className="v3-orb v3-orb-3" style={{ bottom: '-10%', right: '10%', opacity: 0.4 }} />
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 70% 50% at 50% 25%, rgba(124,58,237,0.12) 0%, transparent 55%)' }} />
+        <div className="v3-mesh-blob v3-mesh-section-1" style={{ top: 'auto', bottom: '-15%', left: '50%' }} />
 
         <div className="relative z-10 max-w-6xl mx-auto">
           <motion.p variants={fadeUp} custom={0} className="text-xs font-[family-name:var(--font-mono)] uppercase tracking-[0.25em] text-purple-400 mb-5 text-center">Pricing</motion.p>
           <motion.h2 variants={fadeUp} custom={1} className="text-4xl sm:text-5xl lg:text-6xl font-[family-name:var(--font-serif)] italic leading-[1.05] tracking-tight mb-5 text-center text-white">
             One platform. <span className="text-slate-400">One price.</span>
           </motion.h2>
-          <motion.p variants={fadeUp} custom={2} className="text-slate-300 text-center max-w-lg mx-auto mb-16">
-            Stop paying for 8 different tools. The entire AI stack — connected from day one.
+          <motion.p variants={fadeUp} custom={2} className="text-slate-300 text-center max-w-lg mx-auto mb-16 text-lg">
+            Stop paying $2,400/mo for 8 different tools. Get the entire AI stack &mdash; connected from day one.
           </motion.p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
@@ -458,11 +554,9 @@ export default function V3Page() {
       <div className="v3-divider mx-auto" style={{ maxWidth: '70%' }} />
 
       {/* ═══════════════════════ ABOUT JASON ═══════════════════════ */}
-      <Section className="relative py-28 lg:py-36 px-6 overflow-hidden" id="about">
+      <Section className="relative py-32 lg:py-40 px-6 overflow-hidden" id="about">
         <div className="absolute inset-0" style={{ background: '#161B3A' }} />
-        <div className="v3-orb v3-orb-1" style={{ top: '-5%', left: '-10%', opacity: 0.5 }} />
-        <div className="v3-orb v3-orb-2" style={{ bottom: '-10%', right: '-5%', opacity: 0.3 }} />
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 50% 70% at 25% 50%, rgba(124,58,237,0.10) 0%, transparent 55%)' }} />
+        <div className="v3-mesh-blob v3-mesh-section-2" style={{ top: 'auto', bottom: '-10%', right: '-5%' }} />
 
         <div className="relative z-10 max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
@@ -491,10 +585,10 @@ export default function V3Page() {
                 ))}
               </motion.div>
               <motion.p variants={fadeUp} custom={3} className="text-slate-200 text-lg leading-relaxed mb-4">
-                I spent years building AI models at scale as a <span className="text-white font-semibold">Senior Data Scientist</span> — and watched small business owners get left completely behind by the technology wave.
+                I spent years building AI models at scale as a <span className="text-white font-semibold">Senior Data Scientist</span> &mdash; and watched local business owners get completely left behind by the technology wave.
               </motion.p>
-              <motion.p variants={fadeUp} custom={4} className="text-slate-300 leading-relaxed mb-10">
-                Embedo is the platform I wish existed. Me, my team, and our AI agents will be working with you every step of the way — from strategy call to go-live, and beyond.
+              <motion.p variants={fadeUp} custom={4} className="text-slate-300 text-base leading-relaxed mb-10">
+                Embedo is the platform I wish existed. I personally configure every client&apos;s AI stack. You&apos;re not buying software &mdash; you&apos;re getting a dedicated AI team that knows your business by name.
               </motion.p>
               <motion.div variants={fadeUp} custom={5}>
                 <CalModal calLink={CAL_LINK}>
@@ -528,7 +622,7 @@ export default function V3Page() {
                 </svg>
                 <span className="text-lg font-bold tracking-tight text-white">Embedo</span>
               </div>
-              <p className="text-sm text-slate-300 leading-relaxed max-w-xs mb-6">AI infrastructure for local businesses. Voice, chat, leads, social, surveys — deployed in days.</p>
+              <p className="text-sm text-slate-300 leading-relaxed max-w-xs mb-6">AI infrastructure for local businesses. Voice, chat, leads, social, surveys &mdash; deployed in days.</p>
               <div className="flex gap-3">
                 {[
                   { label: 'LinkedIn', href: 'https://linkedin.com/company/embedo', icon: 'linkedin' },
@@ -545,7 +639,7 @@ export default function V3Page() {
             <div>
               <p className="text-xs font-[family-name:var(--font-mono)] uppercase tracking-[0.18em] text-slate-400 mb-5">Product</p>
               <ul className="space-y-3">
-                {[{ label: 'Platform', href: '#system' }, { label: 'Pricing', href: '#pricing' }, { label: 'Book a Call', href: '#about' }].map((link) => (
+                {[{ label: 'Platform', href: '#system' }, { label: 'The Offer', href: '#offer' }, { label: 'Pricing', href: '#pricing' }, { label: 'Book a Call', href: '#about' }].map((link) => (
                   <li key={link.label}><a href={link.href} className="text-sm text-slate-300 hover:text-white transition-colors duration-200">{link.label}</a></li>
                 ))}
               </ul>
@@ -577,6 +671,9 @@ export default function V3Page() {
           </div>
         </div>
       </footer>
+
+      {/* Chatbot */}
+      <CubeyChat />
     </div>
   );
 }

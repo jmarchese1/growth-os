@@ -50,11 +50,10 @@ export default function InteractiveGrid({ className = '' }: { className?: string
       className={`absolute inset-0 w-full h-full overflow-hidden ${className}`}
       style={{ zIndex: 0 }}
     >
-      {/* Mesh blobs */}
+      {/* Mesh blobs — 3 distinct purple shades */}
       <div className="v3-mesh-blob v3-mesh-1" />
       <div className="v3-mesh-blob v3-mesh-2" />
       <div className="v3-mesh-blob v3-mesh-3" />
-      <div className="v3-mesh-blob v3-mesh-4" />
 
       {/* Subtle grid lines */}
       <div className="v3-grid-lines" />
