@@ -3,23 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
-const DEFAULT_SUBJECT = `quick question about {{company}}`;
-
-const DEFAULT_BODY = `Hey {{firstName}},
-
-I run an AI automation agency built specifically for restaurants. We build three things for our clients: a custom AI phone receptionist, a custom AI chatbot and a professional website.
-
-Here is how it works. When a customer calls and you are busy or closed, the call automatically routes to your AI phone agent. It answers questions, takes orders and books reservations just like a real staff member would. On top of that, we embed an AI chatbot into your website that does the same thing for online visitors.
-
-I would love to jump on a quick call and demo what this would look like for {{company}}. No pressure, just want to show you what is possible.`;
-
-const TEMPLATE_VARS = [
-  { key: '{{firstName}}', label: 'First Name', desc: 'Contact first name from Apollo (falls back to "there")' },
-  { key: '{{lastName}}', label: 'Last Name', desc: 'Contact last name from Apollo' },
-  { key: '{{company}}', label: 'Company', desc: 'Business name in Title Case' },
-  { key: '{{city}}', label: 'City', desc: 'Target city' },
-  { key: '{{calLink}}', label: 'Cal Link', desc: 'Your booking link (best for follow-ups)' },
-];
 
 // Pre-validated US cities with confirmed coordinates for Geoapify Places search.
 // Lat/lon stored here — bypasses geocoding entirely at campaign run time.
@@ -334,11 +317,6 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [aiEnabled, setAiEnabled] = useState(false);
-  const [aiPreviewHtml, setAiPreviewHtml] = useState('');
-  const [aiPreviewing, setAiPreviewing] = useState(false);
-  const [aiPreviewOpen, setAiPreviewOpen] = useState(false);
-
   // Location
   const [selectedState, setSelectedState] = useState('');
   const [cityInput, setCityInput] = useState('');
@@ -347,23 +325,13 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [discoverySource, setDiscoverySource] = useState<'geoapify' | 'apollo'>('geoapify');
-  const [apolloIndustries, setApolloIndustries] = useState<string[]>([]);
   const [apolloEmployeeRange, setApolloEmployeeRange] = useState('1-10');
 
   const [form, setForm] = useState({
     name: '',
     targetIndustry: 'RESTAURANT',
     maxProspects: '50',
-    emailSubject: DEFAULT_SUBJECT,
-    emailBodyHtml: DEFAULT_BODY,
   });
-
-  useEffect(() => {
-    fetch(`${prospectorUrl}/ai/status`)
-      .then((r) => r.json())
-      .then((d: { aiEnabled?: boolean }) => setAiEnabled(d.aiEnabled ?? false))
-      .catch(() => setAiEnabled(false));
-  }, [prospectorUrl]);
 
   // Client-side filter — instant, no API call
   const suggestions: CityEntry[] = cityInput.length >= 1
@@ -416,9 +384,18 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
         discoverySource,
       };
       if (discoverySource === 'apollo') {
-        payload.apolloIndustries = apolloIndustries.length > 0 ? apolloIndustries : undefined;
-        // Collect SIC codes from selected industries
-        const sicCodes = apolloIndustries.flatMap(
+        // Map the industry selector to Apollo industry IDs
+        const industryMap: Record<string, string[]> = {
+          RESTAURANT: ['restaurants', 'food & beverages'],
+          SALON: ['beauty'],
+          RETAIL: ['retail'],
+          FITNESS: ['health, wellness and fitness'],
+          MEDICAL: ['medical practice'],
+          OTHER: [],
+        };
+        const mapped = industryMap[form.targetIndustry] ?? [];
+        if (mapped.length > 0) payload.apolloIndustries = mapped;
+        const sicCodes = mapped.flatMap(
           (id) => APOLLO_INDUSTRIES.find((ind) => ind.id === id)?.sic ?? []
         );
         if (sicCodes.length > 0) payload.apolloSicCodes = sicCodes;
@@ -458,35 +435,6 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
     }
   }
 
-  async function handleAiPreview() {
-    setAiPreviewing(true);
-    setAiPreviewOpen(true);
-    setAiPreviewHtml('');
-    try {
-      const res = await fetch(`${prospectorUrl}/ai/preview-email`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name || 'Acme Restaurant',
-          city: selectedCity ? selectedCity.city : 'New York',
-          website: 'acmerestaurant.com',
-          googleRating: 4.3,
-          googleReviewCount: 218,
-        }),
-      });
-      const data = (await res.json()) as { html?: string; error?: string };
-      if (!res.ok || !data.html) {
-        setAiPreviewHtml(`<p style="color:red">Error: ${data.error ?? 'Generation failed'}</p>`);
-        return;
-      }
-      setAiPreviewHtml(data.html);
-    } catch {
-      setAiPreviewHtml(`<p style="color:red">Network error</p>`);
-    } finally {
-      setAiPreviewing(false);
-    }
-  }
-
   const inputCls = "w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 transition-colors";
   const selectCls = "w-full px-3 py-2.5 bg-[#12101f] border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 transition-colors appearance-none";
   const optionCls = "bg-[#12101f] text-white";
@@ -506,16 +454,6 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-5">
-        {aiEnabled && (
-          <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-violet-500/10 border border-violet-500/25 rounded-lg">
-            <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse flex-shrink-0" />
-            <p className="text-xs text-violet-300">
-              <span className="font-semibold">AI personalization active</span>
-              {' '}— Claude will write a unique email for each prospect at send time using their business name, city, Google rating, and website. The template below is used as a fallback only.
-            </p>
-          </div>
-        )}
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className={labelCls}>Campaign Name</label>
@@ -582,31 +520,6 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
         {discoverySource === 'apollo' && (
           <div className="space-y-4 p-4 bg-violet-500/5 border border-violet-500/15 rounded-lg">
             <p className="text-xs font-semibold text-violet-400 uppercase tracking-wide">Apollo Settings</p>
-
-            <div>
-              <label className={labelCls}>Industry</label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1.5">
-                {APOLLO_INDUSTRIES.map((ind) => (
-                  <button
-                    key={ind.id}
-                    type="button"
-                    onClick={() =>
-                      setApolloIndustries((prev) =>
-                        prev.includes(ind.id) ? prev.filter((i) => i !== ind.id) : [...prev, ind.id]
-                      )
-                    }
-                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
-                      apolloIndustries.includes(ind.id)
-                        ? 'bg-violet-600 text-white border-violet-500'
-                        : 'bg-white/5 text-slate-400 border-white/10 hover:border-white/20'
-                    }`}
-                  >
-                    {ind.label}
-                  </button>
-                ))}
-              </div>
-              <p className="text-[10px] text-slate-600 mt-1.5">Select one or more. Leave blank to search all industries.</p>
-            </div>
 
             <div>
               <label className={labelCls}>Employee Count</label>
@@ -710,84 +623,9 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
           </select>
         </div>
 
-        <div>
-          <label className={labelCls}>
-            Email Subject
-          </label>
-          <input
-            required
-            value={form.emailSubject}
-            onChange={(e) => setForm({ ...form, emailSubject: e.target.value })}
-            className={inputCls}
-            placeholder="quick question about {{company}}"
-          />
-        </div>
-
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className={labelCls + ' mb-0'}>
-              {aiEnabled ? 'Fallback Email Body' : 'Email Body'}
-            </label>
-            {aiEnabled && (
-              <button
-                type="button"
-                onClick={handleAiPreview}
-                disabled={aiPreviewing}
-                className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-violet-300 bg-violet-500/10 border border-violet-500/25 rounded-lg hover:bg-violet-500/20 transition-colors disabled:opacity-50"
-              >
-                <svg className={`w-3 h-3 ${aiPreviewing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={aiPreviewing ? "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" : "M13 10V3L4 14h7v7l9-11h-7z"} />
-                </svg>
-                {aiPreviewing ? 'Generating…' : 'Preview AI Email'}
-              </button>
-            )}
-          </div>
-
-          {/* Variable insert buttons */}
-          <div className="flex flex-wrap gap-1.5 mb-2">
-            {TEMPLATE_VARS.map((v) => (
-              <button
-                key={v.key}
-                type="button"
-                title={v.desc}
-                onClick={() => {
-                  const textarea = document.getElementById('email-body-textarea') as HTMLTextAreaElement | null;
-                  if (textarea) {
-                    const start = textarea.selectionStart;
-                    const end = textarea.selectionEnd;
-                    const text = form.emailBodyHtml;
-                    const newText = text.slice(0, start) + v.key + text.slice(end);
-                    setForm({ ...form, emailBodyHtml: newText });
-                    setTimeout(() => {
-                      textarea.focus();
-                      textarea.setSelectionRange(start + v.key.length, start + v.key.length);
-                    }, 0);
-                  } else {
-                    setForm({ ...form, emailBodyHtml: form.emailBodyHtml + v.key });
-                  }
-                }}
-                className="px-2 py-1 text-[10px] font-semibold rounded-md bg-violet-500/10 border border-violet-500/20 text-violet-300 hover:bg-violet-500/20 transition-colors"
-              >
-                {v.label}
-              </button>
-            ))}
-          </div>
-
-          <textarea
-            id="email-body-textarea"
-            required
-            rows={aiEnabled ? 5 : 10}
-            value={form.emailBodyHtml}
-            onChange={(e) => setForm({ ...form, emailBodyHtml: e.target.value })}
-            className={inputCls + ' resize-y leading-relaxed' + (aiEnabled ? ' opacity-50' : '')}
-            placeholder="Write your email here. Use the variable buttons above to insert dynamic fields..."
-          />
-          <p className="text-[10px] text-slate-600 mt-1">
-            {aiEnabled
-              ? 'This template is only sent if Claude AI is unavailable.'
-              : 'Plain text — signature and unsubscribe link are added automatically. Variables get filled from Apollo data at send time.'}
-          </p>
-        </div>
+        <p className="text-[10px] text-slate-500 bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2">
+          Emails are configured after campaign creation using the sequence editor and email builder.
+        </p>
 
         {error && <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
 
@@ -808,40 +646,6 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
           </button>
         </div>
       </form>
-
-      {/* AI Preview Modal */}
-      {aiPreviewOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setAiPreviewOpen(false)} />
-          <div className="relative bg-[#0f1117] border border-white/10 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-              <div>
-                <p className="text-sm font-semibold text-white">AI Email Preview</p>
-                <p className="text-[10px] text-slate-500 mt-0.5">Sample: &ldquo;{form.name || 'Acme Restaurant'}&rdquo; · {selectedCity?.city || 'New York'} · ★ 4.3</p>
-              </div>
-              <button onClick={() => setAiPreviewOpen(false)} className="text-slate-500 hover:text-white transition-colors text-lg">✕</button>
-            </div>
-            <div className="bg-white" style={{ minHeight: '300px' }}>
-              {aiPreviewing ? (
-                <div className="flex items-center justify-center h-48">
-                  <div className="text-center text-slate-400 text-sm">Claude is writing a personalized email…</div>
-                </div>
-              ) : (
-                <iframe
-                  srcDoc={aiPreviewHtml}
-                  className="w-full border-0"
-                  style={{ height: '400px' }}
-                  title="AI email preview"
-                  sandbox="allow-same-origin"
-                />
-              )}
-            </div>
-            <div className="px-5 py-3 border-t border-white/10 bg-white/[0.02]">
-              <p className="text-[10px] text-slate-600">Each prospect gets a uniquely written version based on their actual data. This is just one example.</p>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
