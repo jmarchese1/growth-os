@@ -8,6 +8,7 @@ import { findBusinessEmail } from '../scraper/brave-search.js';
 import { findEmailViaApollo, extractDomain, verifyEmailViaApollo } from '../scraper/apollo.js';
 import { upsertSuppression } from '../outreach/suppression.js';
 import { isDuplicate } from '../dedup/isDuplicate.js';
+import { scoreWebsite } from '../scraper/website-score.js';
 import { env } from '../config.js';
 
 const log = createLogger('prospector:prospect-worker');
@@ -135,6 +136,28 @@ export function startProspectWorker(): Worker {
         { prospectId: prospect.id, name, email: emailResult?.email, emailSource: emailResult?.source, status },
         'Prospect created',
       );
+
+      // Score website in background (non-blocking)
+      if (website) {
+        scoreWebsite(website).then(async (result) => {
+          try {
+            await db.prospectBusiness.update({
+              where: { id: prospect.id },
+              data: {
+                websiteScore: result.score,
+                websiteScorecard: result.scorecard as object ?? undefined,
+                websiteScoringMethod: result.scoringMethod,
+                websiteHasChatbot: result.hasChatbot,
+                websiteChatbotProvider: result.chatbotProvider,
+                websiteScoredAt: new Date(),
+              },
+            });
+            log.info({ prospectId: prospect.id, score: result.score }, 'Website score saved');
+          } catch (err) {
+            log.warn({ err, prospectId: prospect.id }, 'Failed to save website score');
+          }
+        }).catch(() => {});
+      }
 
       if (emailResult?.email) {
         if (isInvalid) {

@@ -10,6 +10,7 @@ import { generatePersonalizedEmail } from './outreach/ai-personalizer.js';
 import { findEmailViaHunter, extractDomain as extractHunterDomain } from './scraper/hunter.js';
 import { findEmailViaApollo, extractDomain as extractApolloDomain, discoverViaApollo } from './scraper/apollo.js';
 import { isDuplicate } from './dedup/isDuplicate.js';
+import { scoreWebsite } from './scraper/website-score.js';
 import { env } from './config.js';
 
 const log = createLogger('prospector:routes');
@@ -455,6 +456,26 @@ Output format:
               },
             });
             created++;
+
+            // Score website in background (non-blocking)
+            if (p.organizationDomain) {
+              scoreWebsite(`https://${p.organizationDomain}`).then(async (result) => {
+                const prospect = await db.prospectBusiness.findFirst({ where: { campaignId: id, name: p.organizationName }, select: { id: true } });
+                if (prospect) {
+                  await db.prospectBusiness.update({
+                    where: { id: prospect.id },
+                    data: {
+                      websiteScore: result.score,
+                      websiteScorecard: result.scorecard as object ?? undefined,
+                      websiteScoringMethod: result.scoringMethod,
+                      websiteHasChatbot: result.hasChatbot,
+                      websiteChatbotProvider: result.chatbotProvider,
+                      websiteScoredAt: new Date(),
+                    },
+                  });
+                }
+              }).catch(() => {});
+            }
           }
 
           log.info({ campaignId: id, discovered: prospects.length, created, skippedDedup }, 'Apollo campaign complete');

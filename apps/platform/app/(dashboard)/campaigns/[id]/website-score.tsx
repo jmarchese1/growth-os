@@ -1,105 +1,80 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
-interface Scorecard {
-  design: number;
-  layout: number;
-  branding: number;
-  mobile: number;
-  content: number;
-  summary: string;
+interface Props {
+  /** Pre-computed score from database (0-10) */
+  score: number | null;
+  /** Detailed scorecard breakdown */
+  scorecard?: Record<string, number | string> | null;
+  /** Which method was used */
+  scoringMethod?: string | null;
+  /** Whether a chatbot was detected */
+  hasChatbot?: boolean | null;
+  /** Chatbot provider name */
+  chatbotProvider?: string | null;
+  /** Fallback: URL to score on-demand if no stored score */
+  url?: string;
 }
 
-interface SiteCheckResult {
-  score: number;
-  scorecard?: Scorecard;
-  scoringMethod?: 'ai-vision' | 'html-heuristic';
-  hasChatbot: boolean;
-  chatbotProvider: string | null;
-  error?: string;
-}
-
-// In-memory cache to avoid re-fetching the same site
-const cache = new Map<string, SiteCheckResult>();
-
-export function WebsiteScore({ url }: { url: string }) {
-  const [result, setResult] = useState<SiteCheckResult | null>(cache.get(url) ?? null);
-  const [loading, setLoading] = useState(!cache.has(url));
+export function WebsiteScore({ score, scorecard, scoringMethod, hasChatbot, chatbotProvider, url }: Props) {
   const [expanded, setExpanded] = useState(false);
 
-  useEffect(() => {
-    if (cache.has(url)) { setResult(cache.get(url)!); setLoading(false); return; }
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch(`/api/site-check?url=${encodeURIComponent(url)}`);
-        if (res.ok && !cancelled) {
-          const data = await res.json() as SiteCheckResult;
-          cache.set(url, data);
-          setResult(data);
-        }
-      } catch {} finally { if (!cancelled) setLoading(false); }
-    })();
-    return () => { cancelled = true; };
-  }, [url]);
-
-  if (loading) {
-    return <span className="text-[10px] text-slate-600 animate-pulse">scoring...</span>;
+  // No stored score and no URL to check
+  if (score == null && !url) {
+    return <span className="text-[10px] text-slate-700">—</span>;
   }
 
-  if (!result || result.error) {
-    return <span className="text-[10px] text-slate-600">—</span>;
+  // No stored score yet — show pending
+  if (score == null) {
+    return <span className="text-[10px] text-slate-600">Pending</span>;
   }
 
   const scoreColor =
-    result.score >= 7 ? 'text-emerald-400' :
-    result.score >= 4 ? 'text-amber-400' :
+    score >= 7 ? 'text-emerald-400' :
+    score >= 4 ? 'text-amber-400' :
     'text-red-400';
 
-  const isAI = result.scoringMethod === 'ai-vision';
+  const isAI = scoringMethod === 'ai-vision';
 
   return (
     <div className="flex flex-col gap-0.5">
       <div className="flex items-center gap-1.5">
         <button
-          onClick={() => result.scorecard && setExpanded(!expanded)}
-          className={`text-xs font-bold tabular-nums ${scoreColor} ${result.scorecard ? 'hover:underline cursor-pointer' : ''}`}
+          onClick={() => scorecard && setExpanded(!expanded)}
+          className={`text-xs font-bold tabular-nums ${scoreColor} ${scorecard ? 'hover:underline cursor-pointer' : ''}`}
         >
-          {result.score.toFixed(1)}
+          {score.toFixed(1)}
         </button>
         {isAI && (
           <span className="text-[8px] px-1 py-0.5 rounded bg-violet-500/15 text-violet-400 font-semibold uppercase">AI</span>
         )}
       </div>
-      {result.hasChatbot ? (
+      {hasChatbot ? (
         <span className="text-[9px] px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-400 font-medium w-fit">
-          {result.chatbotProvider === 'unknown' ? 'Chat' : result.chatbotProvider}
+          {chatbotProvider === 'unknown' ? 'Chat' : chatbotProvider}
         </span>
       ) : (
         <span className="text-[9px] text-slate-600">No chatbot</span>
       )}
 
-      {/* Expanded AI scorecard */}
-      {expanded && result.scorecard && (
+      {expanded && scorecard && (
         <div className="mt-1.5 p-2.5 bg-white/[0.03] border border-white/[0.08] rounded-lg space-y-1.5">
-          {[
-            { label: 'Design', value: result.scorecard.design },
-            { label: 'Layout', value: result.scorecard.layout },
-            { label: 'Branding', value: result.scorecard.branding },
-            { label: 'Mobile', value: result.scorecard.mobile },
-            { label: 'Content', value: result.scorecard.content },
-          ].map(({ label, value }) => (
-            <div key={label} className="flex items-center justify-between">
-              <span className="text-[9px] text-slate-500">{label}</span>
-              <span className={`text-[10px] font-bold tabular-nums ${value >= 7 ? 'text-emerald-400' : value >= 4 ? 'text-amber-400' : 'text-red-400'}`}>
-                {value.toFixed(1)}
-              </span>
-            </div>
-          ))}
-          {result.scorecard.summary && (
+          {['design', 'layout', 'branding', 'mobile', 'content'].map((key) => {
+            const value = scorecard[key];
+            if (typeof value !== 'number') return null;
+            return (
+              <div key={key} className="flex items-center justify-between">
+                <span className="text-[9px] text-slate-500 capitalize">{key}</span>
+                <span className={`text-[10px] font-bold tabular-nums ${value >= 7 ? 'text-emerald-400' : value >= 4 ? 'text-amber-400' : 'text-red-400'}`}>
+                  {value.toFixed(1)}
+                </span>
+              </div>
+            );
+          })}
+          {typeof scorecard['summary'] === 'string' && (
             <p className="text-[9px] text-slate-500 pt-1 border-t border-white/[0.06] leading-relaxed">
-              {result.scorecard.summary}
+              {scorecard['summary']}
             </p>
           )}
         </div>

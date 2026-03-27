@@ -748,6 +748,12 @@ model ProspectBusiness {
   googlePlaceId     String?  @unique
   googleRating      Float?
   googleReviewCount Int?
+  websiteScore      Float?     // 0-10, AI vision or heuristic
+  websiteScorecard  Json?      // { design, layout, branding, mobile, content, summary }
+  websiteScoringMethod String? // "ai-vision" | "html-heuristic"
+  websiteHasChatbot Boolean?
+  websiteChatbotProvider String?
+  websiteScoredAt   DateTime?
   status            ProspectStatus @default(NEW)
   convertedToBusinessId String?
   nextFollowUpAt    DateTime?   // When the next automated follow-up is scheduled to fire

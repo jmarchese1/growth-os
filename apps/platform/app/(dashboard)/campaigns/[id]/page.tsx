@@ -45,6 +45,11 @@ interface Prospect {
   foundedYear: number | null;
   emailSource: string | null;
   emailVerificationStatus: string | null;
+  websiteScore: number | null;
+  websiteScorecard: Record<string, number | string> | null;
+  websiteScoringMethod: string | null;
+  websiteHasChatbot: boolean | null;
+  websiteChatbotProvider: string | null;
   status: ProspectStatus;
   nextFollowUpAt: string | null;
   createdAt: string;
@@ -419,7 +424,14 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                   {/* Site Score + Chatbot */}
                   <td className="px-4 py-3 min-w-[90px]">
                     {p.website ? (
-                      <WebsiteScore url={p.website} />
+                      <WebsiteScore
+                        score={p.websiteScore}
+                        scorecard={p.websiteScorecard}
+                        scoringMethod={p.websiteScoringMethod}
+                        hasChatbot={p.websiteHasChatbot}
+                        chatbotProvider={p.websiteChatbotProvider}
+                        url={p.website}
+                      />
                     ) : (
                       <span className="text-[10px] text-slate-700">No site</span>
                     )}

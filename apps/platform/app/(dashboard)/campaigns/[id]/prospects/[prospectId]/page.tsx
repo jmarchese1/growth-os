@@ -55,6 +55,11 @@ interface ProspectDetail {
   googlePlaceId: string | null;
   googleRating: number | null;
   googleReviewCount: number | null;
+  websiteScore: number | null;
+  websiteScorecard: unknown;
+  websiteScoringMethod: string | null;
+  websiteHasChatbot: boolean | null;
+  websiteChatbotProvider: string | null;
   nextFollowUpAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -257,7 +262,14 @@ export default async function ProspectDetailPage({ params }: {
                 )}
                 {prospect.website && (
                   <div className="mt-1.5">
-                    <WebsiteScore url={prospect.website} />
+                    <WebsiteScore
+                      score={prospect.websiteScore ?? null}
+                      scorecard={prospect.websiteScorecard as Record<string, number | string> | null}
+                      scoringMethod={prospect.websiteScoringMethod ?? null}
+                      hasChatbot={prospect.websiteHasChatbot ?? null}
+                      chatbotProvider={prospect.websiteChatbotProvider ?? null}
+                      url={prospect.website}
+                    />
                   </div>
                 )}
               </dd>
