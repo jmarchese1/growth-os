@@ -63,6 +63,8 @@ interface ProspectDetail {
     name: string;
     targetCity: string;
     targetIndustry: string;
+    emailSubject: string;
+    emailBodyHtml: string;
     sequenceSteps: Array<{ stepNumber: number; delayHours: number; subject?: string; bodyHtml?: string }> | null;
   };
   messages: OutreachMessage[];
@@ -382,6 +384,9 @@ export default async function ProspectDetailPage({ params }: {
         prospectCity={[prospect.address?.city, prospect.address?.state].filter(Boolean).join(', ') || prospect.campaign.targetCity}
         prospectorUrl={PROSPECTOR_URL}
         campaignId={campaignId}
+        campaignSubject={prospect.campaign.emailSubject}
+        campaignBody={prospect.campaign.emailBodyHtml}
+        prospectFirstName={prospect.contactFirstName ?? undefined}
       />
 
       {/* Email History */}

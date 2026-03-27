@@ -17,6 +17,12 @@ interface Props {
   prospectCity: string;
   prospectorUrl: string;
   campaignId: string;
+  /** Campaign-level email subject (used for step 1 preview) */
+  campaignSubject?: string;
+  /** Campaign-level email body (used for step 1 preview) */
+  campaignBody?: string;
+  /** Prospect first name for variable filling */
+  prospectFirstName?: string;
 }
 
 function formatCountdown(ms: number): string {
@@ -30,11 +36,14 @@ function formatCountdown(ms: number): string {
   return `${m}m`;
 }
 
-function fillTemplate(html: string, name: string, city: string): string {
+function fillTemplate(html: string, name: string, city: string, firstName?: string): string {
   return html
     .replace(/\{\{businessName\}\}/g, name)
+    .replace(/\{\{company\}\}/g, name)
+    .replace(/\{\{firstName\}\}/g, firstName || 'there')
+    .replace(/\{\{lastName\}\}/g, '')
     .replace(/\{\{city\}\}/g, city)
-    .replace(/\{\{calLink\}\}/g, 'https://cal.com/jason')
+    .replace(/\{\{calLink\}\}/g, 'https://cal.com/jason-marchese-mkfkwl/30min')
     .replace(/\{\{replyEmail\}\}/g, 'jason@embedo.io');
 }
 
@@ -178,7 +187,7 @@ function EditStepModal({
   );
 }
 
-export function SequenceSection({ steps, sentStepNumbers, nextFollowUpAt, prospectName, prospectCity, prospectorUrl, campaignId }: Props) {
+export function SequenceSection({ steps, sentStepNumbers, nextFollowUpAt, prospectName, prospectCity, prospectorUrl, campaignId, campaignSubject, campaignBody, prospectFirstName }: Props) {
   const [editingStep, setEditingStep] = useState<Step | null>(null);
   const [localSteps, setLocalSteps] = useState<Step[]>(steps);
   const [previewStep, setPreviewStep] = useState<number | null>(null);
@@ -256,6 +265,15 @@ export function SequenceSection({ steps, sentStepNumbers, nextFollowUpAt, prospe
                             {step.delayHours >= 24 ? `in ~${Math.round(step.delayHours / 24)} days` : `+${step.delayHours}h`}
                           </span>
                         )}
+                        {/* Preview button for step 1 (cold email) */}
+                        {step.stepNumber === 1 && !sent && campaignBody && (
+                          <button
+                            onClick={() => setPreviewStep(isPreviewing ? null : step.stepNumber)}
+                            className="text-[10px] px-2 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-violet-400 hover:text-violet-300 hover:bg-violet-500/20 transition-colors"
+                          >
+                            {isPreviewing ? 'Hide Preview' : 'Preview Email'}
+                          </button>
+                        )}
                         {/* Preview / Edit buttons for follow-up steps */}
                         {step.stepNumber > 1 && step.bodyHtml && (
                           <button
@@ -277,17 +295,38 @@ export function SequenceSection({ steps, sentStepNumbers, nextFollowUpAt, prospe
                     </div>
 
                     {/* Inline email preview */}
-                    {isPreviewing && step.bodyHtml && (
-                      <div className="mt-2 bg-white rounded-lg overflow-hidden border border-white/10">
-                        <iframe
-                          srcDoc={fillTemplate(step.bodyHtml, prospectName, prospectCity)}
-                          className="w-full border-0"
-                          style={{ height: '280px' }}
-                          title={`Step ${step.stepNumber} preview`}
-                          sandbox="allow-same-origin"
-                        />
-                      </div>
-                    )}
+                    {isPreviewing && (() => {
+                      const previewBody = step.stepNumber === 1
+                        ? (step.bodyHtml ?? campaignBody ?? '')
+                        : (step.bodyHtml ?? '');
+                      const previewSubject = step.stepNumber === 1
+                        ? (step.subject ?? campaignSubject ?? '')
+                        : (step.subject ?? '');
+                      if (!previewBody) return null;
+                      // Wrap plain text in HTML if no tags
+                      const htmlContent = previewBody.includes('<')
+                        ? fillTemplate(previewBody, prospectName, prospectCity, prospectFirstName)
+                        : `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.7;color:#1a1a1a;max-width:600px;padding:20px;">${fillTemplate(previewBody, prospectName, prospectCity, prospectFirstName).replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br/>').replace(/^/, '<p>').replace(/$/, '</p>')}</div>`;
+                      return (
+                        <div className="mt-2 rounded-lg overflow-hidden border border-white/10">
+                          {previewSubject && (
+                            <div className="px-3 py-2 bg-white/[0.03] border-b border-white/[0.06]">
+                              <span className="text-[9px] text-slate-600 uppercase tracking-wider">Subject: </span>
+                              <span className="text-xs text-slate-300">{fillTemplate(previewSubject, prospectName, prospectCity, prospectFirstName)}</span>
+                            </div>
+                          )}
+                          <div className="bg-white">
+                            <iframe
+                              srcDoc={htmlContent}
+                              className="w-full border-0"
+                              style={{ height: '320px' }}
+                              title={`Step ${step.stepNumber} preview`}
+                              sandbox="allow-same-origin"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
