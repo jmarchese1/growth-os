@@ -1,0 +1,194 @@
+/* ── V3 Midnight Editorial ─────────────────────────────── */
+
+:root {
+  --v3-bg: #09090B;
+  --v3-surface: #111113;
+  --v3-surface-2: #18181B;
+  --v3-border: rgba(255, 255, 255, 0.06);
+  --v3-border-hover: rgba(255, 255, 255, 0.12);
+  --v3-text: #FAFAFA;
+  --v3-text-muted: #A1A1AA;
+  --v3-text-dim: #52525B;
+  --v3-accent: #7C3AED;
+  --v3-accent-light: #A78BFA;
+  --v3-accent-glow: rgba(124, 58, 237, 0.15);
+}
+
+/* ── Grid overlay ───────────────────────────────────────── */
+.v3-grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 72px 72px;
+}
+
+/* ── Noise texture ──────────────────────────────────────── */
+.v3-noise::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.035;
+  pointer-events: none;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* ── Gradient orbs ──────────────────────────────────────── */
+.v3-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+}
+
+.v3-orb-hero {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.18) 0%, transparent 70%);
+  top: -200px;
+  right: -100px;
+}
+
+.v3-orb-hero-2 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.10) 0%, transparent 70%);
+  bottom: -100px;
+  left: -100px;
+}
+
+/* ── Horizontal rule with glow ──────────────────────────── */
+.v3-hr {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(124, 58, 237, 0.3) 30%,
+    rgba(124, 58, 237, 0.5) 50%,
+    rgba(124, 58, 237, 0.3) 70%,
+    transparent 100%
+  );
+  border: none;
+}
+
+/* ── Glass card ─────────────────────────────────────────── */
+.v3-glass {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--v3-border);
+  backdrop-filter: blur(12px);
+  transition: border-color 0.3s ease, background 0.3s ease;
+}
+
+.v3-glass:hover {
+  border-color: var(--v3-border-hover);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* ── Module item hover glow ─────────────────────────────── */
+.v3-module-item {
+  position: relative;
+}
+
+.v3-module-item::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.15), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: -1;
+}
+
+.v3-module-item:hover::before {
+  opacity: 1;
+}
+
+/* ── Accent underline ───────────────────────────────────── */
+.v3-accent-line {
+  display: inline-block;
+  position: relative;
+}
+
+.v3-accent-line::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--v3-accent), var(--v3-accent-light));
+  border-radius: 1px;
+}
+
+/* ── Pricing card popular ring ──────────────────────────── */
+.v3-popular-ring {
+  position: relative;
+}
+
+.v3-popular-ring::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 16px;
+  padding: 1px;
+  background: linear-gradient(135deg, var(--v3-accent), rgba(124, 58, 237, 0.2), var(--v3-accent-light));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* ── Stat counter pulse ─────────────────────────────────── */
+@keyframes v3-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.v3-stat-glow {
+  animation: v3-pulse 3s ease-in-out infinite;
+}
+
+/* ── Scroll fade trigger ────────────────────────────────── */
+@keyframes v3-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Step connector ─────────────────────────────────────── */
+.v3-step-line {
+  position: absolute;
+  top: 28px;
+  left: calc(50% + 28px);
+  width: calc(100% - 56px);
+  height: 1px;
+  background: linear-gradient(90deg, var(--v3-accent), var(--v3-border));
+}
+
+/* ── Custom scrollbar ───────────────────────────────────── */
+.v3-page ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.v3-page ::-webkit-scrollbar-track {
+  background: var(--v3-bg);
+}
+
+.v3-page ::-webkit-scrollbar-thumb {
+  background: var(--v3-text-dim);
+  border-radius: 3px;
+}
+
+/* ── Selection color ────────────────────────────────────── */
+.v3-page ::selection {
+  background: rgba(124, 58, 237, 0.3);
+  color: white;
+}
