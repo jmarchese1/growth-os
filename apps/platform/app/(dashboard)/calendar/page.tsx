@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import CalSyncButton from './sync-button';
 
 const API_URL = process.env['API_GATEWAY_URL'] ?? process.env['API_URL'] ?? 'http://localhost:3000';
 
@@ -39,11 +40,10 @@ async function getAppointments(startDate: string, endDate: string): Promise<Appo
 
 function statusColor(status: string): string {
   switch (status) {
-    case 'CONFIRMED': return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
-    case 'PENDING': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+    case 'SCHEDULED': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+    case 'COMPLETED': return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
     case 'CANCELLED': return 'bg-red-500/20 text-red-400 border-red-500/30';
-    case 'COMPLETED': return 'bg-violet-500/20 text-violet-400 border-violet-500/30';
-    case 'NO_SHOW': return 'bg-slate-500/20 text-slate-400 border-slate-500/30';
+    case 'NO_SHOW': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
     default: return 'bg-slate-500/20 text-slate-400 border-slate-500/30';
   }
 }
@@ -119,9 +119,12 @@ export default async function CalendarPage() {
 
   return (
     <div className="p-8 space-y-8 animate-fade-up">
-      <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">Calendar</h1>
-        <p className="text-slate-400 mt-1 text-sm">Manage your Cal.com bookings and meetings.</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Calendar</h1>
+          <p className="text-slate-400 mt-1 text-sm">Manage your Cal.com bookings and meetings.</p>
+        </div>
+        <CalSyncButton />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -186,7 +189,7 @@ export default async function CalendarPage() {
                       <div
                         key={apt.id}
                         className={`text-[9px] px-1 py-0.5 rounded truncate ${
-                          apt.status === 'CONFIRMED'
+                          apt.status === 'COMPLETED'
                             ? 'bg-emerald-500/20 text-emerald-300'
                             : apt.status === 'CANCELLED'
                               ? 'bg-red-500/15 text-red-400 line-through'

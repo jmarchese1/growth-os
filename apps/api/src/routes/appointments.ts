@@ -5,6 +5,27 @@ import { createLogger, NotFoundError } from '@embedo/utils';
 
 const log = createLogger('api:appointments');
 
+const CAL_API_BASE = 'https://api.cal.com/v2';
+
+interface CalBooking {
+  id: number;
+  uid: string;
+  title: string;
+  status: string;
+  start: string;
+  end: string;
+  attendees: Array<{
+    email: string;
+    name: string;
+    timeZone: string;
+  }>;
+}
+
+interface CalBookingsResponse {
+  status: string;
+  data: CalBooking[];
+}
+
 export async function appointmentRoutes(app: FastifyInstance): Promise<void> {
   // GET /appointments
   app.get('/appointments', async (request) => {
@@ -89,5 +110,115 @@ export async function appointmentRoutes(app: FastifyInstance): Promise<void> {
 
     log.info({ appointmentId: id, status, notes }, 'Appointment updated');
     return updated;
+  });
+
+  // POST /appointments/sync-cal — pull bookings from Cal.com API and upsert into DB
+  app.post('/appointments/sync-cal', async (_request, reply) => {
+    const calApiKey = process.env['CAL_COM_API_KEY'];
+    if (!calApiKey) {
+      return reply.code(400).send({ error: 'CAL_COM_API_KEY not configured' });
+    }
+
+    // Find the first business to associate appointments with (admin platform = single tenant)
+    const business = await db.business.findFirst({ select: { id: true } });
+    if (!business) {
+      return reply.code(400).send({ error: 'No business found to associate appointments with' });
+    }
+
+    try {
+      // Fetch bookings from Cal.com API v2
+      const res = await fetch(`${CAL_API_BASE}/bookings?status=upcoming,past,cancelled`, {
+        headers: {
+          'Authorization': `Bearer ${calApiKey}`,
+          'cal-api-version': '2024-08-13',
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        log.warn({ status: res.status, body: text }, 'Cal.com API request failed');
+        return reply.code(502).send({ error: `Cal.com API returned ${res.status}` });
+      }
+
+      const body = await res.json() as CalBookingsResponse;
+      const bookings = body.data ?? [];
+
+      let created = 0;
+      let updated = 0;
+      let skipped = 0;
+
+      for (const booking of bookings) {
+        const attendee = booking.attendees?.[0];
+        if (!attendee?.email) {
+          skipped++;
+          continue;
+        }
+
+        // Upsert contact by email
+        let contact = await db.contact.findFirst({
+          where: { email: attendee.email, businessId: business.id },
+          select: { id: true },
+        });
+
+        if (!contact) {
+          const nameParts = (attendee.name ?? '').split(' ');
+          contact = await db.contact.create({
+            data: {
+              businessId: business.id,
+              email: attendee.email,
+              firstName: nameParts[0] || null,
+              lastName: nameParts.slice(1).join(' ') || null,
+              source: 'CALENDLY',
+              status: 'LEAD',
+            },
+            select: { id: true },
+          });
+        }
+
+        // Map Cal.com status to our AppointmentStatus
+        let aptStatus: AppointmentStatus = 'SCHEDULED';
+        if (booking.status === 'cancelled' || booking.status === 'rejected') aptStatus = 'CANCELLED';
+
+        // Upsert by calendlyEventId (the uid)
+        const existing = await db.appointment.findUnique({
+          where: { calendlyEventId: booking.uid },
+        });
+
+        if (existing) {
+          await db.appointment.update({
+            where: { id: existing.id },
+            data: {
+              title: booking.title,
+              startTime: new Date(booking.start),
+              endTime: new Date(booking.end),
+              status: aptStatus,
+              timezone: attendee.timeZone ?? null,
+            },
+          });
+          updated++;
+        } else {
+          await db.appointment.create({
+            data: {
+              businessId: business.id,
+              contactId: contact.id,
+              calendlyEventId: booking.uid,
+              title: booking.title,
+              startTime: new Date(booking.start),
+              endTime: new Date(booking.end),
+              timezone: attendee.timeZone ?? null,
+              status: aptStatus,
+            },
+          });
+          created++;
+        }
+      }
+
+      log.info({ total: bookings.length, created, updated, skipped }, 'Cal.com sync completed');
+      return reply.send({ synced: true, total: bookings.length, created, updated, skipped });
+    } catch (err) {
+      log.error({ err }, 'Cal.com sync failed');
+      return reply.code(500).send({ error: 'Sync failed' });
+    }
   });
 }
