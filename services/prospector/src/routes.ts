@@ -511,14 +511,17 @@ Output format:
           }
 
           // Store totalEntries and config fingerprint on the campaign for the UI
-          const runsRemaining = totalEntries > 0 ? Math.max(0, Math.ceil((totalEntries - existingForConfig - created) / maxResults)) : null;
+          const totalFetched = existingForConfig + created;
+          const remaining = Math.max(0, totalEntries - totalFetched);
+          const runsRemaining = remaining > 0 ? Math.ceil(remaining / maxResults) : 0;
           await db.outboundCampaign.update({
             where: { id },
             data: {
               apolloConfig: {
                 ...(apolloConfig as object),
                 totalEntries,
-                prospectsFetched: existingForConfig + created,
+                prospectsFetched: totalFetched,
+                remaining,
                 runsRemaining,
                 configFingerprint,
               },
