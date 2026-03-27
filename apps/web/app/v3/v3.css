@@ -224,52 +224,105 @@
   text-shadow: 0 0 40px rgba(124, 58, 237, 0.25), 0 0 80px rgba(124, 58, 237, 0.10);
 }
 
-/* ── Dot grid background ───────────────────────────────── */
-.v3-dot-grid {
+/* ── Mesh gradient blobs ───────────────────────────────── */
+.v3-mesh-blob {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform, opacity;
+  mix-blend-mode: screen;
+}
+
+.v3-mesh-1 {
+  width: 60%;
+  aspect-ratio: 1;
+  top: -20%;
+  left: -10%;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.18) 0%, transparent 60%);
+  filter: blur(80px);
+  animation: v3-morph-1 12s ease-in-out infinite;
+}
+
+.v3-mesh-2 {
+  width: 50%;
+  aspect-ratio: 1;
+  bottom: -15%;
+  right: -10%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.16) 0%, transparent 60%);
+  filter: blur(90px);
+  animation: v3-morph-2 15s ease-in-out infinite;
+}
+
+.v3-mesh-3 {
+  width: 40%;
+  aspect-ratio: 1;
+  top: 30%;
+  right: 15%;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.14) 0%, transparent 55%);
+  filter: blur(70px);
+  animation: v3-morph-3 10s ease-in-out infinite;
+}
+
+.v3-mesh-4 {
+  width: 35%;
+  aspect-ratio: 1;
+  bottom: 10%;
+  left: 20%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 55%);
+  filter: blur(75px);
+  animation: v3-morph-4 18s ease-in-out infinite;
+}
+
+@keyframes v3-morph-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.6; }
+  33% { transform: translate(8%, 12%) scale(1.15); opacity: 1; }
+  66% { transform: translate(-5%, 5%) scale(0.9); opacity: 0.7; }
+}
+
+@keyframes v3-morph-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+  40% { transform: translate(-10%, -8%) scale(1.2); opacity: 0.9; }
+  70% { transform: translate(5%, -3%) scale(0.95); opacity: 0.6; }
+}
+
+@keyframes v3-morph-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+  50% { transform: translate(-12%, 10%) scale(1.1); opacity: 1; }
+}
+
+@keyframes v3-morph-4 {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+  35% { transform: translate(10%, -12%) scale(1.18); opacity: 0.85; }
+  65% { transform: translate(-6%, 8%) scale(0.88); opacity: 0.55; }
+}
+
+/* ── Subtle grid lines ─────────────────────────────────── */
+.v3-grid-lines {
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(circle, rgba(167, 139, 250, 0.35) 1px, transparent 1px);
-  background-size: 48px 48px;
-  animation: v3-grid-pulse 4s ease-in-out infinite;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 80px 80px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 70%);
 }
 
-@keyframes v3-grid-pulse {
-  0%, 100% {
-    opacity: 0.4;
-    background-image: radial-gradient(circle, rgba(167, 139, 250, 0.30) 1px, transparent 1px);
-  }
-  50% {
-    opacity: 1;
-    background-image: radial-gradient(circle, rgba(124, 58, 237, 0.50) 1.5px, transparent 1.5px);
-  }
-}
-
-/* Mouse spotlight glow that follows cursor */
-.v3-mouse-spotlight {
+/* ── Mouse-following cursor glow ───────────────────────── */
+.v3-cursor-glow {
   position: absolute;
-  width: 500px;
-  height: 500px;
+  width: 600px;
+  height: 600px;
   border-radius: 50%;
   pointer-events: none;
   transform: translate(-50%, -50%);
   background: radial-gradient(
     circle,
-    rgba(124, 58, 237, 0.20) 0%,
-    rgba(124, 58, 237, 0.08) 30%,
-    transparent 65%
+    rgba(124, 58, 237, 0.15) 0%,
+    rgba(167, 139, 250, 0.06) 35%,
+    transparent 60%
   );
-  transition: left 0.08s ease-out, top 0.08s ease-out;
-}
-
-/* Brighten dots inside the spotlight via mask trick */
-.v3-mouse-spotlight::before {
-  content: '';
-  position: absolute;
-  inset: -50px;
-  background-image: radial-gradient(circle, rgba(167, 139, 250, 0.7) 1.8px, transparent 1.8px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(circle at center, white 0%, transparent 55%);
-  -webkit-mask-image: radial-gradient(circle at center, white 0%, transparent 55%);
+  transition: left 0.15s ease-out, top 0.15s ease-out, opacity 0.4s ease;
 }
 
 /* ── Custom scrollbar ───────────────────────────────────── */

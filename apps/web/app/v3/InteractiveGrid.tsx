@@ -1,30 +1,45 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 /**
- * Animated dot-grid background with breathing pulse + mouse spotlight.
- * Uses DOM elements instead of canvas for guaranteed visibility.
+ * Mesh gradient background with slow morphing blobs + mouse-reactive glow.
  */
 export default function InteractiveGrid({ className = '' }: { className?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
+  const glowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = containerRef.current;
-    if (!el) return;
+    const glow = glowRef.current;
+    if (!el || !glow) return;
+
+    let hovering = false;
 
     const onMove = (e: MouseEvent) => {
       const rect = el.getBoundingClientRect();
-      setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      glow.style.left = `${x}px`;
+      glow.style.top = `${y}px`;
     };
 
-    const onLeave = () => setMousePos(null);
+    const onEnter = () => {
+      hovering = true;
+      glow.style.opacity = '1';
+    };
+
+    const onLeave = () => {
+      hovering = false;
+      glow.style.opacity = '0';
+    };
 
     el.addEventListener('mousemove', onMove);
+    el.addEventListener('mouseenter', onEnter);
     el.addEventListener('mouseleave', onLeave);
     return () => {
       el.removeEventListener('mousemove', onMove);
+      el.removeEventListener('mouseenter', onEnter);
       el.removeEventListener('mouseleave', onLeave);
     };
   }, []);
@@ -35,19 +50,21 @@ export default function InteractiveGrid({ className = '' }: { className?: string
       className={`absolute inset-0 w-full h-full overflow-hidden ${className}`}
       style={{ zIndex: 0 }}
     >
-      {/* CSS dot grid with pulse animation */}
-      <div className="v3-dot-grid" />
+      {/* Mesh blobs */}
+      <div className="v3-mesh-blob v3-mesh-1" />
+      <div className="v3-mesh-blob v3-mesh-2" />
+      <div className="v3-mesh-blob v3-mesh-3" />
+      <div className="v3-mesh-blob v3-mesh-4" />
 
-      {/* Mouse spotlight */}
-      {mousePos && (
-        <div
-          className="v3-mouse-spotlight"
-          style={{
-            left: mousePos.x,
-            top: mousePos.y,
-          }}
-        />
-      )}
+      {/* Subtle grid lines */}
+      <div className="v3-grid-lines" />
+
+      {/* Mouse-following glow */}
+      <div
+        ref={glowRef}
+        className="v3-cursor-glow"
+        style={{ opacity: 0 }}
+      />
     </div>
   );
 }
