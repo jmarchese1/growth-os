@@ -277,6 +277,10 @@ export default function V3Page() {
             </motion.a>
           </motion.div>
 
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.85 }} className="mt-5 text-sm text-slate-400">
+            Or just email <a href="mailto:jason@embedo.io" className="text-purple-400 hover:text-purple-300 transition-colors underline underline-offset-2">jason@embedo.io</a> &mdash; happy to answer any questions.
+          </motion.p>
+
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 1.4 }} className="mt-20 flex flex-col items-center gap-2 text-slate-500">
             <span className="text-[11px] font-[family-name:var(--font-mono)] uppercase tracking-[0.2em]">Scroll</span>
             <motion.div animate={{ y: [0, 6, 0] }} transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }} className="w-px h-8" style={{ background: 'linear-gradient(to bottom, #7C3AED, transparent)' }} />
@@ -679,7 +683,7 @@ export default function V3Page() {
               <p className="text-xs font-[family-name:var(--font-mono)] uppercase tracking-[0.18em] text-slate-400 mb-5">Company</p>
               <ul className="space-y-3">
                 <li><a href="#about" className="text-sm text-slate-300 hover:text-white transition-colors duration-200">About</a></li>
-                <li><a href="mailto:hello@embedo.io" className="text-sm text-slate-300 hover:text-white transition-colors duration-200">hello@embedo.io</a></li>
+                <li><a href="mailto:jason@embedo.io" className="text-sm text-slate-300 hover:text-white transition-colors duration-200">jason@embedo.io</a></li>
                 <li>
                   <CalModal calLink={CAL_LINK}>
                     <span className="text-sm text-slate-300 hover:text-white transition-colors duration-200 cursor-pointer">Book a Call</span>
