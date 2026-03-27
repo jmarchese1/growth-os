@@ -70,30 +70,30 @@ const BONUSES = [
 /* ═══════════════════════════════════════════════════════════ */
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 12 },
   visible: (i: number) => ({
     opacity: 1, y: 0,
-    transition: { duration: 0.9, delay: i * 0.1, ease: [0.25, 0.46, 0.45, 0.94] },
+    transition: { duration: 1.1, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] },
   }),
 };
 
 const fadeScale = {
-  hidden: { opacity: 0, y: 16, scale: 0.97 },
+  hidden: { opacity: 0, y: 10, scale: 0.98 },
   visible: (i: number) => ({
     opacity: 1, y: 0, scale: 1,
-    transition: { duration: 0.9, delay: i * 0.1, ease: [0.25, 0.46, 0.45, 0.94] },
+    transition: { duration: 1.1, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] },
   }),
 };
 
 const slideIn = {
-  hidden: { opacity: 0, y: 14 },
+  hidden: { opacity: 0, y: 8 },
   visible: (i: number) => ({
     opacity: 1, y: 0,
-    transition: { duration: 0.7, delay: i * 0.04, ease: [0.25, 0.46, 0.45, 0.94] },
+    transition: { duration: 0.8, delay: i * 0.03, ease: [0.16, 1, 0.3, 1] },
   }),
 };
 
-const stagger = { visible: { transition: { staggerChildren: 0.06 } } };
+const stagger = { visible: { transition: { staggerChildren: 0.05 } } };
 
 const ROTATING_WORDS = ['never sleeps.', 'runs on AI.', 'learns every day.', 'handles the chaos.', 'closes the deals.', 'does the busywork.'];
 
