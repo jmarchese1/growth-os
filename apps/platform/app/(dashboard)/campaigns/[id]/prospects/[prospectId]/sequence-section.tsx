@@ -265,15 +265,6 @@ export function SequenceSection({ steps, sentStepNumbers, nextFollowUpAt, prospe
                             {step.delayHours >= 24 ? `in ~${Math.round(step.delayHours / 24)} days` : `+${step.delayHours}h`}
                           </span>
                         )}
-                        {/* Preview button for step 1 (cold email) */}
-                        {step.stepNumber === 1 && !sent && campaignBody && (
-                          <button
-                            onClick={() => setPreviewStep(isPreviewing ? null : step.stepNumber)}
-                            className="text-[10px] px-2 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-violet-400 hover:text-violet-300 hover:bg-violet-500/20 transition-colors"
-                          >
-                            {isPreviewing ? 'Hide Preview' : 'Preview Email'}
-                          </button>
-                        )}
                         {/* Preview / Edit buttons for follow-up steps */}
                         {step.stepNumber > 1 && step.bodyHtml && (
                           <button
@@ -294,8 +285,13 @@ export function SequenceSection({ steps, sentStepNumbers, nextFollowUpAt, prospe
                       </div>
                     </div>
 
-                    {/* Inline email preview */}
-                    {isPreviewing && (() => {
+                    {/* Inline email preview -- always visible for unsent step 1 */}
+                    {(() => {
+                      // For step 1: always show when not sent
+                      // For other steps: show when isPreviewing
+                      const shouldShow = step.stepNumber === 1 ? !sent : isPreviewing;
+                      if (!shouldShow) return null;
+
                       const previewBody = step.stepNumber === 1
                         ? (step.bodyHtml ?? campaignBody ?? '')
                         : (step.bodyHtml ?? '');
@@ -308,7 +304,7 @@ export function SequenceSection({ steps, sentStepNumbers, nextFollowUpAt, prospe
                         ? fillTemplate(previewBody, prospectName, prospectCity, prospectFirstName)
                         : `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.7;color:#1a1a1a;max-width:600px;padding:20px;">${fillTemplate(previewBody, prospectName, prospectCity, prospectFirstName).replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br/>').replace(/^/, '<p>').replace(/$/, '</p>')}</div>`;
                       return (
-                        <div className="mt-2 rounded-lg overflow-hidden border border-white/10">
+                        <div className="mt-3 rounded-lg overflow-hidden border border-white/10">
                           {previewSubject && (
                             <div className="px-3 py-2 bg-white/[0.03] border-b border-white/[0.06]">
                               <span className="text-[9px] text-slate-600 uppercase tracking-wider">Subject: </span>

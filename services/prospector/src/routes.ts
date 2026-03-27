@@ -795,7 +795,7 @@ Output format:
     const prospect = await db.prospectBusiness.findUnique({
       where: { id },
       include: {
-        campaign: { select: { id: true, name: true, targetCity: true, targetIndustry: true, sequenceSteps: true } },
+        campaign: { select: { id: true, name: true, targetCity: true, targetIndustry: true, emailSubject: true, emailBodyHtml: true, sequenceSteps: true } },
         messages: { orderBy: { createdAt: 'desc' } },
       },
     });
