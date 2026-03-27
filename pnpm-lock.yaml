@@ -175,6 +175,9 @@ importers:
 
   apps/platform:
     dependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.39.0
+        version: 0.39.0
       '@embedo/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -193,6 +196,9 @@ importers:
       next:
         specifier: ^15.1.0
         version: 15.5.12(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      playwright:
+        specifier: ^1.50.0
+        version: 1.58.2
       react:
         specifier: ^19.0.0
         version: 19.2.4
@@ -778,6 +784,9 @@ packages:
 
   '@anthropic-ai/sdk@0.37.0':
     resolution: {integrity: sha512-tHjX2YbkUBwEgg0JZU3EFSSAQPoK4qQR/NFYa8Vtzd5UAyXzZksCw2In69Rml4R/TyHPBfRYaLK35XiOe33pjw==}
+
+  '@anthropic-ai/sdk@0.39.0':
+    resolution: {integrity: sha512-eMyDIPRZbt1CCLErRCi3exlAvNkBtRe+kW5vvJyef93PmNr/clstYgHhtvmkxN82nlKgzyGPCyGxrm0JQ1ZIdg==}
 
   '@calcom/embed-core@1.5.3':
     resolution: {integrity: sha512-GeId9gaByJ5EWiPmuvelZOvFWPOTWkcWZr5vGTCbIUTX125oE5yn0n8lDF1MJk5Xj1WO+/dk9jKIE08Ad9ytiQ==}
@@ -3609,6 +3618,18 @@ snapshots:
   '@alloc/quick-lru@5.2.0': {}
 
   '@anthropic-ai/sdk@0.37.0':
+    dependencies:
+      '@types/node': 18.19.130
+      '@types/node-fetch': 2.6.13
+      abort-controller: 3.0.0
+      agentkeepalive: 4.6.0
+      form-data-encoder: 1.7.2
+      formdata-node: 4.4.1
+      node-fetch: 2.7.0
+    transitivePeerDependencies:
+      - encoding
+
+  '@anthropic-ai/sdk@0.39.0':
     dependencies:
       '@types/node': 18.19.130
       '@types/node-fetch': 2.6.13

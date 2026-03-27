@@ -7,6 +7,7 @@ import { extractEmailFromWebsite, extractPhoneFromWebsite } from '../scraper/web
 import { findBusinessEmail } from '../scraper/brave-search.js';
 import { findEmailViaApollo, extractDomain, verifyEmailViaApollo } from '../scraper/apollo.js';
 import { upsertSuppression } from '../outreach/suppression.js';
+import { isDuplicate } from '../dedup/isDuplicate.js';
 import { env } from '../config.js';
 
 const log = createLogger('prospector:prospect-worker');
@@ -68,10 +69,10 @@ export function startProspectWorker(): Worker {
     async (job) => {
       const { campaignId, placeId, name, address, phone, website, email: geoapifyEmail } = job.data;
 
-      // Dedup — skip if already scraped
-      const existing = await db.prospectBusiness.findUnique({ where: { googlePlaceId: placeId } });
-      if (existing) {
-        log.info({ placeId, name }, 'Prospect already exists — skipping');
+      // Cross-source dedup — check by placeId, email, phone, website, name across ALL campaigns
+      const dupCheck = await isDuplicate({ name, phone, email: geoapifyEmail, website, googlePlaceId: placeId });
+      if (dupCheck.isDuplicate) {
+        log.info({ placeId, name, matchField: dupCheck.matchField, matchedId: dupCheck.matchedProspectId }, 'Duplicate prospect — skipping');
         return;
       }
 

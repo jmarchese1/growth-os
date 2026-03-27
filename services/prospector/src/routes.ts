@@ -9,6 +9,7 @@ import { sendColdEmail } from './outreach/email-sender.js';
 import { generatePersonalizedEmail } from './outreach/ai-personalizer.js';
 import { findEmailViaHunter, extractDomain as extractHunterDomain } from './scraper/hunter.js';
 import { findEmailViaApollo, extractDomain as extractApolloDomain, discoverViaApollo } from './scraper/apollo.js';
+import { isDuplicate } from './dedup/isDuplicate.js';
 import { env } from './config.js';
 
 const log = createLogger('prospector:routes');
@@ -411,19 +412,14 @@ Output format:
           let created = 0;
           let skippedDedup = 0;
           for (const p of prospects) {
-            // Dedup across ALL campaigns — never contact the same business twice
-            const existingByName = await db.prospectBusiness.findFirst({
-              where: { name: p.organizationName },
+            // Cross-source dedup — check by name, email, phone, website, placeId across ALL campaigns
+            const dupCheck = await isDuplicate({
+              name: p.organizationName,
+              phone: p.organizationPhone ?? undefined,
+              email: p.contact?.email ?? undefined,
+              website: p.organizationDomain ? `https://${p.organizationDomain}` : undefined,
             });
-            if (existingByName) { skippedDedup++; continue; }
-
-            // Also dedup by domain if available
-            if (p.organizationDomain) {
-              const existingByDomain = await db.prospectBusiness.findFirst({
-                where: { website: `https://${p.organizationDomain}` },
-              });
-              if (existingByDomain) { skippedDedup++; continue; }
-            }
+            if (dupCheck.isDuplicate) { skippedDedup++; continue; }
 
             const hasEmail = !!p.contact?.email;
 

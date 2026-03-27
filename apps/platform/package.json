@@ -16,7 +16,9 @@
     "@supabase/ssr": "^0.5.2",
     "lucide-react": "^0.469.0",
     "clsx": "^2.1.0",
-    "@embedo/types": "workspace:*"
+    "@embedo/types": "workspace:*",
+    "@anthropic-ai/sdk": "^0.39.0",
+    "playwright": "^1.50.0"
   },
   "devDependencies": {
     "typescript": "^5.7.0",
