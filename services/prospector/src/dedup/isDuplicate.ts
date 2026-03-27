@@ -71,17 +71,23 @@ export async function isDuplicate(candidate: DuplicateCandidate): Promise<Duplic
     }
   }
 
-  // 3. phone — normalized digits match
+  // 3. phone — normalized digits match (check common formats)
   if (candidate.phone) {
     const normalized = normalizePhone(candidate.phone);
     if (normalized.length >= 7) {
-      // Fetch all prospects with a phone, compare normalized
-      // Use raw query for efficiency on large datasets
-      const matches = await db.prospectBusiness.findMany({
-        where: { phone: { not: null } },
-        select: { id: true, phone: true },
+      // Check a few common formats instead of fetching all records
+      const phoneVariants = [
+        normalized,
+        `+1${normalized}`,
+        `1${normalized}`,
+        normalized.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3'),
+        normalized.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3'),
+        normalized.replace(/(\d{3})(\d{3})(\d{4})/, '+1 $1-$2-$3'),
+      ];
+      const phoneMatch = await db.prospectBusiness.findFirst({
+        where: { phone: { in: phoneVariants } },
+        select: { id: true },
       });
-      const phoneMatch = matches.find((p) => p.phone && normalizePhone(p.phone) === normalized);
       if (phoneMatch) {
         log.info({ matchField: 'phone', matchedId: phoneMatch.id, name: candidate.name }, 'Duplicate found');
         return { isDuplicate: true, matchedProspectId: phoneMatch.id, matchField: 'phone' };
