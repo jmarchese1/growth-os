@@ -399,15 +399,31 @@ Output format:
       // Apollo discovery runs in background — return 202 immediately
       setImmediate(async () => {
         try {
+          // Count existing prospects for this city/industry combo to calculate page offset
+          // This prevents re-fetching the same businesses from Apollo (saves credits)
+          const cityPrefix = campaign.targetCity.split(',')[0]?.trim() ?? campaign.targetCity;
+          const existingForCity = await db.prospectBusiness.count({
+            where: {
+              campaign: {
+                targetCity: { contains: cityPrefix, mode: 'insensitive' },
+                discoverySource: 'apollo',
+              },
+            },
+          });
+          const perPage = 25;
+          const startPage = Math.floor(existingForCity / perPage) + 1;
+
           const apolloOpts: import('./scraper/apollo.js').ApolloDiscoveryOptions = {
-            city: campaign.targetCity.split(',')[0]?.trim() ?? campaign.targetCity,
+            city: cityPrefix,
             industries: apolloConfig.industries ?? [],
             sicCodes: apolloConfig.sicCodes ?? [],
             employeeRanges: apolloConfig.employeeRanges ?? ['1-10'],
             maxResults,
+            startPage,
           };
           if (campaign.targetState) apolloOpts.state = campaign.targetState;
           if (env.BRAVE_SEARCH_API_KEY) apolloOpts.braveApiKey = env.BRAVE_SEARCH_API_KEY;
+          log.info({ campaignId: id, existingForCity, startPage }, 'Apollo offset calculated');
           const prospects = await discoverViaApollo(env.APOLLO_API_KEY!, apolloOpts);
 
           let created = 0;

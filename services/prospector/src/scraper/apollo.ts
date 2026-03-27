@@ -169,6 +169,7 @@ export interface ApolloDiscoveryOptions {
   sicCodes?: string[];          // SIC codes (e.g. ['5812'] = Eating Places)
   employeeRanges: string[];     // e.g. ['1-10', '11-50']
   maxResults: number;
+  startPage?: number;           // Skip to this page (1-based). For offset-based dedup to avoid burning credits.
   personTitles?: string[];
   braveApiKey?: string;         // Brave Search API key for email fallback
 }
@@ -280,8 +281,9 @@ async function searchApolloOrganizations(
   options: ApolloDiscoveryOptions,
 ): Promise<ApolloOrg[]> {
   const allOrgs: ApolloOrg[] = [];
-  let page = 1;
+  let page = options.startPage ?? 1;
   const perPage = 25;
+  if (page > 1) log.info({ startPage: page }, 'Skipping to page (offset-based dedup)');
 
   while (allOrgs.length < options.maxResults) {
     try {
