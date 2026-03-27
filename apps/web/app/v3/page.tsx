@@ -359,15 +359,32 @@ export default function V3Page() {
                     <span className="text-base font-semibold text-white group-hover:text-purple-300 transition-colors duration-300">{mod.name}</span>
                   </div>
                   <p className="text-sm text-slate-300 leading-relaxed col-start-2 md:col-start-3 col-span-2 md:col-span-1">{mod.desc}</p>
-                  <span className="hidden md:block text-xs font-[family-name:var(--font-mono)] text-slate-500 text-right">{mod.value}</span>
+                  <span className="hidden md:block text-xs font-[family-name:var(--font-mono)] text-red-400/60 text-right line-through">{mod.value}</span>
                 </motion.div>
               );
             })}
           </div>
 
-          <motion.div variants={fadeUp} custom={10} className="mt-10 flex items-center justify-between pt-6" style={{ borderTop: '1px solid rgba(124,58,237,0.25)' }}>
-            <span className="text-sm text-slate-400">Purchased separately:</span>
-            <span className="text-lg font-bold text-slate-300 line-through">$2,400/mo</span>
+          <motion.div variants={fadeUp} custom={10} className="mt-10 pt-8 rounded-2xl" style={{ borderTop: '1px solid rgba(124,58,237,0.25)' }}>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div>
+                <p className="text-sm text-slate-400 mb-1">Purchased separately</p>
+                <span className="text-2xl font-bold text-red-400/70 line-through">$2,400/mo</span>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-slate-400 mb-1">With Embedo &mdash; everything included</p>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-sm text-emerald-400 font-medium">Starting at</span>
+                  <span className="text-4xl font-extrabold text-white">$249</span>
+                  <span className="text-sm text-slate-400">/mo</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-center mt-6">
+              <motion.a whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} href="#pricing" className="group inline-flex items-center gap-2 px-7 py-3.5 text-white text-sm font-semibold rounded-xl v3-btn-glow" style={{ background: '#7C3AED' }}>
+                See Plans <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </motion.a>
+            </div>
           </motion.div>
         </div>
       </Section>
@@ -389,20 +406,25 @@ export default function V3Page() {
             If you checked even two, you&apos;re leaving money on the table every single day.
           </motion.p>
 
-          {/* Before / After */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-20">
+          {/* Before / After side by side */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 mb-20 rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
             {/* Before */}
-            <motion.div variants={fadeScale} custom={3} className="v3-glass rounded-2xl p-8 lg:p-10">
+            <motion.div variants={fadeScale} custom={3} className="p-8 lg:p-10" style={{ background: 'rgba(239,68,68,0.04)' }}>
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.30)' }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.25)' }}>
                   <X className="w-5 h-5 text-red-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Without Embedo</h3>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Without Embedo</h3>
+                  <p className="text-xs text-red-400/60">Where you are now</p>
+                </div>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {PAIN_POINTS.map((point) => (
                   <div key={point} className="flex items-start gap-3">
-                    <X className="w-4 h-4 text-red-400/70 flex-shrink-0 mt-1" />
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgba(239,68,68,0.15)' }}>
+                      <X className="w-3 h-3 text-red-400" />
+                    </div>
                     <span className="text-base text-slate-300 leading-relaxed">{point}</span>
                   </div>
                 ))}
@@ -410,17 +432,22 @@ export default function V3Page() {
             </motion.div>
 
             {/* After */}
-            <motion.div variants={fadeScale} custom={4} className="v3-glass rounded-2xl p-8 lg:p-10" style={{ borderColor: 'rgba(124,58,237,0.25)' }}>
+            <motion.div variants={fadeScale} custom={4} className="p-8 lg:p-10" style={{ background: 'rgba(34,197,94,0.04)', borderLeft: '1px solid rgba(255,255,255,0.06)' }}>
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.30)' }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.25)' }}>
                   <Check className="w-5 h-5 text-emerald-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white">With Embedo</h3>
+                <div>
+                  <h3 className="text-lg font-bold text-white">With Embedo</h3>
+                  <p className="text-xs text-emerald-400/60">Where you could be in 48 hours</p>
+                </div>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {SOLUTIONS.map((point) => (
                   <div key={point} className="flex items-start gap-3">
-                    <Check className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-1" />
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgba(34,197,94,0.15)' }}>
+                      <Check className="w-3 h-3 text-emerald-400" />
+                    </div>
                     <span className="text-base text-slate-300 leading-relaxed">{point}</span>
                   </div>
                 ))}
@@ -428,50 +455,84 @@ export default function V3Page() {
             </motion.div>
           </div>
 
+          {/* Value Stack Summary */}
+          <motion.div variants={fadeUp} custom={5} className="v3-glass rounded-2xl p-8 lg:p-10 mb-14" style={{ borderColor: 'rgba(124,58,237,0.20)' }}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+              <div className="text-center">
+                <p className="text-xs font-[family-name:var(--font-mono)] text-slate-400 uppercase tracking-wider mb-2">8 tools separately</p>
+                <p className="text-3xl font-bold text-red-400/70 line-through">$2,400/mo</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs font-[family-name:var(--font-mono)] text-emerald-400 uppercase tracking-wider mb-2">With Embedo</p>
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className="text-4xl font-extrabold text-white">$249</span>
+                  <span className="text-sm text-slate-400">/mo</span>
+                </div>
+              </div>
+              <div className="text-center">
+                <p className="text-xs font-[family-name:var(--font-mono)] text-purple-400 uppercase tracking-wider mb-2">You save</p>
+                <p className="text-3xl font-bold text-emerald-400">$2,151/mo</p>
+              </div>
+            </div>
+          </motion.div>
+
           {/* Bonuses */}
-          <motion.div variants={fadeUp} custom={5} className="text-center mb-10">
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-yellow-300" style={{ border: '1px solid rgba(250,204,21,0.30)', background: 'rgba(250,204,21,0.08)' }}>
+          <motion.div variants={fadeUp} custom={6} className="text-center mb-10">
+            <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-yellow-300" style={{ border: '1px solid rgba(250,204,21,0.30)', background: 'rgba(250,204,21,0.08)' }}>
               <Gift className="w-4 h-4" /> Sign up this month and get $1,000 in bonuses &mdash; free
             </span>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
             {BONUSES.map((bonus, i) => (
-              <motion.div key={bonus.name} variants={fadeScale} custom={i + 6} className="v3-glass rounded-2xl p-7 text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4" style={{ background: 'rgba(250,204,21,0.12)', border: '1px solid rgba(250,204,21,0.25)' }}>
-                  {i === 0 ? <Zap className="w-5 h-5 text-yellow-400" /> : i === 1 ? <Sparkles className="w-5 h-5 text-yellow-400" /> : <Clock className="w-5 h-5 text-yellow-400" />}
+              <motion.div key={bonus.name} variants={fadeScale} custom={i + 7} whileHover={{ y: -4 }} className="v3-glass rounded-2xl p-8">
+                <div className="flex items-center gap-4 mb-5">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(250,204,21,0.12)', border: '1px solid rgba(250,204,21,0.25)' }}>
+                    {i === 0 ? <Zap className="w-5 h-5 text-yellow-400" /> : i === 1 ? <Sparkles className="w-5 h-5 text-yellow-400" /> : <Clock className="w-5 h-5 text-yellow-400" />}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-[family-name:var(--font-mono)] text-yellow-400/80 uppercase tracking-wider">${bonus.value} value &mdash; free</p>
+                    <h4 className="text-base font-bold text-white">{bonus.name}</h4>
+                  </div>
                 </div>
-                <p className="text-xs font-[family-name:var(--font-mono)] text-yellow-400/80 mb-2">${bonus.value} VALUE</p>
-                <h4 className="text-base font-bold text-white mb-2">{bonus.name}</h4>
                 <p className="text-sm text-slate-300 leading-relaxed">{bonus.desc}</p>
               </motion.div>
             ))}
           </div>
 
           {/* Guarantee + Scarcity */}
-          <motion.div variants={fadeUp} custom={9} className="v3-glass rounded-2xl p-8 lg:p-10 text-center" style={{ borderColor: 'rgba(124,58,237,0.25)' }}>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-8 mb-6">
-              <div className="flex items-center gap-3">
-                <Shield className="w-6 h-6 text-emerald-400" />
-                <div className="text-left">
-                  <p className="text-base font-bold text-white">30-Day &ldquo;See It Work&rdquo; Guarantee</p>
-                  <p className="text-sm text-slate-300">If you don&apos;t see results in 30 days, you get your money back. No questions.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            <motion.div variants={fadeScale} custom={10} className="v3-glass rounded-2xl p-8">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)' }}>
+                  <Shield className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div>
+                  <h4 className="text-base font-bold text-white mb-1">30-Day &ldquo;See It Work&rdquo; Guarantee</h4>
+                  <p className="text-sm text-slate-300 leading-relaxed">If you don&apos;t see real results in 30 days, we refund every penny. No hoops, no questions, no hard feelings.</p>
                 </div>
               </div>
-              <div className="hidden sm:block w-px h-12" style={{ background: 'rgba(255,255,255,0.1)' }} />
-              <div className="flex items-center gap-3">
-                <MapPin className="w-6 h-6 text-purple-400" />
-                <div className="text-left">
-                  <p className="text-base font-bold text-white">One per zip code</p>
-                  <p className="text-sm text-slate-300">We only serve one business per area so your AI doesn&apos;t compete with itself.</p>
+            </motion.div>
+            <motion.div variants={fadeScale} custom={11} className="v3-glass rounded-2xl p-8">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.25)' }}>
+                  <MapPin className="w-5 h-5 text-purple-400" />
+                </div>
+                <div>
+                  <h4 className="text-base font-bold text-white mb-1">Exclusive territory &mdash; one per zip code</h4>
+                  <p className="text-sm text-slate-300 leading-relaxed">We only onboard one business per area. Your AI won&apos;t compete with the restaurant next door. First come, first served.</p>
                 </div>
               </div>
-            </div>
+            </motion.div>
+          </div>
+
+          <motion.div variants={fadeUp} custom={12} className="text-center">
             <CalModal calLink={CAL_LINK}>
-              <motion.span whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} className="group inline-flex items-center gap-2 px-8 py-4 text-white text-base font-semibold rounded-xl cursor-pointer v3-btn-glow mt-4" style={{ background: '#7C3AED' }}>
+              <motion.span whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} className="group inline-flex items-center gap-2 px-8 py-4 text-white text-base font-semibold rounded-xl cursor-pointer v3-btn-glow" style={{ background: '#7C3AED' }}>
                 Claim Your Spot <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </motion.span>
             </CalModal>
+            <p className="mt-3 text-xs text-slate-400">30 min &middot; Free &middot; No obligation</p>
           </motion.div>
         </div>
       </Section>
@@ -610,10 +671,11 @@ export default function V3Page() {
       </Section>
 
       {/* ═══════════════════════ FOOTER ═══════════════════════ */}
-      <footer className="py-16 px-6" style={{ background: '#1C2248', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-14">
-            <div className="lg:col-span-2">
+      <footer className="py-16 px-6 lg:px-10" style={{ background: '#1C2248', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="max-w-7xl">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10 lg:gap-16 mb-14">
+            {/* Brand */}
+            <div className="col-span-2">
               <div className="flex items-center gap-2.5 mb-4">
                 <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
                   <polygon points="16,4 28,10 16,16 4,10" fill="#7C3AED" />
@@ -622,7 +684,7 @@ export default function V3Page() {
                 </svg>
                 <span className="text-lg font-bold tracking-tight text-white">Embedo</span>
               </div>
-              <p className="text-sm text-slate-300 leading-relaxed max-w-xs mb-6">AI infrastructure for local businesses. Voice, chat, leads, social, surveys &mdash; deployed in days.</p>
+              <p className="text-sm text-slate-300 leading-relaxed max-w-xs mb-6">AI infrastructure for local businesses. Voice, chat, website, social, CRM &mdash; one platform, deployed in days.</p>
               <div className="flex gap-3">
                 {[
                   { label: 'LinkedIn', href: 'https://linkedin.com/company/embedo', icon: 'linkedin' },
@@ -636,33 +698,49 @@ export default function V3Page() {
                 ))}
               </div>
             </div>
+
+            {/* Product */}
             <div>
               <p className="text-xs font-[family-name:var(--font-mono)] uppercase tracking-[0.18em] text-slate-400 mb-5">Product</p>
               <ul className="space-y-3">
-                {[{ label: 'Platform', href: '#system' }, { label: 'The Offer', href: '#offer' }, { label: 'Pricing', href: '#pricing' }, { label: 'Book a Call', href: '#about' }].map((link) => (
+                {[{ label: 'Platform', href: '#system' }, { label: 'The Offer', href: '#offer' }, { label: 'Pricing', href: '#pricing' }].map((link) => (
                   <li key={link.label}><a href={link.href} className="text-sm text-slate-300 hover:text-white transition-colors duration-200">{link.label}</a></li>
                 ))}
               </ul>
             </div>
+
+            {/* Company */}
             <div>
-              <p className="text-xs font-[family-name:var(--font-mono)] uppercase tracking-[0.18em] text-slate-400 mb-5">Contact</p>
-              <ul className="space-y-3 text-sm text-slate-300">
-                <li><a href="mailto:hello@embedo.io" className="hover:text-white transition-colors duration-200">hello@embedo.io</a></li>
-                <li className="text-slate-400 text-xs pt-2">Serving local businesses<br />across the United States</li>
+              <p className="text-xs font-[family-name:var(--font-mono)] uppercase tracking-[0.18em] text-slate-400 mb-5">Company</p>
+              <ul className="space-y-3">
+                <li><a href="#about" className="text-sm text-slate-300 hover:text-white transition-colors duration-200">About</a></li>
+                <li><a href="mailto:hello@embedo.io" className="text-sm text-slate-300 hover:text-white transition-colors duration-200">hello@embedo.io</a></li>
+                <li>
+                  <CalModal calLink={CAL_LINK}>
+                    <span className="text-sm text-slate-300 hover:text-white transition-colors duration-200 cursor-pointer">Book a Call</span>
+                  </CalModal>
+                </li>
               </ul>
-              <div className="mt-6 flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0" style={{ border: '1px solid rgba(255,255,255,0.12)' }}>
+            </div>
+
+            {/* Founder */}
+            <div>
+              <p className="text-xs font-[family-name:var(--font-mono)] uppercase tracking-[0.18em] text-slate-400 mb-5">Founder</p>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0" style={{ border: '1px solid rgba(255,255,255,0.12)' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src="/workday_photo.jpeg" alt="Jason Marchese" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 8%' }} />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-white leading-none">Jason Marchese</p>
-                  <p className="text-xs text-slate-400 leading-none mt-0.5">Founder &middot; Data Scientist</p>
+                  <p className="text-sm font-semibold text-white leading-none">Jason Marchese</p>
+                  <p className="text-xs text-slate-400 leading-none mt-1">Data Scientist</p>
                 </div>
               </div>
+              <p className="text-xs text-slate-400">Serving local businesses<br />across the United States</p>
             </div>
           </div>
-          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+
+          <div className="pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
             <p className="text-xs text-slate-400">&copy; 2026 Embedo. All rights reserved.</p>
             <div className="flex gap-6">
               <a href="#" className="text-xs text-slate-400 hover:text-slate-200 transition-colors">Privacy Policy</a>
