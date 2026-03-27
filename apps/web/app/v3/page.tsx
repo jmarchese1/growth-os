@@ -637,7 +637,7 @@ export default function V3Page() {
 
       {/* ═══════════════════════ FOOTER ═══════════════════════ */}
       <footer className="py-16 px-6 lg:px-10" style={{ background: '#1C2248', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-        <div className="max-w-7xl">
+        <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10 lg:gap-16 mb-14">
             {/* Brand */}
             <div className="col-span-2">
