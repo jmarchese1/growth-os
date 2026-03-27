@@ -325,6 +325,7 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [discoverySource, setDiscoverySource] = useState<'geoapify' | 'apollo'>('geoapify');
+  const [apolloIndustries, setApolloIndustries] = useState<string[]>([]);
   const [apolloEmployeeRange, setApolloEmployeeRange] = useState('1-10');
 
   const [form, setForm] = useState({
@@ -384,18 +385,8 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
         discoverySource,
       };
       if (discoverySource === 'apollo') {
-        // Map the industry selector to Apollo industry IDs
-        const industryMap: Record<string, string[]> = {
-          RESTAURANT: ['restaurants', 'food & beverages'],
-          SALON: ['beauty'],
-          RETAIL: ['retail'],
-          FITNESS: ['health, wellness and fitness'],
-          MEDICAL: ['medical practice'],
-          OTHER: [],
-        };
-        const mapped = industryMap[form.targetIndustry] ?? [];
-        if (mapped.length > 0) payload.apolloIndustries = mapped;
-        const sicCodes = mapped.flatMap(
+        payload.apolloIndustries = apolloIndustries.length > 0 ? apolloIndustries : undefined;
+        const sicCodes = apolloIndustries.flatMap(
           (id) => APOLLO_INDUSTRIES.find((ind) => ind.id === id)?.sic ?? []
         );
         if (sicCodes.length > 0) payload.apolloSicCodes = sicCodes;
@@ -520,6 +511,31 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
         {discoverySource === 'apollo' && (
           <div className="space-y-4 p-4 bg-violet-500/5 border border-violet-500/15 rounded-lg">
             <p className="text-xs font-semibold text-violet-400 uppercase tracking-wide">Apollo Settings</p>
+
+            <div>
+              <label className={labelCls}>Industries</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1.5">
+                {APOLLO_INDUSTRIES.map((ind) => (
+                  <button
+                    key={ind.id}
+                    type="button"
+                    onClick={() =>
+                      setApolloIndustries((prev) =>
+                        prev.includes(ind.id) ? prev.filter((i) => i !== ind.id) : [...prev, ind.id]
+                      )
+                    }
+                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
+                      apolloIndustries.includes(ind.id)
+                        ? 'bg-violet-600 text-white border-violet-500'
+                        : 'bg-white/5 text-slate-400 border-white/10 hover:border-white/20'
+                    }`}
+                  >
+                    {ind.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-slate-600 mt-1.5">Select one or more. These map directly to Apollo.io industry tags.</p>
+            </div>
 
             <div>
               <label className={labelCls}>Employee Count</label>
