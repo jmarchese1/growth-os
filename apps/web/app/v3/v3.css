@@ -249,7 +249,7 @@
   aspect-ratio: 1;
   bottom: -20%;
   right: -10%;
-  background: radial-gradient(circle, rgba(219, 39, 119, 0.32) 0%, transparent 55%);
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.22) 0%, transparent 55%);
   filter: blur(65px);
   animation: v3-morph-2 15s ease-in-out infinite;
 }

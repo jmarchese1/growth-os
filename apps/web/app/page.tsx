@@ -103,7 +103,7 @@ function RotatingText() {
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % ROTATING_WORDS.length);
-    }, 3600);
+    }, 4200);
     return () => clearInterval(interval);
   }, []);
 
@@ -112,10 +112,10 @@ function RotatingText() {
       <AnimatePresence mode="wait">
         <motion.span
           key={ROTATING_WORDS[index]}
-          initial={{ opacity: 0, rotateX: 60, filter: 'blur(4px)' }}
-          animate={{ opacity: 1, rotateX: 0, filter: 'blur(0px)' }}
-          exit={{ opacity: 0, rotateX: -60, filter: 'blur(4px)' }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          initial={{ opacity: 0, y: 8, filter: 'blur(3px)' }}
+          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          exit={{ opacity: 0, y: -8, filter: 'blur(3px)' }}
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
           className="inline-block text-transparent bg-clip-text v3-shimmer-text"
           style={{
             backgroundImage: 'linear-gradient(90deg, #C4B5FD, #7C3AED, #A78BFA, #C4B5FD)',
