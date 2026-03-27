@@ -21,7 +21,7 @@ export default function CalSyncButton() {
         router.refresh();
       }
     } catch {
-      setResult('Sync failed');
+      setResult('API gateway not reachable — start services with pnpm dev');
     }
     setSyncing(false);
   };
@@ -39,7 +39,7 @@ export default function CalSyncButton() {
         {syncing ? 'Syncing...' : 'Sync Cal.com'}
       </button>
       {result && (
-        <span className={`text-xs ${result.includes('failed') || result.includes('not configured') ? 'text-red-400' : 'text-emerald-400'}`}>
+        <span className={`text-xs ${result.includes('Synced') ? 'text-emerald-400' : result.includes('API gateway') ? 'text-yellow-400' : 'text-red-400'}`}>
           {result}
         </span>
       )}

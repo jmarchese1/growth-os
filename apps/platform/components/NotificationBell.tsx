@@ -98,14 +98,17 @@ export default function NotificationBell() {
 
   // Fetch daily report when tab is opened
   const fetchReport = useCallback(async () => {
-    if (report) return;
+    if (loadingReport) return;
     setLoadingReport(true);
     try {
       const res = await fetch(`/api/daily-report`);
-      if (res.ok) setReport(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        if (data) setReport(data);
+      }
     } catch { /* ignore */ }
     setLoadingReport(false);
-  }, [report]);
+  }, [loadingReport]);
 
   // Close on outside click
   useEffect(() => {
@@ -143,17 +146,19 @@ export default function NotificationBell() {
           {/* Tabs */}
           <div className="flex border-b border-white/[0.06]">
             <button
+              onMouseDown={(e) => { e.stopPropagation(); }}
               onClick={() => setTab('notifications')}
-              className={`flex-1 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
-                tab === 'notifications' ? 'text-white border-b-2 border-violet-500' : 'text-slate-500 hover:text-slate-300'
+              className={`flex-1 py-3 text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
+                tab === 'notifications' ? 'text-white border-b-2 border-violet-500' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
               }`}
             >
               Notifications {unreadCount > 0 && <span className="ml-1 px-1.5 py-0.5 rounded-full bg-violet-500/20 text-violet-400 text-[10px]">{unreadCount}</span>}
             </button>
             <button
+              onMouseDown={(e) => { e.stopPropagation(); }}
               onClick={() => { setTab('report'); fetchReport(); }}
-              className={`flex-1 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
-                tab === 'report' ? 'text-white border-b-2 border-violet-500' : 'text-slate-500 hover:text-slate-300'
+              className={`flex-1 py-3 text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
+                tab === 'report' ? 'text-white border-b-2 border-violet-500' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
               }`}
             >
               Daily Report
