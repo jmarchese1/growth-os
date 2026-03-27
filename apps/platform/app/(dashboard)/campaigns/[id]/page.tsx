@@ -74,6 +74,7 @@ interface Campaign {
   emailSubject: string;
   emailBodyHtml: string;
   sequenceSteps: SequenceStep[] | null;
+  apolloConfig: unknown;
   active: boolean;
   createdAt: string;
 }
@@ -209,6 +210,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
               currentBodyHtml={campaign.emailBodyHtml}
               sequenceSteps={campaign.sequenceSteps}
               prospectorUrl={PROSPECTOR_URL}
+              apolloConfig={campaign.apolloConfig as { appendSignature?: boolean } | null}
             />
             <CloneCampaignButton
               campaignId={id}

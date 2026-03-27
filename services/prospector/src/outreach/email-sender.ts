@@ -55,9 +55,11 @@ export async function sendColdEmail(
       env.ANTHROPIC_API_KEY,
     );
     // Fall back to static template if AI fails
-    bodyHtml = aiHtml ?? renderEmailHtml(bodyTemplate, vars, { appendSignature: true, replyEmail });
+    const appendSig = (campaign.apolloConfig as Record<string, unknown> | null)?.['appendSignature'] !== false;
+    bodyHtml = aiHtml ?? renderEmailHtml(bodyTemplate, vars, { appendSignature: appendSig, replyEmail });
   } else {
-    bodyHtml = renderEmailHtml(bodyTemplate, vars, { appendSignature: true, replyEmail });
+    const appendSig = (campaign.apolloConfig as Record<string, unknown> | null)?.['appendSignature'] !== false;
+    bodyHtml = renderEmailHtml(bodyTemplate, vars, { appendSignature: appendSig, replyEmail });
   }
 
   const subject = renderEmailHtml(subjectTemplate, vars);

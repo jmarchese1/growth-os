@@ -18,6 +18,7 @@ interface Props {
   currentBodyHtml: string;
   sequenceSteps: SequenceStep[] | null;
   prospectorUrl: string;
+  apolloConfig?: { appendSignature?: boolean } | null;
 }
 
 const TEMPLATE_VARS = [
@@ -42,8 +43,12 @@ function applyPreviewVars(text: string) {
   return Object.entries(PREVIEW_VARS).reduce((s, [k, v]) => s.replaceAll(k, v), text);
 }
 
+const SIGNATURE_HTML = `<table style="margin-top: 28px; padding-top: 20px; border-collapse: collapse; width: 100%;" cellpadding="0" cellspacing="0"><tr><td style="padding-right: 12px; vertical-align: middle; width: 56px;"><img src="https://i.imgur.com/RDXkWkD.jpeg" alt="Jason" width="48" height="48" style="border-radius: 50%; display: block; object-fit: cover;" /></td><td style="vertical-align: middle;"><p style="margin: 0; font-size: 14px; font-weight: 700; color: #1a1a1a;">Jason</p><p style="margin: 2px 0 0; font-size: 13px; color: #666;">Founder · <a href="https://embedo.io" style="color: #4f46e5; text-decoration: none;">embedo.io</a></p></td></tr></table>`;
+
+const UNSUB_HTML = `<p style="margin-top: 32px; font-size: 11px; color: #bbb;">Not interested? <a href="mailto:jason@embedo.io?subject=Unsubscribe" style="color: #bbb;">Unsubscribe</a></p>`;
+
 /** Convert plain text to simple HTML for preview */
-function textToHtml(text: string): string {
+function textToHtml(text: string, showSignature = true): string {
   const paragraphs = text
     .split(/\n{2,}/)
     .map((p) => p.trim())
@@ -53,8 +58,8 @@ function textToHtml(text: string): string {
 
   return `<div style="font-family: -apple-system, system-ui, sans-serif; max-width: 580px; color: #222; line-height: 1.7; font-size: 14px; padding: 20px;">
   ${paragraphs}
-  <table style="margin-top: 28px; padding-top: 20px; border-collapse: collapse; width: 100%;" cellpadding="0" cellspacing="0"><tr><td style="padding-right: 12px; vertical-align: middle; width: 56px;"><img src="https://i.imgur.com/RDXkWkD.jpeg" alt="Jason" width="48" height="48" style="border-radius: 50%; display: block; object-fit: cover;" /></td><td style="vertical-align: middle;"><p style="margin: 0; font-size: 14px; font-weight: 700; color: #1a1a1a;">Jason</p><p style="margin: 2px 0 0; font-size: 13px; color: #666;">Founder · <a href="https://embedo.io" style="color: #4f46e5; text-decoration: none;">embedo.io</a></p></td></tr></table>
-  <p style="margin-top: 32px; font-size: 11px; color: #bbb;">Saw your restaurant in a local search. Not interested? <a href="mailto:jason@embedo.io?subject=Unsubscribe" style="color: #bbb;">Unsubscribe</a></p>
+  ${showSignature ? SIGNATURE_HTML : ''}
+  ${UNSUB_HTML}
 </div>`;
 }
 
@@ -93,7 +98,7 @@ function insertVar(textareaId: string, varKey: string, currentValue: string, set
   }
 }
 
-export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, sequenceSteps, prospectorUrl }: Props) {
+export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, sequenceSteps, prospectorUrl, apolloConfig }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -105,6 +110,7 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
   // Step 1 state — convert HTML to plain text if needed
   const [step1Subject, setStep1Subject] = useState(currentSubject);
   const [step1Body, setStep1Body] = useState(htmlToPlainText(currentBodyHtml));
+  const [showSignature, setShowSignature] = useState(apolloConfig?.appendSignature !== false);
 
   // Determine active follow-up steps from the campaign's sequenceSteps
   const followUps = (sequenceSteps ?? []).filter((s) => s.stepNumber > 1);
@@ -127,6 +133,7 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
       const patch: Record<string, unknown> = {
         emailSubject: step1Subject,
         emailBodyHtml: step1Body, // stored as plain text now, rendered at send time
+        apolloConfig: { appendSignature: showSignature }, // piggyback on existing JSON field for email settings
       };
 
       if (followUps.length > 0) {
@@ -256,9 +263,21 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
                   onChange={(e) => setCurrentBody(e.target.value)}
                   className={inputCls + ' resize-y leading-relaxed'}
                 />
-                <p className="text-[10px] text-slate-600 mt-1">
-                  Plain text — signature and unsubscribe are added automatically at send time.
-                </p>
+                <div className="flex items-center justify-between mt-2">
+                  <p className="text-[10px] text-slate-600">
+                    Plain text — unsubscribe link added automatically at send time.
+                  </p>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <span className="text-[10px] text-slate-500">Auto sign-off</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowSignature(!showSignature)}
+                      className={`relative w-8 h-4.5 rounded-full transition-colors ${showSignature ? 'bg-violet-600' : 'bg-white/10'}`}
+                    >
+                      <span className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white shadow transition-transform ${showSignature ? 'left-[18px]' : 'left-0.5'}`} />
+                    </button>
+                  </label>
+                </div>
               </div>
 
               {currentBodyValue && (
@@ -266,7 +285,7 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
                   <label className={labelCls}>Preview</label>
                   <div className="bg-white rounded-xl overflow-hidden border border-white/10">
                     <iframe
-                      srcDoc={textToHtml(applyPreviewVars(currentBodyValue))}
+                      srcDoc={textToHtml(applyPreviewVars(currentBodyValue), showSignature)}
                       className="w-full border-0"
                       style={{ height: '360px' }}
                       title="Email preview"
