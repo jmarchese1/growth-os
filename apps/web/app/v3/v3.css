@@ -224,6 +224,54 @@
   text-shadow: 0 0 40px rgba(124, 58, 237, 0.25), 0 0 80px rgba(124, 58, 237, 0.10);
 }
 
+/* ── Dot grid background ───────────────────────────────── */
+.v3-dot-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(167, 139, 250, 0.35) 1px, transparent 1px);
+  background-size: 48px 48px;
+  animation: v3-grid-pulse 4s ease-in-out infinite;
+}
+
+@keyframes v3-grid-pulse {
+  0%, 100% {
+    opacity: 0.4;
+    background-image: radial-gradient(circle, rgba(167, 139, 250, 0.30) 1px, transparent 1px);
+  }
+  50% {
+    opacity: 1;
+    background-image: radial-gradient(circle, rgba(124, 58, 237, 0.50) 1.5px, transparent 1.5px);
+  }
+}
+
+/* Mouse spotlight glow that follows cursor */
+.v3-mouse-spotlight {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle,
+    rgba(124, 58, 237, 0.20) 0%,
+    rgba(124, 58, 237, 0.08) 30%,
+    transparent 65%
+  );
+  transition: left 0.08s ease-out, top 0.08s ease-out;
+}
+
+/* Brighten dots inside the spotlight via mask trick */
+.v3-mouse-spotlight::before {
+  content: '';
+  position: absolute;
+  inset: -50px;
+  background-image: radial-gradient(circle, rgba(167, 139, 250, 0.7) 1.8px, transparent 1.8px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(circle at center, white 0%, transparent 55%);
+  -webkit-mask-image: radial-gradient(circle at center, white 0%, transparent 55%);
+}
+
 /* ── Custom scrollbar ───────────────────────────────────── */
 .v3-page ::-webkit-scrollbar { width: 6px; }
 .v3-page ::-webkit-scrollbar-track { background: var(--v3-bg); }
