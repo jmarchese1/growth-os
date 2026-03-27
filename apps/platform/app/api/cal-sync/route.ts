@@ -6,6 +6,7 @@ export async function POST() {
   try {
     const res = await fetch(`${API_URL}/appointments/sync-cal`, {
       method: 'POST',
+      body: JSON.stringify({}),
       headers: { 'Content-Type': 'application/json' },
       cache: 'no-store',
     });
