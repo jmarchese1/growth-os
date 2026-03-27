@@ -237,7 +237,7 @@ export default function V3Page() {
             </CalModal>
           </div>
 
-          <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} href="#pricing" className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg text-white v3-btn-glow" style={{ background: '#7C3AED' }}>
+          <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} href="https://app.embedo.io/login" className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg text-white shadow-lg shadow-sky-500/20" style={{ background: '#38bdf8' }}>
             Get Started <ArrowRight className="w-3.5 h-3.5" />
           </motion.a>
         </div>

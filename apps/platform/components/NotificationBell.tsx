@@ -97,9 +97,15 @@ export default function NotificationBell() {
     return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
-  // Fetch daily report
+  // Fetch daily report — only if not already loaded for today
   const fetchReport = useCallback(async () => {
     if (loadingReport) return;
+    // If we already have today's report, don't refetch
+    if (report?.generatedAt) {
+      const reportDate = new Date(report.generatedAt).toISOString().slice(0, 10);
+      const today = new Date().toISOString().slice(0, 10);
+      if (reportDate === today) return;
+    }
     setLoadingReport(true);
     try {
       const res = await fetch(`/api/daily-report`);
@@ -109,7 +115,7 @@ export default function NotificationBell() {
       }
     } catch { /* ignore */ }
     setLoadingReport(false);
-  }, [loadingReport]);
+  }, [loadingReport, report?.generatedAt]);
 
   // Position panel below bell button
   useEffect(() => {
