@@ -19,9 +19,9 @@ export default function InteractiveGrid({ className = '' }: { className?: string
   const RADIUS = 240; // glow radius in px
 
   // Idle (no hover) vs hover base values
-  const IDLE_ALPHA = 0.04;   // barely visible at rest
-  const HOVER_ALPHA = 0.12;  // subtly brighter when hovering
-  const ACTIVE_ALPHA = 0.85; // dots near cursor
+  const IDLE_ALPHA = 0.14;   // visible at rest
+  const HOVER_ALPHA = 0.25;  // brighter when hovering
+  const ACTIVE_ALPHA = 0.9;  // dots near cursor
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;

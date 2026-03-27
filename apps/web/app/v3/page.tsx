@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import { motion, useInView } from 'framer-motion';
+import { motion, useInView, AnimatePresence } from 'framer-motion';
 import {
   Phone, MessageSquare, Globe, Share2, QrCode,
   Mail, PhoneCall, Sparkles, ArrowRight, Shield,
@@ -93,6 +93,37 @@ const slideIn = {
 };
 
 const stagger = { visible: { transition: { staggerChildren: 0.08 } } };
+
+const ROTATING_WORDS = ['runs on AI.', 'never sleeps.', 'answers every call.', 'grows itself.', 'works for you.'];
+
+function RotatingText() {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % ROTATING_WORDS.length);
+    }, 2800);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <span className="relative inline-block">
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={ROTATING_WORDS[index]}
+          initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
+          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          exit={{ opacity: 0, y: -30, filter: 'blur(8px)' }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="inline-block text-transparent bg-clip-text v3-shimmer-text"
+          style={{ backgroundImage: 'linear-gradient(90deg, #C4B5FD, #7C3AED, #A78BFA, #C4B5FD)' }}
+        >
+          {ROTATING_WORDS[index]}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
+}
 
 function Counter({ value, suffix }: { value: number; suffix: string }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -223,9 +254,7 @@ export default function V3Page() {
 
           <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.25, ease: [0.22, 1, 0.36, 1] }} className="mt-8 text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-[family-name:var(--font-serif)] italic leading-[0.95] tracking-tight text-white">
             Your business,<br />
-            <span className="text-transparent bg-clip-text v3-shimmer-text" style={{ backgroundImage: 'linear-gradient(90deg, #C4B5FD, #7C3AED, #A78BFA, #C4B5FD)' }}>
-              now runs on AI.
-            </span>
+            <RotatingText />
           </motion.h1>
 
           <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.5 }} className="mt-7 text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
