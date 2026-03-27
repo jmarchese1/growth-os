@@ -244,10 +244,6 @@ export default function V3Page() {
       {/* ═══════════════════════ HERO ═══════════════════════ */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <InteractiveGrid />
-        <div className="v3-orb v3-orb-1" style={{ top: '-15%', right: '-5%' }} />
-        <div className="v3-orb v3-orb-2" style={{ bottom: '-10%', left: '-8%' }} />
-        <div className="v3-orb v3-orb-3" style={{ top: '20%', left: '50%' }} />
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 70% 50% at 50% 45%, rgba(124,58,237,0.14) 0%, transparent 65%)' }} />
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 pt-32 pb-24 text-center">
           <motion.div initial={{ opacity: 0, y: 20, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}>
