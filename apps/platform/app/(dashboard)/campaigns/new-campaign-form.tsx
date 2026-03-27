@@ -376,6 +376,8 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
     try {
       const payload: Record<string, unknown> = {
         ...form,
+        emailSubject: 'quick question about {{company}}',
+        emailBodyHtml: 'Hey {{firstName}}, wanted to reach out about automating your front-of-house operations. Would love to show you what we can do for {{company}}.',
         targetCity: `${selectedCity.city}, ${selectedCity.state}`,
         targetState: selectedCity.state,
         targetCountry: 'US',
