@@ -200,6 +200,19 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                 : <span className="ml-2 text-slate-500">Inactive</span>}
             </p>
           )}
+          {(() => {
+            const conf = campaign?.apolloConfig as { totalEntries?: number; prospectsFetched?: number; runsRemaining?: number } | null;
+            if (!conf?.totalEntries) return null;
+            return (
+              <div className="flex items-center gap-3 mt-1.5 text-[11px]">
+                <span className="text-slate-500">Apollo pool: <span className="text-slate-300 font-semibold">{conf.totalEntries.toLocaleString()}</span> total businesses</span>
+                <span className="text-slate-700">·</span>
+                <span className="text-slate-500">Fetched: <span className="text-slate-300 font-semibold">{conf.prospectsFetched ?? 0}</span></span>
+                <span className="text-slate-700">·</span>
+                <span className="text-slate-500">Runs remaining: <span className={`font-semibold ${(conf.runsRemaining ?? 0) > 3 ? 'text-emerald-400' : (conf.runsRemaining ?? 0) > 0 ? 'text-amber-400' : 'text-red-400'}`}>{conf.runsRemaining ?? 0}</span></span>
+              </div>
+            );
+          })()}
         </div>
         {campaign && (
           <div className="flex items-center gap-2">

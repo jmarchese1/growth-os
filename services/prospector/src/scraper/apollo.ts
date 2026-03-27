@@ -181,18 +181,23 @@ export interface ApolloDiscoveryOptions {
  * 2. For each org, search for people with owner/manager titles
  * 3. Return prospects with contact info
  */
+export interface ApolloDiscoveryResult {
+  prospects: ApolloProspect[];
+  totalEntries: number; // Total businesses matching this search in Apollo's database
+}
+
 export async function discoverViaApollo(
   apiKey: string,
   options: ApolloDiscoveryOptions,
-): Promise<ApolloProspect[]> {
+): Promise<ApolloDiscoveryResult> {
   const titles = options.personTitles ?? [
     'owner', 'manager', 'general manager', 'managing partner',
     'founder', 'president', 'director', 'operator', 'proprietor',
   ];
 
   // Step 1: Search for organizations
-  const orgs = await searchApolloOrganizations(apiKey, options);
-  log.info({ count: orgs.length, city: options.city }, 'Apollo org search complete');
+  const { orgs, totalEntries } = await searchApolloOrganizations(apiKey, options);
+  log.info({ count: orgs.length, totalEntries, city: options.city }, 'Apollo org search complete');
 
   // Step 2: For each org, find people with target titles
   const prospects: ApolloProspect[] = [];
@@ -256,7 +261,7 @@ export async function discoverViaApollo(
     'Apollo discovery complete',
   );
 
-  return prospects;
+  return { prospects, totalEntries };
 }
 
 interface ApolloOrg {
@@ -279,10 +284,11 @@ interface ApolloOrg {
 async function searchApolloOrganizations(
   apiKey: string,
   options: ApolloDiscoveryOptions,
-): Promise<ApolloOrg[]> {
+): Promise<{ orgs: ApolloOrg[]; totalEntries: number }> {
   const allOrgs: ApolloOrg[] = [];
   let page = options.startPage ?? 1;
   const perPage = 25;
+  let totalEntries = 0;
   if (page > 1) log.info({ startPage: page }, 'Skipping to page (offset-based dedup)');
 
   while (allOrgs.length < options.maxResults) {
@@ -343,8 +349,10 @@ async function searchApolloOrganizations(
         pagination?: { total_pages?: number; total_entries?: number };
       };
 
+      if (data.pagination?.total_entries) totalEntries = data.pagination.total_entries;
+
       log.info(
-        { page, returned: data.organizations?.length ?? 0, totalEntries: data.pagination?.total_entries },
+        { page, returned: data.organizations?.length ?? 0, totalEntries },
         'Apollo org search response',
       );
 
@@ -383,7 +391,7 @@ async function searchApolloOrganizations(
     }
   }
 
-  return allOrgs;
+  return { orgs: allOrgs, totalEntries };
 }
 
 async function findPersonAtOrg(

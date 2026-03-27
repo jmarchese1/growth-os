@@ -399,32 +399,48 @@ Output format:
       // Apollo discovery runs in background — return 202 immediately
       setImmediate(async () => {
         try {
-          // Count existing prospects for this city/industry combo to calculate page offset
-          // This prevents re-fetching the same businesses from Apollo (saves credits)
+          // Build a config fingerprint to track offset per unique search config
           const cityPrefix = campaign.targetCity.split(',')[0]?.trim() ?? campaign.targetCity;
-          const existingForCity = await db.prospectBusiness.count({
-            where: {
-              campaign: {
-                targetCity: { contains: cityPrefix, mode: 'insensitive' },
-                discoverySource: 'apollo',
-              },
-            },
+          const industries = apolloConfig.industries ?? [];
+          const employeeRanges = apolloConfig.employeeRanges ?? ['1-10'];
+          const configFingerprint = JSON.stringify({ city: cityPrefix.toLowerCase(), industries: industries.sort(), employeeRanges: employeeRanges.sort() });
+
+          // Count existing prospects from campaigns with the SAME search config
+          const allCampaigns = await db.outboundCampaign.findMany({
+            where: { discoverySource: 'apollo' },
+            select: { id: true, targetCity: true, apolloConfig: true },
           });
+          const matchingCampaignIds = allCampaigns
+            .filter((c) => {
+              const conf = c.apolloConfig as { industries?: string[]; employeeRanges?: string[] } | null;
+              const fp = JSON.stringify({
+                city: (c.targetCity.split(',')[0]?.trim() ?? c.targetCity).toLowerCase(),
+                industries: (conf?.industries ?? []).sort(),
+                employeeRanges: (conf?.employeeRanges ?? ['1-10']).sort(),
+              });
+              return fp === configFingerprint;
+            })
+            .map((c) => c.id);
+
+          const existingForConfig = matchingCampaignIds.length > 0
+            ? await db.prospectBusiness.count({ where: { campaignId: { in: matchingCampaignIds } } })
+            : 0;
+
           const perPage = 25;
-          const startPage = Math.floor(existingForCity / perPage) + 1;
+          const startPage = Math.floor(existingForConfig / perPage) + 1;
 
           const apolloOpts: import('./scraper/apollo.js').ApolloDiscoveryOptions = {
             city: cityPrefix,
-            industries: apolloConfig.industries ?? [],
+            industries,
             sicCodes: apolloConfig.sicCodes ?? [],
-            employeeRanges: apolloConfig.employeeRanges ?? ['1-10'],
+            employeeRanges,
             maxResults,
             startPage,
           };
           if (campaign.targetState) apolloOpts.state = campaign.targetState;
           if (env.BRAVE_SEARCH_API_KEY) apolloOpts.braveApiKey = env.BRAVE_SEARCH_API_KEY;
-          log.info({ campaignId: id, existingForCity, startPage }, 'Apollo offset calculated');
-          const prospects = await discoverViaApollo(env.APOLLO_API_KEY!, apolloOpts);
+          log.info({ campaignId: id, existingForConfig, startPage, configFingerprint }, 'Apollo offset calculated');
+          const { prospects, totalEntries } = await discoverViaApollo(env.APOLLO_API_KEY!, apolloOpts);
 
           let created = 0;
           let skippedDedup = 0;
@@ -494,7 +510,22 @@ Output format:
             }
           }
 
-          log.info({ campaignId: id, discovered: prospects.length, created, skippedDedup }, 'Apollo campaign complete');
+          // Store totalEntries and config fingerprint on the campaign for the UI
+          const runsRemaining = totalEntries > 0 ? Math.max(0, Math.ceil((totalEntries - existingForConfig - created) / maxResults)) : null;
+          await db.outboundCampaign.update({
+            where: { id },
+            data: {
+              apolloConfig: {
+                ...(apolloConfig as object),
+                totalEntries,
+                prospectsFetched: existingForConfig + created,
+                runsRemaining,
+                configFingerprint,
+              },
+            },
+          });
+
+          log.info({ campaignId: id, discovered: prospects.length, created, skippedDedup, totalEntries, runsRemaining }, 'Apollo campaign complete');
         } catch (err) {
           log.error({ err, campaignId: id }, 'Apollo campaign failed');
         }
