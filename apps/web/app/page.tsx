@@ -95,7 +95,7 @@ const slideIn = {
 
 const stagger = { visible: { transition: { staggerChildren: 0.05 } } };
 
-const ROTATING_WORDS = ['never sleeps.', 'runs on AI.', 'learns every day.', 'handles the chaos.', 'closes the deals.', 'does the busywork.'];
+const ROTATING_WORDS = ['runs on autopilot.', 'never sleeps.', 'works while you rest.', 'runs itself now.', 'operates 24/7.', 'is fully automated.'];
 
 function RotatingText() {
   const [index, setIndex] = useState(0);
@@ -247,7 +247,7 @@ export default function V3Page() {
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <InteractiveGrid />
         {/* Warm accent blob */}
-        <div className="absolute w-[40%] aspect-square bottom-[10%] left-[5%] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(251, 146, 60, 0.18) 0%, transparent 55%)', filter: 'blur(70px)', animation: 'v3-morph-2 14s ease-in-out infinite' }} />
+        <div className="absolute w-[35%] aspect-square top-[18%] right-[8%] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(56, 189, 248, 0.13) 0%, transparent 55%)', filter: 'blur(70px)', animation: 'v3-morph-3 16s ease-in-out infinite' }} />
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 pt-32 pb-24 text-center">
           <motion.div initial={{ opacity: 0, y: 20, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}>
@@ -383,7 +383,7 @@ export default function V3Page() {
       <Section className="relative py-32 lg:py-40 px-6 overflow-hidden" id="offer">
         <div className="absolute inset-0" style={{ background: '#161B3A' }} />
         <div className="v3-mesh-blob v3-mesh-section-3" />
-        <div className="absolute w-[35%] aspect-square top-[5%] right-[-5%] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(251,146,60,0.10) 0%, transparent 55%)', filter: 'blur(60px)' }} />
+        <div className="absolute w-[30%] aspect-square bottom-[10%] right-[5%] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.08) 0%, transparent 55%)', filter: 'blur(65px)', animation: 'v3-morph-1 20s ease-in-out infinite' }} />
 
         <div className="relative z-10 max-w-5xl mx-auto">
           <motion.p variants={fadeUp} custom={0} className="text-xs font-[family-name:var(--font-mono)] uppercase tracking-[0.25em] text-purple-400 mb-5 text-center">The Offer</motion.p>

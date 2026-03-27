@@ -109,6 +109,18 @@
   animation: fade-up 0.35s ease forwards;
 }
 
+/* ── Cubey mascot animations ───────────────────────────────────────────────── */
+@keyframes mascot-bounce { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
+@keyframes mascot-wiggle { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-4deg) translateY(-4px); } 75% { transform: rotate(4deg) translateY(-4px); } }
+@keyframes mascot-shadow { 0%, 100% { transform: translateX(-50%) scaleX(1); opacity: 0.3; } 50% { transform: translateX(-50%) scaleX(0.7); opacity: 0.15; } }
+@keyframes mascot-wave { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-20deg); } 75% { transform: rotate(20deg); } }
+@keyframes mascot-sparkle { 0%, 100% { opacity: 0; transform: scale(0.5); } 50% { opacity: 1; transform: scale(1.2); } }
+.animate-mascot-bounce  { animation: mascot-bounce 2s ease-in-out infinite; }
+.animate-mascot-wiggle  { animation: mascot-wiggle 0.6s ease-in-out infinite; }
+.animate-mascot-shadow  { animation: mascot-shadow 2s ease-in-out infinite; }
+.animate-mascot-wave    { animation: mascot-wave 0.8s ease-in-out infinite; }
+.animate-mascot-sparkle { animation: mascot-sparkle 1.2s ease-in-out infinite; }
+
 /* ── Scrollbar ─────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }

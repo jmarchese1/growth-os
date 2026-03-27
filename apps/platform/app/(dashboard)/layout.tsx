@@ -6,7 +6,10 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import EmbedoLogo from '../../components/EmbedoLogo';
 import NotificationBell from '../../components/NotificationBell';
 import { useSession } from '../../components/auth/session-provider';
+import { CubeyChat } from '../../components/ui/cubey-chat';
 import { createSupabaseBrowserClient } from '../../lib/supabase/client';
+
+const PLATFORM_API = process.env['NEXT_PUBLIC_API_URL'] ?? process.env['API_BASE_URL'] ?? 'https://embedoapi-production.up.railway.app';
 
 const NAV = [
   {
@@ -281,6 +284,41 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setSidebarWidth((w) => (w <= COLLAPSED_WIDTH + 10 ? DEFAULT_WIDTH : COLLAPSED_WIDTH));
   }, []);
 
+  // Fetch live platform context for Cubey
+  const [platformContext, setPlatformContext] = useState('');
+  useEffect(() => {
+    async function fetchContext() {
+      try {
+        const [bizRes, campaignRes] = await Promise.all([
+          fetch(`${PLATFORM_API}/businesses?limit=100`).catch(() => null),
+          fetch(`${PLATFORM_API}/campaigns?limit=20`).catch(() => null),
+        ]);
+        const lines: string[] = [];
+        if (bizRes?.ok) {
+          const bizData = await bizRes.json();
+          const businesses = bizData.businesses ?? bizData ?? [];
+          lines.push(`Total businesses onboarded: ${businesses.length}`);
+          if (businesses.length > 0) {
+            const names = businesses.slice(0, 10).map((b: { name: string; status: string }) => `${b.name} (${b.status})`);
+            lines.push(`Recent businesses: ${names.join(', ')}`);
+          }
+        }
+        if (campaignRes?.ok) {
+          const campData = await campaignRes.json();
+          const campaigns = campData.campaigns ?? campData ?? [];
+          lines.push(`Active outbound campaigns: ${campaigns.length}`);
+          for (const c of campaigns.slice(0, 5)) {
+            lines.push(`Campaign "${c.name ?? c.id}": ${c.status ?? 'unknown'}, ${c.prospectCount ?? 0} prospects, targeting ${c.targetCity ?? 'unknown city'}`);
+          }
+        }
+        if (lines.length > 0) setPlatformContext(lines.join('\n'));
+      } catch { /* non-critical */ }
+    }
+    fetchContext();
+    const interval = setInterval(fetchContext, 120_000);
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
       if (!isDragging.current) return;
@@ -334,6 +372,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </main>
       </div>
+
+      {/* Cubey — internal platform assistant */}
+      <CubeyChat
+        mode="support"
+        businessId="embedo-platform"
+        headerTitle="Cubey Assistant"
+        welcomeMessage="Hey Jason! I'm Cubey, your platform assistant. Ask me about campaigns, prospects, leads, analytics — anything about what's happening in the CRM."
+        systemContext={platformContext}
+      />
     </div>
   );
 }
