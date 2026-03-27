@@ -3,31 +3,36 @@
 import { useEffect, useRef, useCallback } from 'react';
 
 /**
- * Interactive dot-grid canvas that reacts to mouse movement.
- * Dots near the cursor glow purple; a radial light follows the pointer.
+ * Interactive dot-grid canvas with idle pulse wave + mouse hover interactions.
  */
 export default function InteractiveGrid({ className = '' }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouse = useRef({ x: -1000, y: -1000 });
   const hovering = useRef(false);
-  const hoverIntensity = useRef(0); // 0 = idle, 1 = fully hovered
+  const hoverIntensity = useRef(0);
   const raf = useRef(0);
+  const startTime = useRef(0);
 
   const SPACING = 48;
   const DOT_BASE = 0.6;
   const DOT_MAX = 3.5;
-  const RADIUS = 240; // glow radius in px
+  const RADIUS = 240;
 
-  // Idle (no hover) vs hover base values
-  const IDLE_ALPHA = 0.14;   // visible at rest
-  const HOVER_ALPHA = 0.25;  // brighter when hovering
-  const ACTIVE_ALPHA = 0.9;  // dots near cursor
+  // Idle vs hover base values
+  const IDLE_ALPHA = 0.10;
+  const PULSE_STRENGTH = 0.08; // how much the pulse adds
+  const HOVER_ALPHA = 0.28;
+  const ACTIVE_ALPHA = 0.9;
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    const now = performance.now();
+    if (!startTime.current) startTime.current = now;
+    const elapsed = (now - startTime.current) / 1000; // seconds
 
     const dpr = window.devicePixelRatio || 1;
     const w = canvas.clientWidth;
@@ -54,28 +59,44 @@ export default function InteractiveGrid({ className = '' }: { className?: string
     const offsetX = (w % SPACING) / 2;
     const offsetY = (h % SPACING) / 2;
 
-    // Base alpha increases as hover intensity rises
-    const baseAlpha = IDLE_ALPHA + (HOVER_ALPHA - IDLE_ALPHA) * hi;
-    const baseRadius = DOT_BASE + 0.15 * hi;
+    // Center of grid for pulse origin
+    const cx = w / 2;
+    const cy = h / 2;
+    const maxDist = Math.sqrt(cx * cx + cy * cy);
 
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         const x = offsetX + col * SPACING;
         const y = offsetY + row * SPACING;
 
+        // ── Idle pulse wave ──
+        // Radial wave expanding from center
+        const distFromCenter = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+        const normalizedDist = distFromCenter / maxDist;
+        // Two overlapping waves at different speeds for organic feel
+        const wave1 = Math.sin(normalizedDist * 8 - elapsed * 1.2) * 0.5 + 0.5;
+        const wave2 = Math.sin(normalizedDist * 5 + elapsed * 0.7 + 1.5) * 0.5 + 0.5;
+        const pulse = (wave1 * 0.6 + wave2 * 0.4); // 0..1
+        const idlePulse = (1 - hi) * pulse; // fade pulse out when hovering
+
+        // ── Mouse proximity ──
         const dx = x - mx;
         const dy = y - my;
         const dist = Math.sqrt(dx * dx + dy * dy);
         const t = Math.max(0, 1 - dist / RADIUS);
-
-        // Ease: cubic
         const ease = t * t * t;
+
+        // ── Combine ──
+        const baseAlpha = IDLE_ALPHA + PULSE_STRENGTH * idlePulse + (HOVER_ALPHA - IDLE_ALPHA) * hi;
+        const baseRadius = DOT_BASE + 0.2 * idlePulse * (1 - hi) + 0.15 * hi;
 
         const radius = baseRadius + (DOT_MAX - baseRadius) * ease;
         const alpha = baseAlpha + (ACTIVE_ALPHA - baseAlpha) * ease;
 
-        // Color: blend from dim white/slate to purple as proximity increases
-        const colorBlend = ease * hi; // only shift to purple when hovering + close
+        // Color: subtle purple tint from pulse, stronger purple near cursor
+        const pulseColor = idlePulse * 0.3;
+        const cursorColor = ease * hi;
+        const colorBlend = Math.min(1, pulseColor + cursorColor);
         const r = Math.round(255 - (255 - 124) * colorBlend);
         const g = Math.round(255 - (255 - 58) * colorBlend);
         const b = Math.round(255 - (255 - 237) * colorBlend);
