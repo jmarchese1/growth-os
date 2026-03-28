@@ -1,13 +1,13 @@
 export const DEFAULT_EMAIL_SUBJECT = `quick question about {{company}}`;
 
-// Plain text body — no HTML. Signature + unsubscribe appended at send time.
+// Plain text body. Signature + unsubscribe appended at send time.
 export const DEFAULT_EMAIL_BODY = `Hey {{firstName}},
 
-I'm Jason — data scientist turned builder. I've been working on a side project that helps restaurants handle calls and online inquiries when the team is busy. Figured {{shortName}} might find it useful.
+My name is Jason. I am a data scientist and have been building a tool on the side that helps restaurants handle phone calls and website inquiries automatically when the team is too busy to pick up. Thought it might be useful for {{shortName}}.
 
-The gist: when a customer calls and no one can pick up, the system answers, takes orders, books reservations, answers menu questions — sounds like a real person, not a robot. There's also a website chatbot that does the same thing for online visitors.
+Basically when a customer calls and no one can answer, the system picks up, takes orders, books reservations, and answers questions about the menu. It sounds like a real person, not a robot. I also built a chatbot that does the same thing for people visiting your website.
 
-Happy to set one up for {{shortName}} for free if you want to see how it works. No pressure at all.
+Would love to set one up for {{shortName}} for free if you are open to seeing how it works. No strings attached.
 
 Best,
 Jason`;

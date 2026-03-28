@@ -377,7 +377,7 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
       const payload: Record<string, unknown> = {
         ...form,
         emailSubject: 'quick question about {{shortName}}',
-        emailBodyHtml: `Hey {{firstName}},\n\nI'm Jason — data scientist turned builder. I've been working on a side project that helps restaurants handle calls and online inquiries when the team is busy. Figured {{shortName}} might find it useful.\n\nThe gist: when a customer calls and no one can pick up, the system answers, takes orders, books reservations, answers menu questions — sounds like a real person, not a robot. There's also a website chatbot that does the same thing for online visitors.\n\nHappy to set one up for {{shortName}} for free if you want to see how it works. No pressure at all.\n\nBest,\nJason`,
+        emailBodyHtml: `Hey {{firstName}},\n\nMy name is Jason. I am a data scientist and have been building a tool on the side that helps restaurants handle phone calls and website inquiries automatically when the team is too busy to pick up. Thought it might be useful for {{shortName}}.\n\nBasically when a customer calls and no one can answer, the system picks up, takes orders, books reservations, and answers questions about the menu. It sounds like a real person, not a robot. I also built a chatbot that does the same thing for people visiting your website.\n\nWould love to set one up for {{shortName}} for free if you are open to seeing how it works. No strings attached.\n\nBest,\nJason`,
         targetCity: `${selectedCity.city}, ${selectedCity.state}`,
         targetState: selectedCity.state,
         targetCountry: 'US',
