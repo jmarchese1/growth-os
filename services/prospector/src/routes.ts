@@ -392,9 +392,8 @@ Output format:
       }
 
       const apolloConfig = (campaign.apolloConfig as { industries?: string[]; sicCodes?: string[]; employeeRanges?: string[] } | null) ?? {};
-      // Over-fetch from Apollo to compensate for dedup losses (fetch 2x target)
       const targetProspects = campaign.maxProspects ?? 50;
-      const maxResults = targetProspects * 2;
+      const maxResults = targetProspects;
 
       log.info({ campaignId: id, city: campaign.targetCity, apolloConfig, source: 'apollo' }, 'Running Apollo campaign');
 
