@@ -7,7 +7,10 @@ Most restaurants miss 30 to 40% of inbound calls during service. Reservations, c
 
 I built a phone system that answers calls for restaurants when the team is busy, tailored to {{company}}'s menu and FAQs. I also have a chatbot you can drop straight into your website that does the same thing for online visitors.
 
-Happy to set one up for {{company}} for free — want me to send over a quick demo?`;
+Happy to set one up for {{company}} for free — want me to send over a quick demo?
+
+Best,
+Jason`;
 
 // Legacy HTML default kept for old campaigns — new ones use DEFAULT_EMAIL_BODY
 export const DEFAULT_EMAIL_BODY_HTML = DEFAULT_EMAIL_BODY;
