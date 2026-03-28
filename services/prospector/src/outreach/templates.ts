@@ -3,11 +3,11 @@ export const DEFAULT_EMAIL_SUBJECT = `quick question about {{company}}`;
 // Plain text body — no HTML. Signature + unsubscribe appended at send time.
 export const DEFAULT_EMAIL_BODY = `Hey {{firstName}},
 
-Most restaurants miss 30 to 40% of inbound calls during service. Reservations, catering inquiries, to-go orders, all going to voicemail while your team is heads down on the floor.
+I'm Jason — data scientist turned builder. I've been working on a side project that helps restaurants handle calls and online inquiries when the team is busy. Figured {{shortName}} might find it useful.
 
-I built a phone system that answers calls for restaurants when the team is busy, tailored to {{company}}'s menu and FAQs. I also have a chatbot you can drop straight into your website that does the same thing for online visitors.
+The gist: when a customer calls and no one can pick up, the system answers, takes orders, books reservations, answers menu questions — sounds like a real person, not a robot. There's also a website chatbot that does the same thing for online visitors.
 
-Happy to set one up for {{company}} for free — want me to send over a quick demo?
+Happy to set one up for {{shortName}} for free if you want to see how it works. No pressure at all.
 
 Best,
 Jason`;
@@ -21,13 +21,56 @@ function buildUnsubscribe(replyEmail: string): string {
   return `<p style="margin-top: 32px; font-size: 11px; color: #bbb;">Not interested? <a href="mailto:${replyEmail}?subject=Unsubscribe" style="color: #bbb;">Unsubscribe</a></p>`;
 }
 
-/** Convert a business name to Title Case */
+/** Convert a business name to Title Case (handles ALL CAPS gracefully) */
 function toTitleCase(str: string): string {
   return str
     .toLowerCase()
     .split(' ')
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ');
+}
+
+/**
+ * Extract the short/casual name from a business name.
+ * "Mario's Pizzeria" → "Mario's"
+ * "Golden Dragon Kitchen" → "Golden Dragon"
+ * "Shake Shack" → "Shake Shack" (no suffix to strip)
+ */
+const BUSINESS_SUFFIXES = [
+  'restaurant', 'restaurants', 'pizzeria', 'pizzerias', 'pizza',
+  'kitchen', 'grill', 'grille', 'cafe', 'café', 'bistro', 'bar',
+  'tavern', 'pub', 'diner', 'eatery', 'bakery', 'steakhouse',
+  'trattoria', 'osteria', 'brasserie', 'cantina', 'taqueria',
+  'sushi', 'bbq', 'barbecue', 'smokehouse', 'seafood', 'brewing',
+  'brewery', 'taproom', 'lounge', 'catering', 'food', 'foods',
+  'dining', 'hospitality', 'group', 'co', 'co.', 'inc', 'llc',
+  'ltd', 'corporation', 'corp', 'company',
+];
+
+function toShortName(name: string): string {
+  const titleCased = toTitleCase(name);
+  const words = titleCased.split(/\s+/);
+
+  // Don't strip if only 1-2 words (e.g., "Shake Shack" stays)
+  if (words.length <= 2) return titleCased;
+
+  // Strip trailing suffix words
+  while (words.length > 1) {
+    const last = words[words.length - 1]!.toLowerCase().replace(/[^a-z]/g, '');
+    if (BUSINESS_SUFFIXES.includes(last)) {
+      words.pop();
+    } else {
+      break;
+    }
+  }
+
+  // Strip trailing "& " artifacts
+  const result = words.join(' ').replace(/\s*[&+]\s*$/, '').trim();
+
+  // If we stripped too much (1 word left that's very short), return original
+  if (result.length < 3) return titleCased;
+
+  return result;
 }
 
 /**
@@ -41,12 +84,14 @@ export function buildTemplateVars(prospect: {
   address?: unknown;
 }, extras: { city?: string; calLink?: string; replyEmail?: string }): Record<string, string> {
   const company = toTitleCase(prospect.name);
+  const shortName = toShortName(prospect.name);
   const city = (prospect.address as Record<string, string> | null)?.['city'] ?? extras.city ?? '';
   return {
     firstName: prospect.contactFirstName ?? 'there',
     lastName: prospect.contactLastName ?? '',
     company,
-    businessName: company, // backward compat
+    shortName,              // casual name: "Mario's" instead of "Mario's Pizzeria"
+    businessName: company,  // backward compat
     city,
     calLink: extras.calLink ?? '',
     replyEmail: extras.replyEmail ?? '',

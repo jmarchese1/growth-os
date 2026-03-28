@@ -36,10 +36,22 @@ function formatCountdown(ms: number): string {
   return `${m}m`;
 }
 
+const BIZ_SUFFIXES = ['restaurant', 'restaurants', 'pizzeria', 'pizza', 'kitchen', 'grill', 'grille', 'cafe', 'café', 'bistro', 'bar', 'tavern', 'pub', 'diner', 'eatery', 'bakery', 'steakhouse', 'trattoria', 'catering', 'hospitality', 'group', 'co', 'inc', 'llc', 'ltd', 'corp'];
+
+function toShortName(name: string): string {
+  const words = name.split(/\s+/);
+  if (words.length <= 2) return name;
+  while (words.length > 1 && BIZ_SUFFIXES.includes(words[words.length - 1]!.toLowerCase().replace(/[^a-z]/g, ''))) words.pop();
+  const result = words.join(' ').replace(/\s*[&+]\s*$/, '').trim();
+  return result.length < 3 ? name : result;
+}
+
 function fillTemplate(html: string, name: string, city: string, firstName?: string): string {
+  const shortName = toShortName(name);
   return html
     .replace(/\{\{businessName\}\}/g, name)
     .replace(/\{\{company\}\}/g, name)
+    .replace(/\{\{shortName\}\}/g, shortName)
     .replace(/\{\{firstName\}\}/g, firstName || 'there')
     .replace(/\{\{lastName\}\}/g, '')
     .replace(/\{\{city\}\}/g, city)
