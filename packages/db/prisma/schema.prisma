@@ -785,8 +785,10 @@ model OutreachMessage {
   replyCategory   String?
   externalId      String?
   trackingPixelId String?        @unique
-  sendingDomainId String?
-  sendingDomain   SendingDomain? @relation(fields: [sendingDomainId], references: [id])
+  sendingDomainId  String?
+  sendingDomain    SendingDomain? @relation(fields: [sendingDomainId], references: [id])
+  emailTemplateId  String?
+  emailTemplate    EmailTemplate? @relation(fields: [emailTemplateId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -806,6 +808,28 @@ model OutreachSuppression {
   updatedAt DateTime @updatedAt
 
   @@index([email])
+}
+
+// ─── Email Templates (reusable copy with performance tracking) ────────────────
+
+model EmailTemplate {
+  id          String    @id @default(cuid())
+  name        String                    // "Genuine Intro v1", "Free Offer v2"
+  subject     String                    // e.g. "quick question about {{shortName}}"
+  body        String                    // plain text with {{variables}}
+  category    String    @default("cold") // "cold", "followup", "breakup"
+  active      Boolean   @default(true)
+  // Performance tracking (updated by webhook events)
+  timesSent   Int       @default(0)
+  timesOpened Int       @default(0)
+  timesReplied Int      @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  messages    OutreachMessage[]
+
+  @@index([active])
+  @@index([category])
 }
 
 // ─── Sending Domains (inbox rotation + warm-up) ──────────────────────────────

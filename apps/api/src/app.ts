@@ -23,6 +23,7 @@ import { oauthRoutes } from './routes/oauth.js';
 import { meRoutes } from './routes/me.js';
 import { billingRoutes } from './routes/billing.js';
 import { sendingDomainRoutes } from './routes/sending-domains.js';
+import { emailTemplateRoutes } from './routes/email-templates.js';
 import { stripeWebhookRoutes } from './routes/webhooks/stripe.js';
 import { surveyRoutes } from './routes/surveys.js';
 import { campaignRoutes } from './routes/campaigns.js';
@@ -155,6 +156,7 @@ export async function buildApp() {
   await app.register(competitorRoutes);
   await app.register(appointmentRoutes);
   await app.register(sendingDomainRoutes);
+  await app.register(emailTemplateRoutes);
 
   log.info('API Gateway configured');
   return app;
