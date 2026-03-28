@@ -510,8 +510,10 @@ Output format:
             }
           }
 
-          // Store totalEntries and config fingerprint on the campaign for the UI
-          const totalFetched = existingForConfig + created;
+          // Recount total fetched across ALL matching campaigns (not just this one)
+          const totalFetched = matchingCampaignIds.length > 0
+            ? await db.prospectBusiness.count({ where: { campaignId: { in: [...matchingCampaignIds, id] } } })
+            : created;
           const remaining = Math.max(0, totalEntries - totalFetched);
           const runsRemaining = remaining > 0 ? Math.ceil(remaining / maxResults) : 0;
           await db.outboundCampaign.update({
