@@ -23,19 +23,17 @@ function buildUnsubscribe(replyEmail: string): string {
 
 /** Convert a business name to Title Case (handles ALL CAPS gracefully) */
 function toTitleCase(str: string): string {
-  // If the entire string is uppercase, convert to title case
-  // But preserve short words that are likely acronyms (2-3 chars all caps)
-  const isAllCaps = str === str.toUpperCase() && str.length > 3;
   return str
     .split(' ')
     .map((w) => {
-      // Preserve short all-caps words (likely acronyms: BLT, NYC, BBQ)
-      if (w.length <= 3 && w === w.toUpperCase() && /^[A-Z]+$/.test(w)) return w;
-      // If entire name was ALL CAPS, convert each word to title case
-      if (isAllCaps || w === w.toUpperCase() && w.length > 3) {
+      // Preserve known short acronyms (2-3 chars, all letters)
+      if (w.length <= 3 && /^[A-Z]+$/.test(w)) return w;
+      // If word is all caps and longer than 3 chars, title case it
+      // "OLIVIA" → "Olivia", "MARKET" → "Market"
+      if (w === w.toUpperCase() && w.length > 3) {
         return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
       }
-      // Otherwise keep original casing
+      // Mixed case words stay as-is (already properly cased)
       return w;
     })
     .join(' ');
@@ -58,27 +56,52 @@ const BUSINESS_SUFFIXES = [
   'ltd', 'corporation', 'corp', 'company',
 ];
 
+// City names that appear as location qualifiers in business names
+const CITY_SUFFIXES = [
+  'tampa', 'miami', 'orlando', 'jacksonville', 'naples',
+  'nyc', 'brooklyn', 'manhattan', 'queens', 'bronx',
+  'chicago', 'houston', 'dallas', 'austin', 'denver',
+  'seattle', 'portland', 'phoenix', 'atlanta', 'boston',
+  'philadelphia', 'detroit', 'minneapolis', 'nashville',
+  'las vegas', 'vegas', 'san francisco', 'sf', 'la',
+  'los angeles', 'san diego', 'scottsdale', 'savannah',
+  'charleston', 'new orleans', 'nola', 'dc', 'usa',
+];
+
 function toShortName(name: string): string {
   const titleCased = toTitleCase(name);
   const words = titleCased.split(/\s+/);
 
-  // Don't strip if only 1-2 words (e.g., "Shake Shack" stays)
-  if (words.length <= 2) return titleCased;
+  // Don't strip if only 1 word
+  if (words.length <= 1) return titleCased;
 
-  // Strip trailing suffix words
-  while (words.length > 1) {
-    const last = words[words.length - 1]!.toLowerCase().replace(/[^a-z]/g, '');
-    if (BUSINESS_SUFFIXES.includes(last)) {
-      words.pop();
-    } else {
+  // Strip trailing city names first (check multi-word cities like "Las Vegas")
+  const lowerJoined = words.map((w) => w.toLowerCase()).join(' ');
+  for (const city of CITY_SUFFIXES) {
+    if (lowerJoined.endsWith(` ${city}`) && lowerJoined.length > city.length + 2) {
+      const cityWordCount = city.split(' ').length;
+      words.splice(words.length - cityWordCount, cityWordCount);
       break;
+    }
+  }
+
+  // Don't strip business suffixes if only 1-2 words remain
+  if (words.length > 2) {
+    // Strip trailing business suffix words
+    while (words.length > 1) {
+      const last = words[words.length - 1]!.toLowerCase().replace(/[^a-z]/g, '');
+      if (BUSINESS_SUFFIXES.includes(last)) {
+        words.pop();
+      } else {
+        break;
+      }
     }
   }
 
   // Strip trailing "& " artifacts
   const result = words.join(' ').replace(/\s*[&+]\s*$/, '').trim();
 
-  // If we stripped too much (1 word left that's very short), return original
+  // If we stripped too much, return original
   if (result.length < 3) return titleCased;
 
   return result;
