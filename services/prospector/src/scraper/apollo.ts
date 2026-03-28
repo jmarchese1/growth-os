@@ -145,6 +145,7 @@ export async function findEmailViaApollo(
 // ── Apollo Organization + People Discovery ──────────────────────────────────
 
 export interface ApolloProspect {
+  apolloOrgId: string;
   organizationName: string;
   organizationDomain: string | null;
   organizationPhone: string | null;
@@ -170,6 +171,7 @@ export interface ApolloDiscoveryOptions {
   employeeRanges: string[];     // e.g. ['1-10', '11-50']
   maxResults: number;
   startPage?: number;           // Skip to this page (1-based). For offset-based dedup to avoid burning credits.
+  excludeOrgIds?: string[] | undefined; // Apollo org IDs to exclude from results (prevents credit waste on people search)
   personTitles?: string[];
   braveApiKey?: string;         // Brave Search API key for email fallback
 }
@@ -234,6 +236,7 @@ export async function discoverViaApollo(
     }
 
     prospects.push({
+      apolloOrgId: org.id,
       organizationName: org.name,
       organizationDomain: org.domain ?? null,
       organizationPhone: org.phone ?? null,
@@ -310,8 +313,11 @@ async function searchApolloOrganizations(
       if (options.sicCodes && options.sicCodes.length > 0) {
         body['organization_sic_codes'] = options.sicCodes;
       }
+      if (options.excludeOrgIds && options.excludeOrgIds.length > 0) {
+        body['organization_not_ids'] = options.excludeOrgIds;
+      }
 
-      log.info({ body, page }, 'Apollo org search request');
+      log.info({ body: { ...body, organization_not_ids: options.excludeOrgIds?.length ?? 0 }, page }, 'Apollo org search request');
 
       const res = await fetch('https://api.apollo.io/v1/mixed_companies/search', {
         method: 'POST',

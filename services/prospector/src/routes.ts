@@ -427,6 +427,18 @@ Output format:
             ? await db.prospectBusiness.count({ where: { campaignId: { in: matchingCampaignIds } } })
             : 0;
 
+          // Collect real Apollo org IDs from existing prospects to exclude from search
+          // This tells Apollo "don't return these orgs" — saves people-search credits
+          const existingProspects = matchingCampaignIds.length > 0
+            ? await db.prospectBusiness.findMany({
+                where: { campaignId: { in: matchingCampaignIds }, googlePlaceId: { startsWith: 'apollo_' } },
+                select: { googlePlaceId: true },
+              })
+            : [];
+          const excludeOrgIds = existingProspects
+            .map((ep) => ep.googlePlaceId?.replace('apollo_', '') ?? '')
+            .filter((id) => id.length > 10); // Only real Apollo IDs (not old synthetic ones)
+
           const perPage = 25;
           const startPage = Math.floor(existingForConfig / perPage) + 1;
 
@@ -437,10 +449,11 @@ Output format:
             employeeRanges,
             maxResults,
             startPage,
+            excludeOrgIds: excludeOrgIds.length > 0 ? excludeOrgIds : undefined,
           };
           if (campaign.targetState) apolloOpts.state = campaign.targetState;
           if (env.BRAVE_SEARCH_API_KEY) apolloOpts.braveApiKey = env.BRAVE_SEARCH_API_KEY;
-          log.info({ campaignId: id, existingForConfig, startPage, configFingerprint }, 'Apollo offset calculated');
+          log.info({ campaignId: id, existingForConfig, startPage, excludeOrgIds: excludeOrgIds.length, configFingerprint }, 'Apollo offset calculated');
           const { prospects, totalEntries } = await discoverViaApollo(env.APOLLO_API_KEY!, apolloOpts);
 
           let created = 0;
@@ -486,7 +499,7 @@ Output format:
                 ...(p.organizationSicCodes.length > 0 || p.organizationNaicsCodes.length > 0
                   ? { industryCodes: { sic: p.organizationSicCodes, naics: p.organizationNaicsCodes } }
                   : {}),
-                googlePlaceId: `apollo_${p.organizationName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${id.slice(-6)}`,
+                googlePlaceId: `apollo_${p.apolloOrgId}`,
                 status: hasEmail ? 'ENRICHED' : 'NEW',
               },
             });
