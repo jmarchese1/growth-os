@@ -23,10 +23,21 @@ function buildUnsubscribe(replyEmail: string): string {
 
 /** Convert a business name to Title Case (handles ALL CAPS gracefully) */
 function toTitleCase(str: string): string {
+  // If the entire string is uppercase, convert to title case
+  // But preserve short words that are likely acronyms (2-3 chars all caps)
+  const isAllCaps = str === str.toUpperCase() && str.length > 3;
   return str
-    .toLowerCase()
     .split(' ')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .map((w) => {
+      // Preserve short all-caps words (likely acronyms: BLT, NYC, BBQ)
+      if (w.length <= 3 && w === w.toUpperCase() && /^[A-Z]+$/.test(w)) return w;
+      // If entire name was ALL CAPS, convert each word to title case
+      if (isAllCaps || w === w.toUpperCase() && w.length > 3) {
+        return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+      }
+      // Otherwise keep original casing
+      return w;
+    })
     .join(' ');
 }
 
