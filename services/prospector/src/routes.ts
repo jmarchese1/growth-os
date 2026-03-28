@@ -392,7 +392,9 @@ Output format:
       }
 
       const apolloConfig = (campaign.apolloConfig as { industries?: string[]; sicCodes?: string[]; employeeRanges?: string[] } | null) ?? {};
-      const maxResults = campaign.maxProspects ?? 50;
+      // Over-fetch from Apollo to compensate for dedup losses (fetch 2x target)
+      const targetProspects = campaign.maxProspects ?? 50;
+      const maxResults = targetProspects * 2;
 
       log.info({ campaignId: id, city: campaign.targetCity, apolloConfig, source: 'apollo' }, 'Running Apollo campaign');
 
@@ -445,6 +447,8 @@ Output format:
           let created = 0;
           let skippedDedup = 0;
           for (const p of prospects) {
+            // Stop once we hit the target number of new prospects
+            if (created >= targetProspects) break;
             // Cross-source dedup — check by name, email, phone, website, placeId across ALL campaigns
             const dupCheck = await isDuplicate({
               name: p.organizationName,
@@ -515,7 +519,7 @@ Output format:
             ? await db.prospectBusiness.count({ where: { campaignId: { in: [...matchingCampaignIds, id] } } })
             : created;
           const remaining = Math.max(0, totalEntries - totalFetched);
-          const runsRemaining = remaining > 0 ? Math.ceil(remaining / maxResults) : 0;
+          const runsRemaining = remaining > 0 ? Math.ceil(remaining / targetProspects) : 0;
           await db.outboundCampaign.update({
             where: { id },
             data: {
