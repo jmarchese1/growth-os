@@ -25,14 +25,14 @@ async function resolveMessage(event: SendGridEvent) {
   if (trackingPixelId) {
     return db.outreachMessage.findUnique({
       where: { trackingPixelId },
-      select: { id: true, prospectId: true, status: true, openedAt: true },
+      select: { id: true, prospectId: true, status: true, openedAt: true, sendingDomainId: true },
     });
   }
 
   if (sgMessageId) {
     return db.outreachMessage.findFirst({
       where: { externalId: sgMessageId },
-      select: { id: true, prospectId: true, status: true, openedAt: true },
+      select: { id: true, prospectId: true, status: true, openedAt: true, sendingDomainId: true },
     });
   }
 
@@ -40,7 +40,7 @@ async function resolveMessage(event: SendGridEvent) {
     return db.outreachMessage.findFirst({
       where: { prospectId },
       orderBy: { sentAt: 'desc' },
-      select: { id: true, prospectId: true, status: true, openedAt: true },
+      select: { id: true, prospectId: true, status: true, openedAt: true, sendingDomainId: true },
     });
   }
 
@@ -87,11 +87,34 @@ export async function sendgridEventRoutes(app: FastifyInstance): Promise<void> {
           where: { id: message.prospectId },
           data: { status: 'OPENED' },
         });
+        // Track open on sending domain
+        if (message.sendingDomainId) {
+          await db.sendingDomain.update({
+            where: { id: message.sendingDomainId },
+            data: { openCount: { increment: 1 } },
+          }).catch(() => {});
+        }
       }
 
       if ((eventType === 'bounce' || eventType === 'dropped') && message) {
         await db.outreachMessage.update({ where: { id: message.id }, data: { status: 'BOUNCED' } });
         await db.prospectBusiness.update({ where: { id: message.prospectId }, data: { status: 'BOUNCED' } });
+        // Track bounce on sending domain + auto-disable if > 5%
+        if (message.sendingDomainId) {
+          try {
+            const domain = await db.sendingDomain.update({
+              where: { id: message.sendingDomainId },
+              data: { bounceCount: { increment: 1 } },
+            });
+            if (domain.totalSent >= 10 && domain.bounceCount / domain.totalSent > 0.05) {
+              await db.sendingDomain.update({
+                where: { id: message.sendingDomainId },
+                data: { active: false, disabledReason: 'bounce_rate_exceeded' },
+              });
+              log.warn({ domainId: domain.id, domain: domain.domain }, 'Sending domain auto-disabled — bounce rate > 5%');
+            }
+          } catch { /* domain may have been deleted */ }
+        }
         if (email) {
           await db.outreachSuppression.upsert({
             where: { email },

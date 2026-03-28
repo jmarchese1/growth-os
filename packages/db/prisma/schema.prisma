@@ -785,6 +785,8 @@ model OutreachMessage {
   replyCategory   String?
   externalId      String?
   trackingPixelId String?        @unique
+  sendingDomainId String?
+  sendingDomain   SendingDomain? @relation(fields: [sendingDomainId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -792,6 +794,7 @@ model OutreachMessage {
   @@index([prospectId])
   @@index([status])
   @@index([trackingPixelId])
+  @@index([sendingDomainId])
 }
 
 model OutreachSuppression {
@@ -803,6 +806,36 @@ model OutreachSuppression {
   updatedAt DateTime @updatedAt
 
   @@index([email])
+}
+
+// ─── Sending Domains (inbox rotation + warm-up) ──────────────────────────────
+
+model SendingDomain {
+  id              String    @id @default(cuid())
+  domain          String    @unique
+  fromEmail       String
+  fromName        String    @default("Jason")
+  replyToEmail    String?
+  sendgridApiKey  String?                 // null = use global SENDGRID_API_KEY
+  verified        Boolean   @default(false)
+  active          Boolean   @default(true)
+  disabledReason  String?                 // "bounce_rate_exceeded", "manual", "deleted"
+  warmupStage     Int       @default(1)   // 1=5/day, 2=15/day, 3=30/day, 4=50/day
+  warmupStartedAt DateTime?
+  warmupComplete  Boolean   @default(false)
+  dailyLimit      Int       @default(5)
+  sentToday       Int       @default(0)
+  sentTodayDate   DateTime  @default(now())
+  totalSent       Int       @default(0)
+  bounceCount     Int       @default(0)
+  openCount       Int       @default(0)
+  lastUsedAt      DateTime?
+  messages        OutreachMessage[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([active])
+  @@index([lastUsedAt])
 }
 
 // ─── Campaigns (client-facing marketing, distinct from cold outbound) ─────────

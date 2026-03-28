@@ -6,6 +6,7 @@ import type { OutboundCampaign, ProspectBusiness } from '@embedo/db';
 import { renderEmailHtml, buildTemplateVars } from './templates.js';
 import { generatePersonalizedEmail } from './ai-personalizer.js';
 import { isSuppressed } from './suppression.js';
+import { getNextDomain, incrementDomainSend } from './domain-rotator.js';
 import { env } from '../config.js';
 
 const log = createLogger('prospector:email-sender');
@@ -68,16 +69,35 @@ export async function sendColdEmail(
   const pixelUrl = `${env.API_BASE_URL}/track/open/${trackingPixelId}`;
   const htmlWithPixel = `${bodyHtml}\n<img src="${pixelUrl}" width="1" height="1" style="display:none" alt="">`;
 
-  // FROM must be a SendGrid-verified sender. REPLY-TO can be the tracking address.
-  const fromEmail = env.SENDGRID_FROM_EMAIL ?? replyEmail;
-  const fromName = process.env['SENDGRID_FROM_NAME'] ?? 'Jason at Embedo';
+  // Domain rotation: pick the next available sending domain
+  const sendingDomain = await getNextDomain();
+
+  let fromEmail: string;
+  let fromName: string;
+  let sendReplyTo: string;
+
+  if (sendingDomain) {
+    fromEmail = sendingDomain.fromEmail;
+    fromName = sendingDomain.fromName;
+    sendReplyTo = sendingDomain.replyToEmail ?? replyEmail;
+    // Use per-domain SendGrid key if set, otherwise global
+    if (sendingDomain.sendgridApiKey) {
+      sgMail.setApiKey(sendingDomain.sendgridApiKey);
+    }
+    log.debug({ domain: sendingDomain.domain, fromEmail }, 'Using rotated domain');
+  } else {
+    // Fallback to env vars (backward compatible)
+    fromEmail = env.SENDGRID_FROM_EMAIL ?? replyEmail;
+    fromName = process.env['SENDGRID_FROM_NAME'] ?? 'Jason';
+    sendReplyTo = replyEmail;
+  }
 
   let messageId: string;
   try {
     const [response] = await sgMail.send({
       to: prospect.email,
       from: { email: fromEmail, name: fromName },
-      replyTo: replyEmail,  // replies go to tracking address; from must be verified
+      replyTo: sendReplyTo,
       subject,
       html: htmlWithPixel,
       customArgs: {
@@ -92,6 +112,11 @@ export async function sendColdEmail(
     throw new ExternalApiError('SendGrid', `Failed to send cold email to ${prospect.email}`, err);
   }
 
+  // Increment domain send counter
+  if (sendingDomain) {
+    await incrementDomainSend(sendingDomain.id);
+  }
+
   // Create OutreachMessage record
   const message = await db.outreachMessage.create({
     data: {
@@ -104,6 +129,7 @@ export async function sendColdEmail(
       sentAt: new Date(),
       externalId: messageId,
       trackingPixelId,
+      sendingDomainId: sendingDomain?.id ?? null,
     },
   });
 
@@ -113,6 +139,6 @@ export async function sendColdEmail(
     data: { status: 'CONTACTED' },
   });
 
-  log.info({ prospectId: prospect.id, messageId, trackingPixelId }, 'Cold email sent');
+  log.info({ prospectId: prospect.id, messageId, trackingPixelId, domain: sendingDomain?.domain ?? 'env-fallback' }, 'Cold email sent');
   return message.id;
 }
