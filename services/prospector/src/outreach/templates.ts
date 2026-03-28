@@ -3,11 +3,11 @@ export const DEFAULT_EMAIL_SUBJECT = `quick question about {{company}}`;
 // Plain text body — no HTML. Signature + unsubscribe appended at send time.
 export const DEFAULT_EMAIL_BODY = `Hey {{firstName}},
 
-I run an AI automation agency built specifically for restaurants. We build three things for our clients: a custom AI phone receptionist, a custom AI chatbot and a professional website.
+Most restaurants miss 30 to 40% of inbound calls during service. Reservations, catering inquiries, to-go orders, all going to voicemail while your team is heads down on the floor.
 
-Here is how it works. When a customer calls and you are busy or closed, the call automatically routes to your AI phone agent. It answers questions, takes orders and books reservations just like a real staff member would. On top of that, we embed an AI chatbot into your website that does the same thing for online visitors.
+I built a phone system that answers calls for restaurants when the team is busy, tailored to {{company}}'s menu and FAQs. I also have a chatbot you can drop straight into your website that does the same thing for online visitors.
 
-I would love to jump on a quick call and demo what this would look like for {{company}}. No pressure, just want to show you what is possible.`;
+Happy to set one up for {{company}} for free — want me to send over a quick demo?`;
 
 // Legacy HTML default kept for old campaigns — new ones use DEFAULT_EMAIL_BODY
 export const DEFAULT_EMAIL_BODY_HTML = DEFAULT_EMAIL_BODY;

@@ -377,7 +377,7 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
       const payload: Record<string, unknown> = {
         ...form,
         emailSubject: 'quick question about {{company}}',
-        emailBodyHtml: 'Hey {{firstName}}, wanted to reach out about automating your front-of-house operations. Would love to show you what we can do for {{company}}.',
+        emailBodyHtml: `Hey {{firstName}},\n\nMost restaurants miss 30 to 40% of inbound calls during service. Reservations, catering inquiries, to-go orders, all going to voicemail while your team is heads down on the floor.\n\nI built a phone system that answers calls for restaurants when the team is busy, tailored to {{company}}'s menu and FAQs. I also have a chatbot you can drop straight into your website that does the same thing for online visitors.\n\nHappy to set one up for {{company}} for free — want me to send over a quick demo?`,
         targetCity: `${selectedCity.city}, ${selectedCity.state}`,
         targetState: selectedCity.state,
         targetCountry: 'US',
