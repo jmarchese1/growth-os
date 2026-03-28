@@ -41,9 +41,10 @@ export async function sendColdEmail(
   const bodyTemplate = options?.bodyHtmlOverride ?? campaign.emailBodyHtml;
 
   // Use Claude to personalize per prospect if ANTHROPIC_API_KEY is configured
+  const appendSig = (campaign.apolloConfig as Record<string, unknown> | null)?.['appendSignature'] === true;
   let bodyHtml: string;
   if (env.ANTHROPIC_API_KEY && !options?.disableAi && !options?.bodyHtmlOverride) {
-    const aiHtml = await generatePersonalizedEmail(
+    const aiText = await generatePersonalizedEmail(
       {
         name: prospect.name,
         city: vars['city'] ?? campaign.targetCity,
@@ -51,19 +52,27 @@ export async function sendColdEmail(
         phone: prospect.phone,
         googleRating: prospect.googleRating,
         googleReviewCount: prospect.googleReviewCount,
+        contactFirstName: prospect.contactFirstName,
       },
       replyEmail,
       env.ANTHROPIC_API_KEY,
     );
-    // Fall back to static template if AI fails
-    const appendSig = (campaign.apolloConfig as Record<string, unknown> | null)?.['appendSignature'] === true;
-    bodyHtml = aiHtml ?? renderEmailHtml(bodyTemplate, vars, { appendSignature: appendSig, replyEmail });
+    // AI returns plain text with greeting included. Render to HTML + add sign-off + unsubscribe.
+    // Fall back to static template if AI fails.
+    if (aiText) {
+      bodyHtml = renderEmailHtml(aiText, {}, { appendSignature: appendSig, replyEmail });
+    } else {
+      bodyHtml = renderEmailHtml(bodyTemplate, vars, { appendSignature: appendSig, replyEmail });
+    }
   } else {
-    const appendSig = (campaign.apolloConfig as Record<string, unknown> | null)?.['appendSignature'] === true;
     bodyHtml = renderEmailHtml(bodyTemplate, vars, { appendSignature: appendSig, replyEmail });
   }
 
-  const subject = renderEmailHtml(subjectTemplate, vars);
+  // Subject is plain text only -- just substitute variables, no HTML wrapping
+  const subject = Object.entries(vars).reduce(
+    (text, [key, value]) => text.replaceAll(`{{${key}}}`, value),
+    subjectTemplate,
+  );
 
   // Append tracking pixel
   const pixelUrl = `${env.API_BASE_URL}/track/open/${trackingPixelId}`;
