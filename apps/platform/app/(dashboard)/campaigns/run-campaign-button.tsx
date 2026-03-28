@@ -191,6 +191,8 @@ export function RunCampaignButton({ campaignId, prospectorUrl, initialTotal = 0 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const msgRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const prevTotal = useRef(initialTotal);
+  const stableCount = useRef(0);
+  const startedAt = useRef(0);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -202,10 +204,16 @@ export function RunCampaignButton({ campaignId, prospectorUrl, initialTotal = 0 
           const data = (await res.json()) as { total: number };
           setLiveTotal(data.total);
 
-          // If total stopped growing for 2 consecutive polls, mark done
-          if (data.total > 0 && data.total === prevTotal.current) {
-            stopPolling();
-            setState('done');
+          // If total stopped growing for 3 consecutive polls (12s stable) and at least 15s elapsed, mark done
+          const elapsed = Date.now() - startedAt.current;
+          if (data.total > 0 && data.total === prevTotal.current && elapsed > 15000) {
+            stableCount.current++;
+            if (stableCount.current >= 3) {
+              stopPolling();
+              setState('done');
+            }
+          } else {
+            stableCount.current = 0;
           }
           prevTotal.current = data.total;
         }
@@ -230,6 +238,8 @@ export function RunCampaignButton({ campaignId, prospectorUrl, initialTotal = 0 
     setError('');
     setMsgIndex(0);
     prevTotal.current = initialTotal;
+    stableCount.current = 0;
+    startedAt.current = Date.now();
     startPolling();
 
     try {
@@ -243,13 +253,6 @@ export function RunCampaignButton({ campaignId, prospectorUrl, initialTotal = 0 
         return;
       }
 
-      // Max timeout: 120s then auto-complete
-      setTimeout(() => {
-        if (pollRef.current) {
-          stopPolling();
-          setState('done');
-        }
-      }, 120_000);
     } catch {
       stopPolling();
       setState('error');
