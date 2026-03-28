@@ -109,6 +109,51 @@
   animation: fade-up 0.35s ease forwards;
 }
 
+/* ── Campaign run loading screen ───────────────────────────────────────────── */
+@keyframes embedo-cube-spin {
+  from { transform: rotateX(-22deg) rotateY(0deg); }
+  to { transform: rotateX(-22deg) rotateY(360deg); }
+}
+
+@keyframes fade-up-msg {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes success-pop {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes success-draw {
+  from { stroke-dasharray: 100; stroke-dashoffset: 100; }
+  to { stroke-dasharray: 100; stroke-dashoffset: 0; }
+}
+
+@keyframes confetti-burst {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--tx, 80px), var(--ty, -60px)) scale(0); opacity: 0; }
+}
+
+/* Generate 12 confetti directions */
+.fixed div[style*="confetti-burst"]:nth-child(1) { --tx: 80px; --ty: -90px; }
+.fixed div[style*="confetti-burst"]:nth-child(2) { --tx: 60px; --ty: -110px; }
+.fixed div[style*="confetti-burst"]:nth-child(3) { --tx: -70px; --ty: -80px; }
+.fixed div[style*="confetti-burst"]:nth-child(4) { --tx: -90px; --ty: -50px; }
+.fixed div[style*="confetti-burst"]:nth-child(5) { --tx: 100px; --ty: -30px; }
+.fixed div[style*="confetti-burst"]:nth-child(6) { --tx: -60px; --ty: -120px; }
+.fixed div[style*="confetti-burst"]:nth-child(7) { --tx: 40px; --ty: -100px; }
+.fixed div[style*="confetti-burst"]:nth-child(8) { --tx: -100px; --ty: -70px; }
+.fixed div[style*="confetti-burst"]:nth-child(9) { --tx: 110px; --ty: -60px; }
+.fixed div[style*="confetti-burst"]:nth-child(10) { --tx: -40px; --ty: -130px; }
+.fixed div[style*="confetti-burst"]:nth-child(11) { --tx: 70px; --ty: -40px; }
+.fixed div[style*="confetti-burst"]:nth-child(12) { --tx: -80px; --ty: -100px; }
+
 /* ── Cubey mascot animations ───────────────────────────────────────────────── */
 @keyframes mascot-bounce { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
 @keyframes mascot-wiggle { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-4deg) translateY(-4px); } 75% { transform: rotate(4deg) translateY(-4px); } }
