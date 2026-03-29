@@ -230,7 +230,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
               currentBodyHtml={campaign.emailBodyHtml}
               sequenceSteps={campaign.sequenceSteps}
               prospectorUrl={PROSPECTOR_URL}
-              apolloConfig={campaign.apolloConfig as { appendSignature?: boolean; aiPersonalization?: boolean } | null}
+              apolloConfig={campaign.apolloConfig as Record<string, unknown> | null}
             />
             <CloneCampaignButton
               campaignId={id}

@@ -18,7 +18,7 @@ interface Props {
   currentBodyHtml: string;
   sequenceSteps: SequenceStep[] | null;
   prospectorUrl: string;
-  apolloConfig?: { appendSignature?: boolean; aiPersonalization?: boolean } | null;
+  apolloConfig?: Record<string, unknown> | null;
 }
 
 const TEMPLATE_VARS = [
@@ -112,8 +112,8 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
   // Step 1 state — convert HTML to plain text if needed
   const [step1Subject, setStep1Subject] = useState(currentSubject);
   const [step1Body, setStep1Body] = useState(htmlToPlainText(currentBodyHtml));
-  const [showSignature, setShowSignature] = useState(apolloConfig?.appendSignature !== false);
-  const [aiPersonalization, setAiPersonalization] = useState(apolloConfig?.aiPersonalization !== false);
+  const [showSignature, setShowSignature] = useState(apolloConfig?.['appendSignature'] !== false);
+  const [aiPersonalization, setAiPersonalization] = useState(apolloConfig?.['aiPersonalization'] !== false);
 
   // Determine active follow-up steps from the campaign's sequenceSteps
   const followUps = (sequenceSteps ?? []).filter((s) => s.stepNumber > 1);
@@ -133,10 +133,12 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
     setLoading(true);
     setError('');
     try {
+      // Merge email settings into existing apolloConfig (don't overwrite Apollo search params)
+      const existingConfig = (apolloConfig ?? {}) as Record<string, unknown>;
       const patch: Record<string, unknown> = {
         emailSubject: step1Subject,
-        emailBodyHtml: step1Body, // stored as plain text now, rendered at send time
-        apolloConfig: { appendSignature: showSignature, aiPersonalization }, // piggyback on existing JSON field for email settings
+        emailBodyHtml: step1Body,
+        apolloConfig: { ...existingConfig, appendSignature: showSignature, aiPersonalization },
       };
 
       if (followUps.length > 0) {
