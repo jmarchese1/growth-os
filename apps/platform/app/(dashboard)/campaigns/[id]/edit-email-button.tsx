@@ -270,25 +270,25 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
                   <p className="text-[10px] text-slate-600">
                     Plain text — unsubscribe link added automatically at send time.
                   </p>
-                  <div className="flex items-center gap-4 flex-shrink-0">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <span className="text-[10px] text-slate-500">AI rewrite</span>
+                  <div className="flex items-center gap-5 flex-shrink-0">
+                    <label className="flex items-center gap-2.5 cursor-pointer">
+                      <span className={`text-xs font-medium ${aiPersonalization ? 'text-emerald-400' : 'text-red-400'}`}>AI rewrite</span>
                       <button
                         type="button"
                         onClick={() => setAiPersonalization(!aiPersonalization)}
-                        className={`relative w-8 h-4.5 rounded-full transition-colors ${aiPersonalization ? 'bg-violet-600' : 'bg-white/10'}`}
+                        className={`relative w-10 h-5 rounded-full transition-colors ${aiPersonalization ? 'bg-emerald-500' : 'bg-red-500/60'}`}
                       >
-                        <span className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white shadow transition-transform ${aiPersonalization ? 'left-[18px]' : 'left-0.5'}`} />
+                        <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${aiPersonalization ? 'left-[22px]' : 'left-0.5'}`} />
                       </button>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <span className="text-[10px] text-slate-500">Auto sign-off</span>
+                    <label className="flex items-center gap-2.5 cursor-pointer">
+                      <span className={`text-xs font-medium ${showSignature ? 'text-emerald-400' : 'text-red-400'}`}>Sign-off</span>
                       <button
                         type="button"
                         onClick={() => setShowSignature(!showSignature)}
-                        className={`relative w-8 h-4.5 rounded-full transition-colors ${showSignature ? 'bg-violet-600' : 'bg-white/10'}`}
+                        className={`relative w-10 h-5 rounded-full transition-colors ${showSignature ? 'bg-emerald-500' : 'bg-red-500/60'}`}
                       >
-                        <span className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white shadow transition-transform ${showSignature ? 'left-[18px]' : 'left-0.5'}`} />
+                        <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${showSignature ? 'left-[22px]' : 'left-0.5'}`} />
                       </button>
                     </label>
                   </div>
