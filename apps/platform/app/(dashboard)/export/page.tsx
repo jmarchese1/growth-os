@@ -6,30 +6,31 @@ const PROSPECTOR_URL = process.env['NEXT_PUBLIC_PROSPECTOR_URL'] ?? process.env[
 
 interface Campaign { id: string; name: string; targetCity: string; _count: { prospects: number } }
 
+// Column labels use Lemlist-compatible names (lowercase email, firstName, lastName, companyName)
 const ALL_COLUMNS = [
-  { key: 'name', label: 'Business Name', default: true },
-  { key: 'email', label: 'Email', default: true },
-  { key: 'contactFirstName', label: 'First Name', default: true },
-  { key: 'contactLastName', label: 'Last Name', default: true },
-  { key: 'contactTitle', label: 'Title', default: true },
-  { key: 'phone', label: 'Phone', default: true },
-  { key: 'website', label: 'Website', default: true },
-  { key: 'city', label: 'City', default: true },
-  { key: 'state', label: 'State', default: true },
-  { key: 'status', label: 'Status', default: true },
-  { key: 'campaignName', label: 'Campaign', default: true },
-  { key: 'emailSource', label: 'Email Source', default: false },
-  { key: 'contactLinkedIn', label: 'LinkedIn', default: false },
-  { key: 'linkedinUrl', label: 'Company LinkedIn', default: false },
-  { key: 'facebookUrl', label: 'Facebook', default: false },
-  { key: 'twitterUrl', label: 'Twitter/X', default: false },
-  { key: 'revenue', label: 'Revenue', default: false },
-  { key: 'foundedYear', label: 'Founded', default: false },
-  { key: 'googleRating', label: 'Google Rating', default: false },
-  { key: 'googleReviewCount', label: 'Review Count', default: false },
-  { key: 'websiteScore', label: 'Site Score', default: false },
-  { key: 'websiteHasChatbot', label: 'Has Chatbot', default: false },
-  { key: 'createdAt', label: 'Added Date', default: false },
+  { key: 'name', label: 'companyName', displayLabel: 'Business Name', default: true },
+  { key: 'email', label: 'email', displayLabel: 'Email', default: true },
+  { key: 'contactFirstName', label: 'firstName', displayLabel: 'First Name', default: true },
+  { key: 'contactLastName', label: 'lastName', displayLabel: 'Last Name', default: true },
+  { key: 'contactTitle', label: 'jobTitle', displayLabel: 'Title', default: true },
+  { key: 'phone', label: 'phone', displayLabel: 'Phone', default: true },
+  { key: 'website', label: 'companyUrl', displayLabel: 'Website', default: true },
+  { key: 'city', label: 'city', displayLabel: 'City', default: true },
+  { key: 'state', label: 'state', displayLabel: 'State', default: true },
+  { key: 'status', label: 'status', displayLabel: 'Status', default: true },
+  { key: 'campaignName', label: 'campaign', displayLabel: 'Campaign', default: true },
+  { key: 'emailSource', label: 'emailSource', displayLabel: 'Email Source', default: false },
+  { key: 'contactLinkedIn', label: 'linkedinUrl', displayLabel: 'LinkedIn', default: false },
+  { key: 'linkedinUrl', label: 'companyLinkedinUrl', displayLabel: 'Company LinkedIn', default: false },
+  { key: 'facebookUrl', label: 'facebookUrl', displayLabel: 'Facebook', default: false },
+  { key: 'twitterUrl', label: 'twitterUrl', displayLabel: 'Twitter/X', default: false },
+  { key: 'revenue', label: 'revenue', displayLabel: 'Revenue', default: false },
+  { key: 'foundedYear', label: 'foundedYear', displayLabel: 'Founded', default: false },
+  { key: 'googleRating', label: 'googleRating', displayLabel: 'Google Rating', default: false },
+  { key: 'googleReviewCount', label: 'reviewCount', displayLabel: 'Review Count', default: false },
+  { key: 'websiteScore', label: 'siteScore', displayLabel: 'Site Score', default: false },
+  { key: 'websiteHasChatbot', label: 'hasChatbot', displayLabel: 'Has Chatbot', default: false },
+  { key: 'createdAt', label: 'addedDate', displayLabel: 'Added Date', default: false },
 ];
 
 export default function ExportPage() {
@@ -265,7 +266,7 @@ export default function ExportPage() {
                     : 'bg-white/[0.02] border-white/[0.06] text-slate-500 hover:border-white/10'
                 }`}
               >
-                {col.label}
+                {col.displayLabel}
               </button>
             ))}
           </div>
