@@ -18,7 +18,7 @@ interface Props {
   currentBodyHtml: string;
   sequenceSteps: SequenceStep[] | null;
   prospectorUrl: string;
-  apolloConfig?: { appendSignature?: boolean } | null;
+  apolloConfig?: { appendSignature?: boolean; aiPersonalization?: boolean } | null;
 }
 
 const TEMPLATE_VARS = [
@@ -113,6 +113,7 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
   const [step1Subject, setStep1Subject] = useState(currentSubject);
   const [step1Body, setStep1Body] = useState(htmlToPlainText(currentBodyHtml));
   const [showSignature, setShowSignature] = useState(apolloConfig?.appendSignature !== false);
+  const [aiPersonalization, setAiPersonalization] = useState(apolloConfig?.aiPersonalization !== false);
 
   // Determine active follow-up steps from the campaign's sequenceSteps
   const followUps = (sequenceSteps ?? []).filter((s) => s.stepNumber > 1);
@@ -135,7 +136,7 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
       const patch: Record<string, unknown> = {
         emailSubject: step1Subject,
         emailBodyHtml: step1Body, // stored as plain text now, rendered at send time
-        apolloConfig: { appendSignature: showSignature }, // piggyback on existing JSON field for email settings
+        apolloConfig: { appendSignature: showSignature, aiPersonalization }, // piggyback on existing JSON field for email settings
       };
 
       if (followUps.length > 0) {
@@ -265,20 +266,32 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
                   onChange={(e) => setCurrentBody(e.target.value)}
                   className={inputCls + ' resize-y leading-relaxed'}
                 />
-                <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center justify-between mt-2 gap-4">
                   <p className="text-[10px] text-slate-600">
                     Plain text — unsubscribe link added automatically at send time.
                   </p>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <span className="text-[10px] text-slate-500">Auto sign-off</span>
-                    <button
-                      type="button"
-                      onClick={() => setShowSignature(!showSignature)}
-                      className={`relative w-8 h-4.5 rounded-full transition-colors ${showSignature ? 'bg-violet-600' : 'bg-white/10'}`}
-                    >
-                      <span className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white shadow transition-transform ${showSignature ? 'left-[18px]' : 'left-0.5'}`} />
-                    </button>
-                  </label>
+                  <div className="flex items-center gap-4 flex-shrink-0">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <span className="text-[10px] text-slate-500">AI rewrite</span>
+                      <button
+                        type="button"
+                        onClick={() => setAiPersonalization(!aiPersonalization)}
+                        className={`relative w-8 h-4.5 rounded-full transition-colors ${aiPersonalization ? 'bg-violet-600' : 'bg-white/10'}`}
+                      >
+                        <span className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white shadow transition-transform ${aiPersonalization ? 'left-[18px]' : 'left-0.5'}`} />
+                      </button>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <span className="text-[10px] text-slate-500">Auto sign-off</span>
+                      <button
+                        type="button"
+                        onClick={() => setShowSignature(!showSignature)}
+                        className={`relative w-8 h-4.5 rounded-full transition-colors ${showSignature ? 'bg-violet-600' : 'bg-white/10'}`}
+                      >
+                        <span className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white shadow transition-transform ${showSignature ? 'left-[18px]' : 'left-0.5'}`} />
+                      </button>
+                    </label>
+                  </div>
                 </div>
               </div>
 

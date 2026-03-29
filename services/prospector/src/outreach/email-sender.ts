@@ -40,10 +40,12 @@ export async function sendColdEmail(
   const subjectTemplate = options?.subjectOverride ?? campaign.emailSubject;
   const bodyTemplate = options?.bodyHtmlOverride ?? campaign.emailBodyHtml;
 
-  // Use Claude to personalize per prospect if ANTHROPIC_API_KEY is configured
-  const appendSig = (campaign.apolloConfig as Record<string, unknown> | null)?.['appendSignature'] === true;
+  // Use Claude to personalize per prospect if enabled on campaign + ANTHROPIC_API_KEY configured
+  const apolloConf = (campaign.apolloConfig as Record<string, unknown> | null) ?? {};
+  const appendSig = apolloConf['appendSignature'] === true;
+  const aiEnabled = apolloConf['aiPersonalization'] !== false; // default ON for backward compat
   let bodyHtml: string;
-  if (env.ANTHROPIC_API_KEY && !options?.disableAi && !options?.bodyHtmlOverride) {
+  if (env.ANTHROPIC_API_KEY && aiEnabled && !options?.disableAi && !options?.bodyHtmlOverride) {
     const aiText = await generatePersonalizedEmail(
       {
         name: prospect.name,
