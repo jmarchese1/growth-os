@@ -810,6 +810,24 @@ model OutreachSuppression {
   @@index([email])
 }
 
+// ─── Auto-Sender Config ───────────────────────────────────────────────────────
+
+model AutoSenderConfig {
+  id              String    @id @default("singleton")  // only one config
+  active          Boolean   @default(false)
+  // Ramp schedule: JSON array of { week, dailyLimit } e.g. [{ week: 1, dailyLimit: 15 }, ...]
+  rampSchedule    Json      @default("[{\"week\":1,\"dailyLimit\":15},{\"week\":2,\"dailyLimit\":25},{\"week\":3,\"dailyLimit\":40},{\"week\":4,\"dailyLimit\":50}]")
+  sendWindowStart Int       @default(9)   // hour in ET (9 = 9am)
+  sendWindowEnd   Int       @default(17)  // hour in ET (17 = 5pm)
+  // Which campaigns to send from (null = all active)
+  campaignIds     Json?     // string[] of campaign IDs, null = all active
+  activatedAt     DateTime?
+  sentToday       Int       @default(0)
+  sentTodayDate   DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
 // ─── Email Templates (reusable copy with performance tracking) ────────────────
 
 model EmailTemplate {

@@ -61,16 +61,63 @@ const createCampaignSchema = z.object({
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.get('/health', async () => ({ ok: true, service: 'prospector' }));
 
-  // ─── Auto-sender status ──────────────────────────────────────────────────
+  // ─── Auto-sender config + status ─────────────────────────────────────────
   app.get('/auto-sender/status', async () => {
-    const today = new Date().toISOString().slice(0, 10);
-    const sentToday = await db.outreachMessage.count({
-      where: { sentAt: { gte: new Date(today + 'T00:00:00.000Z') }, status: { not: 'FAILED' } },
-    });
+    let config = await db.autoSenderConfig.findUnique({ where: { id: 'singleton' } });
+    if (!config) {
+      config = await db.autoSenderConfig.create({ data: { id: 'singleton', active: false } });
+    }
     const totalUnsent = await db.prospectBusiness.count({
-      where: { status: 'ENRICHED', email: { not: null }, campaign: { active: true } },
+      where: {
+        status: 'ENRICHED',
+        email: { not: null },
+        ...(config.campaignIds ? { campaignId: { in: config.campaignIds as string[] } } : { campaign: { active: true } }),
+      },
     });
-    return { active: !!env.SENDGRID_API_KEY, sentToday, totalUnsent, sendWindow: '9am-5pm ET' };
+    const ramp = config.rampSchedule as Array<{ week: number; dailyLimit: number }>;
+    const daysSince = config.activatedAt ? Math.floor((Date.now() - config.activatedAt.getTime()) / (24 * 60 * 60 * 1000)) : 0;
+    const currentWeek = Math.floor(daysSince / 7) + 1;
+    let currentLimit = ramp[ramp.length - 1]?.dailyLimit ?? 50;
+    for (const stage of ramp) { if (currentWeek <= stage.week) { currentLimit = stage.dailyLimit; break; } }
+
+    return {
+      active: config.active,
+      rampSchedule: ramp,
+      sendWindowStart: config.sendWindowStart,
+      sendWindowEnd: config.sendWindowEnd,
+      campaignIds: config.campaignIds,
+      activatedAt: config.activatedAt,
+      sentToday: config.sentToday,
+      currentDailyLimit: currentLimit,
+      currentWeek,
+      totalUnsent,
+    };
+  });
+
+  app.patch('/auto-sender/config', async (request, reply) => {
+    const body = request.body as Record<string, unknown>;
+    const data: Record<string, unknown> = {};
+
+    if (body['active'] !== undefined) data['active'] = body['active'];
+    if (body['rampSchedule'] !== undefined) data['rampSchedule'] = body['rampSchedule'];
+    if (body['sendWindowStart'] !== undefined) data['sendWindowStart'] = body['sendWindowStart'];
+    if (body['sendWindowEnd'] !== undefined) data['sendWindowEnd'] = body['sendWindowEnd'];
+    if (body['campaignIds'] !== undefined) data['campaignIds'] = body['campaignIds'];
+
+    // If activating for the first time, set activatedAt
+    if (body['active'] === true) {
+      const existing = await db.autoSenderConfig.findUnique({ where: { id: 'singleton' } });
+      if (!existing?.activatedAt) data['activatedAt'] = new Date();
+    }
+
+    const config = await db.autoSenderConfig.upsert({
+      where: { id: 'singleton' },
+      create: { id: 'singleton', ...data },
+      update: data,
+    });
+
+    log.info({ active: config.active }, 'Auto-sender config updated');
+    return reply.send(config);
   });
 
   // ─── Geocode autocomplete (proxied to keep API key server-side) ───────────
