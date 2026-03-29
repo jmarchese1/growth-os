@@ -7,6 +7,7 @@ import { registerRoutes } from './routes.js';
 import { startProspectWorker } from './workers/prospect.worker.js';
 import { startOutreachWorker } from './workers/outreach.worker.js';
 import { sendDailyDigest } from './workers/digest.worker.js';
+import { startAutoSender } from './workers/auto-sender.js';
 
 const log = createLogger('prospector');
 
@@ -45,6 +46,13 @@ async function start() {
     setInterval(sendDailyDigest, 24 * 60 * 60 * 1000);
   }, msUntil9am);
   log.info({ nextDigestAt: next9am.toISOString() }, 'Daily digest scheduled');
+
+  // Auto-sender — drips cold emails throughout the day
+  if (env.SENDGRID_API_KEY) {
+    startAutoSender();
+  } else {
+    log.info('Auto-sender disabled — SENDGRID_API_KEY not configured');
+  }
 }
 
 start().catch((err) => {

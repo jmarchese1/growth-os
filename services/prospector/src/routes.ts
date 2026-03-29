@@ -61,6 +61,18 @@ const createCampaignSchema = z.object({
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.get('/health', async () => ({ ok: true, service: 'prospector' }));
 
+  // ─── Auto-sender status ──────────────────────────────────────────────────
+  app.get('/auto-sender/status', async () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const sentToday = await db.outreachMessage.count({
+      where: { sentAt: { gte: new Date(today + 'T00:00:00.000Z') }, status: { not: 'FAILED' } },
+    });
+    const totalUnsent = await db.prospectBusiness.count({
+      where: { status: 'ENRICHED', email: { not: null }, campaign: { active: true } },
+    });
+    return { active: !!env.SENDGRID_API_KEY, sentToday, totalUnsent, sendWindow: '9am-5pm ET' };
+  });
+
   // ─── Geocode autocomplete (proxied to keep API key server-side) ───────────
   app.get('/geocode/autocomplete', async (request, reply) => {
     const { q, state } = request.query as { q?: string; state?: string };
