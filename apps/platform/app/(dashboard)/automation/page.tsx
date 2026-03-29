@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-const PROSPECTOR_URL = process.env['PROSPECTOR_URL'] ?? 'http://localhost:3009';
+const PROSPECTOR_URL = process.env['NEXT_PUBLIC_PROSPECTOR_URL'] ?? process.env['PROSPECTOR_URL'] ?? 'http://localhost:3009';
 
 interface RampStage { week: number; dailyLimit: number; }
 
@@ -156,8 +156,8 @@ export default function AutomationPage() {
         </div>
       )}
 
-      {/* Live Status Banner */}
-      {status && (
+      {/* Live Status Banner — always show even if status fetch failed */}
+      {(
         <div className={`rounded-2xl p-5 mb-6 border ${active ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-white/[0.02] border-white/[0.06]'}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -166,8 +166,8 @@ export default function AutomationPage() {
                 <p className="text-sm font-semibold text-white">{active ? 'Auto-sender is running' : 'Auto-sender is paused'}</p>
                 <p className="text-xs text-slate-400 mt-0.5">
                   {active
-                    ? `Week ${status.currentWeek} · ${status.sentToday}/${status.currentDailyLimit} sent today · ${status.totalUnsent} prospects remaining`
-                    : `${status.totalUnsent} unsent prospects waiting`}
+                    ? `Week ${status?.currentWeek ?? 1} · ${status?.sentToday ?? 0}/${status?.currentDailyLimit ?? 15} sent today · ${status?.totalUnsent ?? 0} prospects remaining`
+                    : `${status?.totalUnsent ?? 0} unsent prospects waiting`}
                 </p>
               </div>
             </div>
@@ -184,7 +184,7 @@ export default function AutomationPage() {
           </div>
 
           {/* Today's progress bar */}
-          {active && (
+          {active && status && (
             <div className="mt-4">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[10px] text-slate-500">Today&apos;s progress</span>
