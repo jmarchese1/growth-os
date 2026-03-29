@@ -30,6 +30,15 @@ async function resolveMessage(event: SendGridEvent) {
   }
 
   if (sgMessageId) {
+    // SendGrid appends filter IDs to message IDs (e.g. "abc123.filterdrecv-xxx")
+    // Strip everything after the first dot to match our stored externalId
+    const cleanId = sgMessageId.split('.')[0] ?? sgMessageId;
+    const msg = await db.outreachMessage.findFirst({
+      where: { externalId: cleanId },
+      select: { id: true, prospectId: true, status: true, openedAt: true, sendingDomainId: true },
+    });
+    if (msg) return msg;
+    // Also try the full ID in case it was stored that way
     return db.outreachMessage.findFirst({
       where: { externalId: sgMessageId },
       select: { id: true, prospectId: true, status: true, openedAt: true, sendingDomainId: true },
@@ -39,6 +48,16 @@ async function resolveMessage(event: SendGridEvent) {
   if (prospectId) {
     return db.outreachMessage.findFirst({
       where: { prospectId },
+      orderBy: { sentAt: 'desc' },
+      select: { id: true, prospectId: true, status: true, openedAt: true, sendingDomainId: true },
+    });
+  }
+
+  // Last resort: match by recipient email address
+  const email = typeof event['email'] === 'string' ? (event['email'] as string).toLowerCase() : undefined;
+  if (email) {
+    return db.outreachMessage.findFirst({
+      where: { prospect: { email: { equals: email, mode: 'insensitive' } } },
       orderBy: { sentAt: 'desc' },
       select: { id: true, prospectId: true, status: true, openedAt: true, sendingDomainId: true },
     });
@@ -71,6 +90,13 @@ export async function sendgridEventRoutes(app: FastifyInstance): Promise<void> {
 
       const email = typeof event['email'] === 'string' ? (event['email'] as string).toLowerCase() : undefined;
       const message = await resolveMessage(event);
+
+      if (!message && eventType !== 'test') {
+        log.warn({ eventType, email, sgMessageId: event['sg_message_id'], customArgs: event['custom_args'] ?? event['unique_args'] }, 'SendGrid event: could not resolve message');
+      }
+      if (message) {
+        log.info({ eventType, email, messageId: message.id }, 'SendGrid event processed');
+      }
 
       if (eventType === 'delivered' && message) {
         if (message.status !== 'REPLIED' && message.status !== 'BOUNCED') {
