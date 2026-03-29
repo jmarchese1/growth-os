@@ -63,6 +63,8 @@ export default function AutomationPage() {
   // Poll status every 30s
   useEffect(() => { const i = setInterval(fetchStatus, 30_000); return () => clearInterval(i); }, [fetchStatus]);
 
+  const [saved, setSaved] = useState(false);
+
   async function save() {
     setSaving(true);
     await fetch(`${PROSPECTOR_URL}/auto-sender/config`, {
@@ -78,6 +80,24 @@ export default function AutomationPage() {
     });
     await fetchStatus();
     setSaving(false);
+    setSaved(true);
+    // Success sound
+    try {
+      const ctx = new AudioContext();
+      [523.25, 659.25, 783.99].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.1);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime + i * 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.1 + 0.4);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + i * 0.1);
+        osc.stop(ctx.currentTime + i * 0.1 + 0.4);
+      });
+    } catch {}
+    setTimeout(() => setSaved(false), 3000);
   }
 
   function addWeek() {
@@ -118,11 +138,23 @@ export default function AutomationPage() {
         <button
           onClick={save}
           disabled={saving}
-          className="px-5 py-2.5 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-500 transition-colors disabled:opacity-50"
+          className={`px-5 py-2.5 text-white text-sm font-semibold rounded-lg transition-all disabled:opacity-50 ${
+            saved ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-violet-600 hover:bg-violet-500'
+          }`}
         >
-          {saving ? 'Saving...' : 'Save Settings'}
+          {saving ? 'Saving...' : saved ? '✓ Saved' : 'Save Settings'}
         </button>
       </div>
+
+      {/* Save confirmation toast */}
+      {saved && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 bg-emerald-600 text-white text-sm font-semibold rounded-xl shadow-2xl shadow-emerald-600/30 flex items-center gap-3" style={{ animation: 'fade-up 0.4s ease' }}>
+          <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+          </div>
+          {active ? 'Automation is live. Emails will send automatically during your send window.' : 'Settings saved. Automation is paused.'}
+        </div>
+      )}
 
       {/* Live Status Banner */}
       {status && (
