@@ -921,6 +921,28 @@ Output format:
     try {
       const messageId = await sendColdEmail(prospect, prospect.campaign);
       log.info({ prospectId: id, messageId }, 'Manual email send triggered');
+
+      // Queue follow-up steps if sequence is configured
+      const steps = (prospect.campaign.sequenceSteps as Array<{ stepNumber: number; delayHours: number }> | null) ?? [];
+      const baseDelayMs = 5 * 60 * 1000;
+      for (const step of steps) {
+        if (step.stepNumber <= 1) continue;
+        const delayMs = baseDelayMs + step.delayHours * 60 * 60 * 1000;
+        await outreachSendQueue().add(
+          `outreach:${id}:step${step.stepNumber}`,
+          { prospectId: id, campaignId: prospect.campaignId, channel: 'email', stepNumber: step.stepNumber },
+          { delay: delayMs },
+        );
+      }
+      if (steps.length > 1) {
+        const nextStep = steps.find((s) => s.stepNumber === 2);
+        if (nextStep) {
+          const nextFireAt = new Date(Date.now() + baseDelayMs + nextStep.delayHours * 60 * 60 * 1000);
+          await db.prospectBusiness.update({ where: { id }, data: { nextFollowUpAt: nextFireAt } });
+        }
+        log.info({ prospectId: id, followUpSteps: steps.length - 1 }, 'Follow-up sequence queued');
+      }
+
       return reply.code(200).send({ ok: true, messageId });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
