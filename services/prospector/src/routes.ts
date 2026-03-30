@@ -8,7 +8,7 @@ import { searchRestaurants, geocodeCity } from './scraper/geoapify.js';
 import { sendColdEmail } from './outreach/email-sender.js';
 import { generatePersonalizedEmail } from './outreach/ai-personalizer.js';
 import { findEmailViaHunter, extractDomain as extractHunterDomain } from './scraper/hunter.js';
-import { findEmailViaApollo, extractDomain as extractApolloDomain, discoverViaApollo } from './scraper/apollo.js';
+import { findEmailViaApollo, extractDomain as extractApolloDomain, discoverViaApollo, verifyEmailViaApollo } from './scraper/apollo.js';
 import { isDuplicate } from './dedup/isDuplicate.js';
 import { scoreWebsite } from './scraper/website-score.js';
 import { env } from './config.js';
@@ -565,6 +565,32 @@ Output format:
               },
             });
             created++;
+
+            // Verify email in background (non-blocking) — prevents bounces
+            if (p.contact?.email && env.APOLLO_API_KEY) {
+              verifyEmailViaApollo(p.contact.email, env.APOLLO_API_KEY).then(async (status) => {
+                const prospect = await db.prospectBusiness.findFirst({ where: { campaignId: id, name: p.organizationName }, select: { id: true } });
+                if (prospect) {
+                  const isInvalid = status === 'undeliverable';
+                  await db.prospectBusiness.update({
+                    where: { id: prospect.id },
+                    data: {
+                      emailVerificationStatus: status,
+                      emailVerifiedAt: new Date(),
+                      ...(isInvalid ? { status: 'BOUNCED' } : {}),
+                    },
+                  });
+                  if (isInvalid && p.contact?.email) {
+                    await db.outreachSuppression.upsert({
+                      where: { email: p.contact.email },
+                      update: { reason: 'verification_invalid', source: 'apollo' },
+                      create: { email: p.contact.email, reason: 'verification_invalid', source: 'apollo' },
+                    });
+                    log.info({ email: p.contact.email, status }, 'Invalid email suppressed pre-send');
+                  }
+                }
+              }).catch(() => {});
+            }
 
             // Score website in background (non-blocking)
             if (p.organizationDomain) {
