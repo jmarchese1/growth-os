@@ -44,3 +44,4 @@ coverage/
 
 # Prisma
 packages/db/src/generated/
+apps/platform/tsconfig.tsbuildinfo
