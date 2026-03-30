@@ -25,7 +25,7 @@ async function resolveMessage(event: SendGridEvent) {
   if (trackingPixelId) {
     return db.outreachMessage.findUnique({
       where: { trackingPixelId },
-      select: { id: true, prospectId: true, status: true, openedAt: true, sendingDomainId: true },
+      select: { id: true, prospectId: true, status: true, openedAt: true, sendingDomainId: true, emailTemplateId: true },
     });
   }
 
@@ -35,13 +35,13 @@ async function resolveMessage(event: SendGridEvent) {
     const cleanId = sgMessageId.split('.')[0] ?? sgMessageId;
     const msg = await db.outreachMessage.findFirst({
       where: { externalId: cleanId },
-      select: { id: true, prospectId: true, status: true, openedAt: true, sendingDomainId: true },
+      select: { id: true, prospectId: true, status: true, openedAt: true, sendingDomainId: true, emailTemplateId: true },
     });
     if (msg) return msg;
     // Also try the full ID in case it was stored that way
     return db.outreachMessage.findFirst({
       where: { externalId: sgMessageId },
-      select: { id: true, prospectId: true, status: true, openedAt: true, sendingDomainId: true },
+      select: { id: true, prospectId: true, status: true, openedAt: true, sendingDomainId: true, emailTemplateId: true },
     });
   }
 
@@ -49,7 +49,7 @@ async function resolveMessage(event: SendGridEvent) {
     return db.outreachMessage.findFirst({
       where: { prospectId },
       orderBy: { sentAt: 'desc' },
-      select: { id: true, prospectId: true, status: true, openedAt: true, sendingDomainId: true },
+      select: { id: true, prospectId: true, status: true, openedAt: true, sendingDomainId: true, emailTemplateId: true },
     });
   }
 
@@ -59,7 +59,7 @@ async function resolveMessage(event: SendGridEvent) {
     return db.outreachMessage.findFirst({
       where: { prospect: { email: { equals: email, mode: 'insensitive' } } },
       orderBy: { sentAt: 'desc' },
-      select: { id: true, prospectId: true, status: true, openedAt: true, sendingDomainId: true },
+      select: { id: true, prospectId: true, status: true, openedAt: true, sendingDomainId: true, emailTemplateId: true },
     });
   }
 
@@ -113,11 +113,17 @@ export async function sendgridEventRoutes(app: FastifyInstance): Promise<void> {
           where: { id: message.prospectId },
           data: { status: 'OPENED' },
         });
-        // Track open on sending domain
+        // Track open on sending domain + email template
         if (message.sendingDomainId) {
           await db.sendingDomain.update({
             where: { id: message.sendingDomainId },
             data: { openCount: { increment: 1 } },
+          }).catch(() => {});
+        }
+        if (message.emailTemplateId) {
+          await db.emailTemplate.update({
+            where: { id: message.emailTemplateId },
+            data: { timesOpened: { increment: 1 } },
           }).catch(() => {});
         }
       }

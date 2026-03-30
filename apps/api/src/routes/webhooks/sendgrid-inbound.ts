@@ -79,6 +79,13 @@ export async function sendgridInboundRoutes(app: FastifyInstance): Promise<void>
           replyCategory,
         },
       });
+      // Track reply on email template
+      if (latestMessage.emailTemplateId) {
+        await db.emailTemplate.update({
+          where: { id: latestMessage.emailTemplateId },
+          data: { timesReplied: { increment: 1 } },
+        }).catch(() => {});
+      }
     }
 
     // Update prospect status

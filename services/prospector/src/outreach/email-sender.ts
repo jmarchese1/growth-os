@@ -128,6 +128,22 @@ export async function sendColdEmail(
     await incrementDomainSend(sendingDomain.id);
   }
 
+  // Match to an email template for performance tracking
+  let emailTemplateId: string | null = null;
+  try {
+    const template = await db.emailTemplate.findFirst({
+      where: { body: campaign.emailBodyHtml, active: true },
+      select: { id: true },
+    });
+    if (template) {
+      emailTemplateId = template.id;
+      await db.emailTemplate.update({
+        where: { id: template.id },
+        data: { timesSent: { increment: 1 } },
+      });
+    }
+  } catch { /* non-critical */ }
+
   // Create OutreachMessage record
   const message = await db.outreachMessage.create({
     data: {
@@ -141,6 +157,7 @@ export async function sendColdEmail(
       externalId: messageId,
       trackingPixelId,
       sendingDomainId: sendingDomain?.id ?? null,
+      emailTemplateId,
     },
   });
 

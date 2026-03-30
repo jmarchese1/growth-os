@@ -26,6 +26,7 @@ const updateCampaignSchema = z.object({
   emailSubject: z.string().min(5).optional(),
   emailBodyHtml: z.string().min(20).optional(),
   smsBody: z.string().optional(),
+  apolloConfig: z.record(z.unknown()).optional(),
   sequenceSteps: z.array(z.object({
     stepNumber: z.number().int().positive(),
     delayHours: z.number().min(0),
@@ -377,6 +378,7 @@ Output format:
         ...(parsed.emailSubject !== undefined && { emailSubject: parsed.emailSubject }),
         ...(parsed.emailBodyHtml !== undefined && { emailBodyHtml: parsed.emailBodyHtml }),
         ...(parsed.smsBody !== undefined && { smsBody: parsed.smsBody }),
+        ...(parsed.apolloConfig !== undefined && { apolloConfig: parsed.apolloConfig as object }),
         ...(parsed.sequenceSteps !== undefined && { sequenceSteps: parsed.sequenceSteps.sort((a: { stepNumber: number }, b: { stepNumber: number }) => a.stepNumber - b.stepNumber) }),
       },
     });
@@ -771,7 +773,7 @@ Output format:
             messages: {
               orderBy: { createdAt: 'desc' },
               take: 1,
-              select: { status: true, stepNumber: true, subject: true, body: true, sentAt: true, openedAt: true, repliedAt: true, replyBody: true, replyCategory: true },
+              select: { status: true, stepNumber: true, subject: true, body: true, sentAt: true, openedAt: true, repliedAt: true, replyBody: true, replyCategory: true, emailTemplateId: true, sendingDomainId: true },
             },
           },
         }),
