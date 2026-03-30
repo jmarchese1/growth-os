@@ -577,7 +577,7 @@ Output format:
                     data: {
                       emailVerificationStatus: status,
                       emailVerifiedAt: new Date(),
-                      ...(isInvalid ? { status: 'BOUNCED' } : {}),
+                      ...(isInvalid ? { status: 'DEAD' } : {}),
                     },
                   });
                   if (isInvalid && p.contact?.email) {
