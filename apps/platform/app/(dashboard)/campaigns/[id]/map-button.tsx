@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 interface Props {
@@ -14,31 +14,107 @@ interface Props {
 export function MapButton({ campaignName, targetCity, lat, lon, bbox }: Props) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<unknown>(null);
+
   useEffect(() => { setMounted(true); }, []);
 
-  // Build OpenStreetMap embed URL with the bbox region
-  // Use the bbox center and zoom to fit the area
-  const centerLat = bbox ? (bbox.lat1 + bbox.lat2) / 2 : lat;
-  const centerLon = bbox ? (bbox.lon1 + bbox.lon2) / 2 : lon;
+  useEffect(() => {
+    if (!open || !mapRef.current || mapInstanceRef.current) return;
 
-  // Estimate zoom level from bbox size
-  const latRange = bbox ? Math.abs(bbox.lat2 - bbox.lat1) : 0.15;
-  const lonRange = bbox ? Math.abs(bbox.lon2 - bbox.lon1) : 0.15;
-  const maxRange = Math.max(latRange, lonRange);
-  let zoom = 13;
-  if (maxRange > 0.5) zoom = 10;
-  else if (maxRange > 0.2) zoom = 11;
-  else if (maxRange > 0.1) zoom = 12;
-  else if (maxRange > 0.05) zoom = 13;
-  else if (maxRange > 0.02) zoom = 14;
-  else zoom = 15;
+    // Dynamically load Leaflet CSS + JS (no npm dependency needed)
+    const linkEl = document.createElement('link');
+    linkEl.rel = 'stylesheet';
+    linkEl.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(linkEl);
 
-  // Build bbox string for OSM embed
-  const bboxParam = bbox
-    ? `${bbox.lon1},${bbox.lat1},${bbox.lon2},${bbox.lat2}`
-    : `${lon - 0.08},${lat - 0.06},${lon + 0.08},${lat + 0.06}`;
+    const scriptEl = document.createElement('script');
+    scriptEl.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    scriptEl.onload = () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const L = (window as any).L;
+      if (!L || !mapRef.current) return;
 
-  const osmUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${bboxParam}&layer=mapnik&marker=${centerLat},${centerLon}`;
+      const centerLat = bbox ? (bbox.lat1 + bbox.lat2) / 2 : lat;
+      const centerLon = bbox ? (bbox.lon1 + bbox.lon2) / 2 : lon;
+
+      const map = L.map(mapRef.current, { zoomControl: true });
+      mapInstanceRef.current = map;
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19,
+      }).addTo(map);
+
+      if (bbox) {
+        // Draw shaded rectangle for bbox
+        const bounds = L.latLngBounds(
+          [bbox.lat1, bbox.lon1], // SW
+          [bbox.lat2, bbox.lon2], // NE
+        );
+        L.rectangle(bounds, {
+          color: '#7c3aed',
+          weight: 2,
+          fillColor: '#7c3aed',
+          fillOpacity: 0.15,
+          dashArray: '6 4',
+        }).addTo(map);
+
+        // Fit map to bbox with padding
+        map.fitBounds(bounds, { padding: [40, 40] });
+
+        // Center marker
+        L.circleMarker([centerLat, centerLon], {
+          radius: 5,
+          color: '#7c3aed',
+          fillColor: '#7c3aed',
+          fillOpacity: 1,
+        }).addTo(map).bindPopup(`<b>${targetCity}</b><br>AI bounding box`);
+
+      } else {
+        // Draw shaded circle for 15km radius
+        L.circle([lat, lon], {
+          radius: 15000,
+          color: '#f59e0b',
+          weight: 2,
+          fillColor: '#f59e0b',
+          fillOpacity: 0.12,
+          dashArray: '6 4',
+        }).addTo(map);
+
+        // Center marker
+        L.circleMarker([lat, lon], {
+          radius: 5,
+          color: '#f59e0b',
+          fillColor: '#f59e0b',
+          fillOpacity: 1,
+        }).addTo(map).bindPopup(`<b>${targetCity}</b><br>15km radius`);
+
+        // Fit to the circle
+        map.setView([lat, lon], 11);
+      }
+    };
+    document.head.appendChild(scriptEl);
+
+    return () => {
+      if (mapInstanceRef.current) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (mapInstanceRef.current as any).remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [open, lat, lon, bbox, targetCity]);
+
+  // Reset map instance when modal closes so it re-initializes on next open
+  useEffect(() => {
+    if (!open && mapInstanceRef.current) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mapInstanceRef.current as any).remove();
+      mapInstanceRef.current = null;
+    }
+  }, [open]);
+
+  const isBbox = !!bbox;
 
   return (
     <>
@@ -64,39 +140,35 @@ export function MapButton({ campaignName, targetCity, lat, lon, bbox }: Props) {
                 <h2 className="text-base font-semibold text-white">Search Area</h2>
                 <p className="text-xs text-slate-500 mt-0.5">{campaignName} — {targetCity}</p>
               </div>
-              <button onClick={() => setOpen(false)} className="text-slate-500 hover:text-white transition-colors text-xl leading-none">&times;</button>
+              <div className="flex items-center gap-3">
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
+                  isBbox
+                    ? 'bg-violet-500/10 text-violet-400 border border-violet-500/20'
+                    : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${isBbox ? 'bg-violet-400' : 'bg-amber-400'}`} />
+                  {isBbox ? 'AI Bounding Box' : '15km Circle'}
+                </span>
+                <button onClick={() => setOpen(false)} className="text-slate-500 hover:text-white transition-colors text-xl leading-none">&times;</button>
+              </div>
             </div>
 
-            {/* Map */}
-            <div className="relative">
-              <iframe
-                src={osmUrl}
-                className="w-full border-0"
-                style={{ height: '480px' }}
-                title="Campaign search area"
-                loading="lazy"
-              />
+            {/* Map container */}
+            <div ref={mapRef} style={{ height: '500px', width: '100%' }} />
 
-              {/* Bbox overlay info */}
-              {bbox && (
-                <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10">
-                  <p className="text-[10px] font-semibold text-sky-400 uppercase tracking-wider mb-1">Bounding Box</p>
-                  <p className="text-[11px] text-slate-300 font-mono">
-                    SW: {bbox.lat1.toFixed(4)}, {bbox.lon1.toFixed(4)}
-                  </p>
-                  <p className="text-[11px] text-slate-300 font-mono">
-                    NE: {bbox.lat2.toFixed(4)}, {bbox.lon2.toFixed(4)}
-                  </p>
-                </div>
-              )}
-
+            {/* Footer with coords */}
+            <div className="px-6 py-3 border-t border-white/10 flex items-center justify-between">
+              <div className="text-[11px] text-slate-500 font-mono">
+                {bbox ? (
+                  <>SW: {bbox.lat1.toFixed(4)}, {bbox.lon1.toFixed(4)} — NE: {bbox.lat2.toFixed(4)}, {bbox.lon2.toFixed(4)}</>
+                ) : (
+                  <>Center: {lat.toFixed(4)}, {lon.toFixed(4)} — Radius: 15km</>
+                )}
+              </div>
               {!bbox && (
-                <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-sm rounded-lg px-3 py-2 border border-amber-500/20">
-                  <p className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider">15km Circle (no bbox)</p>
-                  <p className="text-[11px] text-slate-400">
-                    This campaign uses a fixed 15km radius. Re-create with AI location resolver for a tighter boundary.
-                  </p>
-                </div>
+                <p className="text-[10px] text-amber-400/70">
+                  Re-create campaign with AI resolver for tighter boundaries
+                </p>
               )}
             </div>
           </div>
