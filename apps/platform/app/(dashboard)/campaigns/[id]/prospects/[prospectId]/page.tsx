@@ -357,8 +357,15 @@ export default async function ProspectDetailPage({ params }: {
           {(() => {
             const events: { date: string; label: string; detail?: string; color: string }[] = [];
             events.push({ date: prospect.createdAt, label: 'Prospect discovered', detail: `Added to ${prospect.campaign.name}`, color: 'bg-slate-500' });
-            if (prospect.email) {
-              events.push({ date: prospect.updatedAt, label: 'Email found', detail: `${prospect.email}${prospect.emailSource ? ` via ${prospect.emailSource}` : ''}`, color: 'bg-blue-400' });
+            // Only show "Email found" if it was discovered after initial creation (enrichment step)
+            // Skip if email was found at discovery time (Apollo) -- redundant with "Prospect discovered"
+            if (prospect.email && prospect.emailVerifiedAt && prospect.emailVerifiedAt !== prospect.createdAt) {
+              const emailDate = prospect.emailVerifiedAt ?? prospect.updatedAt;
+              const createdDate = new Date(prospect.createdAt).getTime();
+              const emailFoundDate = new Date(emailDate).getTime();
+              if (emailFoundDate - createdDate > 60000) { // Only show if found > 1 min after creation
+                events.push({ date: emailDate, label: 'Email found', detail: `${prospect.email}${prospect.emailSource ? ` via ${prospect.emailSource}` : ''}`, color: 'bg-blue-400' });
+              }
             }
             for (const msg of prospect.messages) {
               if (msg.sentAt) events.push({ date: msg.sentAt, label: msg.stepNumber === 1 ? 'Cold email sent' : `Follow-up ${(msg.stepNumber ?? 1) - 1} sent`, detail: msg.subject ?? undefined, color: 'bg-violet-400' });
