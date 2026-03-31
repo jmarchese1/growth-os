@@ -98,6 +98,8 @@ export interface ProspectDiscoveredPayload {
     phone?: string;
     website?: string;
     email?: string;
+    facebook?: string;
+    instagram?: string;
 }
 export interface OutreachSendPayload {
     prospectId: string;

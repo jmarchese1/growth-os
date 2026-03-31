@@ -4,6 +4,12 @@ const log = createLogger('prospector:social-email');
 
 const EMAIL_REGEX = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
 
+// Noise emails to skip on social pages
+const NOISE_DOMAINS = new Set([
+  'facebook.com', 'instagram.com', 'fbcdn.net', 'cdninstagram.com',
+  'example.com', 'sentry.io', 'wixpress.com', 'google.com',
+]);
+
 async function fetchPage(url: string, timeoutMs = 10000): Promise<string | null> {
   try {
     const controller = new AbortController();
@@ -25,113 +31,145 @@ async function fetchPage(url: string, timeoutMs = 10000): Promise<string | null>
   }
 }
 
+function extractValidEmails(html: string): string[] {
+  const emails = html.match(EMAIL_REGEX) ?? [];
+  return [...new Set(emails)]
+    .map(e => e.toLowerCase())
+    .filter(e => {
+      const domain = e.split('@')[1] ?? '';
+      return !NOISE_DOMAINS.has(domain) && !domain.endsWith('.png') && !domain.endsWith('.jpg');
+    });
+}
+
 /**
- * Extract email from a Facebook business page.
- * Scrapes the "About" section which often has contact info.
- * Works with public pages only (no login required).
+ * Extract social media links (Facebook, Instagram) from a website's HTML.
+ * Looks for <a> tags linking to facebook.com and instagram.com.
+ */
+export function extractSocialLinksFromHtml(html: string): { facebook?: string; instagram?: string } {
+  const result: { facebook?: string; instagram?: string } = {};
+
+  // Facebook: look for links to facebook.com/pagename
+  const fbMatch = html.match(/href\s*=\s*["'](https?:\/\/(?:www\.)?facebook\.com\/[^"'?\s#]+)/i);
+  if (fbMatch?.[1]) {
+    result.facebook = fbMatch[1];
+  }
+
+  // Instagram: look for links to instagram.com/handle
+  const igMatch = html.match(/href\s*=\s*["'](https?:\/\/(?:www\.)?instagram\.com\/[^"'?\s#]+)/i);
+  if (igMatch?.[1]) {
+    result.instagram = igMatch[1];
+  }
+
+  return result;
+}
+
+/**
+ * Extract email from a known Facebook page URL.
+ * Tries plain fetch first, falls back to Playwright for JS-rendered pages.
  */
 export async function extractEmailFromFacebook(
-  businessName: string,
-  _city?: string,
+  facebookUrl: string | null | undefined,
 ): Promise<string | null> {
+  if (!facebookUrl) return null;
+
+  // Normalize to /about page which shows contact info
+  let aboutUrl = facebookUrl.replace(/\/$/, '');
+  if (!aboutUrl.endsWith('/about')) {
+    aboutUrl = `${aboutUrl}/about`;
+  }
+
   try {
-    // Search for the Facebook page via a regular search engine approach
-    // Facebook's public pages at /about often show email
-    // We'll try common URL patterns
-    const slug = businessName.toLowerCase().replace(/[^a-z0-9]+/g, '').slice(0, 30);
-    const urlsToTry = [
-      `https://www.facebook.com/${slug}/about`,
-      `https://www.facebook.com/${slug}`,
-    ];
-
-    for (const url of urlsToTry) {
-      const html = await fetchPage(url);
-      if (!html) continue;
-
-      // Facebook pages often have the email in structured data or visible text
-      // Look for email patterns near "Email" labels
-      const emailSection = html.match(/email[^<]*?([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/gi);
-      if (emailSection) {
-        for (const match of emailSection) {
-          const emails = match.match(EMAIL_REGEX);
-          if (emails?.[0]) {
-            log.info({ businessName, email: emails[0], url }, 'Email found via Facebook');
-            return emails[0].toLowerCase();
-          }
-        }
-      }
-
-      // Fallback: any email on the page
-      const allEmails = html.match(EMAIL_REGEX) ?? [];
-      for (const email of allEmails) {
-        const domain = email.split('@')[1]?.toLowerCase() ?? '';
-        // Skip Facebook's own emails and platform noise
-        if (domain.includes('facebook') || domain.includes('fbcdn') || domain.includes('example')) continue;
-        log.info({ businessName, email, url }, 'Email found via Facebook (regex)');
-        return email.toLowerCase();
+    // Try plain fetch first (works for some public pages)
+    const html = await fetchPage(aboutUrl);
+    if (html) {
+      const emails = extractValidEmails(html);
+      if (emails[0]) {
+        log.info({ email: emails[0], url: aboutUrl }, 'Email found via Facebook (fetch)');
+        return emails[0];
       }
     }
+
+    // Try Playwright for JS-rendered Facebook pages
+    try {
+      const pw = await import('playwright');
+      const browser = await pw.chromium.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      });
+      try {
+        const page = await browser.newPage();
+        await page.route('**/*.{png,jpg,jpeg,gif,svg,webp,ico,woff,woff2,mp4,css}', (route) => route.abort());
+        await page.goto(aboutUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+        await page.waitForTimeout(3000);
+
+        const content = await page.content();
+        await browser.close();
+
+        const emails = extractValidEmails(content);
+        if (emails[0]) {
+          log.info({ email: emails[0], url: aboutUrl }, 'Email found via Facebook (Playwright)');
+          return emails[0];
+        }
+      } catch {
+        await browser.close();
+      }
+    } catch {
+      // Playwright not available
+    }
   } catch (err) {
-    log.debug({ err, businessName }, 'Facebook scrape failed');
+    log.debug({ err, url: facebookUrl }, 'Facebook email extraction failed');
   }
 
   return null;
 }
 
 /**
- * Extract email from an Instagram profile bio.
- * Instagram renders bios in the initial HTML for public profiles.
+ * Extract email from a known Instagram profile URL.
+ * Instagram profiles need JS rendering to show contact info.
  */
 export async function extractEmailFromInstagram(
-  businessName: string,
+  instagramUrl: string | null | undefined,
 ): Promise<string | null> {
+  if (!instagramUrl) return null;
+
   try {
-    const slug = businessName.toLowerCase().replace(/[^a-z0-9]+/g, '').slice(0, 30);
-    const url = `https://www.instagram.com/${slug}/`;
+    // Instagram almost always needs JS rendering
+    const pw = await import('playwright');
+    const browser = await pw.chromium.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+    try {
+      const page = await browser.newPage();
+      await page.route('**/*.{png,jpg,jpeg,gif,svg,webp,ico,woff,woff2,mp4}', (route) => route.abort());
+      await page.goto(instagramUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      await page.waitForTimeout(3000);
 
-    const html = await fetchPage(url);
-    if (!html) return null;
+      const content = await page.content();
+      await browser.close();
 
-    // Instagram includes profile data in JSON-LD or in the page source
-    // Look for emails in the bio section
-    const emails = html.match(EMAIL_REGEX) ?? [];
-    for (const email of emails) {
-      const domain = email.split('@')[1]?.toLowerCase() ?? '';
-      // Skip Instagram/Meta platform emails
-      if (domain.includes('instagram') || domain.includes('facebook') || domain.includes('cdninstagram') || domain.includes('example')) continue;
-      log.info({ businessName, email, url }, 'Email found via Instagram bio');
-      return email.toLowerCase();
+      // Look for email in the bio text / page metadata
+      const emails = extractValidEmails(content);
+      if (emails[0]) {
+        log.info({ email: emails[0], url: instagramUrl }, 'Email found via Instagram');
+        return emails[0];
+      }
+    } catch {
+      await browser.close();
     }
-  } catch (err) {
-    log.debug({ err, businessName }, 'Instagram scrape failed');
+  } catch {
+    // Playwright not available — try plain fetch as last resort
+    const html = await fetchPage(instagramUrl);
+    if (html) {
+      const emails = extractValidEmails(html);
+      if (emails[0]) {
+        log.info({ email: emails[0], url: instagramUrl }, 'Email found via Instagram (fetch)');
+        return emails[0];
+      }
+    }
   }
 
   return null;
-}
-
-/**
- * Search Google Business Profile for email.
- * Requires GOOGLE_PLACES_API_KEY. Gracefully returns null if key not set.
- */
-export async function extractEmailFromGooglePlaces(
-  googlePlaceId: string | null | undefined,
-  apiKey: string | null | undefined,
-): Promise<string | null> {
-  if (!googlePlaceId || !apiKey) return null;
-
-  try {
-    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${googlePlaceId}&fields=website,formatted_phone_number,name&key=${apiKey}`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
-
-    // Google Places doesn't directly return email, but the website field can be used
-    // for further scraping. This is mainly a fallback to get a website URL if Geoapify didn't have one.
-    // For now, return null — the website scraper handles the actual email extraction.
-    await res.json(); // consume body
-    return null;
-  } catch {
-    return null;
-  }
 }
 
 /**

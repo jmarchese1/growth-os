@@ -878,6 +878,8 @@ Output format:
           if (place.phone) job['phone'] = place.phone;
           if (place.website) job['website'] = place.website;
           if (place.email) job['email'] = place.email;
+          if (place.facebook) job['facebook'] = place.facebook;
+          if (place.instagram) job['instagram'] = place.instagram;
 
           await prospectDiscoveredQueue().add(`place:${place.placeId}`, job as never);
         }

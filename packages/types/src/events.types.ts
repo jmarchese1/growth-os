@@ -150,6 +150,8 @@ export interface ProspectDiscoveredPayload {
   phone?: string;
   website?: string;
   email?: string;
+  facebook?: string;     // Facebook page URL from OSM
+  instagram?: string;    // Instagram profile URL from OSM
 }
 
 export interface OutreachSendPayload {

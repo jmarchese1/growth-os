@@ -17,6 +17,8 @@ export interface PlaceResult {
   phone?: string;
   website?: string;
   email?: string;
+  facebook?: string;    // Facebook page URL from OSM
+  instagram?: string;   // Instagram profile URL from OSM
 }
 
 export interface BoundingBox {
@@ -52,6 +54,10 @@ interface GeoapifyPlaceProperties {
       'contact:phone'?: string;
       'contact:website'?: string;
       'contact:email'?: string;
+      'contact:facebook'?: string;
+      'contact:instagram'?: string;
+      facebook?: string;
+      instagram?: string;
     };
   };
 }
@@ -106,15 +112,21 @@ function extractContact(props: GeoapifyPlaceProperties): {
   phone?: string;
   website?: string;
   email?: string;
+  facebook?: string;
+  instagram?: string;
 } {
   const raw = props.datasource?.raw ?? {};
-  const contact: { phone?: string; website?: string; email?: string } = {};
+  const contact: { phone?: string; website?: string; email?: string; facebook?: string; instagram?: string } = {};
   const phone = props.phone ?? raw['contact:phone'];
   const website = props.website ?? raw['contact:website'];
   const email = props.email ?? raw['contact:email'];
+  const facebook = raw['contact:facebook'] ?? raw['facebook'];
+  const instagram = raw['contact:instagram'] ?? raw['instagram'];
   if (phone) contact.phone = phone;
   if (website) contact.website = website;
   if (email) contact.email = email;
+  if (facebook) contact.facebook = facebook;
+  if (instagram) contact.instagram = instagram;
   return contact;
 }
 
@@ -172,6 +184,8 @@ export async function searchRestaurants(
       if (contact.phone) result.phone = contact.phone;
       if (contact.website) result.website = contact.website;
       if (contact.email) result.email = contact.email;
+      if (contact.facebook) result.facebook = contact.facebook;
+      if (contact.instagram) result.instagram = contact.instagram;
 
       results.push(result);
     }

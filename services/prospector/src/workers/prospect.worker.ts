@@ -6,7 +6,7 @@ import type { ProspectDiscoveredPayload } from '@embedo/types';
 import { extractEmailFromWebsite, extractPhoneFromWebsite } from '../scraper/website-email.js';
 import { findBusinessEmail } from '../scraper/brave-search.js';
 import { validateEmail, detectContactForm, guessEmailPattern, extractDomain } from '../scraper/email-validator.js';
-import { findEmailViaHunterDomain, extractEmailFromFacebook, extractEmailFromInstagram } from '../scraper/social-email.js';
+import { findEmailViaHunterDomain, extractEmailFromFacebook, extractEmailFromInstagram, extractSocialLinksFromHtml } from '../scraper/social-email.js';
 import { isDuplicate } from '../dedup/isDuplicate.js';
 import { scoreWebsite } from '../scraper/website-score.js';
 import { env } from '../config.js';
@@ -43,6 +43,7 @@ async function enrichEmail(
   city: string,
   website: string | undefined,
   geoapifyEmail: string | undefined,
+  socialUrls?: { facebook?: string; instagram?: string },
 ): Promise<EmailResult | null> {
 
   // Helper: validate and return if good
@@ -85,18 +86,24 @@ async function enrichEmail(
     }
   }
 
-  // 4. Facebook page scrape
-  const fbEmail = await extractEmailFromFacebook(name, city);
-  if (fbEmail) {
-    const result = await tryEmail(fbEmail, 'facebook');
-    if (result) return result;
+  // 4. Facebook page scrape (using real URL from Geoapify or website)
+  const fbUrl = socialUrls?.facebook;
+  if (fbUrl) {
+    const fbEmail = await extractEmailFromFacebook(fbUrl);
+    if (fbEmail) {
+      const result = await tryEmail(fbEmail, 'facebook');
+      if (result) return result;
+    }
   }
 
-  // 5. Instagram bio scrape
-  const igEmail = await extractEmailFromInstagram(name);
-  if (igEmail) {
-    const result = await tryEmail(igEmail, 'instagram');
-    if (result) return result;
+  // 5. Instagram bio scrape (using real URL from Geoapify or website)
+  const igUrl = socialUrls?.instagram;
+  if (igUrl) {
+    const igEmail = await extractEmailFromInstagram(igUrl);
+    if (igEmail) {
+      const result = await tryEmail(igEmail, 'instagram');
+      if (result) return result;
+    }
   }
 
   // 6. Brave Search fallback — only if key is configured
@@ -124,7 +131,7 @@ export function startProspectWorker(): Worker {
   const worker = new Worker<ProspectDiscoveredPayload>(
     QUEUE_NAMES.PROSPECT_DISCOVERED,
     async (job) => {
-      const { campaignId, placeId, name, address, categories, phone, website, email: geoapifyEmail } = job.data;
+      const { campaignId, placeId, name, address, categories, phone, website, email: geoapifyEmail, facebook: geoapifyFb, instagram: geoapifyIg } = job.data;
 
       // Cross-source dedup — check by placeId, email, phone, website, name across ALL campaigns
       const dupCheck = await isDuplicate({ name, phone, email: geoapifyEmail, website, googlePlaceId: placeId });
@@ -134,7 +141,32 @@ export function startProspectWorker(): Worker {
       }
 
       const city = (address['city'] as string | undefined) ?? '';
-      const emailResult = await enrichEmail(name, city, website, geoapifyEmail);
+
+      // Discover social links: prefer Geoapify OSM data, fall back to scraping the website
+      let socialUrls: { facebook?: string; instagram?: string } = {};
+      if (geoapifyFb || geoapifyIg) {
+        if (geoapifyFb) socialUrls.facebook = geoapifyFb;
+        if (geoapifyIg) socialUrls.instagram = geoapifyIg;
+      } else if (website) {
+        // Try to find social links on the business website
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 8000);
+          const res = await fetch(website.startsWith('http') ? website : `https://${website}`, {
+            signal: controller.signal,
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+          });
+          clearTimeout(timer);
+          if (res.ok) {
+            const html = await res.text();
+            socialUrls = extractSocialLinksFromHtml(html);
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      const emailResult = await enrichEmail(name, city, website, geoapifyEmail, socialUrls);
 
       const status = emailResult ? 'ENRICHED' : 'NEW';
 
@@ -185,6 +217,8 @@ export function startProspectWorker(): Worker {
           contactLastName: emailResult?.lastName ?? null,
           contactTitle: emailResult?.position ?? null,
           contactLinkedIn: emailResult?.linkedin ?? null,
+          facebookUrl: socialUrls.facebook ?? null,
+          // instagramUrl not in schema — stored on social URLs via facebookUrl pattern
           googlePlaceId: placeId,
           googleRating: null,
           googleReviewCount: null,
