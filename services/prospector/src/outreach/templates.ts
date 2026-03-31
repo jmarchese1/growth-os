@@ -21,46 +21,19 @@ function buildUnsubscribe(replyEmail: string): string {
   return `<p style="margin-top: 32px; font-size: 11px; color: #bbb;">Not interested? <a href="mailto:${replyEmail}?subject=Unsubscribe" style="color: #bbb;">Unsubscribe</a></p>`;
 }
 
-/** Convert a business name to Title Case (handles ALL CAPS gracefully) */
-function toTitleCase(str: string): string {
-  return str
-    .split(' ')
-    .map((w) => {
-      // Preserve known short acronyms (2-3 chars, all letters)
-      if (w.length <= 3 && /^[A-Z]+$/.test(w)) return w;
-      // If word is all caps and longer than 3 chars, title case it
-      // "OLIVIA" → "Olivia", "MARKET" → "Market"
-      if (w === w.toUpperCase() && w.length > 3) {
-        return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
-      }
-      // Mixed case words stay as-is (already properly cased)
-      return w;
-    })
-    .join(' ');
-}
+// Cache for AI-generated names (survives for the lifetime of the process)
+const nameCache = new Map<string, { displayName: string; shortName: string }>();
 
 /**
- * Extract the short/casual name from a business name.
- * "Mario's Pizzeria" → "Mario's"
- * "Golden Dragon Kitchen" → "Golden Dragon"
- * "Shake Shack" → "Shake Shack" (no suffix to strip)
+ * Use Claude Haiku to generate proper display name + short name for a business.
+ * AI handles ALL casing and shortening — no hardcoded rules.
+ *
+ * Returns { displayName, shortName } where:
+ * - displayName: properly cased full name ("IHOP", "Olive Garden", "L&B Spumoni Gardens")
+ * - shortName: casual name for emails ("IHOP", "Olive Garden", "L&B")
  */
-// Business/city suffix lists kept for reference but no longer used in code
-// AI short name generation (aiShortName) handles all cases now
-
-// Cache for AI-generated short names (survives for the lifetime of the process)
-const shortNameCache = new Map<string, string>();
-
-/**
- * Use Claude Haiku to generate a natural short name for a business.
- * Falls back to title-cased full name if AI is unavailable.
- */
-export async function aiShortName(name: string, apiKey: string): Promise<string> {
-  const titleCased = toTitleCase(name);
-  if (titleCased.split(/\s+/).length <= 1) return titleCased;
-
-  // Check cache
-  const cached = shortNameCache.get(name.toLowerCase());
+export async function aiBusinessName(name: string, apiKey: string): Promise<{ displayName: string; shortName: string }> {
+  const cached = nameCache.get(name.toLowerCase());
   if (cached) return cached;
 
   try {
@@ -68,43 +41,58 @@ export async function aiShortName(name: string, apiKey: string): Promise<string>
     const client = new Anthropic({ apiKey });
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 30,
+      max_tokens: 60,
       messages: [{
         role: 'user',
-        content: `Given this business name, return ONLY the short casual name you'd use in conversation. No quotes, no explanation, just the name.
+        content: `Given this business name, return two things as JSON: the properly cased display name, and the short casual name you'd use in a friendly email. No explanation, ONLY valid JSON.
+
+Rules:
+- Preserve acronyms: IHOP stays IHOP, BLT stays BLT, NYC stays NYC
+- Fix bad casing: "OLIVIA TAMPA" → "Olivia", "wagamama us" → "Wagamama"
+- Strip location suffixes: "Fushimi Staten Island" → "Fushimi"
+- Strip generic suffixes: "Restaurant", "Kitchen", "Hospitality Group", "& Lounge", etc.
+- Keep brand names intact: "Olive Garden" stays "Olive Garden", "Dave & Buster's" stays "Dave & Buster's"
+- The short name is what you'd say casually: "Hey, have you tried [shortName]?"
 
 Examples:
-"Mario's Pizzeria" → Mario's
-"wagamama us" → Wagamama
-"Legacy Hospitality Companies" → Legacy
-"Golden Dragon Kitchen" → Golden Dragon
-"Shake Shack" → Shake Shack
-"BLT Restaurant Group" → BLT
-"OLIVIA Tampa" → Olivia
-"Salt Shack On The Bay" → Salt Shack
-"The Capital Grille" → Capital Grille
-"Pineapple Hospitality Group" → Pineapple
+"MARIO'S PIZZERIA" → {"displayName":"Mario's Pizzeria","shortName":"Mario's"}
+"IHOP" → {"displayName":"IHOP","shortName":"IHOP"}
+"L&B Spumoni Gardens" → {"displayName":"L&B Spumoni Gardens","shortName":"L&B"}
+"wagamama us" → {"displayName":"Wagamama","shortName":"Wagamama"}
+"Dave & Buster's" → {"displayName":"Dave & Buster's","shortName":"Dave & Buster's"}
+"The Capital Grille" → {"displayName":"The Capital Grille","shortName":"Capital Grille"}
+"OLIVIA Tampa" → {"displayName":"Olivia","shortName":"Olivia"}
+"Salt Shack On The Bay" → {"displayName":"Salt Shack On The Bay","shortName":"Salt Shack"}
+"Pineapple Hospitality Group" → {"displayName":"Pineapple Hospitality Group","shortName":"Pineapple"}
+"il a forno a legna" → {"displayName":"Il a Forno a Legna","shortName":"Il Forno"}
 
-"${titleCased}" →`,
+"${name}" →`,
       }],
     });
 
-    const result = (response.content[0]?.type === 'text' ? response.content[0].text : '').trim().replace(/^["']|["']$/g, '');
-    const shortName = result.length >= 2 && result.length <= titleCased.length ? result : titleCased;
+    const raw = (response.content[0]?.type === 'text' ? response.content[0].text : '').trim();
+    const jsonStr = raw.replace(/^```json?\s*/i, '').replace(/```\s*$/, '').trim();
+    const parsed = JSON.parse(jsonStr) as { displayName: string; shortName: string };
 
-    shortNameCache.set(name.toLowerCase(), shortName);
-    return shortName;
+    if (parsed.displayName && parsed.shortName && parsed.displayName.length >= 2 && parsed.shortName.length >= 2) {
+      nameCache.set(name.toLowerCase(), parsed);
+      return parsed;
+    }
   } catch {
-    return titleCased;
+    // Fall through to raw name
   }
+
+  const fallback = { displayName: name, shortName: name };
+  nameCache.set(name.toLowerCase(), fallback);
+  return fallback;
 }
 
-// Sync fallback for when AI is not available (used in non-async contexts)
-function toShortNameSync(name: string): string {
-  const titleCased = toTitleCase(name);
-  const cached = shortNameCache.get(name.toLowerCase());
-  if (cached) return cached;
-  return titleCased;
+/**
+ * Convenience wrapper that returns just the short name (backward compat).
+ */
+export async function aiShortName(name: string, apiKey: string): Promise<string> {
+  const result = await aiBusinessName(name, apiKey);
+  return result.shortName;
 }
 
 /**
@@ -117,17 +105,30 @@ export async function buildTemplateVars(prospect: {
   contactLastName?: string | null;
   address?: unknown;
 }, extras: { city?: string; calLink?: string; replyEmail?: string; anthropicKey?: string | undefined }): Promise<Record<string, string>> {
-  const company = toTitleCase(prospect.name);
   // Use stored shortName if available (generated at prospect creation time)
-  // Fall back to AI generation or sync fallback
-  const shortName = (prospect as { shortName?: string | null }).shortName
-    ?? (extras.anthropicKey ? await aiShortName(prospect.name, extras.anthropicKey) : toShortNameSync(prospect.name));
+  const storedShortName = (prospect as { shortName?: string | null }).shortName;
+
+  let company: string;
+  let shortName: string;
+
+  if (extras.anthropicKey) {
+    // AI handles both display name and short name — no hardcoded casing
+    const names = await aiBusinessName(prospect.name, extras.anthropicKey);
+    company = names.displayName;
+    shortName = storedShortName ?? names.shortName;
+  } else {
+    // No API key — use cached or raw name
+    const cached = nameCache.get(prospect.name.toLowerCase());
+    company = cached?.displayName ?? prospect.name;
+    shortName = storedShortName ?? cached?.shortName ?? prospect.name;
+  }
+
   const city = (prospect.address as Record<string, string> | null)?.['city'] ?? extras.city ?? '';
   return {
     firstName: prospect.contactFirstName ?? 'there',
     lastName: prospect.contactLastName ?? '',
     company,
-    shortName,              // casual name: "Mario's" instead of "Mario's Pizzeria"
+    shortName,
     businessName: company,  // backward compat
     city,
     calLink: extras.calLink ?? '',

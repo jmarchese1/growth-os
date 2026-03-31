@@ -43,7 +43,7 @@ export async function sendColdEmail(
   // Use Claude to personalize per prospect if enabled on campaign + ANTHROPIC_API_KEY configured
   const apolloConf = (campaign.apolloConfig as Record<string, unknown> | null) ?? {};
   const appendSig = apolloConf['appendSignature'] === true;
-  const aiEnabled = apolloConf['aiPersonalization'] !== false; // default ON for backward compat
+  const aiEnabled = apolloConf['aiPersonalization'] === true; // OFF by default, must be explicitly enabled
   let bodyHtml: string;
   if (env.ANTHROPIC_API_KEY && aiEnabled && !options?.disableAi && !options?.bodyHtmlOverride) {
     const aiText = await generatePersonalizedEmail(
