@@ -965,7 +965,13 @@ Output format:
           { prospectId: id, campaignId: prospect.campaignId, channel: 'email', stepNumber: 1 },
           { delay },
         );
-        log.info({ prospectId: id, delayMinutes: Math.round(delay / 60000), queuePosition: manualSendQueue }, 'Manual send staggered');
+        // Store when the queued send will fire so the UI can show a countdown
+        const sendsAt = new Date(Date.now() + delay);
+        await db.prospectBusiness.update({
+          where: { id },
+          data: { nextFollowUpAt: sendsAt, status: 'ENRICHED' },
+        });
+        log.info({ prospectId: id, delayMinutes: Math.round(delay / 60000), sendsAt: sendsAt.toISOString() }, 'Manual send staggered');
       } else {
         // First send goes immediately
         await sendColdEmail(prospect, prospect.campaign);

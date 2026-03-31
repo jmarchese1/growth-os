@@ -513,7 +513,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                   <td className="px-4 py-3 min-w-[180px] sticky right-0 bg-[#0c0a18] group-hover:bg-[#0e0c1e] z-10 transition-colors">
                     <div className="flex items-center gap-2 flex-nowrap">
                       {p.email && (p.status === 'NEW' || p.status === 'ENRICHED') && (
-                        <SendButton prospectId={p.id} prospectorUrl={PROSPECTOR_URL} />
+                        <SendButton prospectId={p.id} prospectorUrl={PROSPECTOR_URL} nextFollowUpAt={p.nextFollowUpAt} status={p.status} />
                       )}
                       {p.status === 'REPLIED' && (
                         <ConvertButton prospectId={p.id} prospectorUrl={PROSPECTOR_URL} />

@@ -169,7 +169,7 @@ export default async function ProspectDetailPage({ params }: {
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {(prospect.status === 'ENRICHED' || prospect.status === 'NEW') && prospect.email && (
-            <SendButton prospectId={prospect.id} prospectorUrl={PROSPECTOR_URL} />
+            <SendButton prospectId={prospect.id} prospectorUrl={PROSPECTOR_URL} nextFollowUpAt={prospect.nextFollowUpAt} status={prospect.status} />
           )}
           {prospect.status === 'REPLIED' && (
             <ConvertButton prospectId={prospect.id} prospectorUrl={PROSPECTOR_URL} />
