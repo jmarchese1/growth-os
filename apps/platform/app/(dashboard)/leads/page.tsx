@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { LeadRowActions } from './lead-row-actions';
-import { SeedTestLead } from './seed-button';
+import { CreateLeadButton } from './seed-button';
 
 const PROSPECTOR_URL = process.env['PROSPECTOR_URL'] ?? 'http://localhost:3009';
 
@@ -97,7 +97,7 @@ export default async function LeadsPage() {
             Prospects who have engaged — your active sales pipeline.
           </p>
         </div>
-        <SeedTestLead prospectorUrl={PROSPECTOR_URL} />
+        <CreateLeadButton prospectorUrl={PROSPECTOR_URL} />
       </div>
 
       {/* Stats */}
@@ -127,7 +127,7 @@ export default async function LeadsPage() {
             <p className="text-slate-600 text-xs mt-2">
               When prospects reply to outbound campaigns, they&apos;ll appear here as leads.
               <br />
-              Use the <strong className="text-amber-400">Seed Test Lead</strong> button above to create an example.
+              Use the <strong className="text-amber-400">+ Create Lead</strong> button above to add a lead manually.
             </p>
           </div>
         ) : (
