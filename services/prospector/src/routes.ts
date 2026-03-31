@@ -949,6 +949,15 @@ Output format:
       return reply.code(400).send({ error: `Already contacted (status: ${prospect.status})` });
     }
 
+    // Prevent duplicate sends -- check if step 1 already exists for this prospect
+    const existingStep1 = await db.outreachMessage.findFirst({
+      where: { prospectId: id, stepNumber: 1 },
+      select: { id: true },
+    });
+    if (existingStep1) {
+      return reply.code(400).send({ error: 'Step 1 already sent to this prospect' });
+    }
+
     // Reset queue counter if last send was > 10 min ago
     if (Date.now() - lastManualSendAt > 10 * 60 * 1000) manualSendQueue = 0;
 

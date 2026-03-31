@@ -46,6 +46,16 @@ export function startOutreachWorker(): Worker {
         return;
       }
 
+      // Prevent duplicate sends for same step
+      const existingMsg = await db.outreachMessage.findFirst({
+        where: { prospectId, stepNumber: stepNumber ?? 1 },
+        select: { id: true },
+      });
+      if (existingMsg) {
+        log.info({ prospectId, stepNumber }, 'Step already sent — skipping duplicate');
+        return;
+      }
+
       const suppression = await db.outreachSuppression.findUnique({
         where: { email: prospect.email.toLowerCase() },
       });
