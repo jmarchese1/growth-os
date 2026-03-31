@@ -1,6 +1,6 @@
 # Embedo Platform — Current Status
 
-> Last updated: 2026-03-23. Update this file at the end of any session that changes deployment state, implements a new feature, or discovers a broken integration.
+> Last updated: 2026-03-30. Update this file at the end of any session that changes deployment state, implements a new feature, or discovers a broken integration.
 
 ---
 
@@ -15,7 +15,8 @@
 | `chatbot-agent` | Railway | https://chatbot-agent-production-e735.up.railway.app | ✅ Online |
 | `Redis` | Railway | redis.railway.internal:6379 | ✅ Online |
 | `apps/client` | Vercel | https://app.embedo.io | ✅ Live |
-| `apps/web` | Vercel | https://embedo.io | ✅ Live (assumed) |
+| `apps/web` | Vercel | https://embedo.io | ✅ Live (v3 landing page) |
+| `apps/platform` | Vercel | https://platform.embedo.io | ✅ Live |
 | `Supabase DB` | Supabase | postgres.umstbrqhhjptjxzgbflu | ✅ Online |
 
 **NOT yet deployed to Railway (services are skeletal — logic lives in API gateway):**
@@ -65,7 +66,8 @@ GEOAPIFY_API_KEY (city geocoding)
 BRAVE_SEARCH_API_KEY (prospect discovery)
 REPLY_TRACKING_EMAIL=outreach@replies.embedo.io
 OWNER_EMAIL, OWNER_PHONE, API_BASE_URL
-⚠️ APOLLO_API_KEY — NOT SET (email enrichment falls back to Brave/scraping)
+APOLLO_API_KEY (set — Apollo discovery + verification active)
+CAL_LINK=https://cal.com/jason-marchese-mkfkwl/30min
 ```
 
 ### `website-gen` (Railway)
@@ -106,8 +108,30 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 - **SendGrid Event Webhook**: pointing to `/webhooks/sendgrid/events` — open/click/bounce tracking
 
 **Outbound / Prospecting**
-- **Cold outreach pipeline**: Campaign creation → prospect discovery (Geoapify + Brave) → email enrichment (Brave/scraping) → multi-step email sequences via SendGrid → reply tracking
-- **Automated follow-up sequences**: Multi-step sequences fire on schedule; countdown timers in UI; sequence timeline on prospect detail
+- **Cold outreach pipeline**: Campaign creation → prospect discovery (Apollo or Geoapify) → email enrichment → multi-step email sequences via SendGrid → reply tracking
+- **Apollo discovery**: Organization search + people search with page offset tracking, org ID exclusion (prevents credit waste), config-aware pagination, cross-campaign dedup
+- **Geoapify discovery**: Google Maps search with website scraping + Brave Search for emails (no Apollo dependency)
+- **Cross-source dedup**: `isDuplicate()` checks name, email, phone, website domain, googlePlaceId across ALL campaigns regardless of source
+- **Email verification**: Apollo-discovered prospects verified via Apollo API; undeliverable emails auto-set to DEAD + suppressed
+- **Automated follow-up sequences**: Multi-step sequences fire on schedule; countdown timers in UI; sequence timeline on prospect detail; Send Now queues follow-ups automatically
+- **Smart send staggering**: Rapid Send Now clicks auto-queue with 3-min intervals; live countdown on each queued send
+- **Duplicate send prevention**: Checks if step already sent before sending; prevents double-emails
+- **AI email personalization**: Claude Haiku rewrites cold emails per-prospect (toggleable per campaign)
+- **Smart business names**: Title case conversion, acronym preservation, city suffix stripping, business suffix stripping ({{shortName}} variable)
+- **Inbox rotation**: 3 sending domains (embedo.io, getembedo.com, tryembedo.com) with round-robin rotation, per-domain daily limits, warm-up stages (5→15→30→50/day)
+- **Domain health tracking**: Bounce rate, open rate, health score per domain; auto-disable at 50+ sends with 10%+ bounce rate
+- **Email templates**: Auto-created from campaign copy on first send; track timesSent, timesOpened, timesReplied per template
+- **Export page**: Select campaigns + columns, download CSV/TSV with Lemlist-compatible headers
+- **Campaign loading screen**: Full-screen rotating cube + status messages during scraping; success confetti + sound on completion
+
+**Platform (Internal CRM)**
+- **Analytics dashboard**: Outreach funnel visualization, key metrics (open/reply/bounce/conversion rates), domain health cards, email copy performance with visual bars, city performance table, send time heatmap
+- **Sending Domains page**: Add/verify/warm-up domains, health scores, daily send progress bars, active/disable toggles
+- **Email Templates page**: CRUD for reusable templates, performance tracking, duplicate/archive actions
+- **Cubey assistant**: Platform chatbot with live CRM context (businesses, campaigns), proxied through /api/chatbot to avoid CORS
+- **All timestamps in ET**: Every date display uses timeZone: 'America/New_York'
+- **Unique sidebar icons**: Each nav item has a distinct icon
+- **Daily report caching**: Generated once per day, cached server-side
 
 **Pipeline / Proposals**
 - **Proposal generation**: POST `/proposals/generate` → Claude Haiku → shareable HTML link
@@ -178,7 +202,6 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 
 - **Social media service**: Meta webhook stub only; comment/DM processing marked TODO
 - **Lead-engine**: Event workers exist but no HTTP routes; not deployed
-- **Email/SMS sequence automation**: Sequences defined in DB but no scheduler deployed
 
 ---
 
@@ -220,7 +243,7 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 
 | Item | What's needed | Priority |
 |---|---|---|
-| Apollo.io API key | Set `APOLLO_API_KEY` in prospector Railway env to enable email enrichment | Medium |
+| Apollo.io API key | ✅ Set and active on Railway prospector | Done |
 | Meta/Google/TikTok OAuth apps | Create developer apps, set client IDs/secrets in API env | Low |
 | Stripe webhook (production) | Add `https://embedoapi-production.up.railway.app/webhooks/stripe` in Stripe Dashboard, subscribe to events | High |
 | Stripe branding | Upload Embedo logo + set violet brand color in Stripe Dashboard > Settings > Branding | Medium |
@@ -230,15 +253,17 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 ## Schema State
 
 The Prisma schema has been pushed to Supabase (`prisma db push`) and includes all models.
-Last schema change: Added 9 restaurant tools (WaitlistEntry, CateringInquiry, FeedbackEntry, TableSession, GiftCard models + ToolType enum expansion).
+Last schema change: Added SendingDomain, EmailTemplate, AutoSenderConfig models + sendingDomainId/emailTemplateId on OutreachMessage + websiteScore fields on ProspectBusiness (2026-03-30).
 Migration method: `prisma db push` (non-interactive — use this for local dev; proper migrations TBD).
 
 ---
 
-## Active Business (Demo)
-- **Business ID**: `cmmnr04gf0000wlgw7jtwx2p2`
+## Active Business
+- **Business ID**: `cmn9hlazo0000wlzguthxygw4` (recreated 2026-03-27 after DB reset)
 - **Owner**: jason@embedo.io
-- **Used in**: `EMBEDO_BUSINESS_ID` env var on API and prospector
+- **Sending Domains**: embedo.io (warmed, 50/day), getembedo.com (warming), tryembedo.com (warming)
+- **Active Campaigns**: ~30 across Vegas, NYC, Miami, Chicago, Tampa, Brooklyn
+- **Total Prospects**: ~860+ across all campaigns
 
 ---
 
