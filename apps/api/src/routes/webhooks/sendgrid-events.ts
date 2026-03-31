@@ -138,7 +138,7 @@ export async function sendgridEventRoutes(app: FastifyInstance): Promise<void> {
               where: { id: message.sendingDomainId },
               data: { bounceCount: { increment: 1 } },
             });
-            if (domain.totalSent >= 10 && domain.bounceCount / domain.totalSent > 0.05) {
+            if (domain.totalSent >= 50 && domain.bounceCount / domain.totalSent > 0.10) {
               await db.sendingDomain.update({
                 where: { id: message.sendingDomainId },
                 data: { active: false, disabledReason: 'bounce_rate_exceeded' },
