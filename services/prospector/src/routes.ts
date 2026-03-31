@@ -161,6 +161,29 @@ Examples:
         bbox = geoBbox;
       }
 
+      // Step 3: Check if any existing campaign already uses this exact bbox
+      // (Geoapify geocoder is deterministic for the same query, so matching by lat/lon works)
+      const existingCampaign = await db.outboundCampaign.findFirst({
+        where: {
+          targetLat: geoResult.lat,
+          targetLon: geoResult.lon,
+          targetBboxLon1: { not: null },
+        },
+        select: { targetBboxLon1: true, targetBboxLat1: true, targetBboxLon2: true, targetBboxLat2: true },
+      });
+
+      // Reuse existing bbox if we found a campaign at the exact same geocoded point
+      if (existingCampaign?.targetBboxLon1 != null && existingCampaign.targetBboxLat1 != null &&
+          existingCampaign.targetBboxLon2 != null && existingCampaign.targetBboxLat2 != null) {
+        bbox = {
+          lon1: existingCampaign.targetBboxLon1,
+          lat1: existingCampaign.targetBboxLat1,
+          lon2: existingCampaign.targetBboxLon2,
+          lat2: existingCampaign.targetBboxLat2,
+        };
+        log.info({ input: text }, 'Reusing bbox from existing campaign at same location');
+      }
+
       const result = {
         city: aiParsed.displayName,
         state: aiParsed.state,
@@ -803,13 +826,42 @@ Output format:
       }
     }
 
+    // Build the Geoapify filter string for fingerprinting (must match what searchRestaurants uses)
+    const filterFingerprint = coords.bbox
+      ? `rect:${coords.bbox.lon1},${coords.bbox.lat1},${coords.bbox.lon2},${coords.bbox.lat2}`
+      : `circle:${coords.lon},${coords.lat},15000`;
+
     // Scrape places in background — return 202 immediately
     setImmediate(async () => {
       try {
-        const existingCount = await db.prospectBusiness.count({ where: { campaignId: id } });
+        // Global offset: count prospects across ALL campaigns using the exact same Geoapify filter.
+        // This ensures campaign 2 on "Staten Island" picks up where campaign 1 left off.
+        const allGeoapifyCampaigns = await db.outboundCampaign.findMany({
+          where: { discoverySource: 'geoapify' },
+          select: { id: true, targetLat: true, targetLon: true, targetBboxLon1: true, targetBboxLat1: true, targetBboxLon2: true, targetBboxLat2: true },
+        });
+
+        const matchingCampaignIds = allGeoapifyCampaigns
+          .filter((c) => {
+            // Build the same filter string for each campaign and compare
+            const cFilter = (c.targetBboxLon1 != null && c.targetBboxLat1 != null && c.targetBboxLon2 != null && c.targetBboxLat2 != null)
+              ? `rect:${c.targetBboxLon1},${c.targetBboxLat1},${c.targetBboxLon2},${c.targetBboxLat2}`
+              : (c.targetLat != null && c.targetLon != null)
+                ? `circle:${c.targetLon},${c.targetLat},15000`
+                : null;
+            return cFilter === filterFingerprint;
+          })
+          .map((c) => c.id);
+
+        const globalOffset = matchingCampaignIds.length > 0
+          ? await db.prospectBusiness.count({ where: { campaignId: { in: matchingCampaignIds } } })
+          : 0;
+
         const fetchLimit = campaign.maxProspects ?? 200;
-        const allPlaces = await searchRestaurants(campaign.targetCity, env.GEOAPIFY_API_KEY!, fetchLimit, coords, existingCount);
-        log.info({ campaignId: id, total: allPlaces.length, startOffset: existingCount }, 'Places scraped, queuing prospects');
+        log.info({ campaignId: id, globalOffset, matchingCampaigns: matchingCampaignIds.length, filterFingerprint }, 'Geoapify global offset calculated');
+
+        const allPlaces = await searchRestaurants(campaign.targetCity, env.GEOAPIFY_API_KEY!, fetchLimit, coords, globalOffset);
+        log.info({ campaignId: id, total: allPlaces.length, startOffset: globalOffset }, 'Places scraped, queuing prospects');
 
         for (const place of allPlaces) {
           const job: Record<string, unknown> = {
