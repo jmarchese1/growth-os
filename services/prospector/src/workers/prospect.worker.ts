@@ -6,7 +6,7 @@ import type { ProspectDiscoveredPayload } from '@embedo/types';
 import { extractEmailFromWebsite, extractPhoneFromWebsite } from '../scraper/website-email.js';
 import { findBusinessEmail } from '../scraper/brave-search.js';
 import { validateEmail, detectContactForm, guessEmailPattern, extractDomain } from '../scraper/email-validator.js';
-import { findEmailViaHunterDomain, extractEmailFromFacebook, extractEmailFromInstagram, extractSocialLinksFromHtml } from '../scraper/social-email.js';
+import { extractEmailFromFacebook, extractEmailFromInstagram, extractSocialLinksFromHtml } from '../scraper/social-email.js';
 import { isDuplicate } from '../dedup/isDuplicate.js';
 import { scoreWebsite } from '../scraper/website-score.js';
 import { env } from '../config.js';
@@ -78,39 +78,26 @@ async function enrichEmail(
   // If we already have a high-confidence email (95+), skip slower sources
   const bestSoFar = candidates.reduce((b, c) => c.confidence > b ? c.confidence : b, 0);
   if (bestSoFar < 90) {
-    // 3. Hunter.io domain lookup
-    if (env.HUNTER_API_KEY && website) {
-      const domain = extractDomain(website);
-      const hunterResult = await findEmailViaHunterDomain(domain, env.HUNTER_API_KEY);
-      if (hunterResult) {
-        await collect(hunterResult.email, 'hunter', {
-          firstName: hunterResult.firstName ?? null,
-          lastName: hunterResult.lastName ?? null,
-          position: hunterResult.position ?? null,
-        });
-      }
-    }
-
-    // 4. Facebook page scrape
+    // 3. Facebook page scrape
     if (socialUrls?.facebook) {
       const fbEmail = await extractEmailFromFacebook(socialUrls.facebook);
       if (fbEmail) await collect(fbEmail, 'facebook');
     }
 
-    // 5. Instagram bio scrape
+    // 4. Instagram bio scrape
     if (socialUrls?.instagram) {
       const igEmail = await extractEmailFromInstagram(socialUrls.instagram);
       if (igEmail) await collect(igEmail, 'instagram');
     }
 
-    // 6. Brave Search
+    // 5. Brave Search
     if (env.BRAVE_SEARCH_API_KEY && city) {
       const found = await findBusinessEmail(name, city, env.BRAVE_SEARCH_API_KEY, website);
       if (found) await collect(found, 'brave_search');
     }
   }
 
-  // 7. Pattern guessing — only if nothing else found
+  // 6. Pattern guessing — only if nothing else found
   if (candidates.length === 0 && website) {
     const domain = extractDomain(website);
     const guess = await guessEmailPattern(domain);
