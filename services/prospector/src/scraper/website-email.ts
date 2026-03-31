@@ -29,7 +29,7 @@ const FREE_EMAIL_DOMAINS = new Set([
   'comcast.net', 'att.net', 'verizon.net', 'cox.net', 'sbcglobal.net',
 ]);
 
-// SaaS / platform domains that appear in scraped HTML but are never business contact emails
+// SaaS / platform / review domains — emails from these are never the business contact
 const NOISE_DOMAINS = new Set([
   'sentry.io', 'sentry-next.wixpress.com', 'wixpress.com',
   'mailchimp.com', 'constantcontact.com', 'sendgrid.net',
@@ -38,7 +38,22 @@ const NOISE_DOMAINS = new Set([
   'twitter.com', 'yelp.com', 'tripadvisor.com', 'opentable.com',
   'grubhub.com', 'doordash.com', 'ubereats.com', 'toasttab.com',
   'squareup.com', 'clover.com', 'stripe.com', 'paypal.com',
+  'theinfatuation.com', 'eater.com', 'timeout.com', 'thrillist.com',
+  'zagat.com', 'allmenus.com', 'menuism.com', 'menupages.com',
+  'cuny.edu', 'edu', // university domains
+  'cloudflare.com', 'amazonaws.com', 'azurewebsites.net',
+  'typeform.com', 'jotform.com', 'google.com',
 ]);
+
+/** Check if email domain matches any noise domain (exact or subdomain) */
+function isNoiseDomain(domain: string): boolean {
+  if (NOISE_DOMAINS.has(domain)) return true;
+  // Check if it's a subdomain of a noise domain (e.g. sentry.wixpress.com → wixpress.com)
+  for (const noise of NOISE_DOMAINS) {
+    if (domain.endsWith(`.${noise}`)) return true;
+  }
+  return false;
+}
 
 // Contact page paths to check (ordered by likelihood of having emails)
 const CONTACT_PATHS = [
@@ -138,8 +153,8 @@ function isValidEmail(email: string): boolean {
   // Reject image/asset filenames (logo@2x.png, icon@3x.svg)
   if (ASSET_EXTENSIONS.has(tld)) return false;
 
-  // Reject noise/platform domains
-  if (NOISE_DOMAINS.has(domain)) return false;
+  // Reject noise/platform domains (exact + subdomain match)
+  if (isNoiseDomain(domain)) return false;
 
   // Reject placeholder patterns
   if (PLACEHOLDER_PATTERNS.some((p) => lower.includes(p))) return false;

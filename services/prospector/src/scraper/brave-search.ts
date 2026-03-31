@@ -15,12 +15,30 @@ const SKIP_DOMAINS = new Set([
   'linkedin.com', 'pinterest.com', 'tiktok.com', 'reddit.com',
 ]);
 
-// Known noise / platform emails to reject
+// Known noise / platform / review / directory emails to reject
 const NOISE_DOMAINS = new Set([
   'sentry.io', 'wixpress.com', 'squarespace.com', 'godaddy.com',
   'mailchimp.com', 'constantcontact.com', 'hubspot.com',
   'googleapis.com', 'google.com', 'example.com',
+  'theinfatuation.com', 'eater.com', 'timeout.com', 'thrillist.com',
+  'zagat.com', 'yelp.com', 'tripadvisor.com', 'opentable.com',
+  'facebook.com', 'instagram.com', 'twitter.com', 'linkedin.com',
+  'grubhub.com', 'doordash.com', 'ubereats.com', 'toasttab.com',
+  'cuny.edu', 'nyu.edu', 'columbia.edu', // university domains
+  'cloudflare.com', 'amazonaws.com', 'typeform.com', 'jotform.com',
+  'stripe.com', 'paypal.com', 'squareup.com', 'clover.com',
+  'sendgrid.net', 'intercom.io', 'salesforce.com',
 ]);
+
+function isNoiseDomain(domain: string): boolean {
+  if (NOISE_DOMAINS.has(domain)) return true;
+  for (const noise of NOISE_DOMAINS) {
+    if (domain.endsWith(`.${noise}`)) return true;
+  }
+  // Block all .edu domains
+  if (domain.endsWith('.edu')) return true;
+  return false;
+}
 
 // Placeholder patterns
 const PLACEHOLDER_PATTERNS = [
@@ -48,8 +66,8 @@ function isValidBusinessEmail(email: string): boolean {
   // Reject asset filenames
   if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'ico', 'js', 'css'].includes(tld)) return false;
 
-  // Reject noise domains
-  if (NOISE_DOMAINS.has(domain)) return false;
+  // Reject noise domains (exact + subdomain match)
+  if (isNoiseDomain(domain)) return false;
 
   // Reject placeholders
   if (PLACEHOLDER_PATTERNS.some(p => lower.includes(p))) return false;
@@ -171,37 +189,64 @@ export async function findBusinessEmail(
 
     if (allEmails.length === 0) return null;
 
-    // Score and pick the best email
+    // Score and pick the best email, with business-relevance filtering
     const nameWords = businessName.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 2);
+    const FREE_PROVIDERS = new Set(['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 'icloud.com', 'comcast.net', 'att.net', 'verizon.net']);
 
-    const scored = allEmails.map(({ email, fromPage, domain }) => {
-      let score = 0;
+    const scored = allEmails
+      .filter(({ email, domain }) => {
+        // CRITICAL: For Brave Search results, reject emails from domains that
+        // are clearly unrelated to the business (other restaurants, blogs, etc.)
+        // Only accept: (a) free email providers, (b) domains containing a business name word
+        if (FREE_PROVIDERS.has(domain)) return true;
 
-      // Found on an actual page vs just a snippet
-      if (fromPage) score += 10;
+        const domainBase = domain.split('.').slice(0, -1).join('').toLowerCase();
+        const hasNameMatch = nameWords.some(w => domainBase.includes(w));
+        // Also accept generic role prefixes on any domain (info@, contact@, etc.)
+        // but only if the search result URL was the business's own site
+        if (hasNameMatch) return true;
 
-      // Custom domain (not free email) — strong signal
-      const isFree = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 'icloud.com'].includes(domain);
-      if (!isFree) {
-        score += 30;
-      } else {
-        // Free email — check if local part contains business name words
-        const local = email.split('@')[0]!.replace(/[^a-z0-9]/g, '');
-        const hasBusinessWord = nameWords.some(w => local.includes(w));
-        if (hasBusinessWord) score += 20;
-        else score += 2; // random free email — low confidence
-      }
+        // Don't accept generic prefixes on unrelated domains — too many false positives
+        // (e.g. info@greatrestaurantsmag.com for "Il Sogno")
 
-      // Role prefix bonus
-      const local = email.split('@')[0] ?? '';
-      if (/^(info|contact|hello|book|reserv|order|catering|events)/.test(local)) score += 5;
-      if (/^(owner|manager|gm|chef)/.test(local)) score += 8;
+        log.debug({ email, businessName, reason: 'domain not related' }, 'Brave: rejecting unrelated email');
+        return false;
+      })
+      .map(({ email, fromPage, domain }) => {
+        let score = 0;
 
-      return { email, score };
-    });
+        if (fromPage) score += 10;
+
+        const isFree = FREE_PROVIDERS.has(domain);
+        if (!isFree) {
+          // Check if domain contains business name — strong relevance signal
+          const domainBase = domain.split('.').slice(0, -1).join('').toLowerCase();
+          const domainMatchesName = nameWords.some(w => domainBase.includes(w));
+          score += domainMatchesName ? 30 : 10; // unrelated custom domain scores low
+        } else {
+          const local = email.split('@')[0]!.replace(/[^a-z0-9]/g, '');
+          const hasBusinessWord = nameWords.some(w => local.includes(w));
+          if (hasBusinessWord) score += 20;
+          else score += 2;
+        }
+
+        const local = email.split('@')[0] ?? '';
+        if (/^(info|contact|hello|book|reserv|order|catering|events)/.test(local)) score += 5;
+        if (/^(owner|manager|gm|chef)/.test(local)) score += 8;
+
+        return { email, score };
+      });
+
+    if (scored.length === 0) return null;
 
     scored.sort((a, b) => b.score - a.score);
     const best = scored[0]!;
+
+    // Only return if we have reasonable confidence (score > 5 avoids random junk)
+    if (best.score <= 5) {
+      log.debug({ businessName, bestEmail: best.email, bestScore: best.score }, 'Brave: best email too low confidence');
+      return null;
+    }
 
     log.info({ businessName, city, email: best.email, score: best.score, totalFound: scored.length }, 'Found email via Brave Search');
     return best.email;
