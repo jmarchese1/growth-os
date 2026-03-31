@@ -24,8 +24,9 @@ interface Props {
 const TEMPLATE_VARS = [
   { key: '{{firstName}}', label: 'First Name', desc: 'Contact first name (falls back to "there")' },
   { key: '{{lastName}}', label: 'Last Name', desc: 'Contact last name' },
-  { key: '{{company}}', label: 'Company', desc: 'Full business name in Title Case' },
+  { key: '{{company}}', label: 'Company', desc: 'Full business name, properly cased' },
   { key: '{{shortName}}', label: 'Short Name', desc: 'Casual name — "Mario\'s" instead of "Mario\'s Pizzeria"' },
+  { key: '{{type}}', label: 'Type', desc: 'Sub-industry — "pizzeria", "diner", "sushi bar", etc.' },
   { key: '{{city}}', label: 'City', desc: 'Target city' },
   { key: '{{calLink}}', label: 'Cal Link', desc: 'Booking link (best for follow-ups)' },
 ];
@@ -35,6 +36,7 @@ const PREVIEW_VARS: Record<string, string> = {
   '{{lastName}}': 'Chen',
   '{{company}}': 'Golden Dragon Kitchen',
   '{{shortName}}': 'Golden Dragon',
+  '{{type}}': 'Chinese restaurant',
   '{{businessName}}': 'Golden Dragon Kitchen',
   '{{city}}': 'New York',
   '{{calLink}}': 'https://cal.com/jason-marchese-mkfkwl/30min',

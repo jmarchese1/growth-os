@@ -32,6 +32,8 @@ interface OutreachMessage {
 interface ProspectDetail {
   id: string;
   name: string;
+  shortName: string | null;
+  businessType: string | null;
   email: string | null;
   emailSource: string | null;
   emailVerificationStatus: string | null;
@@ -249,6 +251,24 @@ export default async function ProspectDetailPage({ params }: {
         <div className="bg-white/[0.03] backdrop-blur-sm rounded-2xl border border-white/[0.08] p-5 space-y-4 glow-card">
           <h2 className="text-[9px] font-bold text-slate-600 uppercase tracking-[0.16em]">Business Info</h2>
           <dl className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Short Name</dt>
+                <dd className="text-sm text-slate-300">{prospect.shortName ?? <span className="text-slate-700 italic">not set</span>}</dd>
+              </div>
+              <div>
+                <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Type</dt>
+                <dd>
+                  {prospect.businessType ? (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                      {prospect.businessType}
+                    </span>
+                  ) : (
+                    <span className="text-sm text-slate-700 italic">not set</span>
+                  )}
+                </dd>
+              </div>
+            </div>
             <div>
               <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Website</dt>
               <dd>

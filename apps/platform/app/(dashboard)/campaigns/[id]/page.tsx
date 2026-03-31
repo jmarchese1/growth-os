@@ -8,6 +8,7 @@ import { FollowUpTimer } from './follow-up-timer';
 import { EmailPreviewModal } from './email-preview-modal';
 import { WebsiteScore } from './website-score';
 import { CloneCampaignButton } from '../clone-campaign-button';
+import { MapButton } from './map-button';
 
 const PROSPECTOR_URL = process.env.PROSPECTOR_URL ?? 'http://localhost:3009';
 
@@ -76,6 +77,13 @@ interface Campaign {
   name: string;
   targetCity: string;
   targetIndustry: string;
+  discoverySource: string;
+  targetLat: number | null;
+  targetLon: number | null;
+  targetBboxLon1: number | null;
+  targetBboxLat1: number | null;
+  targetBboxLon2: number | null;
+  targetBboxLat2: number | null;
   emailSubject: string;
   emailBodyHtml: string;
   sequenceSteps: SequenceStep[] | null;
@@ -237,6 +245,17 @@ export default async function CampaignDetailPage({ params, searchParams }: {
               campaignName={campaign.name}
               prospectorUrl={PROSPECTOR_URL}
             />
+            {campaign.targetLat != null && campaign.targetLon != null && (
+              <MapButton
+                campaignName={campaign.name}
+                targetCity={campaign.targetCity}
+                lat={campaign.targetLat}
+                lon={campaign.targetLon}
+                bbox={campaign.targetBboxLon1 != null && campaign.targetBboxLat1 != null && campaign.targetBboxLon2 != null && campaign.targetBboxLat2 != null
+                  ? { lon1: campaign.targetBboxLon1, lat1: campaign.targetBboxLat1, lon2: campaign.targetBboxLon2, lat2: campaign.targetBboxLat2 }
+                  : null}
+              />
+            )}
           </div>
         )}
       </div>
