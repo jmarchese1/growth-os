@@ -1,6 +1,6 @@
 # Embedo Platform — Current Status
 
-> Last updated: 2026-03-30. Update this file at the end of any session that changes deployment state, implements a new feature, or discovers a broken integration.
+> Last updated: 2026-03-31. Update this file at the end of any session that changes deployment state, implements a new feature, or discovers a broken integration.
 
 ---
 
@@ -117,18 +117,37 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 - **Smart send staggering**: Rapid Send Now clicks auto-queue with 3-min intervals; live countdown on each queued send
 - **Duplicate send prevention**: Checks if step already sent before sending; prevents double-emails
 - **AI email personalization**: Claude Haiku rewrites cold emails per-prospect (toggleable per campaign)
-- **Smart business names**: Title case conversion, acronym preservation, city suffix stripping, business suffix stripping ({{shortName}} variable)
+- **AI business names**: Claude Haiku generates displayName, shortName, businessType, and isChain for every prospect — no hardcoded casing/suffix rules. `{{shortName}}`, `{{type}}`, `{{company}}` all AI-driven.
+- **`{{type}}` template variable**: Sub-industry like "pizzeria", "diner", "sushi bar" — inferred from Geoapify categories + AI. Available in email editor with preview.
+- **Email quality overhaul**: Domain-vs-website validation (rejects unrelated domains), MX record checks, Brave Search restricted to relevant pages only, chain detection (isChain field). emailConfidence score stored per prospect.
+- **Email enrichment waterfall**: Collects from ALL sources (Geoapify → website scrape → Facebook → Instagram → Brave Search), validates each, returns highest confidence. No more first-match-wins.
+- **Social link extraction**: Geoapify OSM data (`contact:facebook`, `contact:instagram`) + website scraping (checks homepage + /contact + /about for social links in footer)
+- **AI location resolver**: Free-text input → Haiku parses intent → Geoapify geocoder provides precise coordinates + bbox. Supports neighborhoods, boroughs, sub-city areas.
+- **Bounding box search**: Geoapify `rect:` filter for tight geographic targeting (instead of 15km circle). AI-resolved bbox reused across campaigns at same location (~100m fuzzy matching).
+- **Global Geoapify offset**: Campaign 2 on Staten Island starts where campaign 1 left off. Offset shared across all campaigns with the same filter fingerprint.
+- **Leaflet map visualization**: Map button on campaign pages shows shaded violet rectangle (bbox) or amber circle (15km radius) on an interactive Leaflet map.
+- **Emails NOT auto-queued**: Prospect creation only enriches. User must manually send via campaign UI.
+- **Improved website scraper**: Gmail/Yahoo unblocked with smart scoring, 12 contact page paths, contact link following, Playwright JS fallback, email quality scoring (0-100).
 - **Inbox rotation**: 3 sending domains (embedo.io, getembedo.com, tryembedo.com) with round-robin rotation, per-domain daily limits, warm-up stages (5→15→30→50/day)
 - **Domain health tracking**: Bounce rate, open rate, health score per domain; auto-disable at 50+ sends with 10%+ bounce rate
 - **Email templates**: Auto-created from campaign copy on first send; track timesSent, timesOpened, timesReplied per template
 - **Export page**: Select campaigns + columns, download CSV/TSV with Lemlist-compatible headers
 - **Campaign loading screen**: Full-screen rotating cube + status messages during scraping; success confetti + sound on completion
 
+**Instagram DM Outreach (new)**
+- **Instagram DM platform**: Full `/instagram` page under OUTBOUND in sidebar — connect IG accounts via cookies, compose DM templates with {{variables}}, send to campaigns, track sent/failed/replied DMs
+- **Playwright DM automation**: Browser automation sends DMs with human-like typing delays (30-80ms/char), 2-5 min between sends, max 25/day per session
+- **Instagram session management**: Cookie-based auth, daily limit tracking, session validation (detect expired/challenged), auto-save updated cookies after each use
+- **Instagram handle discovery**: Extracted from Geoapify OSM + website social links during prospect enrichment. Stored as `instagramHandle` on ProspectBusiness.
+- **Configurable selectors**: Instagram UI selectors stored in DB, updatable without code deploy
+
 **Platform (Internal CRM)**
 - **Analytics dashboard**: Outreach funnel visualization, key metrics (open/reply/bounce/conversion rates), domain health cards, email copy performance with visual bars, city performance table, send time heatmap
 - **Sending Domains page**: Add/verify/warm-up domains, health scores, daily send progress bars, active/disable toggles
 - **Email Templates page**: CRUD for reusable templates, performance tracking, duplicate/archive actions
 - **Cubey assistant**: Platform chatbot with live CRM context (businesses, campaigns), proxied through /api/chatbot to avoid CORS
+- **Prospect detail enhancements**: shortName + businessType shown on Business Info card; emailConfidence, isChain, hasContactForm tracked
+- **Emails page sort**: Default sort by most recent sent time (descending)
 - **All timestamps in ET**: Every date display uses timeZone: 'America/New_York'
 - **Unique sidebar icons**: Each nav item has a distinct icon
 - **Daily report caching**: Generated once per day, cached server-side
@@ -200,7 +219,7 @@ NEXT_PUBLIC_API_URL=https://embedoapi-production.up.railway.app
 
 ### ❌ Not Implemented / Placeholder
 
-- **Social media service**: Meta webhook stub only; comment/DM processing marked TODO
+- **Social media content service**: Meta webhook stub only; comment/DM auto-response marked TODO (Instagram DM outreach is separate, lives in prospector)
 - **Lead-engine**: Event workers exist but no HTTP routes; not deployed
 
 ---

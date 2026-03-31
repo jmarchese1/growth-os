@@ -271,13 +271,16 @@ OUTBOUND (cold)          PIPELINE (warm)          MAIN (customers)
 ─────────────────        ─────────────────        ─────────────────
 Campaigns                Leads                    Businesses
   └─ Prospects             └─ Proposals             └─ Contacts
-       │                        │                        │
+Emails                         │                        │
+Instagram DMs                  │                        │
+       │                       │                        │
        ├─ Reply ──────────► Lead created           Signed customer
        ├─ Meeting booked ─► Lead created           (product delivery)
        └─ Converted ──────────────────────────────► Business onboarded
 ```
 
-- **Outbound**: Cold outreach campaigns via prospector. Prospects discovered, enriched, emailed.
+- **Outbound**: Cold outreach campaigns via prospector. Prospects discovered, enriched, emailed + DM'd via Instagram.
+- **Sidebar nav**: OVERVIEW | OUTBOUND (Campaigns, Emails, Instagram, Leads) | TOOLS | ACCOUNT
 - **Pipeline**: When prospects reply or book a Cal.com meeting, they become leads. Proposals sent here.
 - **Main**: Converted leads become onboarded businesses receiving Embedo products.
 
