@@ -10,15 +10,17 @@ type SendingDomain = Awaited<ReturnType<typeof db.sendingDomain.findFirst>> & {}
  * Returns null if no domains have capacity (triggers env fallback).
  */
 export async function getNextDomain(): Promise<SendingDomain | null> {
-  const today = new Date().toISOString().slice(0, 10);
+  // Get today's date in ET (midnight ET = 5am UTC, or 4am UTC during EDT)
+  const nowET = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
+  const today = new Date(nowET).toISOString().slice(0, 10);
+  const todayMidnightUTC = new Date(today + 'T05:00:00.000Z'); // midnight ET in UTC
 
-  // Lazy reset: reset sentToday for domains whose sentTodayDate is stale
+  // Lazy reset: reset sentToday for domains whose sentTodayDate is before today (ET)
   await db.sendingDomain.updateMany({
     where: {
-      active: true,
-      sentTodayDate: { lt: new Date(today + 'T00:00:00.000Z') },
+      sentTodayDate: { lt: todayMidnightUTC },
     },
-    data: { sentToday: 0, sentTodayDate: new Date(today + 'T00:00:00.000Z') },
+    data: { sentToday: 0, sentTodayDate: todayMidnightUTC },
   });
 
   // Find all active, verified domains
@@ -118,4 +120,14 @@ export async function advanceWarmup(): Promise<void> {
       log.info({ domain: domain.domain, stage, dailyLimit: limit, complete }, 'Warm-up stage advanced');
     }
   }
+}
+
+/**
+ * Reset daily send counts. Called at midnight ET from scheduled job.
+ */
+export async function resetDailyCounts(): Promise<void> {
+  const result = await db.sendingDomain.updateMany({
+    data: { sentToday: 0, sentTodayDate: new Date() },
+  });
+  log.info({ domainsReset: result.count }, 'Daily send counts reset (midnight ET)');
 }

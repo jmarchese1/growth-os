@@ -7,6 +7,7 @@ import { registerRoutes } from './routes.js';
 import { startProspectWorker } from './workers/prospect.worker.js';
 import { startOutreachWorker } from './workers/outreach.worker.js';
 import { sendDailyDigest } from './workers/digest.worker.js';
+import { resetDailyCounts, advanceWarmup } from './outreach/domain-rotator.js';
 
 const log = createLogger('prospector');
 
@@ -45,6 +46,22 @@ async function start() {
     setInterval(sendDailyDigest, 24 * 60 * 60 * 1000);
   }, msUntil9am);
   log.info({ nextDigestAt: next9am.toISOString() }, 'Daily digest scheduled');
+
+  // Midnight ET reset — reset daily send counts + advance warm-up stages
+  const nextMidnightET = new Date(now);
+  nextMidnightET.setUTCHours(5, 0, 0, 0); // midnight ET = 5:00 UTC (EST)
+  if (nextMidnightET <= now) nextMidnightET.setDate(nextMidnightET.getDate() + 1);
+  const msUntilMidnight = nextMidnightET.getTime() - now.getTime();
+
+  setTimeout(() => {
+    resetDailyCounts();
+    advanceWarmup();
+    setInterval(() => {
+      resetDailyCounts();
+      advanceWarmup();
+    }, 24 * 60 * 60 * 1000);
+  }, msUntilMidnight);
+  log.info({ nextResetAt: nextMidnightET.toISOString() }, 'Midnight ET reset scheduled');
 
 }
 
