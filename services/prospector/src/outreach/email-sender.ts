@@ -129,19 +129,32 @@ export async function sendColdEmail(
   }
 
   // Match to an email template for performance tracking
+  // Auto-create a template if this email copy hasn't been seen before
   let emailTemplateId: string | null = null;
   try {
-    const template = await db.emailTemplate.findFirst({
+    let template = await db.emailTemplate.findFirst({
       where: { body: campaign.emailBodyHtml, active: true },
       select: { id: true },
     });
-    if (template) {
-      emailTemplateId = template.id;
-      await db.emailTemplate.update({
-        where: { id: template.id },
-        data: { timesSent: { increment: 1 } },
+    if (!template) {
+      // Auto-create template from new campaign copy
+      template = await db.emailTemplate.create({
+        data: {
+          name: `${campaign.name} copy`,
+          subject: campaign.emailSubject,
+          body: campaign.emailBodyHtml,
+          category: 'cold',
+          timesSent: 0,
+        },
+        select: { id: true },
       });
+      log.info({ templateId: template.id, campaign: campaign.name }, 'Auto-created email template from campaign copy');
     }
+    emailTemplateId = template.id;
+    await db.emailTemplate.update({
+      where: { id: template.id },
+      data: { timesSent: { increment: 1 } },
+    });
   } catch { /* non-critical */ }
 
   // Create OutreachMessage record
