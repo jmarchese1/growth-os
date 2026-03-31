@@ -42,6 +42,10 @@ const createCampaignSchema = z.object({
   targetCountry: z.string().optional(),
   targetLat: z.number().optional(),
   targetLon: z.number().optional(),
+  targetBboxLon1: z.number().optional(),
+  targetBboxLat1: z.number().optional(),
+  targetBboxLon2: z.number().optional(),
+  targetBboxLat2: z.number().optional(),
   targetIndustry: z.enum(['RESTAURANT', 'SALON', 'RETAIL', 'FITNESS', 'MEDICAL', 'OTHER']).default('RESTAURANT'),
   discoverySource: z.enum(['geoapify', 'apollo']).default('geoapify'),
   apolloIndustries: z.array(z.string()).optional(),       // Apollo keyword tags (e.g. ['restaurants'])
@@ -61,6 +65,71 @@ const createCampaignSchema = z.object({
 
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.get('/health', async () => ({ ok: true, service: 'prospector' }));
+
+  // ─── AI Location Resolver ────────────────────────────────────────────────
+  app.post('/resolve-location', async (request, reply) => {
+    const { text } = request.body as { text?: string };
+    if (!text || text.trim().length < 2) {
+      return reply.code(400).send({ error: 'Location text is required' });
+    }
+
+    if (!env.ANTHROPIC_API_KEY) {
+      return reply.code(400).send({ error: 'ANTHROPIC_API_KEY not configured' });
+    }
+
+    try {
+      const Anthropic = (await import('@anthropic-ai/sdk')).default;
+      const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+      const response = await client.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 300,
+        messages: [{
+          role: 'user',
+          content: `Given this location, return a JSON object with the canonical name, US state code, center coordinates, and a TIGHT rectangular bounding box that covers ONLY this specific area.
+
+For boroughs, neighborhoods, or sub-city areas, the bbox should tightly fit that specific area, NOT the whole city. For example, "Staten Island" should cover just Staten Island, not all of NYC.
+
+The bounding box should be the SW corner (lon1, lat1) and NE corner (lon2, lat2). Make it tight — no more than ~1km padding beyond the actual boundary.
+
+Return ONLY valid JSON, no explanation:
+{
+  "city": "canonical city/area name",
+  "state": "XX",
+  "lat": center latitude,
+  "lon": center longitude,
+  "bbox": { "lon1": SW longitude, "lat1": SW latitude, "lon2": NE longitude, "lat2": NE latitude }
+}
+
+Location: "${text.trim()}"`,
+        }],
+      });
+
+      const raw = (response.content[0]?.type === 'text' ? response.content[0].text : '').trim();
+      // Extract JSON from response (handle markdown code blocks)
+      const jsonStr = raw.replace(/^```json?\s*/i, '').replace(/```\s*$/, '').trim();
+      const parsed = JSON.parse(jsonStr) as {
+        city: string;
+        state: string;
+        lat: number;
+        lon: number;
+        bbox: { lon1: number; lat1: number; lon2: number; lat2: number };
+      };
+
+      // Validate the response has required fields and reasonable coordinates
+      if (!parsed.city || !parsed.state || !parsed.lat || !parsed.lon || !parsed.bbox) {
+        return reply.code(500).send({ error: 'AI returned incomplete location data' });
+      }
+      if (Math.abs(parsed.lat) > 90 || Math.abs(parsed.lon) > 180) {
+        return reply.code(500).send({ error: 'AI returned invalid coordinates' });
+      }
+
+      log.info({ input: text, resolved: parsed }, 'Location resolved via AI');
+      return reply.send(parsed);
+    } catch (err) {
+      log.error({ err, text }, 'Location resolution failed');
+      return reply.code(500).send({ error: 'Failed to resolve location' });
+    }
+  });
 
   // ─── Auto-sender config + status ─────────────────────────────────────────
   app.get('/auto-sender/status', async () => {
@@ -306,6 +375,10 @@ Output format:
     if (parsed.targetCountry !== undefined) createData['targetCountry'] = parsed.targetCountry;
     if (parsed.targetLat !== undefined) createData['targetLat'] = parsed.targetLat;
     if (parsed.targetLon !== undefined) createData['targetLon'] = parsed.targetLon;
+    if (parsed.targetBboxLon1 !== undefined) createData['targetBboxLon1'] = parsed.targetBboxLon1;
+    if (parsed.targetBboxLat1 !== undefined) createData['targetBboxLat1'] = parsed.targetBboxLat1;
+    if (parsed.targetBboxLon2 !== undefined) createData['targetBboxLon2'] = parsed.targetBboxLon2;
+    if (parsed.targetBboxLat2 !== undefined) createData['targetBboxLat2'] = parsed.targetBboxLat2;
     if (parsed.discoverySource) createData['discoverySource'] = parsed.discoverySource;
     if (parsed.apolloIndustries || parsed.apolloEmployeeRanges || parsed.apolloSicCodes) {
       createData['apolloConfig'] = {
@@ -660,11 +733,19 @@ Output format:
 
     log.info({ campaignId: id, city: campaign.targetCity, source: 'geoapify' }, 'Running campaign');
 
-    // Use stored coords if available (set at campaign creation via autocomplete).
-    let coords: { lon: number; lat: number };
+    // Use stored coords + bbox if available (set at campaign creation via AI resolver).
+    let coords: { lon: number; lat: number; bbox?: { lon1: number; lat1: number; lon2: number; lat2: number } };
     if (campaign.targetLat != null && campaign.targetLon != null) {
       coords = { lon: campaign.targetLon, lat: campaign.targetLat };
-      log.info({ campaignId: id, coords }, 'Using stored campaign coords — skipping geocode');
+      // Attach bounding box if all 4 corners are set
+      if (campaign.targetBboxLon1 != null && campaign.targetBboxLat1 != null &&
+          campaign.targetBboxLon2 != null && campaign.targetBboxLat2 != null) {
+        coords.bbox = {
+          lon1: campaign.targetBboxLon1, lat1: campaign.targetBboxLat1,
+          lon2: campaign.targetBboxLon2, lat2: campaign.targetBboxLat2,
+        };
+      }
+      log.info({ campaignId: id, coords, hasBbox: !!coords.bbox }, 'Using stored campaign coords');
     } else {
       try {
         coords = await geocodeCity(campaign.targetCity, env.GEOAPIFY_API_KEY!);

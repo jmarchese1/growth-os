@@ -701,6 +701,10 @@ model OutboundCampaign {
   targetCountry  String?      // ISO 3166-1 alpha-2 e.g. "US"
   targetLat      Float?       // Stored at campaign creation — bypasses geocoding at run time
   targetLon      Float?
+  targetBboxLon1 Float?       // Bounding box SW corner longitude (AI-generated)
+  targetBboxLat1 Float?       // Bounding box SW corner latitude
+  targetBboxLon2 Float?       // Bounding box NE corner longitude
+  targetBboxLat2 Float?       // Bounding box NE corner latitude
   targetIndustry BusinessType @default(RESTAURANT)
   discoverySource String      @default("geoapify")  // "geoapify" | "apollo"
   apolloConfig    Json?       // { industries: string[], employeeRanges: string[] }

@@ -18,6 +18,13 @@ export interface PlaceResult {
   email?: string;
 }
 
+export interface BoundingBox {
+  lon1: number; // SW corner longitude
+  lat1: number; // SW corner latitude
+  lon2: number; // NE corner longitude
+  lat2: number; // NE corner latitude
+}
+
 interface GeoapifyGeoResult {
   lon: number;
   lat: number;
@@ -76,15 +83,14 @@ export async function geocodeCity(city: string, apiKey: string): Promise<{ lon: 
 }
 
 async function fetchPlacesPage(
-  lon: number,
-  lat: number,
+  filter: string,
   offset: number,
   limit: number,
   apiKey: string,
 ): Promise<GeoapifyPlacesResponse> {
   const params = new URLSearchParams({
     categories: 'catering.restaurant',
-    filter: `circle:${lon},${lat},15000`, // 15km radius
+    filter,
     limit: String(limit),
     offset: String(offset),
     apiKey,
@@ -114,20 +120,30 @@ export async function searchRestaurants(
   city: string,
   apiKey: string,
   maxResults = 200,
-  coords?: { lon: number; lat: number },
+  coords?: { lon: number; lat: number; bbox?: BoundingBox },
   startOffset = 0,
 ): Promise<PlaceResult[]> {
   log.info({ city, maxResults, startOffset }, 'Starting Geoapify restaurant search');
 
-  const { lon, lat } = coords ?? await geocodeCity(city, apiKey);
-  log.info({ city, lon, lat }, 'City geocoded');
+  const resolved = coords ?? { ...(await geocodeCity(city, apiKey)) };
+
+  // Build filter: use bounding box if available, otherwise fall back to 15km circle
+  let filter: string;
+  if (coords?.bbox) {
+    const { lon1, lat1, lon2, lat2 } = coords.bbox;
+    filter = `rect:${lon1},${lat1},${lon2},${lat2}`;
+    log.info({ city, bbox: coords.bbox }, 'Using bounding box filter');
+  } else {
+    filter = `circle:${resolved.lon},${resolved.lat},15000`;
+    log.info({ city, lon: resolved.lon, lat: resolved.lat }, 'Using 15km circle filter (no bbox)');
+  }
 
   const results: PlaceResult[] = [];
   const batchSize = 20; // Geoapify free tier recommended batch size
   let offset = startOffset;
 
   while (results.length < maxResults) {
-    const data = await fetchPlacesPage(lon, lat, offset, batchSize, apiKey);
+    const data = await fetchPlacesPage(filter, offset, batchSize, apiKey);
 
     if (!data.features.length) break;
 
@@ -164,6 +180,6 @@ export async function searchRestaurants(
     await new Promise((r) => setTimeout(r, 200));
   }
 
-  log.info({ city, found: results.length }, 'Geoapify search complete');
+  log.info({ city, found: results.length, filter }, 'Geoapify search complete');
   return results;
 }
