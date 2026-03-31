@@ -35,7 +35,7 @@ export async function sendColdEmail(
   const calLink = process.env['CAL_LINK'] ?? 'https://cal.com/jason-marchese-mkfkwl/30min';
 
   // Build variable map from prospect data (firstName, lastName, company, city, etc.)
-  const vars = buildTemplateVars(prospect, { city: campaign.targetCity, calLink, replyEmail });
+  const vars = await buildTemplateVars(prospect, { city: campaign.targetCity, calLink, replyEmail, anthropicKey: env.ANTHROPIC_API_KEY });
 
   const subjectTemplate = options?.subjectOverride ?? campaign.emailSubject;
   const bodyTemplate = options?.bodyHtmlOverride ?? campaign.emailBodyHtml;

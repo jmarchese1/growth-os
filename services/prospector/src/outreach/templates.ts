@@ -45,80 +45,82 @@ function toTitleCase(str: string): string {
  * "Golden Dragon Kitchen" → "Golden Dragon"
  * "Shake Shack" → "Shake Shack" (no suffix to strip)
  */
-const BUSINESS_SUFFIXES = [
-  'restaurant', 'restaurants', 'pizzeria', 'pizzerias', 'pizza',
-  'kitchen', 'grill', 'grille', 'cafe', 'café', 'bistro', 'bar',
-  'tavern', 'pub', 'diner', 'eatery', 'bakery', 'steakhouse',
-  'trattoria', 'osteria', 'brasserie', 'cantina', 'taqueria',
-  'sushi', 'bbq', 'barbecue', 'smokehouse', 'seafood', 'brewing',
-  'brewery', 'taproom', 'lounge', 'catering', 'food', 'foods',
-  'dining', 'hospitality', 'group', 'co', 'co.', 'inc', 'llc',
-  'ltd', 'corporation', 'corp', 'company',
-];
+// Business/city suffix lists kept for reference but no longer used in code
+// AI short name generation (aiShortName) handles all cases now
 
-// City names that appear as location qualifiers in business names
-const CITY_SUFFIXES = [
-  'tampa', 'miami', 'orlando', 'jacksonville', 'naples',
-  'nyc', 'brooklyn', 'manhattan', 'queens', 'bronx',
-  'chicago', 'houston', 'dallas', 'austin', 'denver',
-  'seattle', 'portland', 'phoenix', 'atlanta', 'boston',
-  'philadelphia', 'detroit', 'minneapolis', 'nashville',
-  'las vegas', 'vegas', 'san francisco', 'sf', 'la',
-  'los angeles', 'san diego', 'scottsdale', 'savannah',
-  'charleston', 'new orleans', 'nola', 'dc', 'usa',
-];
+// Cache for AI-generated short names (survives for the lifetime of the process)
+const shortNameCache = new Map<string, string>();
 
-function toShortName(name: string): string {
+/**
+ * Use Claude Haiku to generate a natural short name for a business.
+ * Falls back to title-cased full name if AI is unavailable.
+ */
+async function aiShortName(name: string, apiKey: string): Promise<string> {
   const titleCased = toTitleCase(name);
-  const words = titleCased.split(/\s+/);
+  if (titleCased.split(/\s+/).length <= 1) return titleCased;
 
-  // Don't strip if only 1 word
-  if (words.length <= 1) return titleCased;
+  // Check cache
+  const cached = shortNameCache.get(name.toLowerCase());
+  if (cached) return cached;
 
-  // Strip trailing city names first (check multi-word cities like "Las Vegas")
-  const lowerJoined = words.map((w) => w.toLowerCase()).join(' ');
-  for (const city of CITY_SUFFIXES) {
-    if (lowerJoined.endsWith(` ${city}`) && lowerJoined.length > city.length + 2) {
-      const cityWordCount = city.split(' ').length;
-      words.splice(words.length - cityWordCount, cityWordCount);
-      break;
-    }
+  try {
+    const Anthropic = (await import('@anthropic-ai/sdk')).default;
+    const client = new Anthropic({ apiKey });
+    const response = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 30,
+      messages: [{
+        role: 'user',
+        content: `Given this business name, return ONLY the short casual name you'd use in conversation. No quotes, no explanation, just the name.
+
+Examples:
+"Mario's Pizzeria" → Mario's
+"wagamama us" → Wagamama
+"Legacy Hospitality Companies" → Legacy
+"Golden Dragon Kitchen" → Golden Dragon
+"Shake Shack" → Shake Shack
+"BLT Restaurant Group" → BLT
+"OLIVIA Tampa" → Olivia
+"Salt Shack On The Bay" → Salt Shack
+"The Capital Grille" → Capital Grille
+"Pineapple Hospitality Group" → Pineapple
+
+"${titleCased}" →`,
+      }],
+    });
+
+    const result = (response.content[0]?.type === 'text' ? response.content[0].text : '').trim().replace(/^["']|["']$/g, '');
+    const shortName = result.length >= 2 && result.length <= titleCased.length ? result : titleCased;
+
+    shortNameCache.set(name.toLowerCase(), shortName);
+    return shortName;
+  } catch {
+    return titleCased;
   }
+}
 
-  // Don't strip business suffixes if only 1-2 words remain
-  if (words.length > 2) {
-    // Strip trailing business suffix words
-    while (words.length > 1) {
-      const last = words[words.length - 1]!.toLowerCase().replace(/[^a-z]/g, '');
-      if (BUSINESS_SUFFIXES.includes(last)) {
-        words.pop();
-      } else {
-        break;
-      }
-    }
-  }
-
-  // Strip trailing "& " artifacts
-  const result = words.join(' ').replace(/\s*[&+]\s*$/, '').trim();
-
-  // If we stripped too much, return original
-  if (result.length < 3) return titleCased;
-
-  return result;
+// Sync fallback for when AI is not available (used in non-async contexts)
+function toShortNameSync(name: string): string {
+  const titleCased = toTitleCase(name);
+  const cached = shortNameCache.get(name.toLowerCase());
+  if (cached) return cached;
+  return titleCased;
 }
 
 /**
  * Build the full variable map from prospect data.
  * Variables: {{firstName}}, {{lastName}}, {{company}}, {{city}}, {{calLink}}, {{replyEmail}}, {{businessName}} (alias)
  */
-export function buildTemplateVars(prospect: {
+export async function buildTemplateVars(prospect: {
   name: string;
   contactFirstName?: string | null;
   contactLastName?: string | null;
   address?: unknown;
-}, extras: { city?: string; calLink?: string; replyEmail?: string }): Record<string, string> {
+}, extras: { city?: string; calLink?: string; replyEmail?: string; anthropicKey?: string | undefined }): Promise<Record<string, string>> {
   const company = toTitleCase(prospect.name);
-  const shortName = toShortName(prospect.name);
+  const shortName = extras.anthropicKey
+    ? await aiShortName(prospect.name, extras.anthropicKey)
+    : toShortNameSync(prospect.name);
   const city = (prospect.address as Record<string, string> | null)?.['city'] ?? extras.city ?? '';
   return {
     firstName: prospect.contactFirstName ?? 'there',
