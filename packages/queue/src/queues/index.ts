@@ -16,6 +16,7 @@ import type {
   SequenceStepJobPayload,
   ProspectDiscoveredPayload,
   OutreachSendPayload,
+  InstagramDmSendPayload,
 } from '@embedo/types';
 
 // ─── Queue Names ──────────────────────────────────────────────────────────────
@@ -35,6 +36,7 @@ export const QUEUE_NAMES = {
   SEQUENCE_STEP: 'embedo-sequence.step',
   PROSPECT_DISCOVERED: 'embedo-prospect.discovered',
   OUTREACH_SEND: 'embedo-outreach.send',
+  INSTAGRAM_DM_SEND: 'embedo-instagram-dm.send',
 } as const;
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
@@ -77,6 +79,7 @@ export const sequenceStepQueue = () => getQueue<SequenceStepJobPayload>(QUEUE_NA
 
 export const prospectDiscoveredQueue = () => getQueue<ProspectDiscoveredPayload>(QUEUE_NAMES.PROSPECT_DISCOVERED);
 export const outreachSendQueue = () => getQueue<OutreachSendPayload>(QUEUE_NAMES.OUTREACH_SEND);
+export const instagramDmQueue = () => getQueue<InstagramDmSendPayload>(QUEUE_NAMES.INSTAGRAM_DM_SEND);
 
 export async function closeAllQueues(): Promise<void> {
   await Promise.all([...queues.values()].map((q) => q.close()));

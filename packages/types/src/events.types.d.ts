@@ -107,4 +107,10 @@ export interface OutreachSendPayload {
     channel: 'email' | 'sms';
     stepNumber?: number;
 }
+export interface InstagramDmSendPayload {
+    prospectId: string;
+    campaignId: string;
+    sessionId?: string;
+    stepNumber?: number;
+}
 //# sourceMappingURL=events.types.d.ts.map

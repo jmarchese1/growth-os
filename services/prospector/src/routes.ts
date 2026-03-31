@@ -27,6 +27,8 @@ const updateCampaignSchema = z.object({
   emailBodyHtml: z.string().min(20).optional(),
   smsBody: z.string().optional(),
   apolloConfig: z.record(z.unknown()).optional(),
+  instagramDmEnabled: z.boolean().optional(),
+  instagramDmBody: z.string().optional(),
   sequenceSteps: z.array(z.object({
     stepNumber: z.number().int().positive(),
     delayHours: z.number().min(0),
@@ -201,6 +203,174 @@ Examples:
       log.error({ err, text }, 'Location resolution failed');
       return reply.code(500).send({ error: 'Failed to resolve location' });
     }
+  });
+
+  // ─── Instagram DM Outreach ───────────────────────────────────────────────
+
+  // Session CRUD
+  app.post('/instagram/sessions', async (request, reply) => {
+    const { username, cookies, userAgent, dailyLimit } = request.body as {
+      username: string; cookies: unknown[]; userAgent?: string; dailyLimit?: number;
+    };
+    if (!username || !cookies?.length) {
+      return reply.code(400).send({ error: 'username and cookies are required' });
+    }
+    const session = await db.instagramSession.create({
+      data: {
+        username,
+        cookies: cookies as object[],
+        userAgent: userAgent ?? null,
+        dailyLimit: dailyLimit ?? 25,
+      },
+    });
+    log.info({ sessionId: session.id, username }, 'Instagram session created');
+    return reply.code(201).send(session);
+  });
+
+  app.get('/instagram/sessions', async () => {
+    return db.instagramSession.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: { _count: { select: { messages: true } } },
+    });
+  });
+
+  app.patch('/instagram/sessions/:id', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const body = request.body as Record<string, unknown>;
+    const data: Record<string, unknown> = {};
+    if (body['cookies']) data['cookies'] = body['cookies'];
+    if (body['userAgent'] !== undefined) data['userAgent'] = body['userAgent'];
+    if (body['dailyLimit'] !== undefined) data['dailyLimit'] = body['dailyLimit'];
+    if (body['selectors'] !== undefined) data['selectors'] = body['selectors'];
+    if (body['status'] !== undefined) data['status'] = body['status'];
+
+    const session = await db.instagramSession.update({ where: { id }, data: data as never });
+    return reply.send(session);
+  });
+
+  app.delete('/instagram/sessions/:id', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    await db.instagramSession.update({ where: { id }, data: { status: 'SUSPENDED' } });
+    return reply.send({ success: true });
+  });
+
+  app.post('/instagram/sessions/:id/test', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const session = await db.instagramSession.findUnique({ where: { id } });
+    if (!session) return reply.code(404).send({ error: 'Session not found' });
+
+    try {
+      const { createBrowserContext, validateSessionPage, saveCookies } = await import('./instagram/session-manager.js');
+      const { getSelectors } = await import('./instagram/selectors.js');
+      const selectors = getSelectors(session.selectors as Record<string, string> | null);
+      const { browser, context } = await createBrowserContext(
+        session.cookies as unknown as Array<{ name: string; value: string; domain: string; path: string }>,
+        session.userAgent,
+      );
+
+      try {
+        const page = await context.newPage();
+        const status = await validateSessionPage(page, selectors);
+        await saveCookies(id, context);
+        await browser.close();
+
+        await db.instagramSession.update({ where: { id }, data: { status } });
+        return reply.send({ status, username: session.username });
+      } catch (err) {
+        await browser.close();
+        throw err;
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      log.error({ err, sessionId: id }, 'Instagram session test failed');
+      return reply.code(500).send({ error: msg });
+    }
+  });
+
+  // DM sending
+  app.post('/instagram/dm/send', async (request, reply) => {
+    const { prospectId, campaignId } = request.body as { prospectId: string; campaignId: string };
+    if (!prospectId || !campaignId) {
+      return reply.code(400).send({ error: 'prospectId and campaignId required' });
+    }
+    const { instagramDmQueue } = await import('@embedo/queue');
+    await instagramDmQueue().add(`ig-dm:${prospectId}`, { prospectId, campaignId });
+    return reply.send({ queued: true, prospectId });
+  });
+
+  app.post('/instagram/dm/send-campaign', async (request, reply) => {
+    const { campaignId } = request.body as { campaignId: string };
+    if (!campaignId) return reply.code(400).send({ error: 'campaignId required' });
+
+    const campaign = await db.outboundCampaign.findUnique({ where: { id: campaignId } });
+    if (!campaign?.instagramDmBody) {
+      return reply.code(400).send({ error: 'Campaign has no Instagram DM template' });
+    }
+
+    // Find all prospects with an Instagram handle that haven't been DM'd yet
+    const prospects = await db.prospectBusiness.findMany({
+      where: {
+        campaignId,
+        instagramHandle: { not: null },
+        instagramDms: { none: {} },
+      },
+      select: { id: true, instagramHandle: true },
+    });
+
+    if (prospects.length === 0) {
+      return reply.code(400).send({ error: 'No eligible prospects with Instagram handles' });
+    }
+
+    const { instagramDmQueue } = await import('@embedo/queue');
+    const queue = instagramDmQueue();
+
+    // Stagger: 2-5 min between each DM
+    for (let i = 0; i < prospects.length; i++) {
+      const delayMs = i * (2 + Math.random() * 3) * 60 * 1000;
+      await queue.add(
+        `ig-dm:${prospects[i]!.id}`,
+        { prospectId: prospects[i]!.id, campaignId },
+        { delay: Math.round(delayMs) },
+      );
+    }
+
+    log.info({ campaignId, count: prospects.length }, 'Instagram DM campaign queued');
+    return reply.send({ queued: prospects.length, campaignId });
+  });
+
+  app.get('/instagram/dm/sent', async (request) => {
+    const { campaignId, status, page = '1', pageSize = '50' } = request.query as Record<string, string>;
+    const where: Record<string, unknown> = {};
+    if (campaignId) where['campaignId'] = campaignId;
+    if (status) where['status'] = status;
+
+    const [items, total] = await Promise.all([
+      db.instagramDM.findMany({
+        where: where as never,
+        skip: (parseInt(page) - 1) * parseInt(pageSize),
+        take: parseInt(pageSize),
+        orderBy: { createdAt: 'desc' },
+        include: {
+          prospect: { select: { id: true, name: true, instagramHandle: true, shortName: true } },
+          session: { select: { username: true } },
+        },
+      }),
+      db.instagramDM.count({ where: where as never }),
+    ]);
+
+    return { items, total };
+  });
+
+  app.get('/instagram/dm/quota', async () => {
+    const sessions = await db.instagramSession.findMany({
+      where: { status: 'ACTIVE' },
+      select: { id: true, username: true, dailyLimit: true, sentToday: true, sentTodayDate: true },
+    });
+
+    const totalLimit = sessions.reduce((sum, s) => sum + s.dailyLimit, 0);
+    const totalSent = sessions.reduce((sum, s) => sum + s.sentToday, 0);
+
+    return { sessions, totalLimit, totalSent, remaining: totalLimit - totalSent };
   });
 
   // ─── Auto-sender config + status ─────────────────────────────────────────
@@ -524,6 +694,8 @@ Output format:
         ...(parsed.emailBodyHtml !== undefined && { emailBodyHtml: parsed.emailBodyHtml }),
         ...(parsed.smsBody !== undefined && { smsBody: parsed.smsBody }),
         ...(parsed.apolloConfig !== undefined && { apolloConfig: parsed.apolloConfig as object }),
+        ...(parsed.instagramDmEnabled !== undefined && { instagramDmEnabled: parsed.instagramDmEnabled }),
+        ...(parsed.instagramDmBody !== undefined && { instagramDmBody: parsed.instagramDmBody }),
         ...(parsed.sequenceSteps !== undefined && { sequenceSteps: parsed.sequenceSteps.sort((a: { stepNumber: number }, b: { stepNumber: number }) => a.stepNumber - b.stepNumber) }),
       },
     });

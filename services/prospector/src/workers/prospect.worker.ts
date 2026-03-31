@@ -212,7 +212,8 @@ export function startProspectWorker(): Worker {
           contactTitle: emailResult?.position ?? null,
           contactLinkedIn: emailResult?.linkedin ?? null,
           facebookUrl: socialUrls.facebook ?? null,
-          // instagramUrl not in schema — stored on social URLs via facebookUrl pattern
+          instagramUrl: socialUrls.instagram ?? null,
+          instagramHandle: socialUrls.instagram ? (() => { try { const path = new URL(socialUrls.instagram.startsWith('http') ? socialUrls.instagram : `https://${socialUrls.instagram}`).pathname.replace(/^\//, '').replace(/\/$/, '').split('/')[0]; return path && /^[a-zA-Z0-9_.]+$/.test(path) ? path.toLowerCase() : null; } catch { return null; } })() : null,
           googlePlaceId: placeId,
           googleRating: null,
           googleReviewCount: null,

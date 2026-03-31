@@ -714,6 +714,8 @@ model OutboundCampaign {
   maxProspects   Int?         // null = no limit; caps outreach sends per run
   // Optional multi-step outreach: [{ stepNumber, delayHours, subject, bodyHtml }]
   sequenceSteps  Json?
+  instagramDmEnabled Boolean  @default(false)
+  instagramDmBody    String?  // DM template with {{variables}}
   active         Boolean      @default(true)
   prospects      ProspectBusiness[]
 
@@ -746,6 +748,8 @@ model ProspectBusiness {
   contactLinkedIn   String?
   linkedinUrl       String?  // Business LinkedIn page
   facebookUrl       String?
+  instagramUrl      String?    // Instagram profile URL (from Geoapify/website scrape)
+  instagramHandle   String?    // Extracted handle e.g. "marios_pizza"
   twitterUrl        String?
   logoUrl           String?
   revenue           String?  // e.g. "5.6M", "1.2B"
@@ -767,6 +771,7 @@ model ProspectBusiness {
   convertedToBusinessId String?
   nextFollowUpAt    DateTime?   // When the next automated follow-up is scheduled to fire
   messages          OutreachMessage[]
+  instagramDms      InstagramDM[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -774,6 +779,7 @@ model ProspectBusiness {
   @@index([campaignId])
   @@index([status])
   @@index([email])
+  @@index([instagramHandle])
   @@index([nextFollowUpAt])
 }
 
@@ -1426,4 +1432,52 @@ model CompetitorReport {
 
   @@index([competitorId])
   @@index([reportDate])
+}
+
+// ─── Instagram DM Outreach ───────────────────────────────────────────────────
+
+model InstagramSession {
+  id            String    @id @default(cuid())
+  username      String    @unique
+  cookies       Json                          // Browser cookies JSON array
+  userAgent     String?                       // UA string used when cookies were captured
+  status        String    @default("ACTIVE")  // ACTIVE, CHALLENGE_REQUIRED, SUSPENDED, EXPIRED
+  challengeType String?                       // "2fa", "suspicious_login", "phone_verify"
+  dailyLimit    Int       @default(25)
+  sentToday     Int       @default(0)
+  sentTodayDate DateTime  @default(now())
+  totalSent     Int       @default(0)
+  lastUsedAt    DateTime?
+  lastError     String?
+  selectors     Json?     // Configurable CSS selectors for IG UI elements
+
+  messages      InstagramDM[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([status])
+}
+
+model InstagramDM {
+  id            String           @id @default(cuid())
+  prospectId    String
+  prospect      ProspectBusiness @relation(fields: [prospectId], references: [id])
+  campaignId    String?
+  sessionId     String
+  session       InstagramSession @relation(fields: [sessionId], references: [id])
+
+  body          String           // The DM text sent
+  status        String           @default("QUEUED")  // QUEUED, SENT, FAILED, REPLIED
+  stepNumber    Int?
+  sentAt        DateTime?
+  failureReason String?          // "challenge_required", "rate_limited", "selector_not_found", etc.
+  repliedAt     DateTime?
+  replyBody     String?
+
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([prospectId])
+  @@index([sessionId])
+  @@index([status])
 }

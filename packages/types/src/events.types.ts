@@ -160,3 +160,10 @@ export interface OutreachSendPayload {
   channel: 'email' | 'sms';
   stepNumber?: number;
 }
+
+export interface InstagramDmSendPayload {
+  prospectId: string;
+  campaignId: string;
+  sessionId?: string;  // Auto-select if not provided
+  stepNumber?: number;
+}

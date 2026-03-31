@@ -8,6 +8,8 @@ import { startProspectWorker } from './workers/prospect.worker.js';
 import { startOutreachWorker } from './workers/outreach.worker.js';
 import { sendDailyDigest } from './workers/digest.worker.js';
 import { resetDailyCounts, advanceWarmup } from './outreach/domain-rotator.js';
+import { startInstagramDmWorker } from './workers/instagram-dm.worker.js';
+import { resetDailyCounts as resetIgDailyCounts } from './instagram/session-manager.js';
 
 const log = createLogger('prospector');
 
@@ -30,6 +32,7 @@ async function start() {
   // Start BullMQ workers
   startProspectWorker();
   startOutreachWorker();
+  startInstagramDmWorker();
 
   await app.listen({ port: env.PORT, host: '0.0.0.0' });
   log.info({ port: env.PORT }, 'Prospector service started');
@@ -56,9 +59,11 @@ async function start() {
   setTimeout(() => {
     resetDailyCounts();
     advanceWarmup();
+    resetIgDailyCounts();
     setInterval(() => {
       resetDailyCounts();
       advanceWarmup();
+      resetIgDailyCounts();
     }, 24 * 60 * 60 * 1000);
   }, msUntilMidnight);
   log.info({ nextResetAt: nextMidnightET.toISOString() }, 'Midnight ET reset scheduled');
