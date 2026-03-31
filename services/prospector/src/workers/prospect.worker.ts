@@ -5,8 +5,6 @@ import { createLogger } from '@embedo/utils';
 import type { ProspectDiscoveredPayload } from '@embedo/types';
 import { extractEmailFromWebsite, extractPhoneFromWebsite } from '../scraper/website-email.js';
 import { findBusinessEmail } from '../scraper/brave-search.js';
-import { findEmailViaApollo, extractDomain, verifyEmailViaApollo } from '../scraper/apollo.js';
-import { upsertSuppression } from '../outreach/suppression.js';
 import { isDuplicate } from '../dedup/isDuplicate.js';
 import { scoreWebsite } from '../scraper/website-score.js';
 import { env } from '../config.js';
@@ -42,24 +40,7 @@ async function enrichEmail(
     if (found) return { email: found, source: 'brave_search' };
   }
 
-  // 4. Apollo.io domain search — drop in APOLLO_API_KEY to enable
-  if (env.APOLLO_API_KEY && website) {
-    const domain = extractDomain(website);
-    if (domain) {
-      const result = await findEmailViaApollo(domain, env.APOLLO_API_KEY);
-      if (result) {
-        return {
-          email: result.email,
-          source: 'apollo',
-          firstName: result.firstName,
-          lastName: result.lastName,
-          position: result.position,
-          linkedin: result.linkedin,
-          confidence: result.confidence,
-        };
-      }
-    }
-  }
+  // No Apollo enrichment for Geoapify campaigns — keep sources separate
 
   return null;
 }
@@ -80,16 +61,7 @@ export function startProspectWorker(): Worker {
       const city = (address['city'] as string | undefined) ?? '';
       const emailResult = await enrichEmail(name, city, geoapifyEmail, website);
 
-      // Verify the discovered email to avoid hard bounces
-      let verification: { result?: string; score?: number } | null = null;
-      if (emailResult?.email && env.APOLLO_API_KEY) {
-        const apolloResult = await verifyEmailViaApollo(emailResult.email, env.APOLLO_API_KEY);
-        verification = { result: apolloResult };
-      }
-
-      const verificationStatus = verification?.result?.toLowerCase();
-      const isInvalid = verificationStatus === 'undeliverable';
-      const status = isInvalid ? 'DEAD' : emailResult ? 'ENRICHED' : 'NEW';
+      const status = emailResult ? 'ENRICHED' : 'NEW';
 
       // If Geoapify did not return a phone, try scraping the website
       let resolvedPhone = phone ?? null;
@@ -118,15 +90,12 @@ export function startProspectWorker(): Worker {
           contactLastName: emailResult?.lastName ?? null,
           contactTitle: emailResult?.position ?? null,
           contactLinkedIn: emailResult?.linkedin ?? null,
-          emailVerificationStatus: verification?.result ?? null,
-          emailVerificationScore: verification?.score != null ? Math.round(verification.score) : null,
-          emailVerifiedAt: verification ? new Date() : null,
           googlePlaceId: placeId,
           googleRating: null,
           googleReviewCount: null,
           status,
           // Countdown to first email shown in campaign table
-          nextFollowUpAt: emailResult?.email && !isInvalid
+          nextFollowUpAt: emailResult?.email
             ? new Date(Date.now() + baseDelayMs)
             : null,
         },
@@ -160,12 +129,6 @@ export function startProspectWorker(): Worker {
       }
 
       if (emailResult?.email) {
-        if (isInvalid) {
-          await upsertSuppression({ email: emailResult.email, reason: 'verification_invalid', source: 'apollo' });
-          log.info({ prospectId: prospect.id }, 'Invalid email — suppressed');
-          return;
-        }
-
         const campaign = await db.outboundCampaign.findUnique({
           where: { id: campaignId },
           select: { sequenceSteps: true },
