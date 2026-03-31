@@ -23,6 +23,8 @@ interface Props {
   campaignBody?: string;
   /** Prospect first name for variable filling */
   prospectFirstName?: string;
+  /** AI-generated short name for the business */
+  prospectShortName?: string;
 }
 
 function formatCountdown(ms: number): string {
@@ -46,8 +48,8 @@ function toShortName(name: string): string {
   return result.length < 3 ? name : result;
 }
 
-function fillTemplate(html: string, name: string, city: string, firstName?: string): string {
-  const shortName = toShortName(name);
+function fillTemplate(html: string, name: string, city: string, firstName?: string, storedShortName?: string): string {
+  const shortName = storedShortName ?? toShortName(name);
   return html
     .replace(/\{\{businessName\}\}/g, name)
     .replace(/\{\{company\}\}/g, name)
@@ -199,7 +201,7 @@ function EditStepModal({
   );
 }
 
-export function SequenceSection({ steps, sentStepNumbers, nextFollowUpAt, prospectName, prospectCity, prospectorUrl, campaignId, campaignSubject, campaignBody, prospectFirstName }: Props) {
+export function SequenceSection({ steps, sentStepNumbers, nextFollowUpAt, prospectName, prospectCity, prospectorUrl, campaignId, campaignSubject, campaignBody, prospectFirstName, prospectShortName }: Props) {
   const [editingStep, setEditingStep] = useState<Step | null>(null);
   const [localSteps, setLocalSteps] = useState<Step[]>(steps);
   const [previewStep, setPreviewStep] = useState<number | null>(null);
@@ -313,14 +315,14 @@ export function SequenceSection({ steps, sentStepNumbers, nextFollowUpAt, prospe
                       if (!previewBody) return null;
                       // Wrap plain text in HTML if no tags
                       const htmlContent = previewBody.includes('<')
-                        ? fillTemplate(previewBody, prospectName, prospectCity, prospectFirstName)
-                        : `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.7;color:#1a1a1a;max-width:600px;padding:20px;">${fillTemplate(previewBody, prospectName, prospectCity, prospectFirstName).replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br/>').replace(/^/, '<p>').replace(/$/, '</p>')}</div>`;
+                        ? fillTemplate(previewBody, prospectName, prospectCity, prospectFirstName, prospectShortName)
+                        : `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.7;color:#1a1a1a;max-width:600px;padding:20px;">${fillTemplate(previewBody, prospectName, prospectCity, prospectFirstName, prospectShortName).replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br/>').replace(/^/, '<p>').replace(/$/, '</p>')}</div>`;
                       return (
                         <div className="mt-3 rounded-lg overflow-hidden border border-white/10">
                           {previewSubject && (
                             <div className="px-3 py-2 bg-white/[0.03] border-b border-white/[0.06]">
                               <span className="text-[9px] text-slate-600 uppercase tracking-wider">Subject: </span>
-                              <span className="text-xs text-slate-300">{fillTemplate(previewSubject, prospectName, prospectCity, prospectFirstName)}</span>
+                              <span className="text-xs text-slate-300">{fillTemplate(previewSubject, prospectName, prospectCity, prospectFirstName, prospectShortName)}</span>
                             </div>
                           )}
                           <div className="bg-white">

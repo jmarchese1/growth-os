@@ -106,6 +106,16 @@ export function startProspectWorker(): Worker {
         'Prospect created',
       );
 
+      // Generate AI short name in background (non-blocking)
+      if (env.ANTHROPIC_API_KEY) {
+        import('../outreach/templates.js').then(async ({ aiShortName }) => {
+          const sn = await aiShortName(name, env.ANTHROPIC_API_KEY!);
+          if (sn) {
+            await db.prospectBusiness.update({ where: { id: prospect.id }, data: { shortName: sn } });
+          }
+        }).catch(() => {});
+      }
+
       // Score website in background (non-blocking)
       if (website) {
         scoreWebsite(website).then(async (result) => {

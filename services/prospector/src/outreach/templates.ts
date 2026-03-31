@@ -55,7 +55,7 @@ const shortNameCache = new Map<string, string>();
  * Use Claude Haiku to generate a natural short name for a business.
  * Falls back to title-cased full name if AI is unavailable.
  */
-async function aiShortName(name: string, apiKey: string): Promise<string> {
+export async function aiShortName(name: string, apiKey: string): Promise<string> {
   const titleCased = toTitleCase(name);
   if (titleCased.split(/\s+/).length <= 1) return titleCased;
 
@@ -118,9 +118,10 @@ export async function buildTemplateVars(prospect: {
   address?: unknown;
 }, extras: { city?: string; calLink?: string; replyEmail?: string; anthropicKey?: string | undefined }): Promise<Record<string, string>> {
   const company = toTitleCase(prospect.name);
-  const shortName = extras.anthropicKey
-    ? await aiShortName(prospect.name, extras.anthropicKey)
-    : toShortNameSync(prospect.name);
+  // Use stored shortName if available (generated at prospect creation time)
+  // Fall back to AI generation or sync fallback
+  const shortName = (prospect as { shortName?: string | null }).shortName
+    ?? (extras.anthropicKey ? await aiShortName(prospect.name, extras.anthropicKey) : toShortNameSync(prospect.name));
   const city = (prospect.address as Record<string, string> | null)?.['city'] ?? extras.city ?? '';
   return {
     firstName: prospect.contactFirstName ?? 'there',

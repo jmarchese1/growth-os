@@ -406,6 +406,7 @@ export default async function ProspectDetailPage({ params }: {
         campaignSubject={prospect.campaign.emailSubject}
         campaignBody={prospect.campaign.emailBodyHtml}
         prospectFirstName={prospect.contactFirstName ?? undefined}
+        prospectShortName={(prospect as unknown as { shortName?: string }).shortName ?? undefined}
       />
 
       {/* Email History */}

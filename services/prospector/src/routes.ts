@@ -566,6 +566,17 @@ Output format:
             });
             created++;
 
+            // Generate AI short name in background (non-blocking)
+            if (env.ANTHROPIC_API_KEY) {
+              import('./outreach/templates.js').then(async ({ aiShortName }) => {
+                const sn = await aiShortName(p.organizationName, env.ANTHROPIC_API_KEY!);
+                const prospect = await db.prospectBusiness.findFirst({ where: { campaignId: id, name: p.organizationName }, select: { id: true } });
+                if (prospect && sn) {
+                  await db.prospectBusiness.update({ where: { id: prospect.id }, data: { shortName: sn } });
+                }
+              }).catch(() => {});
+            }
+
             // Verify email in background (non-blocking) — prevents bounces
             if (p.contact?.email && env.APOLLO_API_KEY) {
               verifyEmailViaApollo(p.contact.email, env.APOLLO_API_KEY).then(async (status) => {

@@ -725,6 +725,7 @@ model ProspectBusiness {
   campaign   OutboundCampaign @relation(fields: [campaignId], references: [id])
 
   name              String
+  shortName         String?    // AI-generated casual name: "Mario's" from "Mario's Pizzeria"
   address           Json?
   phone             String?
   website           String?
