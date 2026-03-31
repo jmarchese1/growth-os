@@ -5,42 +5,117 @@ import { createLogger } from '@embedo/utils';
 import type { ProspectDiscoveredPayload } from '@embedo/types';
 import { extractEmailFromWebsite, extractPhoneFromWebsite } from '../scraper/website-email.js';
 import { findBusinessEmail } from '../scraper/brave-search.js';
+import { validateEmail, detectContactForm, guessEmailPattern, extractDomain } from '../scraper/email-validator.js';
+import { findEmailViaHunterDomain, extractEmailFromFacebook, extractEmailFromInstagram } from '../scraper/social-email.js';
 import { isDuplicate } from '../dedup/isDuplicate.js';
 import { scoreWebsite } from '../scraper/website-score.js';
 import { env } from '../config.js';
 
 const log = createLogger('prospector:prospect-worker');
 
-async function enrichEmail(
-  name: string,
-  city: string,
-  geoapifyEmail: string | undefined,
-  website: string | undefined,
-): Promise<{
+interface EmailResult {
   email: string;
   source: string;
+  confidence: number;
   firstName?: string | null;
   lastName?: string | null;
   position?: string | null;
   linkedin?: string | null;
-  confidence?: number | null;
-} | null> {
-  // 1. Email directly from Geoapify (OSM data)
-  if (geoapifyEmail) return { email: geoapifyEmail, source: 'geoapify' };
+}
 
-  // 2. Scrape website for mailto / email regex (with quality scoring)
+/**
+ * Full email enrichment waterfall with validation.
+ *
+ * Order:
+ * 1. Geoapify email (from OSM data)
+ * 2. Website scrape (mailto + regex, 12 paths + contact link following)
+ * 3. Playwright fallback (JS-rendered sites)
+ * 4. Hunter.io domain lookup (if key configured)
+ * 5. Facebook page scrape
+ * 6. Instagram bio scrape
+ * 7. Brave Search (snippet + selective page visits)
+ * 8. Email pattern guessing (info@domain)
+ *
+ * Every email passes through domain-vs-website validation + MX check before being accepted.
+ */
+async function enrichEmail(
+  name: string,
+  city: string,
+  website: string | undefined,
+  geoapifyEmail: string | undefined,
+): Promise<EmailResult | null> {
+
+  // Helper: validate and return if good
+  async function tryEmail(email: string, source: string, extra?: Partial<EmailResult>): Promise<EmailResult | null> {
+    const validation = await validateEmail(email, website, name);
+    if (!validation.valid) {
+      log.debug({ email, source, reason: validation.reason, name }, 'Email rejected by validator');
+      return null;
+    }
+    return { email, source, confidence: validation.confidence, ...extra };
+  }
+
+  // 1. Geoapify email (from OSM data) — validate it too
+  if (geoapifyEmail) {
+    const result = await tryEmail(geoapifyEmail, 'geoapify');
+    if (result) return result;
+  }
+
+  // 2. Website scrape (mailto + regex + contact link following + Playwright fallback)
   if (website) {
     const scraped = await extractEmailFromWebsite(website, name);
-    if (scraped) return { email: scraped.email, source: `website_scrape:${scraped.source}` };
+    if (scraped) {
+      const result = await tryEmail(scraped.email, `website_scrape:${scraped.source}`);
+      if (result) return result;
+    }
   }
 
-  // 3. Brave Search fallback — only if key is configured
+  // 3. Hunter.io domain lookup (if key configured and we have a website)
+  if (env.HUNTER_API_KEY && website) {
+    const domain = extractDomain(website);
+    const hunterResult = await findEmailViaHunterDomain(domain, env.HUNTER_API_KEY);
+    if (hunterResult) {
+      const result = await tryEmail(hunterResult.email, 'hunter', {
+        firstName: hunterResult.firstName ?? null,
+        lastName: hunterResult.lastName ?? null,
+        position: hunterResult.position ?? null,
+        confidence: hunterResult.confidence,
+      });
+      if (result) return result;
+    }
+  }
+
+  // 4. Facebook page scrape
+  const fbEmail = await extractEmailFromFacebook(name, city);
+  if (fbEmail) {
+    const result = await tryEmail(fbEmail, 'facebook');
+    if (result) return result;
+  }
+
+  // 5. Instagram bio scrape
+  const igEmail = await extractEmailFromInstagram(name);
+  if (igEmail) {
+    const result = await tryEmail(igEmail, 'instagram');
+    if (result) return result;
+  }
+
+  // 6. Brave Search fallback — only if key is configured
   if (env.BRAVE_SEARCH_API_KEY && city) {
-    const found = await findBusinessEmail(name, city, env.BRAVE_SEARCH_API_KEY);
-    if (found) return { email: found, source: 'brave_search' };
+    const found = await findBusinessEmail(name, city, env.BRAVE_SEARCH_API_KEY, website);
+    if (found) {
+      const result = await tryEmail(found, 'brave_search');
+      if (result) return result;
+    }
   }
 
-  // No Apollo enrichment for Geoapify campaigns — keep sources separate
+  // 7. Email pattern guessing (info@domain) — last resort
+  if (website) {
+    const domain = extractDomain(website);
+    const guess = await guessEmailPattern(domain);
+    if (guess) {
+      return { email: guess.email, source: 'pattern_guess', confidence: guess.confidence };
+    }
+  }
 
   return null;
 }
@@ -59,7 +134,7 @@ export function startProspectWorker(): Worker {
       }
 
       const city = (address['city'] as string | undefined) ?? '';
-      const emailResult = await enrichEmail(name, city, geoapifyEmail, website);
+      const emailResult = await enrichEmail(name, city, website, geoapifyEmail);
 
       const status = emailResult ? 'ENRICHED' : 'NEW';
 
@@ -74,6 +149,26 @@ export function startProspectWorker(): Worker {
         }
       }
 
+      // Detect contact form on website (even if no email found)
+      let hasContactForm: boolean | null = null;
+      if (website && !emailResult) {
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 8000);
+          const res = await fetch(website.startsWith('http') ? website : `https://${website}`, {
+            signal: controller.signal,
+            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; EmbedoBot/1.0)' },
+          });
+          clearTimeout(timer);
+          if (res.ok) {
+            const html = await res.text();
+            hasContactForm = detectContactForm(html);
+          }
+        } catch {
+          // ignore
+        }
+      }
+
       const prospect = await db.prospectBusiness.create({
         data: {
           campaignId,
@@ -84,6 +179,8 @@ export function startProspectWorker(): Worker {
           website: website ?? null,
           email: emailResult?.email ?? null,
           emailSource: emailResult?.source ?? null,
+          emailConfidence: emailResult?.confidence ?? null,
+          hasContactForm,
           contactFirstName: emailResult?.firstName ?? null,
           contactLastName: emailResult?.lastName ?? null,
           contactTitle: emailResult?.position ?? null,
@@ -96,11 +193,11 @@ export function startProspectWorker(): Worker {
       });
 
       log.info(
-        { prospectId: prospect.id, name, email: emailResult?.email, emailSource: emailResult?.source, status },
+        { prospectId: prospect.id, name, email: emailResult?.email, source: emailResult?.source, confidence: emailResult?.confidence, status, hasContactForm },
         'Prospect created',
       );
 
-      // Generate AI short name + business type in background (non-blocking)
+      // Generate AI short name + business type + chain detection in background (non-blocking)
       if (env.ANTHROPIC_API_KEY) {
         import('../outreach/templates.js').then(async ({ aiBusinessName, typeFromCategories }) => {
           const categoryHint = categories?.length ? typeFromCategories(categories) : null;
@@ -111,6 +208,7 @@ export function startProspectWorker(): Worker {
               data: {
                 shortName: result.shortName,
                 businessType: result.type,
+                isChain: result.isChain,
               },
             });
           }

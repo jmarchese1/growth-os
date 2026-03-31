@@ -22,7 +22,7 @@ function buildUnsubscribe(replyEmail: string): string {
 }
 
 // Cache for AI-generated names (survives for the lifetime of the process)
-const nameCache = new Map<string, { displayName: string; shortName: string; type: string }>();
+const nameCache = new Map<string, { displayName: string; shortName: string; type: string; isChain: boolean }>();
 
 /**
  * Map Geoapify categories to human-readable business type.
@@ -88,7 +88,7 @@ export async function aiBusinessName(
   name: string,
   apiKey: string,
   categoryHint?: string | null,
-): Promise<{ displayName: string; shortName: string; type: string }> {
+): Promise<{ displayName: string; shortName: string; type: string; isChain: boolean }> {
   const cacheKey = name.toLowerCase();
   const cached = nameCache.get(cacheKey);
   if (cached) return cached;
@@ -103,10 +103,10 @@ export async function aiBusinessName(
 
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 80,
+      max_tokens: 100,
       messages: [{
         role: 'user',
-        content: `Given this business name, return JSON with: the properly cased display name, the short casual name, and the business type (what kind of food place it is). No explanation, ONLY valid JSON.
+        content: `Given this business name, return JSON with: the properly cased display name, the short casual name, the business type, and whether it's a chain. No explanation, ONLY valid JSON.
 
 Name rules:
 - Preserve acronyms: IHOP stays IHOP, BLT stays BLT
@@ -118,19 +118,22 @@ Type rules:
 - The type is a lowercase label like: "pizzeria", "diner", "sushi bar", "steakhouse", "Chinese restaurant", "Italian restaurant", "BBQ spot", "cafe", "bar", "taco shop", "bakery", "seafood restaurant", "burger spot", "brunch spot", "ramen shop", "Thai restaurant", etc.
 - Use the most specific type that fits. "Mario's Pizzeria" → "pizzeria", not "restaurant"
 - If the name doesn't clearly indicate a type, default to "restaurant"
+
+Chain rules:
+- isChain is true for national/regional chains with 10+ locations (IHOP, Olive Garden, Applebee's, Shake Shack, Dave & Buster's, Ruby Tuesday, Outback, Chili's, etc.)
+- isChain is false for independent local restaurants, even if the name sounds generic
+- When in doubt, default to false
 ${hintLine}
 
 Examples:
-"MARIO'S PIZZERIA" → {"displayName":"Mario's Pizzeria","shortName":"Mario's","type":"pizzeria"}
-"IHOP" → {"displayName":"IHOP","shortName":"IHOP","type":"diner"}
-"Golden Dragon Kitchen" → {"displayName":"Golden Dragon Kitchen","shortName":"Golden Dragon","type":"Chinese restaurant"}
-"Shake Shack" → {"displayName":"Shake Shack","shortName":"Shake Shack","type":"burger spot"}
-"The Capital Grille" → {"displayName":"The Capital Grille","shortName":"Capital Grille","type":"steakhouse"}
-"Pho Saigon" → {"displayName":"Pho Saigon","shortName":"Pho Saigon","type":"Vietnamese restaurant"}
-"Blue Ribbon Sushi" → {"displayName":"Blue Ribbon Sushi","shortName":"Blue Ribbon","type":"sushi bar"}
-"Olive Garden" → {"displayName":"Olive Garden","shortName":"Olive Garden","type":"Italian restaurant"}
-"Bridgeview Diner" → {"displayName":"Bridgeview Diner","shortName":"Bridgeview","type":"diner"}
-"Fushimi" → {"displayName":"Fushimi","shortName":"Fushimi","type":"Japanese restaurant"}
+"MARIO'S PIZZERIA" → {"displayName":"Mario's Pizzeria","shortName":"Mario's","type":"pizzeria","isChain":false}
+"IHOP" → {"displayName":"IHOP","shortName":"IHOP","type":"diner","isChain":true}
+"Olive Garden" → {"displayName":"Olive Garden","shortName":"Olive Garden","type":"Italian restaurant","isChain":true}
+"Shake Shack" → {"displayName":"Shake Shack","shortName":"Shake Shack","type":"burger spot","isChain":true}
+"The Capital Grille" → {"displayName":"The Capital Grille","shortName":"Capital Grille","type":"steakhouse","isChain":true}
+"Fushimi" → {"displayName":"Fushimi","shortName":"Fushimi","type":"Japanese restaurant","isChain":false}
+"Bridgeview Diner" → {"displayName":"Bridgeview Diner","shortName":"Bridgeview","type":"diner","isChain":false}
+"Pho Saigon" → {"displayName":"Pho Saigon","shortName":"Pho Saigon","type":"Vietnamese restaurant","isChain":false}
 
 "${name}" →`,
       }],
@@ -138,13 +141,14 @@ Examples:
 
     const raw = (response.content[0]?.type === 'text' ? response.content[0].text : '').trim();
     const jsonStr = raw.replace(/^```json?\s*/i, '').replace(/```\s*$/, '').trim();
-    const parsed = JSON.parse(jsonStr) as { displayName: string; shortName: string; type: string };
+    const parsed = JSON.parse(jsonStr) as { displayName: string; shortName: string; type: string; isChain?: boolean };
 
     if (parsed.displayName?.length >= 2 && parsed.shortName?.length >= 2) {
       const result = {
         displayName: parsed.displayName,
         shortName: parsed.shortName,
         type: parsed.type || categoryHint || 'restaurant',
+        isChain: parsed.isChain ?? false,
       };
       nameCache.set(cacheKey, result);
       return result;
@@ -153,7 +157,7 @@ Examples:
     // Fall through to raw name
   }
 
-  const fallback = { displayName: name, shortName: name, type: categoryHint || 'restaurant' };
+  const fallback = { displayName: name, shortName: name, type: categoryHint || 'restaurant', isChain: false };
   nameCache.set(cacheKey, fallback);
   return fallback;
 }

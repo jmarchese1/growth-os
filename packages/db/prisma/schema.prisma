@@ -731,11 +731,14 @@ model ProspectBusiness {
   name              String
   shortName         String?    // AI-generated casual name: "Mario's" from "Mario's Pizzeria"
   businessType      String?    // AI-inferred sub-industry: "pizzeria", "diner", "sushi bar", etc.
+  isChain           Boolean?   // AI-detected national/regional chain (10+ locations)
   address           Json?
   phone             String?
   website           String?
   email             String?
-  emailSource       String?  // "geoapify" | "website_scrape" | "brave_search" | "hunter"
+  emailSource       String?  // "geoapify" | "website_scrape" | "brave_search" | "hunter" | "facebook" | "instagram" | "pattern_guess"
+  emailConfidence   Int?     // 0-100 quality score of the email
+  hasContactForm    Boolean? // website has a contact form (reachable even without email)
   phoneSource       String?  // "geoapify" | "website_scrape"
   contactFirstName  String?
   contactLastName   String?

@@ -717,7 +717,7 @@ Output format:
                 const result = await aiBusinessName(p.organizationName, env.ANTHROPIC_API_KEY!);
                 const prospect = await db.prospectBusiness.findFirst({ where: { campaignId: id, name: p.organizationName }, select: { id: true } });
                 if (prospect && result) {
-                  await db.prospectBusiness.update({ where: { id: prospect.id }, data: { shortName: result.shortName, businessType: result.type } });
+                  await db.prospectBusiness.update({ where: { id: prospect.id }, data: { shortName: result.shortName, businessType: result.type, isChain: result.isChain } });
                 }
               }).catch(() => {});
             }

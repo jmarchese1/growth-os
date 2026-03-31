@@ -119,6 +119,7 @@ export async function findBusinessEmail(
   businessName: string,
   city: string,
   apiKey: string,
+  websiteUrl?: string | null,
 ): Promise<string | null> {
   const query = `"${businessName}" "${city}" restaurant contact email`;
 
@@ -154,15 +155,24 @@ export async function findBusinessEmail(
       }
     }
 
-    // Phase 2: Visit top non-directory pages and scrape for emails
+    // Phase 2: Only visit pages that are likely the business's OWN site
+    // This prevents scraping food blogs, review sites, and competitor pages
+    const nameWords = businessName.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 2);
+    const websiteDomain = websiteUrl ? (() => { try { return new URL(websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`).host.replace(/^www\./, ''); } catch { return null; } })() : null;
+
     const pagesToVisit = results
       .filter(r => {
         try {
           const host = new URL(r.url).host.replace(/^www\./, '');
-          return !SKIP_DOMAINS.has(host) && ![...SKIP_DOMAINS].some(d => host.endsWith(`.${d}`));
+          // Skip known directories/platforms
+          if (SKIP_DOMAINS.has(host) || [...SKIP_DOMAINS].some(d => host.endsWith(`.${d}`))) return false;
+          // Only visit if domain matches the business website OR contains business name words
+          if (websiteDomain && host === websiteDomain) return true;
+          const hostBase = host.split('.')[0] ?? '';
+          return nameWords.some(w => hostBase.includes(w));
         } catch { return false; }
       })
-      .slice(0, 3); // max 3 pages to visit
+      .slice(0, 2); // max 2 pages (only relevant ones)
 
     for (const result of pagesToVisit) {
       // Small delay between page fetches
@@ -190,7 +200,6 @@ export async function findBusinessEmail(
     if (allEmails.length === 0) return null;
 
     // Score and pick the best email, with business-relevance filtering
-    const nameWords = businessName.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 2);
     const FREE_PROVIDERS = new Set(['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 'icloud.com', 'comcast.net', 'att.net', 'verizon.net']);
 
     const scored = allEmails
