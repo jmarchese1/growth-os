@@ -1,5 +1,5 @@
 import { Worker } from 'bullmq';
-import { getRedisConnection, QUEUE_NAMES, outreachSendQueue } from '@embedo/queue';
+import { getRedisConnection, QUEUE_NAMES } from '@embedo/queue';
 import { db } from '@embedo/db';
 import { createLogger } from '@embedo/utils';
 import type { ProspectDiscoveredPayload } from '@embedo/types';
@@ -74,8 +74,6 @@ export function startProspectWorker(): Worker {
         }
       }
 
-      const baseDelayMs = 5 * 60 * 1000; // 5 minutes before first email
-
       const prospect = await db.prospectBusiness.create({
         data: {
           campaignId,
@@ -94,10 +92,6 @@ export function startProspectWorker(): Worker {
           googleRating: null,
           googleReviewCount: null,
           status,
-          // Countdown to first email shown in campaign table
-          nextFollowUpAt: emailResult?.email
-            ? new Date(Date.now() + baseDelayMs)
-            : null,
         },
       });
 
@@ -145,33 +139,7 @@ export function startProspectWorker(): Worker {
         }).catch(() => {});
       }
 
-      if (emailResult?.email) {
-        const campaign = await db.outboundCampaign.findUnique({
-          where: { id: campaignId },
-          select: { sequenceSteps: true },
-        });
-        const steps = (campaign?.sequenceSteps as Array<{ stepNumber: number; delayHours: number }> | null) ?? [];
-
-        // Queue step 1 (cold email)
-        await outreachSendQueue().add(
-          `outreach:${prospect.id}:step1`,
-          { prospectId: prospect.id, campaignId, channel: 'email', stepNumber: 1 },
-          { delay: baseDelayMs },
-        );
-
-        // Queue follow-up steps with their configured delays
-        for (const step of steps) {
-          if (step.stepNumber <= 1) continue;
-          const delayMs = baseDelayMs + step.delayHours * 60 * 60 * 1000;
-          await outreachSendQueue().add(
-            `outreach:${prospect.id}:step${step.stepNumber}`,
-            { prospectId: prospect.id, campaignId, channel: 'email', stepNumber: step.stepNumber },
-            { delay: delayMs },
-          );
-        }
-
-        log.info({ prospectId: prospect.id, steps: steps.length + 1 }, 'Outreach sequence queued');
-      }
+      // Emails are NOT auto-queued — user must manually send via the campaign UI
     },
     {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -67,6 +67,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.get('/health', async () => ({ ok: true, service: 'prospector' }));
 
   // ─── AI Location Resolver ────────────────────────────────────────────────
+  // Two-step: Haiku parses user intent → Geoapify geocoder provides precise coords + bbox
   app.post('/resolve-location', async (request, reply) => {
     const { text } = request.body as { text?: string };
     if (!text || text.trim().length < 2) {
@@ -76,55 +77,101 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     if (!env.ANTHROPIC_API_KEY) {
       return reply.code(400).send({ error: 'ANTHROPIC_API_KEY not configured' });
     }
+    if (!env.GEOAPIFY_API_KEY) {
+      return reply.code(400).send({ error: 'GEOAPIFY_API_KEY not configured' });
+    }
 
     try {
+      // Step 1: Use Haiku to parse the user's free-text into a clean geocoding query + metadata
       const Anthropic = (await import('@anthropic-ai/sdk')).default;
       const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
-      const response = await client.messages.create({
+      const aiResponse = await client.messages.create({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 300,
+        max_tokens: 150,
         messages: [{
           role: 'user',
-          content: `Given this location, return a JSON object with the canonical name, US state code, center coordinates, and a TIGHT rectangular bounding box that covers ONLY this specific area.
+          content: `Parse this location into a geocoding query. Return ONLY valid JSON, no explanation.
 
-For boroughs, neighborhoods, or sub-city areas, the bbox should tightly fit that specific area, NOT the whole city. For example, "Staten Island" should cover just Staten Island, not all of NYC.
+- "searchQuery": the best search string for a geocoder (e.g. "Great Kills, Staten Island, NY")
+- "displayName": the canonical short name to show the user (e.g. "Great Kills")
+- "state": US state code (e.g. "NY")
+- "radiusKm": how large the search area should be in km. Use 2-3 for neighborhoods, 5-8 for small cities/boroughs, 10-15 for large cities. Default 5.
 
-The bounding box should be the SW corner (lon1, lat1) and NE corner (lon2, lat2). Make it tight — no more than ~1km padding beyond the actual boundary.
+Examples:
+"staten island great kills" → {"searchQuery":"Great Kills, Staten Island, NY","displayName":"Great Kills","state":"NY","radiusKm":3}
+"Manhattan" → {"searchQuery":"Manhattan, New York, NY","displayName":"Manhattan","state":"NY","radiusKm":10}
+"Edison NJ" → {"searchQuery":"Edison, NJ","displayName":"Edison","state":"NJ","radiusKm":8}
+"upper east side nyc" → {"searchQuery":"Upper East Side, Manhattan, New York, NY","displayName":"Upper East Side","state":"NY","radiusKm":2}
 
-Return ONLY valid JSON, no explanation:
-{
-  "city": "canonical city/area name",
-  "state": "XX",
-  "lat": center latitude,
-  "lon": center longitude,
-  "bbox": { "lon1": SW longitude, "lat1": SW latitude, "lon2": NE longitude, "lat2": NE latitude }
-}
-
-Location: "${text.trim()}"`,
+"${text.trim()}" →`,
         }],
       });
 
-      const raw = (response.content[0]?.type === 'text' ? response.content[0].text : '').trim();
-      // Extract JSON from response (handle markdown code blocks)
-      const jsonStr = raw.replace(/^```json?\s*/i, '').replace(/```\s*$/, '').trim();
-      const parsed = JSON.parse(jsonStr) as {
-        city: string;
+      const aiRaw = (aiResponse.content[0]?.type === 'text' ? aiResponse.content[0].text : '').trim();
+      const aiJson = aiRaw.replace(/^```json?\s*/i, '').replace(/```\s*$/, '').trim();
+      const aiParsed = JSON.parse(aiJson) as {
+        searchQuery: string;
+        displayName: string;
         state: string;
-        lat: number;
-        lon: number;
-        bbox: { lon1: number; lat1: number; lon2: number; lat2: number };
+        radiusKm: number;
       };
 
-      // Validate the response has required fields and reasonable coordinates
-      if (!parsed.city || !parsed.state || !parsed.lat || !parsed.lon || !parsed.bbox) {
-        return reply.code(500).send({ error: 'AI returned incomplete location data' });
-      }
-      if (Math.abs(parsed.lat) > 90 || Math.abs(parsed.lon) > 180) {
-        return reply.code(500).send({ error: 'AI returned invalid coordinates' });
+      if (!aiParsed.searchQuery || !aiParsed.displayName || !aiParsed.state) {
+        return reply.code(500).send({ error: 'AI could not parse location' });
       }
 
-      log.info({ input: text, resolved: parsed }, 'Location resolved via AI');
-      return reply.send(parsed);
+      // Step 2: Use Geoapify geocoder for precise coordinates and bbox
+      const geoParams = new URLSearchParams({
+        text: aiParsed.searchQuery,
+        format: 'json',
+        limit: '1',
+        apiKey: env.GEOAPIFY_API_KEY!,
+      });
+      const geoRes = await fetch(`https://api.geoapify.com/v1/geocode/search?${geoParams}`);
+      if (!geoRes.ok) {
+        return reply.code(500).send({ error: `Geocoder HTTP ${geoRes.status}` });
+      }
+      const geoData = (await geoRes.json()) as { results: Array<{ lat: number; lon: number; formatted: string; result_type: string; bbox: { lon1: number; lat1: number; lon2: number; lat2: number } }> };
+      const geoResult = geoData.results[0];
+
+      if (!geoResult) {
+        return reply.code(404).send({ error: `Location not found: "${aiParsed.searchQuery}"` });
+      }
+
+      // Use Geoapify bbox if it's a meaningful size, otherwise build one from radius
+      const geoBbox = geoResult.bbox;
+      const bboxWidth = Math.abs(geoBbox.lon2 - geoBbox.lon1);
+      const bboxHeight = Math.abs(geoBbox.lat2 - geoBbox.lat1);
+      const isTiny = bboxWidth < 0.01 && bboxHeight < 0.01; // less than ~1km
+
+      let bbox: { lon1: number; lat1: number; lon2: number; lat2: number };
+      if (isTiny) {
+        // Geoapify returned a point-like bbox (common for suburbs/neighborhoods)
+        // Expand using the AI-suggested radius
+        const radiusKm = aiParsed.radiusKm || 5;
+        const latDelta = radiusKm / 111; // ~111km per degree latitude
+        const lonDelta = radiusKm / (111 * Math.cos(geoResult.lat * Math.PI / 180));
+        bbox = {
+          lon1: geoResult.lon - lonDelta,
+          lat1: geoResult.lat - latDelta,
+          lon2: geoResult.lon + lonDelta,
+          lat2: geoResult.lat + latDelta,
+        };
+      } else {
+        bbox = geoBbox;
+      }
+
+      const result = {
+        city: aiParsed.displayName,
+        state: aiParsed.state,
+        lat: geoResult.lat,
+        lon: geoResult.lon,
+        bbox,
+        geocoderType: geoResult.result_type,
+      };
+
+      log.info({ input: text, aiQuery: aiParsed.searchQuery, geocoderType: geoResult.result_type, result }, 'Location resolved');
+      return reply.send(result);
     } catch (err) {
       log.error({ err, text }, 'Location resolution failed');
       return reply.code(500).send({ error: 'Failed to resolve location' });
