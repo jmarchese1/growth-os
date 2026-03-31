@@ -1455,6 +1455,38 @@ Output format:
   });
 
   // ─── Seed a test lead (dev only) ──────────────────────────────────────────
+  app.post('/leads', async (request, reply) => {
+    const body = request.body as { name?: string; email?: string; phone?: string; company?: string; source?: string; notes?: string };
+    if (!body.name && !body.email) return reply.code(400).send({ error: 'Name or email required' });
+
+    // Find or create a "Manual Leads" campaign to house manually-added leads
+    let manualCampaign = await db.outboundCampaign.findFirst({ where: { name: 'Manual Leads' } });
+    if (!manualCampaign) {
+      manualCampaign = await db.outboundCampaign.create({
+        data: { name: 'Manual Leads', targetCity: 'Manual', targetIndustry: 'OTHER', emailSubject: '', emailBodyHtml: '', active: true },
+      });
+    }
+
+    const prospect = await db.prospectBusiness.create({
+      data: {
+        campaignId: manualCampaign.id,
+        name: body.company || body.name || 'Unknown',
+        email: body.email ?? null,
+        phone: body.phone ?? null,
+        contactFirstName: body.name?.split(' ')[0] ?? null,
+        contactLastName: body.name?.split(' ').slice(1).join(' ') || null,
+        emailSource: body.source ?? 'manual',
+        status: 'REPLIED',
+        ...(body.notes ? { address: { notes: body.notes } } : {}),
+        googlePlaceId: `manual_${Date.now()}`,
+      },
+    });
+
+    log.info({ prospectId: prospect.id, name: body.name }, 'Lead created manually');
+    return reply.code(201).send({ ok: true, prospectId: prospect.id });
+  });
+
+  // Legacy seed endpoint (kept for backward compat)
   app.post('/seed/test-lead', async (_request, reply) => {
     // Find or create a test campaign
     let campaign = await db.outboundCampaign.findFirst({
