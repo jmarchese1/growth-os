@@ -13,6 +13,7 @@ export interface PlaceResult {
     city?: string;
     state?: string;
   };
+  categories?: string[];  // e.g. ["catering.restaurant", "catering.restaurant.pizza"]
   phone?: string;
   website?: string;
   email?: string;
@@ -42,6 +43,7 @@ interface GeoapifyPlaceProperties {
   formatted?: string;
   city?: string;
   state_code?: string;
+  categories?: string[];
   phone?: string;
   website?: string;
   email?: string;
@@ -166,6 +168,7 @@ export async function searchRestaurants(
         name: props.name,
         address,
       };
+      if (props.categories?.length) result.categories = props.categories;
       if (contact.phone) result.phone = contact.phone;
       if (contact.website) result.website = contact.website;
       if (contact.email) result.email = contact.email;

@@ -49,7 +49,7 @@ export function startProspectWorker(): Worker {
   const worker = new Worker<ProspectDiscoveredPayload>(
     QUEUE_NAMES.PROSPECT_DISCOVERED,
     async (job) => {
-      const { campaignId, placeId, name, address, phone, website, email: geoapifyEmail } = job.data;
+      const { campaignId, placeId, name, address, categories, phone, website, email: geoapifyEmail } = job.data;
 
       // Cross-source dedup — check by placeId, email, phone, website, name across ALL campaigns
       const dupCheck = await isDuplicate({ name, phone, email: geoapifyEmail, website, googlePlaceId: placeId });
@@ -106,12 +106,19 @@ export function startProspectWorker(): Worker {
         'Prospect created',
       );
 
-      // Generate AI short name in background (non-blocking)
+      // Generate AI short name + business type in background (non-blocking)
       if (env.ANTHROPIC_API_KEY) {
-        import('../outreach/templates.js').then(async ({ aiShortName }) => {
-          const sn = await aiShortName(name, env.ANTHROPIC_API_KEY!);
-          if (sn) {
-            await db.prospectBusiness.update({ where: { id: prospect.id }, data: { shortName: sn } });
+        import('../outreach/templates.js').then(async ({ aiBusinessName, typeFromCategories }) => {
+          const categoryHint = categories?.length ? typeFromCategories(categories) : null;
+          const result = await aiBusinessName(name, env.ANTHROPIC_API_KEY!, categoryHint);
+          if (result) {
+            await db.prospectBusiness.update({
+              where: { id: prospect.id },
+              data: {
+                shortName: result.shortName,
+                businessType: result.type,
+              },
+            });
           }
         }).catch(() => {});
       }

@@ -730,6 +730,7 @@ model ProspectBusiness {
 
   name              String
   shortName         String?    // AI-generated casual name: "Mario's" from "Mario's Pizzeria"
+  businessType      String?    // AI-inferred sub-industry: "pizzeria", "diner", "sushi bar", etc.
   address           Json?
   phone             String?
   website           String?

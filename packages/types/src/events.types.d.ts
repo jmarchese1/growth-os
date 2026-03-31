@@ -94,6 +94,7 @@ export interface ProspectDiscoveredPayload {
     placeId: string;
     name: string;
     address: Record<string, unknown>;
+    categories?: string[];
     phone?: string;
     website?: string;
     email?: string;

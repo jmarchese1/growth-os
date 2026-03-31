@@ -22,49 +22,115 @@ function buildUnsubscribe(replyEmail: string): string {
 }
 
 // Cache for AI-generated names (survives for the lifetime of the process)
-const nameCache = new Map<string, { displayName: string; shortName: string }>();
+const nameCache = new Map<string, { displayName: string; shortName: string; type: string }>();
 
 /**
- * Use Claude Haiku to generate proper display name + short name for a business.
- * AI handles ALL casing and shortening — no hardcoded rules.
- *
- * Returns { displayName, shortName } where:
- * - displayName: properly cased full name ("IHOP", "Olive Garden", "L&B Spumoni Gardens")
- * - shortName: casual name for emails ("IHOP", "Olive Garden", "L&B")
+ * Map Geoapify categories to human-readable business type.
+ * Returns null if category is too generic to be useful.
  */
-export async function aiBusinessName(name: string, apiKey: string): Promise<{ displayName: string; shortName: string }> {
-  const cached = nameCache.get(name.toLowerCase());
+export function typeFromCategories(categories: string[]): string | null {
+  // Find the most specific restaurant subcategory
+  const sub = categories
+    .filter(c => c.startsWith('catering.'))
+    .sort((a, b) => b.split('.').length - a.split('.').length)[0];
+
+  if (!sub) return null;
+
+  const map: Record<string, string> = {
+    'catering.restaurant.pizza': 'pizzeria',
+    'catering.restaurant.italian': 'Italian restaurant',
+    'catering.restaurant.chinese': 'Chinese restaurant',
+    'catering.restaurant.japanese': 'Japanese restaurant',
+    'catering.restaurant.sushi': 'sushi bar',
+    'catering.restaurant.thai': 'Thai restaurant',
+    'catering.restaurant.indian': 'Indian restaurant',
+    'catering.restaurant.mexican': 'Mexican restaurant',
+    'catering.restaurant.burger': 'burger spot',
+    'catering.restaurant.steak': 'steakhouse',
+    'catering.restaurant.seafood': 'seafood restaurant',
+    'catering.restaurant.barbecue': 'BBQ spot',
+    'catering.restaurant.vietnamese': 'Vietnamese restaurant',
+    'catering.restaurant.korean': 'Korean restaurant',
+    'catering.restaurant.greek': 'Greek restaurant',
+    'catering.restaurant.french': 'French restaurant',
+    'catering.restaurant.mediterranean': 'Mediterranean restaurant',
+    'catering.restaurant.american': 'American restaurant',
+    'catering.restaurant.noodle': 'noodle shop',
+    'catering.restaurant.ramen': 'ramen shop',
+    'catering.restaurant.wings': 'wings spot',
+    'catering.restaurant.vegan': 'vegan restaurant',
+    'catering.restaurant.vegetarian': 'vegetarian restaurant',
+    'catering.restaurant.tapas': 'tapas bar',
+    'catering.restaurant.diner': 'diner',
+    'catering.restaurant.breakfast': 'breakfast spot',
+    'catering.restaurant.brunch': 'brunch spot',
+    'catering.fast_food': 'fast food spot',
+    'catering.fast_food.pizza': 'pizza spot',
+    'catering.fast_food.burger': 'burger spot',
+    'catering.fast_food.sandwich': 'sandwich shop',
+    'catering.cafe': 'cafe',
+    'catering.pub': 'pub',
+    'catering.bar': 'bar',
+    'catering.ice_cream': 'ice cream shop',
+    'catering.food_court': 'food court',
+  };
+
+  return map[sub] ?? null;
+}
+
+/**
+ * Use Claude Haiku to generate proper display name, short name, and business type.
+ * AI handles ALL casing, shortening, and type inference — no hardcoded rules.
+ *
+ * @param categoryHint - Optional Geoapify category-derived type to confirm/override
+ */
+export async function aiBusinessName(
+  name: string,
+  apiKey: string,
+  categoryHint?: string | null,
+): Promise<{ displayName: string; shortName: string; type: string }> {
+  const cacheKey = name.toLowerCase();
+  const cached = nameCache.get(cacheKey);
   if (cached) return cached;
 
   try {
     const Anthropic = (await import('@anthropic-ai/sdk')).default;
     const client = new Anthropic({ apiKey });
+
+    const hintLine = categoryHint
+      ? `\nCategory hint from structured data: "${categoryHint}". Use this if it makes sense, but override if the name strongly suggests otherwise.`
+      : '';
+
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 60,
+      max_tokens: 80,
       messages: [{
         role: 'user',
-        content: `Given this business name, return two things as JSON: the properly cased display name, and the short casual name you'd use in a friendly email. No explanation, ONLY valid JSON.
+        content: `Given this business name, return JSON with: the properly cased display name, the short casual name, and the business type (what kind of food place it is). No explanation, ONLY valid JSON.
 
-Rules:
-- Preserve acronyms: IHOP stays IHOP, BLT stays BLT, NYC stays NYC
+Name rules:
+- Preserve acronyms: IHOP stays IHOP, BLT stays BLT
 - Fix bad casing: "OLIVIA TAMPA" → "Olivia", "wagamama us" → "Wagamama"
-- Strip location suffixes: "Fushimi Staten Island" → "Fushimi"
-- Strip generic suffixes: "Restaurant", "Kitchen", "Hospitality Group", "& Lounge", etc.
-- Keep brand names intact: "Olive Garden" stays "Olive Garden", "Dave & Buster's" stays "Dave & Buster's"
-- The short name is what you'd say casually: "Hey, have you tried [shortName]?"
+- Strip location suffixes and generic words for the short name
+- Keep brand names intact
+
+Type rules:
+- The type is a lowercase label like: "pizzeria", "diner", "sushi bar", "steakhouse", "Chinese restaurant", "Italian restaurant", "BBQ spot", "cafe", "bar", "taco shop", "bakery", "seafood restaurant", "burger spot", "brunch spot", "ramen shop", "Thai restaurant", etc.
+- Use the most specific type that fits. "Mario's Pizzeria" → "pizzeria", not "restaurant"
+- If the name doesn't clearly indicate a type, default to "restaurant"
+${hintLine}
 
 Examples:
-"MARIO'S PIZZERIA" → {"displayName":"Mario's Pizzeria","shortName":"Mario's"}
-"IHOP" → {"displayName":"IHOP","shortName":"IHOP"}
-"L&B Spumoni Gardens" → {"displayName":"L&B Spumoni Gardens","shortName":"L&B"}
-"wagamama us" → {"displayName":"Wagamama","shortName":"Wagamama"}
-"Dave & Buster's" → {"displayName":"Dave & Buster's","shortName":"Dave & Buster's"}
-"The Capital Grille" → {"displayName":"The Capital Grille","shortName":"Capital Grille"}
-"OLIVIA Tampa" → {"displayName":"Olivia","shortName":"Olivia"}
-"Salt Shack On The Bay" → {"displayName":"Salt Shack On The Bay","shortName":"Salt Shack"}
-"Pineapple Hospitality Group" → {"displayName":"Pineapple Hospitality Group","shortName":"Pineapple"}
-"il a forno a legna" → {"displayName":"Il a Forno a Legna","shortName":"Il Forno"}
+"MARIO'S PIZZERIA" → {"displayName":"Mario's Pizzeria","shortName":"Mario's","type":"pizzeria"}
+"IHOP" → {"displayName":"IHOP","shortName":"IHOP","type":"diner"}
+"Golden Dragon Kitchen" → {"displayName":"Golden Dragon Kitchen","shortName":"Golden Dragon","type":"Chinese restaurant"}
+"Shake Shack" → {"displayName":"Shake Shack","shortName":"Shake Shack","type":"burger spot"}
+"The Capital Grille" → {"displayName":"The Capital Grille","shortName":"Capital Grille","type":"steakhouse"}
+"Pho Saigon" → {"displayName":"Pho Saigon","shortName":"Pho Saigon","type":"Vietnamese restaurant"}
+"Blue Ribbon Sushi" → {"displayName":"Blue Ribbon Sushi","shortName":"Blue Ribbon","type":"sushi bar"}
+"Olive Garden" → {"displayName":"Olive Garden","shortName":"Olive Garden","type":"Italian restaurant"}
+"Bridgeview Diner" → {"displayName":"Bridgeview Diner","shortName":"Bridgeview","type":"diner"}
+"Fushimi" → {"displayName":"Fushimi","shortName":"Fushimi","type":"Japanese restaurant"}
 
 "${name}" →`,
       }],
@@ -72,18 +138,23 @@ Examples:
 
     const raw = (response.content[0]?.type === 'text' ? response.content[0].text : '').trim();
     const jsonStr = raw.replace(/^```json?\s*/i, '').replace(/```\s*$/, '').trim();
-    const parsed = JSON.parse(jsonStr) as { displayName: string; shortName: string };
+    const parsed = JSON.parse(jsonStr) as { displayName: string; shortName: string; type: string };
 
-    if (parsed.displayName && parsed.shortName && parsed.displayName.length >= 2 && parsed.shortName.length >= 2) {
-      nameCache.set(name.toLowerCase(), parsed);
-      return parsed;
+    if (parsed.displayName?.length >= 2 && parsed.shortName?.length >= 2) {
+      const result = {
+        displayName: parsed.displayName,
+        shortName: parsed.shortName,
+        type: parsed.type || categoryHint || 'restaurant',
+      };
+      nameCache.set(cacheKey, result);
+      return result;
     }
   } catch {
     // Fall through to raw name
   }
 
-  const fallback = { displayName: name, shortName: name };
-  nameCache.set(name.toLowerCase(), fallback);
+  const fallback = { displayName: name, shortName: name, type: categoryHint || 'restaurant' };
+  nameCache.set(cacheKey, fallback);
   return fallback;
 }
 
@@ -105,22 +176,26 @@ export async function buildTemplateVars(prospect: {
   contactLastName?: string | null;
   address?: unknown;
 }, extras: { city?: string; calLink?: string; replyEmail?: string; anthropicKey?: string | undefined }): Promise<Record<string, string>> {
-  // Use stored shortName if available (generated at prospect creation time)
+  // Use stored fields if available (generated at prospect creation time)
   const storedShortName = (prospect as { shortName?: string | null }).shortName;
+  const storedType = (prospect as { businessType?: string | null }).businessType;
 
   let company: string;
   let shortName: string;
+  let type: string;
 
   if (extras.anthropicKey) {
-    // AI handles both display name and short name — no hardcoded casing
+    // AI handles display name, short name, and type — no hardcoded rules
     const names = await aiBusinessName(prospect.name, extras.anthropicKey);
     company = names.displayName;
     shortName = storedShortName ?? names.shortName;
+    type = storedType ?? names.type;
   } else {
     // No API key — use cached or raw name
     const cached = nameCache.get(prospect.name.toLowerCase());
     company = cached?.displayName ?? prospect.name;
     shortName = storedShortName ?? cached?.shortName ?? prospect.name;
+    type = storedType ?? cached?.type ?? 'restaurant';
   }
 
   const city = (prospect.address as Record<string, string> | null)?.['city'] ?? extras.city ?? '';
@@ -129,6 +204,7 @@ export async function buildTemplateVars(prospect: {
     lastName: prospect.contactLastName ?? '',
     company,
     shortName,
+    type,                   // sub-industry: "pizzeria", "diner", "sushi bar", etc.
     businessName: company,  // backward compat
     city,
     calLink: extras.calLink ?? '',

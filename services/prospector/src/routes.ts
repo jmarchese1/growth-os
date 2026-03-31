@@ -639,13 +639,13 @@ Output format:
             });
             created++;
 
-            // Generate AI short name in background (non-blocking)
+            // Generate AI short name + business type in background (non-blocking)
             if (env.ANTHROPIC_API_KEY) {
-              import('./outreach/templates.js').then(async ({ aiShortName }) => {
-                const sn = await aiShortName(p.organizationName, env.ANTHROPIC_API_KEY!);
+              import('./outreach/templates.js').then(async ({ aiBusinessName }) => {
+                const result = await aiBusinessName(p.organizationName, env.ANTHROPIC_API_KEY!);
                 const prospect = await db.prospectBusiness.findFirst({ where: { campaignId: id, name: p.organizationName }, select: { id: true } });
-                if (prospect && sn) {
-                  await db.prospectBusiness.update({ where: { id: prospect.id }, data: { shortName: sn } });
+                if (prospect && result) {
+                  await db.prospectBusiness.update({ where: { id: prospect.id }, data: { shortName: result.shortName, businessType: result.type } });
                 }
               }).catch(() => {});
             }
@@ -771,6 +771,7 @@ Output format:
             name: place.name,
             address: place.address as Record<string, unknown>,
           };
+          if (place.categories?.length) job['categories'] = place.categories;
           if (place.phone) job['phone'] = place.phone;
           if (place.website) job['website'] = place.website;
           if (place.email) job['email'] = place.email;

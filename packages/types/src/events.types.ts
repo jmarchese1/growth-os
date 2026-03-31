@@ -146,6 +146,7 @@ export interface ProspectDiscoveredPayload {
   placeId: string;
   name: string;
   address: Record<string, unknown>;
+  categories?: string[];  // Geoapify categories e.g. ["catering.restaurant.pizza"]
   phone?: string;
   website?: string;
   email?: string;
