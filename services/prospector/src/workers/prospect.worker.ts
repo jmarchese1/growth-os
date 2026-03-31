@@ -5,7 +5,7 @@ import { createLogger } from '@embedo/utils';
 import type { ProspectDiscoveredPayload } from '@embedo/types';
 import { extractEmailFromWebsite, extractPhoneFromWebsite } from '../scraper/website-email.js';
 import { findBusinessEmail } from '../scraper/brave-search.js';
-import { validateEmail, detectContactForm, guessEmailPattern, extractDomain } from '../scraper/email-validator.js';
+import { validateEmail, detectContactForm } from '../scraper/email-validator.js';
 import { extractEmailFromFacebook, extractEmailFromInstagram, extractSocialLinksFromHtml } from '../scraper/social-email.js';
 import { isDuplicate } from '../dedup/isDuplicate.js';
 import { scoreWebsite } from '../scraper/website-score.js';
@@ -97,14 +97,8 @@ async function enrichEmail(
     }
   }
 
-  // 6. Pattern guessing — only if nothing else found
-  if (candidates.length === 0 && website) {
-    const domain = extractDomain(website);
-    const guess = await guessEmailPattern(domain);
-    if (guess) {
-      candidates.push({ email: guess.email, source: 'pattern_guess', confidence: guess.confidence });
-    }
-  }
+  // Pattern guessing removed — info@domain with 25% confidence generates too many
+  // unverified emails that waste sends and hurt domain reputation.
 
   if (candidates.length === 0) return null;
 
@@ -142,21 +136,29 @@ export function startProspectWorker(): Worker {
         if (geoapifyFb) socialUrls.facebook = geoapifyFb;
         if (geoapifyIg) socialUrls.instagram = geoapifyIg;
       } else if (website) {
-        // Try to find social links on the business website
-        try {
-          const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 8000);
-          const res = await fetch(website.startsWith('http') ? website : `https://${website}`, {
-            signal: controller.signal,
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
-          });
-          clearTimeout(timer);
-          if (res.ok) {
-            const html = await res.text();
-            socialUrls = extractSocialLinksFromHtml(html);
+        // Try to find social links on the business website (check multiple pages)
+        const base = (() => { try { const u = new URL(website.startsWith('http') ? website : `https://${website}`); return `${u.protocol}//${u.host}`; } catch { return null; } })();
+        if (base) {
+          const pagesToCheck = [base, `${base}/contact`, `${base}/contact-us`, `${base}/about`];
+          for (const pageUrl of pagesToCheck) {
+            try {
+              const controller = new AbortController();
+              const timer = setTimeout(() => controller.abort(), 6000);
+              const res = await fetch(pageUrl, {
+                signal: controller.signal,
+                redirect: 'follow',
+                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+              });
+              clearTimeout(timer);
+              if (res.ok) {
+                const html = await res.text();
+                const links = extractSocialLinksFromHtml(html);
+                if (links.facebook && !socialUrls.facebook) socialUrls.facebook = links.facebook;
+                if (links.instagram && !socialUrls.instagram) socialUrls.instagram = links.instagram;
+                if (socialUrls.facebook && socialUrls.instagram) break;
+              }
+            } catch { /* ignore */ }
           }
-        } catch {
-          // ignore
         }
       }
 

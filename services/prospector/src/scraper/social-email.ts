@@ -48,16 +48,28 @@ function extractValidEmails(html: string): string[] {
 export function extractSocialLinksFromHtml(html: string): { facebook?: string; instagram?: string } {
   const result: { facebook?: string; instagram?: string } = {};
 
-  // Facebook: look for links to facebook.com/pagename
-  const fbMatch = html.match(/href\s*=\s*["'](https?:\/\/(?:www\.)?facebook\.com\/[^"'?\s#]+)/i);
-  if (fbMatch?.[1]) {
-    result.facebook = fbMatch[1];
+  // Facebook: look for links to facebook.com/pagename (check ALL matches, not just first)
+  const fbMatches = html.matchAll(/href\s*=\s*["'](https?:\/\/(?:www\.)?facebook\.com\/[^"'?\s#]+)/gi);
+  for (const m of fbMatches) {
+    const url = m[1];
+    if (!url) continue;
+    // Skip share/sharer links, login links, and generic facebook.com
+    if (/\/(sharer|share|login|dialog|plugins|tr\?)/.test(url)) continue;
+    if (url === 'https://facebook.com/' || url === 'https://www.facebook.com/') continue;
+    result.facebook = url;
+    break;
   }
 
-  // Instagram: look for links to instagram.com/handle
-  const igMatch = html.match(/href\s*=\s*["'](https?:\/\/(?:www\.)?instagram\.com\/[^"'?\s#]+)/i);
-  if (igMatch?.[1]) {
-    result.instagram = igMatch[1];
+  // Instagram: look for links to instagram.com/handle (check ALL matches)
+  const igMatches = html.matchAll(/href\s*=\s*["'](https?:\/\/(?:www\.)?instagram\.com\/[^"'?\s#]+)/gi);
+  for (const m of igMatches) {
+    const url = m[1];
+    if (!url) continue;
+    // Skip share/embed links and generic instagram.com
+    if (/\/(accounts|explore|p\/|reel\/|stories\/)/.test(url)) continue;
+    if (url === 'https://instagram.com/' || url === 'https://www.instagram.com/') continue;
+    result.instagram = url;
+    break;
   }
 
   return result;
