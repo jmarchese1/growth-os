@@ -161,18 +161,20 @@ Examples:
         bbox = geoBbox;
       }
 
-      // Step 3: Check if any existing campaign already uses this exact bbox
-      // (Geoapify geocoder is deterministic for the same query, so matching by lat/lon works)
+      // Step 3: Check if any existing campaign targets the same location (~100m tolerance)
+      // This ensures "Staten Island", "staten island", and "SI, NY" all share the same bbox
+      const COORD_TOLERANCE = 0.001; // ~100m
       const existingCampaign = await db.outboundCampaign.findFirst({
         where: {
-          targetLat: geoResult.lat,
-          targetLon: geoResult.lon,
+          targetLat: { gte: geoResult.lat - COORD_TOLERANCE, lte: geoResult.lat + COORD_TOLERANCE },
+          targetLon: { gte: geoResult.lon - COORD_TOLERANCE, lte: geoResult.lon + COORD_TOLERANCE },
           targetBboxLon1: { not: null },
         },
         select: { targetBboxLon1: true, targetBboxLat1: true, targetBboxLon2: true, targetBboxLat2: true },
+        orderBy: { createdAt: 'asc' }, // use the earliest campaign's bbox
       });
 
-      // Reuse existing bbox if we found a campaign at the exact same geocoded point
+      // Reuse existing bbox if we found a campaign at ~the same point
       if (existingCampaign?.targetBboxLon1 != null && existingCampaign.targetBboxLat1 != null &&
           existingCampaign.targetBboxLon2 != null && existingCampaign.targetBboxLat2 != null) {
         bbox = {
@@ -844,6 +846,8 @@ Output format:
         const matchingCampaignIds = allGeoapifyCampaigns
           .filter((c) => {
             // Build the same filter string for each campaign and compare
+            // Use fuzzy matching on coordinates (~100m tolerance) to catch
+            // campaigns created with slightly different queries for the same location
             const cFilter = (c.targetBboxLon1 != null && c.targetBboxLat1 != null && c.targetBboxLon2 != null && c.targetBboxLat2 != null)
               ? `rect:${c.targetBboxLon1},${c.targetBboxLat1},${c.targetBboxLon2},${c.targetBboxLat2}`
               : (c.targetLat != null && c.targetLon != null)
