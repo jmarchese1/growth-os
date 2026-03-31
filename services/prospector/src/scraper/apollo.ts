@@ -213,12 +213,12 @@ export async function discoverViaApollo(
     // Email fallback: website scraping → Brave Search
     if (!contact?.email && org.domain) {
       log.debug({ orgName: org.name, domain: org.domain }, 'Apollo no email — trying website scrape');
-      const websiteEmail = await extractEmailFromWebsite(`https://${org.domain}`);
-      if (websiteEmail) {
-        log.info({ orgName: org.name, email: websiteEmail }, 'Email found via website scrape');
+      const websiteResult = await extractEmailFromWebsite(`https://${org.domain}`, org.name);
+      if (websiteResult) {
+        log.info({ orgName: org.name, email: websiteResult.email, score: websiteResult.score }, 'Email found via website scrape');
         contact = contact ?? { email: '', firstName: null, lastName: null, position: null, linkedin: null, confidence: 0 };
-        contact.email = websiteEmail;
-        contact.confidence = 45;
+        contact.email = websiteResult.email;
+        contact.confidence = Math.min(websiteResult.score, 100);
         emailSource = 'website';
       }
     }

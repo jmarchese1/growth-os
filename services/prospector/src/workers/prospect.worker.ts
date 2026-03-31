@@ -28,10 +28,10 @@ async function enrichEmail(
   // 1. Email directly from Geoapify (OSM data)
   if (geoapifyEmail) return { email: geoapifyEmail, source: 'geoapify' };
 
-  // 2. Scrape website for mailto / email regex
+  // 2. Scrape website for mailto / email regex (with quality scoring)
   if (website) {
-    const scraped = await extractEmailFromWebsite(website);
-    if (scraped) return { email: scraped, source: 'website_scrape' };
+    const scraped = await extractEmailFromWebsite(website, name);
+    if (scraped) return { email: scraped.email, source: `website_scrape:${scraped.source}` };
   }
 
   // 3. Brave Search fallback — only if key is configured
