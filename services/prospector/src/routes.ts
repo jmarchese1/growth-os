@@ -1280,13 +1280,20 @@ Output format:
         include: {
           campaign: { select: { id: true, name: true, targetCity: true, targetIndustry: true } },
           messages: {
-            orderBy: { createdAt: 'desc' },
+            orderBy: { sentAt: 'desc' },
             select: { id: true, status: true, stepNumber: true, subject: true, sentAt: true, openedAt: true, repliedAt: true, replyBody: true, replyCategory: true },
           },
         },
       }),
       db.prospectBusiness.count({ where: where as never }),
     ]);
+
+    // Sort prospects by most recent sent message time (descending)
+    items.sort((a, b) => {
+      const aTime = a.messages.find((m: { sentAt: Date | null }) => m.sentAt)?.sentAt?.getTime() ?? 0;
+      const bTime = b.messages.find((m: { sentAt: Date | null }) => m.sentAt)?.sentAt?.getTime() ?? 0;
+      return bTime - aTime;
+    });
 
     return { items, total, page: parseInt(page), pageSize: parseInt(pageSize) };
   });
