@@ -927,6 +927,11 @@ Output format:
   });
 
   // ─── Send email to prospect now (bypass queue delay) ──────────────────────
+  // Track manual send queue for staggering
+  let manualSendQueue = 0;
+  let lastManualSendAt = 0;
+  const STAGGER_INTERVAL_MS = 3 * 60 * 1000; // 3 minutes between sends
+
   app.post('/prospects/:id/send', async (request, reply) => {
     const { id } = request.params as { id: string };
 
@@ -944,13 +949,32 @@ Output format:
       return reply.code(400).send({ error: `Already contacted (status: ${prospect.status})` });
     }
 
+    // Reset queue counter if last send was > 10 min ago
+    if (Date.now() - lastManualSendAt > 10 * 60 * 1000) manualSendQueue = 0;
+
+    // Stagger: first send is immediate, subsequent ones get 3-min delays
+    const delay = manualSendQueue > 0 ? manualSendQueue * STAGGER_INTERVAL_MS : 0;
+    manualSendQueue++;
+    lastManualSendAt = Date.now();
+
     try {
-      const messageId = await sendColdEmail(prospect, prospect.campaign);
-      log.info({ prospectId: id, messageId }, 'Manual email send triggered');
+      if (delay > 0) {
+        // Queue for later instead of sending immediately
+        await outreachSendQueue().add(
+          `manual:${id}:step1`,
+          { prospectId: id, campaignId: prospect.campaignId, channel: 'email', stepNumber: 1 },
+          { delay },
+        );
+        log.info({ prospectId: id, delayMinutes: Math.round(delay / 60000), queuePosition: manualSendQueue }, 'Manual send staggered');
+      } else {
+        // First send goes immediately
+        await sendColdEmail(prospect, prospect.campaign);
+        log.info({ prospectId: id }, 'Manual email sent immediately');
+      }
 
       // Queue follow-up steps if sequence is configured
       const steps = (prospect.campaign.sequenceSteps as Array<{ stepNumber: number; delayHours: number }> | null) ?? [];
-      const baseDelayMs = 5 * 60 * 1000;
+      const baseDelayMs = delay + 5 * 60 * 1000;
       for (const step of steps) {
         if (step.stepNumber <= 1) continue;
         const delayMs = baseDelayMs + step.delayHours * 60 * 60 * 1000;
@@ -969,7 +993,10 @@ Output format:
         log.info({ prospectId: id, followUpSteps: steps.length - 1 }, 'Follow-up sequence queued');
       }
 
-      return reply.code(200).send({ ok: true, messageId });
+      return reply.code(200).send({
+        ok: true,
+        ...(delay > 0 ? { queued: true, delayMinutes: Math.round(delay / 60000) } : {}),
+      });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.toLowerCase().includes('suppressed')) {
