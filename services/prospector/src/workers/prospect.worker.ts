@@ -24,19 +24,20 @@ interface EmailResult {
 }
 
 /**
- * Full email enrichment waterfall with validation.
+ * Full email enrichment — collects from ALL sources, validates each,
+ * then returns the HIGHEST confidence email.
  *
- * Order:
+ * Sources (all run, not short-circuited):
  * 1. Geoapify email (from OSM data)
- * 2. Website scrape (mailto + regex, 12 paths + contact link following)
- * 3. Playwright fallback (JS-rendered sites)
- * 4. Hunter.io domain lookup (if key configured)
- * 5. Facebook page scrape
- * 6. Instagram bio scrape
- * 7. Brave Search (snippet + selective page visits)
- * 8. Email pattern guessing (info@domain)
+ * 2. Website scrape (mailto + regex, 12 paths + Playwright)
+ * 3. Hunter.io domain lookup (if key configured)
+ * 4. Facebook page scrape (real URL)
+ * 5. Instagram bio scrape (real URL)
+ * 6. Brave Search (snippet + selective page visits)
+ * 7. Email pattern guessing (info@domain)
  *
- * Every email passes through domain-vs-website validation + MX check before being accepted.
+ * Every email passes domain-vs-website validation + MX check.
+ * The one with the highest confidence score wins.
  */
 async function enrichEmail(
   name: string,
@@ -45,86 +46,92 @@ async function enrichEmail(
   geoapifyEmail: string | undefined,
   socialUrls?: { facebook?: string; instagram?: string },
 ): Promise<EmailResult | null> {
+  const candidates: EmailResult[] = [];
 
-  // Helper: validate and return if good
-  async function tryEmail(email: string, source: string, extra?: Partial<EmailResult>): Promise<EmailResult | null> {
+  // Helper: validate and collect if good
+  async function collect(email: string, source: string, extra?: Partial<EmailResult>): Promise<void> {
+    // Skip if we already have this exact email from another source
+    if (candidates.some(c => c.email === email)) return;
+
     const validation = await validateEmail(email, website, name);
     if (!validation.valid) {
       log.debug({ email, source, reason: validation.reason, name }, 'Email rejected by validator');
-      return null;
+      return;
     }
-    return { email, source, confidence: validation.confidence, ...extra };
+    const confidence = extra?.confidence != null ? Math.max(extra.confidence, validation.confidence) : validation.confidence;
+    candidates.push({ email, source, ...extra, confidence });
   }
 
-  // 1. Geoapify email (from OSM data) — validate it too
+  // 1. Geoapify email (from OSM data)
   if (geoapifyEmail) {
-    const result = await tryEmail(geoapifyEmail, 'geoapify');
-    if (result) return result;
+    await collect(geoapifyEmail, 'geoapify');
   }
 
-  // 2. Website scrape (mailto + regex + contact link following + Playwright fallback)
+  // 2. Website scrape (mailto + regex + contact links + Playwright)
   if (website) {
     const scraped = await extractEmailFromWebsite(website, name);
     if (scraped) {
-      const result = await tryEmail(scraped.email, `website_scrape:${scraped.source}`);
-      if (result) return result;
+      await collect(scraped.email, `website_scrape:${scraped.source}`);
     }
   }
 
-  // 3. Hunter.io domain lookup (if key configured and we have a website)
-  if (env.HUNTER_API_KEY && website) {
-    const domain = extractDomain(website);
-    const hunterResult = await findEmailViaHunterDomain(domain, env.HUNTER_API_KEY);
-    if (hunterResult) {
-      const result = await tryEmail(hunterResult.email, 'hunter', {
-        firstName: hunterResult.firstName ?? null,
-        lastName: hunterResult.lastName ?? null,
-        position: hunterResult.position ?? null,
-        confidence: hunterResult.confidence,
-      });
-      if (result) return result;
+  // If we already have a high-confidence email (95+), skip slower sources
+  const bestSoFar = candidates.reduce((b, c) => c.confidence > b ? c.confidence : b, 0);
+  if (bestSoFar < 90) {
+    // 3. Hunter.io domain lookup
+    if (env.HUNTER_API_KEY && website) {
+      const domain = extractDomain(website);
+      const hunterResult = await findEmailViaHunterDomain(domain, env.HUNTER_API_KEY);
+      if (hunterResult) {
+        await collect(hunterResult.email, 'hunter', {
+          firstName: hunterResult.firstName ?? null,
+          lastName: hunterResult.lastName ?? null,
+          position: hunterResult.position ?? null,
+        });
+      }
+    }
+
+    // 4. Facebook page scrape
+    if (socialUrls?.facebook) {
+      const fbEmail = await extractEmailFromFacebook(socialUrls.facebook);
+      if (fbEmail) await collect(fbEmail, 'facebook');
+    }
+
+    // 5. Instagram bio scrape
+    if (socialUrls?.instagram) {
+      const igEmail = await extractEmailFromInstagram(socialUrls.instagram);
+      if (igEmail) await collect(igEmail, 'instagram');
+    }
+
+    // 6. Brave Search
+    if (env.BRAVE_SEARCH_API_KEY && city) {
+      const found = await findBusinessEmail(name, city, env.BRAVE_SEARCH_API_KEY, website);
+      if (found) await collect(found, 'brave_search');
     }
   }
 
-  // 4. Facebook page scrape (using real URL from Geoapify or website)
-  const fbUrl = socialUrls?.facebook;
-  if (fbUrl) {
-    const fbEmail = await extractEmailFromFacebook(fbUrl);
-    if (fbEmail) {
-      const result = await tryEmail(fbEmail, 'facebook');
-      if (result) return result;
-    }
-  }
-
-  // 5. Instagram bio scrape (using real URL from Geoapify or website)
-  const igUrl = socialUrls?.instagram;
-  if (igUrl) {
-    const igEmail = await extractEmailFromInstagram(igUrl);
-    if (igEmail) {
-      const result = await tryEmail(igEmail, 'instagram');
-      if (result) return result;
-    }
-  }
-
-  // 6. Brave Search fallback — only if key is configured
-  if (env.BRAVE_SEARCH_API_KEY && city) {
-    const found = await findBusinessEmail(name, city, env.BRAVE_SEARCH_API_KEY, website);
-    if (found) {
-      const result = await tryEmail(found, 'brave_search');
-      if (result) return result;
-    }
-  }
-
-  // 7. Email pattern guessing (info@domain) — last resort
-  if (website) {
+  // 7. Pattern guessing — only if nothing else found
+  if (candidates.length === 0 && website) {
     const domain = extractDomain(website);
     const guess = await guessEmailPattern(domain);
     if (guess) {
-      return { email: guess.email, source: 'pattern_guess', confidence: guess.confidence };
+      candidates.push({ email: guess.email, source: 'pattern_guess', confidence: guess.confidence });
     }
   }
 
-  return null;
+  if (candidates.length === 0) return null;
+
+  // Sort by confidence descending, return the best
+  candidates.sort((a, b) => b.confidence - a.confidence);
+
+  if (candidates.length > 1) {
+    log.info(
+      { name, best: candidates[0]!.email, bestScore: candidates[0]!.confidence, all: candidates.map(c => `${c.email}(${c.confidence})`) },
+      'Multiple emails found — returning highest confidence',
+    );
+  }
+
+  return candidates[0]!;
 }
 
 export function startProspectWorker(): Worker {
