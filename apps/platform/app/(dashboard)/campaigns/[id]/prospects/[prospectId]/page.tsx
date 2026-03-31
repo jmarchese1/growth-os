@@ -49,6 +49,8 @@ interface ProspectDetail {
   contactLinkedIn: string | null;
   linkedinUrl: string | null;
   facebookUrl: string | null;
+  instagramUrl: string | null;
+  instagramHandle: string | null;
   twitterUrl: string | null;
   logoUrl: string | null;
   revenue: string | null;
@@ -330,7 +332,7 @@ export default async function ProspectDetailPage({ params }: {
                 <dd className="text-sm text-slate-400">{prospect.foundedYear}</dd>
               </div>
             )}
-            {(prospect.linkedinUrl || prospect.facebookUrl || prospect.twitterUrl) && (
+            {(prospect.linkedinUrl || prospect.facebookUrl || prospect.instagramHandle || prospect.twitterUrl) && (
               <div>
                 <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Social</dt>
                 <dd className="flex items-center gap-3">
@@ -339,6 +341,9 @@ export default async function ProspectDetailPage({ params }: {
                   )}
                   {prospect.facebookUrl && (
                     <a href={prospect.facebookUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:text-blue-300 transition-colors">Facebook</a>
+                  )}
+                  {prospect.instagramHandle && (
+                    <a href={`https://instagram.com/${prospect.instagramHandle}`} target="_blank" rel="noopener noreferrer" className="text-xs text-pink-400 hover:text-pink-300 transition-colors">@{prospect.instagramHandle}</a>
                   )}
                   {prospect.twitterUrl && (
                     <a href={prospect.twitterUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-sky-400 hover:text-sky-300 transition-colors">Twitter</a>

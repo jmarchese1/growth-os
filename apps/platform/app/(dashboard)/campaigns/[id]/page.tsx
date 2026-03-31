@@ -40,6 +40,8 @@ interface Prospect {
   contactLinkedIn: string | null;
   linkedinUrl: string | null;
   facebookUrl: string | null;
+  instagramUrl: string | null;
+  instagramHandle: string | null;
   twitterUrl: string | null;
   logoUrl: string | null;
   revenue: string | null;
@@ -433,11 +435,14 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                         {p.facebookUrl && (
                           <a href={p.facebookUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-400 hover:text-blue-300">Fb</a>
                         )}
+                        {p.instagramHandle && (
+                          <a href={`https://instagram.com/${p.instagramHandle}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-pink-400 hover:text-pink-300">@{p.instagramHandle}</a>
+                        )}
                         {p.twitterUrl && (
                           <a href={p.twitterUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-400 hover:text-blue-300">X</a>
                         )}
                       </div>
-                      {!p.revenue && !p.foundedYear && !p.linkedinUrl && !p.facebookUrl && !p.twitterUrl && (
+                      {!p.revenue && !p.foundedYear && !p.linkedinUrl && !p.facebookUrl && !p.instagramHandle && !p.twitterUrl && (
                         <span className="text-xs text-slate-700">—</span>
                       )}
                     </div>
