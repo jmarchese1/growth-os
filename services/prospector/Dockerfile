@@ -13,14 +13,13 @@ RUN npx turbo run build --filter=@embedo/prospector
 FROM node:20-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 # Install system dependencies for Chromium
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libnss3 libnspr4 libdbus-1-3 libatk1.0-0 libatk-bridge2.0-0 \
     libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 \
     libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libcairo2 \
-    libasound2 libatspi2.0-0 libwayland-client0 libxdamage1 \
+    libasound2 libatspi2.0-0 libwayland-client0 \
     fonts-liberation fonts-noto-color-emoji ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
@@ -30,7 +29,8 @@ COPY --from=builder /app/services/prospector/node_modules ./services/prospector/
 COPY --from=builder /app/services/prospector/dist ./services/prospector/dist
 COPY --from=builder /app/services/prospector/package.json ./services/prospector/
 
-# Install Playwright Chromium AFTER copying node_modules (so playwright package is available)
+# Install Playwright Chromium into default location (/root/.cache/ms-playwright)
+# Must run AFTER node_modules are copied so playwright package is available
 RUN npx playwright install chromium
 
 EXPOSE 3009
