@@ -76,11 +76,16 @@ let _chromium: any = null;
 async function getChromium() {
   if (_chromium) return _chromium;
 
+  // Ensure PLAYWRIGHT_BROWSERS_PATH is set for Docker environments
+  if (!process.env['PLAYWRIGHT_BROWSERS_PATH'] && process.env['NODE_ENV'] === 'production') {
+    process.env['PLAYWRIGHT_BROWSERS_PATH'] = '/app/.playwright-browsers';
+  }
+
   // Try playwright-chromium first (bundles browser binary in node_modules)
   try {
     const pwc = await import('playwright-chromium');
     _chromium = pwc.chromium;
-    log.info('Using playwright-chromium (bundled browser)');
+    log.info('Using playwright-chromium');
     return _chromium;
   } catch {
     // Fall back to regular playwright
@@ -89,7 +94,7 @@ async function getChromium() {
   try {
     const pw = await import('playwright');
     _chromium = pw.chromium;
-    log.info('Using playwright (system browser)');
+    log.info('Using playwright');
     return _chromium;
   } catch {
     throw new Error('Neither playwright-chromium nor playwright is available');
