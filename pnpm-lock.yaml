@@ -575,6 +575,9 @@ importers:
       playwright:
         specifier: ^1.58.2
         version: 1.58.2
+      playwright-chromium:
+        specifier: ^1.58.2
+        version: 1.59.0
       twilio:
         specifier: ^5.3.7
         version: 5.12.2
@@ -2965,8 +2968,18 @@ packages:
     resolution: {integrity: sha512-TfySrs/5nm8fQJDcBDuUng3VOUKsd7S+zqvbOTiGXHfxX4wK31ard+hoNuvkicM/2YFzlpDgABOevKSsB4G/FA==}
     engines: {node: '>= 6'}
 
+  playwright-chromium@1.59.0:
+    resolution: {integrity: sha512-dxNxQbAYUk6hXoAuJe283Gtt23TUK9gNkYc6wK/wh1nRGDxDszMdyhTXLPXmJ19bCH46OXhe8ZIJYvR1WW3nng==}
+    engines: {node: '>=18'}
+    hasBin: true
+
   playwright-core@1.58.2:
     resolution: {integrity: sha512-yZkEtftgwS8CsfYo7nm0KE8jsvm6i/PTgVtB8DL726wNf6H2IMsDuxCpJj59KDaxCtSnrWan2AeDqM7JBaultg==}
+    engines: {node: '>=18'}
+    hasBin: true
+
+  playwright-core@1.59.0:
+    resolution: {integrity: sha512-PW/X/IoZ6BMUUy8rpwHEZ8Kc0IiLIkgKYGNFaMs5KmQhcfLILNx9yCQD0rnWeWfz1PNeqcFP1BsihQhDOBCwZw==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -5680,7 +5693,13 @@ snapshots:
 
   pirates@4.0.7: {}
 
+  playwright-chromium@1.59.0:
+    dependencies:
+      playwright-core: 1.59.0
+
   playwright-core@1.58.2: {}
+
+  playwright-core@1.59.0: {}
 
   playwright@1.58.2:
     dependencies:

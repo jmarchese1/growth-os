@@ -70,38 +70,38 @@ export async function getAvailableSession(): Promise<{
 /**
  * Create a Playwright browser context with Instagram session cookies.
  */
-let chromiumInstalled = false;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _chromium: any = null;
+
+async function getChromium() {
+  if (_chromium) return _chromium;
+
+  // Try playwright-chromium first (bundles browser binary in node_modules)
+  try {
+    const pwc = await import('playwright-chromium');
+    _chromium = pwc.chromium;
+    log.info('Using playwright-chromium (bundled browser)');
+    return _chromium;
+  } catch {
+    // Fall back to regular playwright
+  }
+
+  try {
+    const pw = await import('playwright');
+    _chromium = pw.chromium;
+    log.info('Using playwright (system browser)');
+    return _chromium;
+  } catch {
+    throw new Error('Neither playwright-chromium nor playwright is available');
+  }
+}
 
 export async function createBrowserContext(
   cookies: CookieData[],
   userAgent?: string | null,
 ) {
-  const pw = await import('playwright');
-
-  // Auto-install Chromium on first use if not found
-  if (!chromiumInstalled) {
-    try {
-      await pw.chromium.launch({ headless: true }).then(b => b.close());
-      chromiumInstalled = true;
-    } catch (err) {
-      if (String(err).includes('Executable') || String(err).includes('browserType.launch')) {
-        log.info('Chromium not found — installing...');
-        const { execSync } = await import('child_process');
-        try {
-          execSync('npx playwright install chromium', { stdio: 'inherit', timeout: 120000 });
-          chromiumInstalled = true;
-          log.info('Chromium installed successfully');
-        } catch (installErr) {
-          log.error({ err: installErr }, 'Failed to install Chromium');
-          throw new Error('Chromium not available and auto-install failed. Run: npx playwright install chromium');
-        }
-      } else {
-        throw err;
-      }
-    }
-  }
-
-  const browser = await pw.chromium.launch({
+  const chromium = await getChromium();
+  const browser = await chromium.launch({
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
   });
