@@ -78,7 +78,7 @@ async function getChromium() {
 
   // Ensure PLAYWRIGHT_BROWSERS_PATH is set for Docker environments
   if (!process.env['PLAYWRIGHT_BROWSERS_PATH'] && process.env['NODE_ENV'] === 'production') {
-    process.env['PLAYWRIGHT_BROWSERS_PATH'] = '/app/.playwright-browsers';
+    process.env['PLAYWRIGHT_BROWSERS_PATH'] = '/opt/pw-browsers';
   }
 
   // Try playwright-chromium first (bundles browser binary in node_modules)

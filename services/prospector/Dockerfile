@@ -12,30 +12,28 @@ RUN pnpm install --no-frozen-lockfile
 RUN pnpm --filter @embedo/db db:generate
 RUN npx turbo run build --filter=@embedo/prospector
 
-# Install Chromium to a known path INSIDE /app so it survives COPY --from=builder
-ENV PLAYWRIGHT_BROWSERS_PATH=/app/.playwright-browsers
-RUN npx playwright install chromium && ls -la /app/.playwright-browsers/
+# Install Chromium with system deps to a shared path
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers
+RUN npx playwright install --with-deps chromium \
+    && chmod -R o+rx /opt/pw-browsers \
+    && ls -la /opt/pw-browsers/
 
 FROM node:20-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-ENV PLAYWRIGHT_BROWSERS_PATH=/app/.playwright-browsers
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers
 
-# System deps for Chromium
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libnss3 libnspr4 libdbus-1-3 libatk1.0-0 libatk-bridge2.0-0 \
-    libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 \
-    libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libcairo2 \
-    libasound2 libatspi2.0-0 libwayland-client0 \
-    fonts-liberation fonts-noto-color-emoji ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+# Copy system deps installed by --with-deps from builder
+COPY --from=builder /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
+COPY --from=builder /usr/share/fonts /usr/share/fonts
+COPY --from=builder /etc/fonts /etc/fonts
 
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/services/prospector/node_modules ./services/prospector/node_modules
 COPY --from=builder /app/services/prospector/dist ./services/prospector/dist
 COPY --from=builder /app/services/prospector/package.json ./services/prospector/
-COPY --from=builder /app/.playwright-browsers /app/.playwright-browsers
+COPY --from=builder /opt/pw-browsers /opt/pw-browsers
 
 EXPOSE 3009
 CMD ["node", "services/prospector/dist/index.js"]
