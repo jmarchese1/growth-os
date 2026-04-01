@@ -164,6 +164,42 @@ export async function sendInstagramDm(
       return { success: false, dmId: dm.id, error: 'Instagram profile not found' };
     }
 
+    // Check follower count — skip accounts with 100k+ followers
+    try {
+      const pageHtml = await page.content();
+      // Instagram shows follower counts in meta tags or in the page text
+      // Format: "123K followers" or "1.2M followers" or "12,345 followers"
+      const followerMatch = pageHtml.match(/(\d[\d,.]*[KMkm]?)\s*(?:followers|Followers)/);
+      if (followerMatch?.[1]) {
+        let count = 0;
+        const raw = followerMatch[1].replace(/,/g, '');
+        if (/[Kk]$/.test(raw)) count = parseFloat(raw) * 1000;
+        else if (/[Mm]$/.test(raw)) count = parseFloat(raw) * 1000000;
+        else count = parseInt(raw);
+
+        if (count > 0) {
+          log.info({ handle: prospect.instagramHandle, followers: count }, 'Follower count detected');
+          // Store on prospect for future filtering
+          await db.prospectBusiness.update({
+            where: { id: prospectId },
+            data: { instagramFollowers: count },
+          }).catch(() => {});
+        }
+
+        const maxFollowers = 100000;
+        if (count > maxFollowers) {
+          await db.instagramDM.update({
+            where: { id: dm.id },
+            data: { status: 'FAILED', failureReason: `too_many_followers:${count}` },
+          });
+          log.info({ handle: prospect.instagramHandle, followers: count }, 'Skipping — too many followers');
+          return { success: false, dmId: dm.id, error: `Account has ${count.toLocaleString()} followers (limit: ${maxFollowers.toLocaleString()})` };
+        }
+      }
+    } catch {
+      // Don't block sending if follower check fails
+    }
+
     // Check if private
     const isPrivate = await page.$(selectors.privateIndicator).catch(() => null);
     if (isPrivate) {

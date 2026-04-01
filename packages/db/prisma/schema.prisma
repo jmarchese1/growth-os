@@ -750,6 +750,7 @@ model ProspectBusiness {
   facebookUrl       String?
   instagramUrl      String?    // Instagram profile URL (from Geoapify/website scrape)
   instagramHandle   String?    // Extracted handle e.g. "marios_pizza"
+  instagramFollowers Int?      // Follower count (scraped from profile page)
   twitterUrl        String?
   logoUrl           String?
   revenue           String?  // e.g. "5.6M", "1.2B"
