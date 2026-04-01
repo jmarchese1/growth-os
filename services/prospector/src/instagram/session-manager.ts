@@ -82,8 +82,9 @@ export async function createBrowserContext(
 
   if (browserlessUrl) {
     // Connect to remote Browserless service (Railway production)
-    const wsUrl = `wss://${browserlessUrl.replace(/^https?:\/\//, '')}/chromium/playwright`;
-    log.info({ wsUrl }, 'Connecting to remote Browserless');
+    const token = process.env['BROWSERLESS_TOKEN'] ?? '';
+    const wsUrl = `wss://${browserlessUrl.replace(/^https?:\/\//, '')}/chromium/playwright?token=${token}`;
+    log.info('Connecting to remote Browserless');
     browser = await pw.chromium.connect(wsUrl);
   } else {
     // Local development — launch Chromium directly
