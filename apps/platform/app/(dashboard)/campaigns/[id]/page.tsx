@@ -42,6 +42,7 @@ interface Prospect {
   facebookUrl: string | null;
   instagramUrl: string | null;
   instagramHandle: string | null;
+  instagramFollowers: number | null;
   twitterUrl: string | null;
   logoUrl: string | null;
   revenue: string | null;
@@ -436,7 +437,12 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                           <a href={p.facebookUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-400 hover:text-blue-300">Fb</a>
                         )}
                         {p.instagramHandle && (
-                          <a href={`https://instagram.com/${p.instagramHandle}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-pink-400 hover:text-pink-300">@{p.instagramHandle}</a>
+                          <span className="flex items-center gap-1">
+                            <a href={`https://instagram.com/${p.instagramHandle}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-pink-400 hover:text-pink-300">@{p.instagramHandle}</a>
+                            {p.instagramFollowers != null && p.instagramFollowers > 0 && (
+                              <span className="text-[9px] text-slate-600">{p.instagramFollowers >= 1000 ? `${(p.instagramFollowers / 1000).toFixed(1)}K` : p.instagramFollowers}</span>
+                            )}
+                          </span>
                         )}
                         {p.twitterUrl && (
                           <a href={p.twitterUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-400 hover:text-blue-300">X</a>

@@ -299,7 +299,7 @@ Examples:
   });
 
   app.post('/instagram/dm/send-campaign', async (request, reply) => {
-    const { campaignId } = request.body as { campaignId: string };
+    const { campaignId, excludeIds } = request.body as { campaignId: string; excludeIds?: string[] };
     if (!campaignId) return reply.code(400).send({ error: 'campaignId required' });
 
     const campaign = await db.outboundCampaign.findUnique({ where: { id: campaignId } });
@@ -307,12 +307,18 @@ Examples:
       return reply.code(400).send({ error: 'Campaign has no Instagram DM template' });
     }
 
-    // Find all prospects with an Instagram handle that haven't been DM'd yet
+    // Find eligible prospects: have IG handle, not already DM'd, not a chain, under 100k followers
     const prospects = await db.prospectBusiness.findMany({
       where: {
         campaignId,
         instagramHandle: { not: null },
-        instagramDms: { none: {} },
+        instagramDms: { none: { status: 'SENT' } },
+        isChain: { not: true },
+        ...(excludeIds?.length ? { id: { notIn: excludeIds } } : {}),
+        OR: [
+          { instagramFollowers: null },
+          { instagramFollowers: { lt: 100000 } },
+        ],
       },
       select: { id: true, instagramHandle: true },
     });
@@ -371,6 +377,80 @@ Examples:
     const totalSent = sessions.reduce((sum, s) => sum + s.sentToday, 0);
 
     return { sessions, totalLimit, totalSent, remaining: totalLimit - totalSent };
+  });
+
+  // Batch follower scrape
+  app.post('/instagram/scrape-followers', async (request, reply) => {
+    const { campaignId, limit } = (request.body ?? {}) as { campaignId?: string; limit?: number };
+    const { batchScrapeFollowers } = await import('./instagram/follower-scraper.js');
+
+    // Run in background
+    setImmediate(async () => {
+      try {
+        await batchScrapeFollowers(campaignId, limit ?? 50);
+      } catch (err) {
+        log.error({ err }, 'Follower scrape failed');
+      }
+    });
+
+    return reply.send({ started: true, campaignId });
+  });
+
+  // Queue preview — show who would get DM'd for a campaign
+  app.get('/instagram/dm/preview', async (request) => {
+    const { campaignId } = request.query as { campaignId: string };
+    if (!campaignId) return { items: [], total: 0 };
+
+    const prospects = await db.prospectBusiness.findMany({
+      where: {
+        campaignId,
+        instagramHandle: { not: null },
+        instagramDms: { none: { status: 'SENT' } }, // Not already DM'd
+        isChain: { not: true }, // Skip chains
+      },
+      select: {
+        id: true,
+        name: true,
+        shortName: true,
+        instagramHandle: true,
+        instagramFollowers: true,
+        businessType: true,
+        isChain: true,
+        email: true,
+        website: true,
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    // Filter out 100k+ followers
+    const eligible = prospects.filter(p => !p.instagramFollowers || p.instagramFollowers < 100000);
+
+    return { items: eligible, total: eligible.length, filtered: prospects.length - eligible.length };
+  });
+
+  // Pause/resume DM sending
+  app.post('/instagram/dm/pause', async (_request, reply) => {
+    const { instagramDmQueue } = await import('@embedo/queue');
+    await instagramDmQueue().pause();
+    return reply.send({ paused: true });
+  });
+
+  app.post('/instagram/dm/resume', async (_request, reply) => {
+    const { instagramDmQueue } = await import('@embedo/queue');
+    await instagramDmQueue().resume();
+    return reply.send({ resumed: true });
+  });
+
+  // Remove a specific DM from the queue
+  app.delete('/instagram/dm/:id', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const dm = await db.instagramDM.findUnique({ where: { id } });
+    if (!dm) return reply.code(404).send({ error: 'DM not found' });
+    if (dm.status === 'QUEUED') {
+      await db.instagramDM.delete({ where: { id } });
+      return reply.send({ deleted: true });
+    }
+    return reply.code(400).send({ error: 'Can only delete QUEUED DMs' });
   });
 
   // ─── Auto-sender config + status ─────────────────────────────────────────
