@@ -70,46 +70,28 @@ export async function getAvailableSession(): Promise<{
 /**
  * Create a Playwright browser context with Instagram session cookies.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let _chromium: any = null;
-
-async function getChromium() {
-  if (_chromium) return _chromium;
-
-  // Ensure PLAYWRIGHT_BROWSERS_PATH is set for Docker environments
-  if (!process.env['PLAYWRIGHT_BROWSERS_PATH'] && process.env['NODE_ENV'] === 'production') {
-    process.env['PLAYWRIGHT_BROWSERS_PATH'] = '/opt/pw-browsers';
-  }
-
-  // Try playwright-chromium first (bundles browser binary in node_modules)
-  try {
-    const pwc = await import('playwright-chromium');
-    _chromium = pwc.chromium;
-    log.info('Using playwright-chromium');
-    return _chromium;
-  } catch {
-    // Fall back to regular playwright
-  }
-
-  try {
-    const pw = await import('playwright');
-    _chromium = pw.chromium;
-    log.info('Using playwright');
-    return _chromium;
-  } catch {
-    throw new Error('Neither playwright-chromium nor playwright is available');
-  }
-}
-
 export async function createBrowserContext(
   cookies: CookieData[],
   userAgent?: string | null,
 ) {
-  const chromium = await getChromium();
-  const browser = await chromium.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-  });
+  const pw = await import('playwright');
+  const browserlessUrl = process.env['BROWSERLESS_URL'];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let browser: any;
+
+  if (browserlessUrl) {
+    // Connect to remote Browserless service (Railway production)
+    const wsUrl = `wss://${browserlessUrl.replace(/^https?:\/\//, '')}/chromium/playwright`;
+    log.info({ wsUrl }, 'Connecting to remote Browserless');
+    browser = await pw.chromium.connect(wsUrl);
+  } else {
+    // Local development — launch Chromium directly
+    browser = await pw.chromium.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    });
+  }
 
   const context = await browser.newContext({
     userAgent: userAgent ?? 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
