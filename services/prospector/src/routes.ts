@@ -1135,6 +1135,20 @@ Output format:
 
           await prospectDiscoveredQueue().add(`place:${place.placeId}`, job as never);
         }
+
+        // Auto-scrape Instagram follower counts after prospects are queued
+        // Wait for prospects to be created (enrichment takes ~2-3 min for 50 prospects)
+        // then batch scrape their IG profiles for follower counts
+        const waitMs = Math.max(allPlaces.length * 3000, 30000); // ~3s per prospect, min 30s
+        setTimeout(async () => {
+          try {
+            const { batchScrapeFollowers } = await import('./instagram/follower-scraper.js');
+            await batchScrapeFollowers(id, 200);
+          } catch (scrapeErr) {
+            log.warn({ err: scrapeErr, campaignId: id }, 'Auto follower scrape failed');
+          }
+        }, waitMs);
+
       } catch (err) {
         log.error({ err, campaignId: id }, 'Campaign scrape failed');
       }
