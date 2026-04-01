@@ -1,3 +1,8 @@
+// Set Playwright browser path BEFORE any imports that touch playwright
+if (process.env['NODE_ENV'] === 'production' && !process.env['PLAYWRIGHT_BROWSERS_PATH']) {
+  process.env['PLAYWRIGHT_BROWSERS_PATH'] = '/app/.playwright-browsers';
+}
+
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
