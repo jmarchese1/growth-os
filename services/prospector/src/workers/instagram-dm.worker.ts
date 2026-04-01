@@ -37,10 +37,6 @@ export function startInstagramDmWorker(): Worker {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       connection: getRedisConnection() as any,
       concurrency: 1, // MUST be 1 — sequential DMs to avoid detection
-      limiter: {
-        max: 1,
-        duration: 120000, // At most 1 job per 2 minutes
-      },
     },
   );
 
