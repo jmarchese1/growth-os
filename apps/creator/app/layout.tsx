@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Reach — Instagram DM Autopilot",
-  description: "Automatically DM your engaged followers. Turn likes into clients.",
+  description: "Turn your followers into clients. Automatically.",
 };
 
 export default function RootLayout({
@@ -23,15 +23,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
-    >
-      <body className="min-h-full flex flex-col bg-[#06080f] text-white">
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <style dangerouslySetInnerHTML={{ __html: `@import url('https://api.fontshare.com/v2/css?f[]=clash-display@700,600,500&f[]=satoshi@400,500,700&display=swap');` }} />
-        {children}
-      </body>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body>{children}</body>
     </html>
   );
 }
