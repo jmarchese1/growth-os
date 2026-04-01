@@ -10,6 +10,7 @@ import { sendDailyDigest } from './workers/digest.worker.js';
 import { resetDailyCounts, advanceWarmup } from './outreach/domain-rotator.js';
 import { startInstagramDmWorker } from './workers/instagram-dm.worker.js';
 import { resetDailyCounts as resetIgDailyCounts } from './instagram/session-manager.js';
+import { checkForReplies } from './instagram/reply-checker.js';
 
 const log = createLogger('prospector');
 
@@ -67,6 +68,17 @@ async function start() {
     }, 24 * 60 * 60 * 1000);
   }, msUntilMidnight);
   log.info({ nextResetAt: nextMidnightET.toISOString() }, 'Midnight ET reset scheduled');
+
+  // Instagram reply checker — every hour, 8am-11pm ET, Mon-Sat
+  // The checkForReplies function itself enforces the time/day window
+  setInterval(() => {
+    checkForReplies().catch(err => log.error({ err }, 'Instagram reply check failed'));
+  }, 60 * 60 * 1000); // every hour
+  // Also run once on startup (will skip if outside window)
+  setTimeout(() => {
+    checkForReplies().catch(err => log.error({ err }, 'Instagram reply check failed'));
+  }, 30000); // 30s after startup
+  log.info('Instagram reply checker scheduled (hourly, 8am-11pm ET, Mon-Sat)');
 
 }
 
