@@ -51,6 +51,15 @@ export async function sendInstagramDm(
   if (!prospect) throw new Error(`Prospect ${prospectId} not found`);
   if (!prospect.instagramHandle) throw new Error(`Prospect ${prospectId} has no Instagram handle`);
 
+  // Duplicate check — don't DM someone we've already successfully DM'd
+  const existingDm = await db.instagramDM.findFirst({
+    where: { prospectId, status: 'SENT' },
+  });
+  if (existingDm) {
+    log.info({ prospectId, handle: prospect.instagramHandle }, 'Already DM\'d this prospect — skipping');
+    return { success: true, dmId: existingDm.id };
+  }
+
   const campaign = await db.outboundCampaign.findUnique({ where: { id: campaignId } });
   if (!campaign) throw new Error(`Campaign ${campaignId} not found`);
 
