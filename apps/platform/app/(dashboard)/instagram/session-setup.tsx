@@ -55,7 +55,13 @@ export function SessionSetup({ prospectorUrl, sessions }: { prospectorUrl: strin
     try {
       const res = await fetch(`${prospectorUrl}/instagram/sessions/${id}/test`, { method: 'POST' });
       const data = await res.json() as { status?: string; error?: string };
-      if (data.error) setError(data.error);
+      if (data.error) {
+        if (data.error.includes('Executable') || data.error.includes('playwright')) {
+          setError('Chromium not installed on server — DMs can only be sent locally for now.');
+        } else {
+          setError(data.error);
+        }
+      }
       router.refresh();
     } catch {
       setError('Test failed — is prospector running?');
