@@ -27,7 +27,11 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col bg-[#050508] text-white">{children}</body>
+      <body className="min-h-full flex flex-col bg-[#06080f] text-white">
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+        <style dangerouslySetInnerHTML={{ __html: `@import url('https://api.fontshare.com/v2/css?f[]=clash-display@700,600,500&f[]=satoshi@400,500,700&display=swap');` }} />
+        {children}
+      </body>
     </html>
   );
 }
