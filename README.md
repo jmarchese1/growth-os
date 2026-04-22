@@ -67,30 +67,7 @@ For service businesses (agencies, coaches, contractors) — custom proposals dra
 
 ---
 
-## Screenshots
-
-<table>
-  <tr>
-    <td align="center">
-      <img src="docs/screenshots/onboarding.png" alt="Onboarding a new business" width="100%"/>
-      <sub><b>Onboarding</b> · install the full stack in one flow</sub>
-    </td>
-    <td align="center">
-      <img src="docs/screenshots/platform.png" alt="Platform dashboard" width="100%"/>
-      <sub><b>Platform</b> · CRM, leads, agents, content</sub>
-    </td>
-  </tr>
-  <tr>
-    <td align="center">
-      <img src="docs/screenshots/voice-agent.png" alt="Voice agent config" width="100%"/>
-      <sub><b>Voice agent</b> · ElevenLabs script + voice picker</sub>
-    </td>
-    <td align="center">
-      <img src="docs/screenshots/chatbot.png" alt="Chatbot preview" width="100%"/>
-      <sub><b>Chatbot</b> · live preview with the business's data</sub>
-    </td>
-  </tr>
-</table>
+> More product screenshots (onboarding, platform, voice-agent config, chatbot preview) will land in [`docs/screenshots/`](docs/screenshots/) as the admin surface matures — capture recipe in the folder README.
 
 ---
 

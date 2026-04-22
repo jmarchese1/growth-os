@@ -1,12 +1,15 @@
 # Screenshots
 
-Drop real PNGs here with these exact filenames and they'll render in the main [README](../../README.md) automatically.
+## Already captured
 
-## Expected files
+| File | What it is |
+|---|---|
+| `hero.png` | Branded hero card — Embedo logo + tagline + feature pills (1920×1080 @ 2x DPR). Rendered from a design-only HTML page, not a product screenshot. |
 
-| Filename | Shows | Recommended dimensions |
+## Still needed — drop PNGs here with these filenames and they'll auto-wire in the README
+
+| Filename | Shows | Recommended dims |
 |---|---|---|
-| `hero.png` | Big top-of-page hero | 1600×900 |
 | `onboarding.png` | Business onboarding flow | 1200×800 |
 | `platform.png` | Platform admin dashboard | 1200×800 |
 | `voice-agent.png` | Voice agent configuration | 1200×800 |
