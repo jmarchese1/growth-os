@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+﻿import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { SendButton } from './send-button';
 import { ConvertButton } from './convert-button';
@@ -102,17 +102,17 @@ function fmt(iso: string | null | undefined): string {
 
 function StatusBadge({ status }: { status: ProspectStatus }) {
   const map: Record<ProspectStatus, { dot: string; label: string; bg: string; text: string }> = {
-    NEW:          { dot: 'bg-slate-500', label: 'New',       bg: 'bg-slate-500/10', text: 'text-slate-400' },
+    NEW:          { dot: 'bg-slate-500', label: 'New',       bg: 'bg-slate-500/10', text: 'text-paper-3' },
     ENRICHED:     { dot: 'bg-blue-400',  label: 'Has Email', bg: 'bg-blue-500/10',  text: 'text-blue-400'  },
-    CONTACTED:    { dot: 'bg-violet-400',label: 'Emailed',   bg: 'bg-violet-500/10',text: 'text-violet-400'},
+    CONTACTED:    { dot: 'bg-violet-400',label: 'Emailed',   bg: 'bg-signal-soft',text: 'text-signal'},
     OPENED:       { dot: 'bg-amber-400', label: 'Opened',    bg: 'bg-amber-500/10', text: 'text-amber-400' },
     REPLIED:      { dot: 'bg-emerald-400',label: 'Replied',  bg: 'bg-emerald-500/10',text: 'text-emerald-400'},
     CONVERTED:    { dot: 'bg-green-400', label: 'Converted', bg: 'bg-green-500/10', text: 'text-green-400' },
     BOUNCED:      { dot: 'bg-red-400',   label: 'Bounced',   bg: 'bg-red-500/10',   text: 'text-red-400'  },
-    DEAD:         { dot: 'bg-slate-600', label: 'Dead',      bg: 'bg-slate-600/10', text: 'text-slate-500' },
+    DEAD:         { dot: 'bg-slate-600', label: 'Dead',      bg: 'bg-slate-600/10', text: 'text-paper-4' },
     UNSUBSCRIBED: { dot: 'bg-orange-400',label: 'Unsub',     bg: 'bg-orange-500/10',text: 'text-orange-400'},
   };
-  const { dot, label, bg, text } = map[status] ?? { dot: 'bg-slate-500', label: status, bg: 'bg-slate-500/10', text: 'text-slate-400' };
+  const { dot, label, bg, text } = map[status] ?? { dot: 'bg-slate-500', label: status, bg: 'bg-slate-500/10', text: 'text-paper-3' };
   return (
     <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${bg} ${text}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${dot} flex-shrink-0`} />
@@ -182,7 +182,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
         </div>
 
         {/* Ambient glow orbs — very subtle */}
-        <div className="absolute top-10 right-16 w-64 h-64 rounded-full bg-violet-600/8 blur-[90px] animate-float-orb" />
+        <div className="absolute top-10 right-16 w-64 h-64 rounded-full bg-signal text-ink-0/8 blur-[90px] animate-float-orb" />
         <div className="absolute bottom-20 right-0 w-48 h-48 rounded-full bg-indigo-600/6 blur-[70px] animate-float-orb-b" />
       </div>
 
@@ -192,23 +192,23 @@ export default async function CampaignDetailPage({ params, searchParams }: {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <div className="flex items-center gap-2 text-sm text-slate-500 mb-1">
-            <Link href="/" className="hover:text-violet-400 transition-colors flex items-center gap-1">
+          <div className="flex items-center gap-2 text-sm text-paper-4 mb-1">
+            <Link href="/" className="hover:text-signal transition-colors flex items-center gap-1">
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
               Overview
             </Link>
-            <span className="text-slate-700">/</span>
-            <Link href="/campaigns" className="hover:text-violet-400 transition-colors">Campaigns</Link>
-            <span className="text-slate-700">/</span>
-            <span className="text-slate-300">{campaign?.name ?? id}</span>
+            <span className="text-paper-4">/</span>
+            <Link href="/campaigns" className="hover:text-signal transition-colors">Campaigns</Link>
+            <span className="text-paper-4">/</span>
+            <span className="text-paper-2">{campaign?.name ?? id}</span>
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">{campaign?.name ?? 'Campaign'}</h1>
+          <h1 className="text-2xl font-bold text-paper tracking-tight">{campaign?.name ?? 'Campaign'}</h1>
           {campaign && (
-            <p className="text-sm text-slate-400 mt-0.5">
+            <p className="text-sm text-paper-3 mt-0.5">
               {campaign.targetCity} · {campaign.targetIndustry}
               {campaign.active
                 ? <span className="ml-2 text-emerald-400 font-medium">● Active</span>
-                : <span className="ml-2 text-slate-500">Inactive</span>}
+                : <span className="ml-2 text-paper-4">Inactive</span>}
             </p>
           )}
           {(() => {
@@ -216,13 +216,13 @@ export default async function CampaignDetailPage({ params, searchParams }: {
             if (!conf?.totalEntries) return null;
             return (
               <div className="flex items-center gap-3 mt-1.5 text-[11px]">
-                <span className="text-slate-500">Apollo pool: <span className="text-slate-300 font-semibold">{conf.totalEntries.toLocaleString()}</span> matching businesses</span>
-                <span className="text-slate-700">·</span>
-                <span className="text-slate-500">Fetched: <span className="text-slate-300 font-semibold">{conf.prospectsFetched ?? 0}</span></span>
-                <span className="text-slate-700">·</span>
-                <span className="text-slate-500">Remaining: <span className={`font-semibold ${(conf.remaining ?? 0) > 50 ? 'text-emerald-400' : (conf.remaining ?? 0) > 0 ? 'text-amber-400' : 'text-red-400'}`}>{conf.remaining ?? 0}</span></span>
-                <span className="text-slate-700">·</span>
-                <span className="text-slate-500">~<span className={`font-semibold ${(conf.runsRemaining ?? 0) > 3 ? 'text-emerald-400' : (conf.runsRemaining ?? 0) > 0 ? 'text-amber-400' : 'text-red-400'}`}>{conf.runsRemaining ?? 0}</span> runs left</span>
+                <span className="text-paper-4">Apollo pool: <span className="text-paper-2 font-semibold">{conf.totalEntries.toLocaleString()}</span> matching businesses</span>
+                <span className="text-paper-4">·</span>
+                <span className="text-paper-4">Fetched: <span className="text-paper-2 font-semibold">{conf.prospectsFetched ?? 0}</span></span>
+                <span className="text-paper-4">·</span>
+                <span className="text-paper-4">Remaining: <span className={`font-semibold ${(conf.remaining ?? 0) > 50 ? 'text-emerald-400' : (conf.remaining ?? 0) > 0 ? 'text-amber-400' : 'text-red-400'}`}>{conf.remaining ?? 0}</span></span>
+                <span className="text-paper-4">·</span>
+                <span className="text-paper-4">~<span className={`font-semibold ${(conf.runsRemaining ?? 0) > 3 ? 'text-emerald-400' : (conf.runsRemaining ?? 0) > 0 ? 'text-amber-400' : 'text-red-400'}`}>{conf.runsRemaining ?? 0}</span> runs left</span>
               </div>
             );
           })()}
@@ -266,23 +266,23 @@ export default async function CampaignDetailPage({ params, searchParams }: {
       {/* Funnel stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
-          { label: 'Scraped', value: stats.total, pct: 100, color: 'text-slate-200', border: 'border-white/10' },
+          { label: 'Scraped', value: stats.total, pct: 100, color: 'text-slate-200', border: 'border-rule' },
           { label: 'Has Email', value: hasEmail, pct: pct(hasEmail), color: 'text-blue-400', border: 'border-blue-500/20' },
-          { label: 'Emailed', value: emailed, pct: pct(emailed), color: 'text-violet-400', border: 'border-violet-500/20' },
+          { label: 'Emailed', value: emailed, pct: pct(emailed), color: 'text-signal', border: 'border-rule' },
           { label: 'Opened', value: opened, pct: pct(opened), color: 'text-amber-400', border: 'border-amber-500/20' },
           { label: 'Replied', value: replied, pct: pct(replied), color: 'text-emerald-400', border: 'border-emerald-500/20' },
           { label: 'Converted', value: converted, pct: pct(converted), color: 'text-green-400', border: 'border-green-500/20' },
         ].map((stat) => (
-          <div key={stat.label} className={`bg-white/5 backdrop-blur-sm rounded-xl border ${stat.border} p-4`}>
-            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-2">{stat.label}</p>
+          <div key={stat.label} className={`bg-ink-2 backdrop-blur-sm rounded-xl border ${stat.border} p-4`}>
+            <p className="text-[10px] font-semibold text-paper-4 uppercase tracking-widest mb-2">{stat.label}</p>
             <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-            <p className="text-[10px] text-slate-600 mt-1">{stat.pct}% of total</p>
+            <p className="text-[10px] text-paper-4 mt-1">{stat.pct}% of total</p>
           </div>
         ))}
       </div>
 
       {/* Filter tabs */}
-      <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1 w-fit border border-white/10">
+      <div className="flex items-center gap-1 bg-ink-2 rounded-lg p-1 w-fit border border-rule">
         {tabs.map((tab) => {
           const isActive = tab.value === undefined ? !filterStatus : filterStatus === tab.value;
           const href = tab.value
@@ -294,12 +294,12 @@ export default async function CampaignDetailPage({ params, searchParams }: {
               href={href}
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 isActive
-                  ? 'bg-violet-600/30 text-white border border-violet-500/40'
-                  : 'text-slate-500 hover:text-slate-300'
+                  ? 'bg-signal-soft text-paper border border-signal'
+                  : 'text-paper-4 hover:text-paper-2'
               }`}
             >
               {tab.label}
-              <span className={`ml-1.5 text-xs ${isActive ? 'text-violet-400' : 'text-slate-600'}`}>
+              <span className={`ml-1.5 text-xs ${isActive ? 'text-signal' : 'text-paper-4'}`}>
                 {tab.count}
               </span>
             </Link>
@@ -308,34 +308,34 @@ export default async function CampaignDetailPage({ params, searchParams }: {
       </div>
 
       {/* Prospects table */}
-      <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+      <div className="bg-ink-2 backdrop-blur-sm rounded-xl border border-rule">
         {/* Scrollbar-on-top wrapper: rotateX flips the scrollbar to the top, inner div flips content back */}
         <div className="overflow-x-auto [transform:rotateX(180deg)]">
         <div className="[transform:rotateX(180deg)]">
         <table className="text-sm" style={{ minWidth: '1620px', width: '100%' }}>
           <thead>
-            <tr className="bg-white/[0.07] border-b-2 border-slate-700/40">
-              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap sticky left-0 bg-[#17132b] z-10">Company</th>
-              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Phone</th>
-              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Email</th>
-              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Contact</th>
-              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Details</th>
-              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Rating</th>
-              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Site Score</th>
-              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Status</th>
-              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Sent</th>
-              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Opened</th>
-              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Reply</th>
-              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">
-                Sequence <span className="text-[9px] text-slate-600 font-normal">· next follow-up</span>
+            <tr className="bg-ink-3 border-b-2 border-slate-700/40">
+              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-paper-3 uppercase tracking-widest whitespace-nowrap sticky left-0 bg-[#121212] z-10">Company</th>
+              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-paper-3 uppercase tracking-widest whitespace-nowrap">Phone</th>
+              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-paper-3 uppercase tracking-widest whitespace-nowrap">Email</th>
+              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-paper-3 uppercase tracking-widest whitespace-nowrap">Contact</th>
+              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-paper-3 uppercase tracking-widest whitespace-nowrap">Details</th>
+              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-paper-3 uppercase tracking-widest whitespace-nowrap">Rating</th>
+              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-paper-3 uppercase tracking-widest whitespace-nowrap">Site Score</th>
+              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-paper-3 uppercase tracking-widest whitespace-nowrap">Status</th>
+              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-paper-3 uppercase tracking-widest whitespace-nowrap">Sent</th>
+              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-paper-3 uppercase tracking-widest whitespace-nowrap">Opened</th>
+              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-paper-3 uppercase tracking-widest whitespace-nowrap">Reply</th>
+              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-paper-3 uppercase tracking-widest whitespace-nowrap">
+                Sequence <span className="text-[9px] text-paper-4 font-normal">· next follow-up</span>
               </th>
-              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap sticky right-0 bg-[#17132b] z-10">Actions</th>
+              <th className="text-left px-4 py-3.5 text-[10px] font-semibold text-paper-3 uppercase tracking-widest whitespace-nowrap sticky right-0 bg-[#121212] z-10">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/60">
+          <tbody className="divide-y divide-rule">
             {prospects.length === 0 && (
               <tr>
-                <td colSpan={12} className="px-4 py-16 text-center text-slate-600 text-sm">
+                <td colSpan={12} className="px-4 py-16 text-center text-paper-4 text-sm">
                   No prospects found{filterStatus ? ` with status "${filterStatus}"` : ''}.
                 </td>
               </tr>
@@ -344,17 +344,17 @@ export default async function CampaignDetailPage({ params, searchParams }: {
               const msg = p.messages[0];
               const cityState = [p.address?.city, p.address?.state].filter(Boolean).join(', ');
               return (
-                <tr key={p.id} className="hover:bg-violet-950/20 transition-colors group">
+                <tr key={p.id} className="hover:bg-ink-2 transition-colors group">
 
                   {/* Company — sticky left */}
-                  <td className="px-4 py-3 min-w-[180px] max-w-[220px] sticky left-0 bg-[#0c0a18] group-hover:bg-[#0e0c1e] z-10 transition-colors">
-                    <Link href={`/campaigns/${id}/prospects/${p.id}`} className="font-semibold text-white hover:text-violet-300 transition-colors truncate block text-sm">
+                  <td className="px-4 py-3 min-w-[180px] max-w-[220px] sticky left-0 bg-[#0a0a0a] group-hover:bg-[#0e0c1e] z-10 transition-colors">
+                    <Link href={`/campaigns/${id}/prospects/${p.id}`} className="font-semibold text-paper hover:text-signal transition-colors truncate block text-sm">
                       {p.name}
                     </Link>
-                    {cityState && <p className="text-xs text-slate-500 truncate mt-0.5">{cityState}</p>}
+                    {cityState && <p className="text-xs text-paper-4 truncate mt-0.5">{cityState}</p>}
                     {p.website && (
                       <a href={p.website} target="_blank" rel="noopener noreferrer"
-                        className="text-xs text-violet-400 hover:text-violet-300 hover:underline truncate block transition-colors">
+                        className="text-xs text-signal hover:text-signal hover:underline truncate block transition-colors">
                         {p.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
                       </a>
                     )}
@@ -363,11 +363,11 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                   {/* Phone */}
                   <td className="px-4 py-3 min-w-[130px] whitespace-nowrap">
                     {p.phone ? (
-                      <a href={`tel:${p.phone}`} className="text-xs text-slate-300 hover:text-violet-400 transition-colors font-mono">
+                      <a href={`tel:${p.phone}`} className="text-xs text-paper-2 hover:text-signal transition-colors font-mono">
                         {p.phone}
                       </a>
                     ) : (
-                      <span className="text-xs text-slate-700">—</span>
+                      <span className="text-xs text-paper-4">—</span>
                     )}
                   </td>
 
@@ -375,7 +375,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                   <td className="px-4 py-3 min-w-[190px]">
                     {p.email ? (
                       <div className="space-y-1">
-                        <a href={`mailto:${p.email}`} className="font-mono text-xs text-slate-300 hover:text-violet-400 transition-colors truncate block">
+                        <a href={`mailto:${p.email}`} className="font-mono text-xs text-paper-2 hover:text-signal transition-colors truncate block">
                           {p.email}
                         </a>
                         <div className="flex items-center gap-2">
@@ -384,18 +384,18 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                               p.emailSource === 'apollo' ? 'text-purple-400/60' :
                               p.emailSource === 'website' ? 'text-blue-400/60' :
                               p.emailSource === 'brave_search' ? 'text-orange-400/60' :
-                              'text-slate-400/60'
+                              'text-paper-3/60'
                             }`}>via {p.emailSource === 'brave_search' ? 'Brave' : p.emailSource}</span>
                           )}
                           {p.emailVerificationStatus && (
-                            <span className="text-[9px] uppercase tracking-wider text-slate-600">
+                            <span className="text-[9px] uppercase tracking-wider text-paper-4">
                               {p.emailVerificationStatus}
                             </span>
                           )}
                         </div>
                       </div>
                     ) : (
-                      <span className="text-xs text-slate-600 italic">not found</span>
+                      <span className="text-xs text-paper-4 italic">not found</span>
                     )}
                   </td>
 
@@ -407,7 +407,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                           {[p.contactFirstName, p.contactLastName].filter(Boolean).join(' ')}
                         </span>
                         {p.contactTitle && (
-                          <p className="text-[10px] text-slate-500 mt-0.5">{p.contactTitle}</p>
+                          <p className="text-[10px] text-paper-4 mt-0.5">{p.contactTitle}</p>
                         )}
                         {p.contactLinkedIn && (
                           <a href={p.contactLinkedIn} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-400 hover:text-blue-300 mt-0.5 block">
@@ -416,7 +416,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                         )}
                       </div>
                     ) : (
-                      <span className="text-xs text-slate-700">—</span>
+                      <span className="text-xs text-paper-4">—</span>
                     )}
                   </td>
 
@@ -427,7 +427,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                         <span className="text-[10px] text-emerald-400">${p.revenue} rev</span>
                       )}
                       {p.foundedYear && (
-                        <span className="text-[10px] text-slate-500">Est. {p.foundedYear}</span>
+                        <span className="text-[10px] text-paper-4">Est. {p.foundedYear}</span>
                       )}
                       <div className="flex items-center gap-2 mt-0.5">
                         {p.linkedinUrl && (
@@ -440,7 +440,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                           <span className="flex items-center gap-1">
                             <a href={`https://instagram.com/${p.instagramHandle}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-pink-400 hover:text-pink-300">@{p.instagramHandle}</a>
                             {p.instagramFollowers != null && p.instagramFollowers > 0 && (
-                              <span className="text-[9px] text-slate-600">{p.instagramFollowers >= 1000 ? `${(p.instagramFollowers / 1000).toFixed(1)}K` : p.instagramFollowers}</span>
+                              <span className="text-[9px] text-paper-4">{p.instagramFollowers >= 1000 ? `${(p.instagramFollowers / 1000).toFixed(1)}K` : p.instagramFollowers}</span>
                             )}
                           </span>
                         )}
@@ -449,7 +449,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                         )}
                       </div>
                       {!p.revenue && !p.foundedYear && !p.linkedinUrl && !p.facebookUrl && !p.instagramHandle && !p.twitterUrl && (
-                        <span className="text-xs text-slate-700">—</span>
+                        <span className="text-xs text-paper-4">—</span>
                       )}
                     </div>
                   </td>
@@ -459,10 +459,10 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                     {p.googleRating ? (
                       <span className="text-xs text-amber-400">
                         ★ {p.googleRating}
-                        <span className="text-slate-600 ml-1">({p.googleReviewCount ?? 0})</span>
+                        <span className="text-paper-4 ml-1">({p.googleReviewCount ?? 0})</span>
                       </span>
                     ) : (
-                      <span className="text-xs text-slate-700">—</span>
+                      <span className="text-xs text-paper-4">—</span>
                     )}
                   </td>
 
@@ -478,7 +478,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                         url={p.website}
                       />
                     ) : (
-                      <span className="text-[10px] text-slate-700">No site</span>
+                      <span className="text-[10px] text-paper-4">No site</span>
                     )}
                   </td>
 
@@ -490,9 +490,9 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                   {/* Sent */}
                   <td className="px-4 py-3 min-w-[130px] whitespace-nowrap">
                     {msg?.sentAt ? (
-                      <span className="text-xs text-slate-400">{fmt(msg.sentAt)}</span>
+                      <span className="text-xs text-paper-3">{fmt(msg.sentAt)}</span>
                     ) : (
-                      <span className="text-xs text-slate-700">—</span>
+                      <span className="text-xs text-paper-4">—</span>
                     )}
                   </td>
 
@@ -501,9 +501,9 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                     {msg?.openedAt ? (
                       <span className="text-xs text-amber-400">{fmt(msg.openedAt)}</span>
                     ) : msg?.sentAt ? (
-                      <span className="text-xs text-slate-700">Not yet</span>
+                      <span className="text-xs text-paper-4">Not yet</span>
                     ) : (
-                      <span className="text-xs text-slate-700">—</span>
+                      <span className="text-xs text-paper-4">—</span>
                     )}
                   </td>
 
@@ -516,7 +516,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                     ) : msg?.repliedAt ? (
                       <span className="text-xs text-emerald-500">Replied {fmt(msg.repliedAt)}</span>
                     ) : (
-                      <span className="text-xs text-slate-700">—</span>
+                      <span className="text-xs text-paper-4">—</span>
                     )}
                   </td>
 
@@ -529,18 +529,18 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                       />
                     ) : msg?.sentAt ? (
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-[9px] font-semibold text-slate-600 uppercase tracking-wider">
+                        <span className="text-[9px] font-semibold text-paper-4 uppercase tracking-wider">
                           Step {msg.stepNumber ?? 1} sent
                         </span>
-                        <span className="text-xs text-slate-600">Sequence done</span>
+                        <span className="text-xs text-paper-4">Sequence done</span>
                       </div>
                     ) : (
-                      <span className="text-xs text-slate-700">—</span>
+                      <span className="text-xs text-paper-4">—</span>
                     )}
                   </td>
 
                   {/* Actions — sticky right */}
-                  <td className="px-4 py-3 min-w-[180px] sticky right-0 bg-[#0c0a18] group-hover:bg-[#0e0c1e] z-10 transition-colors">
+                  <td className="px-4 py-3 min-w-[180px] sticky right-0 bg-[#0a0a0a] group-hover:bg-[#0e0c1e] z-10 transition-colors">
                     <div className="flex items-center gap-2 flex-nowrap">
                       {p.email && (p.status === 'NEW' || p.status === 'ENRICHED') && (
                         <SendButton prospectId={p.id} prospectorUrl={PROSPECTOR_URL} nextFollowUpAt={p.nextFollowUpAt} status={p.status} />
@@ -557,7 +557,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                       )}
                       <Link
                         href={`/campaigns/${id}/prospects/${p.id}`}
-                        className="text-xs px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-colors whitespace-nowrap"
+                        className="text-xs px-2.5 py-1.5 rounded-lg bg-ink-2 border border-rule text-paper-3 hover:text-paper hover:bg-ink-3 transition-colors whitespace-nowrap"
                       >
                         View →
                       </Link>
@@ -572,8 +572,8 @@ export default async function CampaignDetailPage({ params, searchParams }: {
         </div>{/* end rotateX outer / overflow-x-auto */}
 
         {/* Footer */}
-        <div className="px-4 py-3 border-t border-white/5 bg-white/[0.01] flex items-center justify-between">
-          <p className="text-xs text-slate-600">
+        <div className="px-4 py-3 border-t border-rule-soft bg-ink-1 flex items-center justify-between">
+          <p className="text-xs text-paper-4">
             {total} prospect{total !== 1 ? 's' : ''}{filterStatus ? ` · ${tabs.find(t => t.value === filterStatus)?.label ?? 'Filtered'}` : ''} · Opens tracked via pixel
           </p>
           {total > 50 && (
@@ -586,7 +586,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                   Previous
                 </Link>
               )}
-              <span className="text-xs text-slate-500">Page {page}</span>
+              <span className="text-xs text-paper-4">Page {page}</span>
               {total > parseInt(page) * 50 && (
                 <Link
                   href={`/campaigns/${id}?${filterStatus ? `status=${filterStatus}&` : ''}page=${parseInt(page) + 1}`}

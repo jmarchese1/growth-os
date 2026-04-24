@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Plus, FileText, ArrowUpRight } from 'lucide-react';
 import { GenerateProposalModal } from './generate-proposal-modal';
 import { ProposalPreviewModal } from './proposal-preview-modal';
+import { SectionHeader, HeroMetric, MetricBlock, Button } from '../../../components/ui/primitives';
 
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'https://embedoapi-production.up.railway.app';
 
@@ -28,12 +30,12 @@ interface Proposal {
   intakeData: ProposalIntakeData;
 }
 
-const statusColors: Record<string, string> = {
-  DRAFT: 'bg-slate-500/15 text-slate-400 border-slate-500/25',
-  SENT: 'bg-blue-500/15 text-blue-400 border-blue-500/25',
-  VIEWED: 'bg-amber-500/15 text-amber-400 border-amber-500/25',
-  ACCEPTED: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25',
-  DECLINED: 'bg-red-500/15 text-red-400 border-red-500/25',
+const statusColor: Record<string, string> = {
+  DRAFT:    'text-paper-3',
+  SENT:     'text-[#63b7ff]',
+  VIEWED:   'text-amber',
+  ACCEPTED: 'text-signal',
+  DECLINED: 'text-ember',
 };
 
 export default function ProposalsPage() {
@@ -61,7 +63,6 @@ export default function ProposalsPage() {
         setLoading(false);
       }
     }
-
     fetchProposals();
   }, []);
 
@@ -72,94 +73,133 @@ export default function ProposalsPage() {
   };
 
   return (
-    <div className="p-8 space-y-8 animate-fade-up">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Proposals</h1>
-          <p className="text-slate-400 mt-1 text-sm">{total} total proposals</p>
+    <div className="pt-10 pb-24 px-8 max-w-[1400px] mx-auto space-y-14">
+      {/* Masthead */}
+      <section className="pb-10 hairline-b">
+        <div className="flex items-center gap-4 mb-3">
+          <span className="font-mono text-[10px] tracking-mega text-paper-4 uppercase">
+            Chapter 08 · Proposals
+          </span>
+          <span className="h-px w-16 bg-rule" />
+          <span className="font-mono text-[10px] tracking-mega text-paper-3 uppercase">
+            {total} generated
+          </span>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="px-4 py-2 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-500 transition-colors"
-        >
-          + Generate New
-        </button>
-      </div>
+        <div className="flex items-end justify-between gap-8">
+          <h1 className="font-display italic font-light text-paper leading-[0.95] tracking-tight text-[64px] lg:text-[76px] max-w-3xl">
+            AI proposals.
+          </h1>
+          <Button variant="primary" onClick={() => setShowModal(true)}>
+            <Plus className="w-3 h-3" />
+            <span>Generate new</span>
+          </Button>
+        </div>
+        <p className="font-ui text-paper-2 text-[15px] mt-5 max-w-xl leading-relaxed">
+          Generated with Sonnet, hosted on shareable links, tracked from first view to acceptance.
+        </p>
+      </section>
 
-      <div className="grid grid-cols-3 gap-6">
-        <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
-          <p className="text-slate-400 text-sm font-medium">Total Proposals</p>
-          <p className="text-3xl font-bold text-white mt-2">{total}</p>
+      {/* Summary */}
+      <section className="grid grid-cols-12 gap-8">
+        <div className="col-span-12 lg:col-span-5">
+          <HeroMetric label="Proposals in circulation" value={total} caption={`${viewed} viewed, ${accepted} accepted`} size="md" />
         </div>
-        <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
-          <p className="text-slate-400 text-sm font-medium">Viewed</p>
-          <p className="text-3xl font-bold text-amber-400 mt-2">{viewed}</p>
+        <div className="col-span-12 lg:col-span-7 panel">
+          <div className="grid grid-cols-3">
+            <MetricBlock label="Total" value={total} />
+            <MetricBlock label="Viewed" value={viewed} delta={total > 0 ? `${Math.round((viewed/total)*100)}% open` : ''} trend={viewed > 0 ? 'up' : 'flat'} />
+            <MetricBlock label="Accepted" value={accepted} delta={viewed > 0 ? `${Math.round((accepted/viewed)*100)}% of viewed` : ''} trend={accepted > 0 ? 'up' : 'flat'} />
+          </div>
         </div>
-        <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
-          <p className="text-slate-400 text-sm font-medium">Accepted</p>
-          <p className="text-3xl font-bold text-emerald-400 mt-2">{accepted}</p>
-        </div>
-      </div>
+      </section>
 
-      <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-x-auto">
-        {loading ? (
-          <div className="p-16 text-center">
-            <p className="text-slate-500 text-sm">Loading proposals...</p>
-          </div>
-        ) : proposals.length === 0 ? (
-          <div className="p-16 text-center">
-            <p className="text-slate-500 text-sm">No proposals yet.</p>
-            <button
-              onClick={() => setShowModal(true)}
-              className="mt-3 inline-block text-sm text-violet-400 hover:text-violet-300 transition-colors"
-            >
-              Generate your first proposal →
-            </button>
-          </div>
-        ) : (
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-white/5 bg-white/[0.02]">
-                <th className="text-left px-6 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Business</th>
-                <th className="text-left px-6 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Contact</th>
-                <th className="text-left px-6 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Industry</th>
-                <th className="text-left px-6 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Status</th>
-                <th className="text-left px-6 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Created</th>
-                <th className="text-left px-6 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/[0.04]">
-              {proposals.map((proposal) => (
-                <tr key={proposal.id} className="hover:bg-white/[0.03] transition-colors">
-                  <td className="px-6 py-4 font-semibold text-white">{proposal.intakeData.businessName}</td>
-                  <td className="px-6 py-4 text-sm text-slate-400">
-                    {proposal.intakeData.contactName && <p>{proposal.intakeData.contactName}</p>}
-                    {proposal.intakeData.contactEmail && <p className="text-xs text-slate-500">{proposal.intakeData.contactEmail}</p>}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-slate-400 capitalize">{proposal.intakeData.industry}</td>
-                  <td className="px-6 py-4">
-                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${statusColors[proposal.status] ?? 'bg-slate-500/10 text-slate-400 border-slate-500/20'}`}>
-                      {proposal.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-slate-500">{new Date(proposal.createdAt).toLocaleDateString()}</td>
-                  <td className="px-6 py-4 text-sm">
-                    <div className="flex gap-2">
-                      <button onClick={() => setPreviewProposal(proposal)} className="text-violet-400 hover:text-violet-300 transition-colors">
-                        Preview
-                      </button>
-                      <span className="text-slate-600">•</span>
-                      <a href={`https://embedo.io/proposal/${proposal.shareToken}`} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-300 transition-colors">
-                        Public Link
-                      </a>
-                    </div>
-                  </td>
+      {/* Ledger */}
+      <section>
+        <SectionHeader numeral="1" title="The ledger" subtitle={`${total} proposals on file`} />
+
+        <div className="mt-6 panel overflow-hidden">
+          {loading ? (
+            <div className="p-16 text-center">
+              <p className="font-mono text-[11px] tracking-micro uppercase text-paper-4">Loading…</p>
+            </div>
+          ) : proposals.length === 0 ? (
+            <div className="p-20 text-center">
+              <FileText className="w-8 h-8 text-paper-4 mx-auto mb-4" />
+              <p className="font-display italic text-paper-3 text-2xl font-light">No proposals yet.</p>
+              <button onClick={() => setShowModal(true)} className="font-mono text-[11px] tracking-micro uppercase text-signal hover:underline mt-4 inline-block">
+                Generate the first proposal →
+              </button>
+            </div>
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="hairline-b">
+                  <Th>Business</Th>
+                  <Th>Contact</Th>
+                  <Th>Industry</Th>
+                  <Th>Status</Th>
+                  <Th align="right">Created</Th>
+                  <Th align="right"> </Th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+              </thead>
+              <tbody>
+                {proposals.map((proposal, idx) => (
+                  <tr key={proposal.id} className="hairline-b last:border-0 hover:bg-ink-2 transition-colors group">
+                    <td className="px-5 py-4 min-w-[220px]">
+                      <div className="flex items-start gap-3">
+                        <span className="font-mono text-[10px] text-paper-4 pt-1 shrink-0">
+                          №{(idx + 1).toString().padStart(3, '0')}
+                        </span>
+                        <span className="font-display italic text-paper text-lg font-light leading-tight">
+                          {proposal.intakeData.businessName}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      {proposal.intakeData.contactName && (
+                        <p className="font-ui text-sm text-paper">{proposal.intakeData.contactName}</p>
+                      )}
+                      {proposal.intakeData.contactEmail && (
+                        <p className="font-mono text-[10px] text-paper-4 mt-0.5">{proposal.intakeData.contactEmail}</p>
+                      )}
+                    </td>
+                    <td className="px-4 py-4 font-mono text-[10px] tracking-micro uppercase text-paper-3">
+                      {proposal.intakeData.industry}
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className={`font-mono text-[10px] tracking-mega uppercase ${statusColor[proposal.status] ?? 'text-paper-3'}`}>
+                        {proposal.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-right font-mono text-[11px] text-paper-3 nums">
+                      {new Date(proposal.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </td>
+                    <td className="px-5 py-4 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-3">
+                        <button
+                          onClick={() => setPreviewProposal(proposal)}
+                          className="font-mono text-[10px] tracking-mega uppercase text-paper-3 hover:text-signal transition-colors"
+                        >
+                          Preview
+                        </button>
+                        <a
+                          href={`https://embedo.io/proposal/${proposal.shareToken}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 font-mono text-[10px] tracking-mega uppercase text-paper-4 hover:text-signal transition-colors"
+                        >
+                          <span>Link</span>
+                          <ArrowUpRight className="w-3 h-3" />
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </section>
 
       {showModal && <GenerateProposalModal onClose={() => setShowModal(false)} onProposalGenerated={handleProposalGenerated} />}
       {previewProposal && (
@@ -173,5 +213,13 @@ export default function ProposalsPage() {
         />
       )}
     </div>
+  );
+}
+
+function Th({ children, align = 'left' }: { children: React.ReactNode; align?: 'left' | 'right' }) {
+  return (
+    <th className={`px-4 py-3 font-mono text-[9px] tracking-mega uppercase text-paper-4 font-medium ${align === 'right' ? 'text-right' : 'text-left'}`}>
+      {children}
+    </th>
   );
 }

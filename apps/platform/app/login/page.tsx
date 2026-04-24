@@ -1,149 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '../../lib/supabase/client';
-import EmbedoLogo from '../../components/EmbedoLogo';
 
-/* ── Particle canvas ─────────────────────────────────────────────── */
-interface Particle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  radius: number;
-  opacity: number;
-  violet: boolean;
-}
-
-function OrbitalParticleCanvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mouseRef = useRef({ x: -9999, y: -9999 });
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let animId: number;
-    const particles: Particle[] = [];
-    const COUNT = 70;
-    const CONNECT_DIST = 160;
-    const MOUSE_DIST = 200;
-
-    const resize = () => {
-      canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-      canvas.height = canvas.offsetHeight * window.devicePixelRatio;
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-    };
-    resize();
-
-    const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
-
-    const handleMove = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    };
-    window.addEventListener('mousemove', handleMove);
-
-    const w = () => canvas.offsetWidth;
-    const h = () => canvas.offsetHeight;
-
-    for (let i = 0; i < COUNT; i++) {
-      particles.push({
-        x: Math.random() * w(),
-        y: Math.random() * h(),
-        vx: (Math.random() - 0.5) * 0.3,
-        vy: (Math.random() - 0.5) * 0.3,
-        radius: Math.random() * 1.6 + 0.5,
-        opacity: Math.random() * 0.5 + 0.15,
-        violet: Math.random() < 0.5,
-      });
-    }
-
-    const draw = () => {
-      ctx.clearRect(0, 0, w(), h());
-      const mx = mouseRef.current.x;
-      const my = mouseRef.current.y;
-
-      for (let i = 0; i < particles.length; i++) {
-        const a = particles[i];
-
-        // Mouse repulsion
-        const dmx = a.x - mx;
-        const dmy = a.y - my;
-        const md = Math.sqrt(dmx * dmx + dmy * dmy);
-        if (md < MOUSE_DIST && md > 0) {
-          const force = (1 - md / MOUSE_DIST) * 0.4;
-          a.vx += (dmx / md) * force;
-          a.vy += (dmy / md) * force;
-        }
-
-        // Damping
-        a.vx *= 0.995;
-        a.vy *= 0.995;
-
-        // Lines between nearby particles
-        for (let j = i + 1; j < particles.length; j++) {
-          const b = particles[j];
-          const dx = a.x - b.x;
-          const dy = a.y - b.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < CONNECT_DIST) {
-            const alpha = (1 - dist / CONNECT_DIST) * 0.12;
-            const lineColor = (a.violet && b.violet)
-              ? `rgba(139,92,246,${alpha})`
-              : (!a.violet && !b.violet)
-              ? `rgba(99,102,241,${alpha})`
-              : `rgba(120,87,244,${alpha})`;
-            ctx.beginPath();
-            ctx.strokeStyle = lineColor;
-            ctx.lineWidth = 0.8;
-            ctx.moveTo(a.x, a.y);
-            ctx.lineTo(b.x, b.y);
-            ctx.stroke();
-          }
-        }
-
-        // Draw particle
-        ctx.beginPath();
-        ctx.arc(a.x, a.y, a.radius, 0, Math.PI * 2);
-        ctx.fillStyle = a.violet
-          ? `rgba(167,139,250,${a.opacity})`
-          : `rgba(99,102,241,${a.opacity})`;
-        ctx.fill();
-
-        // Move
-        a.x += a.vx;
-        a.y += a.vy;
-        if (a.x < 0 || a.x > w()) a.vx *= -1;
-        if (a.y < 0 || a.y > h()) a.vy *= -1;
-      }
-
-      animId = requestAnimationFrame(draw);
-    };
-
-    draw();
-
-    return () => {
-      cancelAnimationFrame(animId);
-      ro.disconnect();
-      window.removeEventListener('mousemove', handleMove);
-    };
-  }, []);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className="absolute inset-0 w-full h-full"
-      style={{ opacity: 0.6 }}
-    />
-  );
-}
-
-/* ── Login page ──────────────────────────────────────────────────── */
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -157,183 +17,191 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
-
     const supabase = createSupabaseBrowserClient();
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
+    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
     if (authError) {
-      setError(authError.message === 'Invalid login credentials'
-        ? 'Invalid email or password'
-        : authError.message
-      );
+      setError(authError.message === 'Invalid login credentials' ? 'Invalid email or password' : authError.message);
       setLoading(false);
       return;
     }
-
     router.push('/');
     router.refresh();
   }
 
   async function handleForgotPassword(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim()) {
-      setError('Enter your email address first');
-      return;
-    }
+    if (!email.trim()) { setError('Enter your email address first'); return; }
     setLoading(true);
     setError('');
-
     const supabase = createSupabaseBrowserClient();
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/callback`,
     });
-
-    if (resetError) {
-      setError(resetError.message);
-    } else {
-      setForgotSent(true);
-    }
+    if (resetError) setError(resetError.message);
+    else setForgotSent(true);
     setLoading(false);
   }
 
+  const now = new Date();
+  const timeString = now.toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: false, hour: '2-digit', minute: '2-digit' });
+  const dateString = now.toLocaleDateString('en-US', { timeZone: 'America/New_York', weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0c0a18] relative overflow-hidden">
-      {/* Dynamic particle canvas background */}
-      <OrbitalParticleCanvas />
+    <div className="min-h-screen grid grid-cols-12 bg-ink-0 text-paper">
+      {/* LEFT — editorial panel */}
+      <aside className="col-span-12 lg:col-span-7 relative hairline-r flex flex-col justify-between p-10 lg:p-16 bg-ink-0 overflow-hidden">
+        {/* Subtle grid behind */}
+        <div className="absolute inset-0 bg-grid-fine opacity-40 pointer-events-none" />
+        <div className="absolute inset-0 grain pointer-events-none" />
 
-      {/* Ambient glow orbs */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-32 left-1/4 w-[560px] h-[560px] rounded-full bg-violet-700/8 blur-[110px] animate-float-orb" />
-        <div className="absolute top-2/3 -right-20 w-[420px] h-[420px] rounded-full bg-indigo-600/6 blur-[100px] animate-float-orb-b" />
-        <div className="absolute bottom-0 left-10 w-[300px] h-[300px] rounded-full bg-violet-900/8 blur-[80px]" />
-      </div>
-
-      {/* Login card */}
-      <div className="relative z-10 w-full max-w-md px-4">
-        <div className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-2xl shadow-2xl overflow-visible">
-          {/* Header */}
-          <div className="px-8 pt-10 pb-6 text-center overflow-visible">
-            {/* Embedo Logo — isometric cube with orbiting particles */}
-            <div className="relative mx-auto mb-6 flex items-center justify-center" style={{ width: 140, height: 140, overflow: 'visible' }}>
-              {/* Glow behind logo */}
-              <div className="absolute inset-0 rounded-full bg-violet-500/15 blur-2xl" />
-              <div className="absolute inset-4 rounded-full bg-violet-600/10 blur-xl" />
-              <EmbedoLogo size={72} />
+        <header className="relative z-10 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 border border-paper flex items-center justify-center">
+              <span className="font-display italic font-light text-paper text-[17px] leading-none">E</span>
             </div>
-
-            <h1 className="text-xl font-bold text-white tracking-tight">Welcome back</h1>
-            <p className="text-sm text-slate-500 mt-1.5">Sign in to Embedo Growth OS</p>
+            <div>
+              <p className="font-display italic font-light text-paper text-[18px] leading-none">Embedo</p>
+              <p className="font-mono text-[9px] tracking-mega text-paper-4 mt-1 uppercase">Operator</p>
+            </div>
           </div>
-
-          {/* Form */}
-          <div className="px-8 pb-8">
-            {showForgot ? (
-              <form onSubmit={handleForgotPassword} className="space-y-4">
-                {forgotSent ? (
-                  <div className="px-4 py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
-                    <p className="text-sm text-emerald-400 font-medium">Password reset email sent</p>
-                    <p className="text-xs text-slate-400 mt-1">Check your inbox for a reset link.</p>
-                  </div>
-                ) : (
-                  <>
-                    <div>
-                      <label className="block text-xs font-medium text-slate-400 mb-1.5">Email address</label>
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="you@company.com"
-                        autoFocus
-                        required
-                        className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.08] rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/30 transition-all"
-                      />
-                    </div>
-                    {error && (
-                      <div className="px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg">
-                        <p className="text-xs text-red-400">{error}</p>
-                      </div>
-                    )}
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full py-3 bg-violet-600 text-white text-sm font-semibold rounded-xl hover:bg-violet-500 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
-                    >
-                      {loading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-                      Send Reset Link
-                    </button>
-                  </>
-                )}
-                <button
-                  type="button"
-                  onClick={() => { setShowForgot(false); setForgotSent(false); setError(''); }}
-                  className="w-full text-sm text-slate-500 hover:text-violet-400 transition-colors"
-                >
-                  Back to sign in
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Email address</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@company.com"
-                    autoFocus
-                    required
-                    className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.08] rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/30 transition-all"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-medium text-slate-400">Password</label>
-                    <button
-                      type="button"
-                      onClick={() => { setShowForgot(true); setError(''); }}
-                      className="text-[11px] text-violet-400/70 hover:text-violet-400 transition-colors"
-                    >
-                      Forgot password?
-                    </button>
-                  </div>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    required
-                    className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.08] rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/30 transition-all"
-                  />
-                </div>
-
-                {error && (
-                  <div className="px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg">
-                    <p className="text-xs text-red-400">{error}</p>
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={loading || !email.trim() || !password.trim()}
-                  className="w-full py-3 bg-violet-600 text-white text-sm font-semibold rounded-xl hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 shadow-lg shadow-violet-600/20"
-                >
-                  {loading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-                  {loading ? 'Signing in...' : 'Sign in'}
-                </button>
-              </form>
-            )}
+          <div className="hidden sm:flex items-baseline gap-4 font-mono text-[10px] tracking-mega uppercase text-paper-4">
+            <span>{dateString}</span>
+            <span className="text-paper">{timeString} ET</span>
           </div>
+        </header>
+
+        <div className="relative z-10 max-w-2xl">
+          <span className="font-mono text-[10px] tracking-mega text-paper-4 uppercase">
+            § Vol. 01 · Issue {String(now.getDate()).padStart(3, '0')}
+          </span>
+          <h1 className="font-display italic font-light text-paper mt-6 leading-[0.92] tracking-tight text-[72px] lg:text-[104px]">
+            Where <br />
+            <span className="text-signal not-italic font-normal" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85em', letterSpacing: '-0.03em' }}>
+              cold
+            </span>{' '}becomes <br /> warm.
+          </h1>
+          <p className="font-ui text-paper-2 text-[15px] mt-8 max-w-md leading-relaxed">
+            The internal outreach terminal for Embedo. Campaigns, prospects, domains, replies,
+            everything in one frame.
+          </p>
         </div>
 
-        {/* Footer */}
-        <p className="text-center text-[11px] text-slate-700 mt-6">
-          Embedo Growth OS &middot; AI infrastructure for local businesses
-        </p>
-      </div>
+        <footer className="relative z-10 flex items-center justify-between font-mono text-[10px] tracking-mega text-paper-4 uppercase">
+          <span>Embedo · Growth OS</span>
+          <span>All times Eastern</span>
+        </footer>
+      </aside>
+
+      {/* RIGHT — form */}
+      <section className="col-span-12 lg:col-span-5 flex items-center justify-center p-8 lg:p-16 bg-ink-1">
+        <div className="w-full max-w-sm">
+          <div className="mb-10">
+            <span className="label">§ 01 — Identify</span>
+            <h2 className="font-display italic font-light text-paper text-[48px] leading-none tracking-tight mt-3">
+              Welcome back.
+            </h2>
+            <p className="font-ui text-paper-2 text-sm mt-3">
+              Sign in to continue to Embedo Operator.
+            </p>
+          </div>
+
+          {showForgot ? (
+            <form onSubmit={handleForgotPassword} className="space-y-5">
+              {forgotSent ? (
+                <div className="hairline bg-signal-soft p-4">
+                  <p className="font-display italic text-signal text-lg">Reset link sent.</p>
+                  <p className="font-mono text-[11px] tracking-micro uppercase text-paper-3 mt-2">
+                    Check your inbox for a reset link.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@company.com" autoFocus required />
+                  {error && <ErrorMsg>{error}</ErrorMsg>}
+                  <button type="submit" disabled={loading} className="btn btn-primary w-full justify-center">
+                    {loading ? 'Sending…' : 'Send reset link'}
+                  </button>
+                </>
+              )}
+              <button
+                type="button"
+                onClick={() => { setShowForgot(false); setForgotSent(false); setError(''); }}
+                className="w-full font-mono text-[11px] tracking-micro uppercase text-paper-3 hover:text-signal transition-colors pt-2"
+              >
+                ← Back to sign in
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleLogin} className="space-y-5">
+              <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@company.com" autoFocus required />
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="label-sm">Password</label>
+                  <button
+                    type="button"
+                    onClick={() => { setShowForgot(true); setError(''); }}
+                    className="font-mono text-[10px] tracking-micro uppercase text-paper-3 hover:text-signal transition-colors"
+                  >
+                    Forgot?
+                  </button>
+                </div>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password"
+                  required
+                  className="input w-full"
+                />
+              </div>
+
+              {error && <ErrorMsg>{error}</ErrorMsg>}
+
+              <button
+                type="submit"
+                disabled={loading || !email.trim() || !password.trim()}
+                className="btn btn-primary w-full justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Signing in…' : 'Sign in'}
+              </button>
+            </form>
+          )}
+
+          <p className="mt-12 font-mono text-[10px] tracking-mega text-paper-4 uppercase text-center">
+            Internal platform · Embedo
+          </p>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function Field({
+  label, type = 'text', value, onChange, placeholder, autoFocus, required,
+}: {
+  label: string; type?: string; value: string; onChange: (v: string) => void;
+  placeholder?: string; autoFocus?: boolean; required?: boolean;
+}) {
+  return (
+    <div>
+      <label className="label-sm block mb-2">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        autoFocus={autoFocus}
+        required={required}
+        className="input w-full"
+      />
+    </div>
+  );
+}
+
+function ErrorMsg({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="hairline border-ember bg-ember/10 px-3 py-2">
+      <p className="font-mono text-[11px] tracking-micro text-ember">{children}</p>
     </div>
   );
 }

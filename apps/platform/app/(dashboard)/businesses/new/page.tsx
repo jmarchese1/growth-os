@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -115,22 +115,22 @@ export default function NewBusinessPage() {
   }
 
   const inputClass =
-    'w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-colors';
+    'w-full bg-ink-2 border border-rule  px-4 py-2.5 text-paper placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-signal/50 focus:border-signal/50 transition-colors';
 
   return (
     <div className="p-8 max-w-2xl mx-auto space-y-8 animate-fade-up">
       <div>
-        <a href="/businesses" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">
+        <a href="/businesses" className="text-sm text-paper-4 hover:text-paper-2 transition-colors">
           &larr; Back to Businesses
         </a>
-        <h1 className="text-2xl font-bold text-white tracking-tight mt-4">Onboard New Business</h1>
-        <p className="text-slate-400 mt-1 text-sm">
+        <h1 className="text-2xl font-bold text-paper tracking-tight mt-4">Onboard New Business</h1>
+        <p className="text-paper-3 mt-1 text-sm">
           Register a new business and select the products to build for them.
         </p>
       </div>
 
       {error && (
-        <div className="bg-red-500/10 border border-red-500/25 text-red-400 text-sm rounded-lg px-4 py-3">
+        <div className="bg-red-500/10 border border-red-500/25 text-red-400 text-sm  px-4 py-3">
           {error}
         </div>
       )}
@@ -138,7 +138,7 @@ export default function NewBusinessPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Business Name */}
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-1.5">
+          <label htmlFor="name" className="block text-sm font-medium text-paper-2 mb-1.5">
             Business Name <span className="text-red-400">*</span>
           </label>
           <input
@@ -154,7 +154,7 @@ export default function NewBusinessPage() {
         {/* Type + Timezone row */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="type" className="block text-sm font-medium text-slate-300 mb-1.5">
+            <label htmlFor="type" className="block text-sm font-medium text-paper-2 mb-1.5">
               Business Type
             </label>
             <select
@@ -172,7 +172,7 @@ export default function NewBusinessPage() {
           </div>
 
           <div>
-            <label htmlFor="timezone" className="block text-sm font-medium text-slate-300 mb-1.5">
+            <label htmlFor="timezone" className="block text-sm font-medium text-paper-2 mb-1.5">
               Timezone
             </label>
             <select
@@ -193,7 +193,7 @@ export default function NewBusinessPage() {
         {/* Contact Info */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-slate-300 mb-1.5">
+            <label htmlFor="phone" className="block text-sm font-medium text-paper-2 mb-1.5">
               Phone
             </label>
             <input
@@ -205,7 +205,7 @@ export default function NewBusinessPage() {
             />
           </div>
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1.5">
+            <label htmlFor="email" className="block text-sm font-medium text-paper-2 mb-1.5">
               Email
             </label>
             <input
@@ -220,7 +220,7 @@ export default function NewBusinessPage() {
 
         {/* Website */}
         <div>
-          <label htmlFor="website" className="block text-sm font-medium text-slate-300 mb-1.5">
+          <label htmlFor="website" className="block text-sm font-medium text-paper-2 mb-1.5">
             Website
           </label>
           <input
@@ -234,7 +234,7 @@ export default function NewBusinessPage() {
 
         {/* Address */}
         <fieldset className="space-y-3">
-          <legend className="text-sm font-medium text-slate-300">Address (optional)</legend>
+          <legend className="text-sm font-medium text-paper-2">Address (optional)</legend>
           <input
             name="street"
             type="text"
@@ -251,12 +251,12 @@ export default function NewBusinessPage() {
         {/* ── Products / Modules ─────────────────────────────────────────── */}
         <fieldset className="space-y-3">
           <div className="flex items-center justify-between">
-            <legend className="text-sm font-medium text-slate-300">Products to Deploy</legend>
+            <legend className="text-sm font-medium text-paper-2">Products to Deploy</legend>
             <div className="flex gap-3 text-xs">
-              <button type="button" onClick={selectAll} className="text-violet-400 hover:text-violet-300 transition-colors">
+              <button type="button" onClick={selectAll} className="text-signal hover:text-signal transition-colors">
                 Select all
               </button>
-              <button type="button" onClick={clearAll} className="text-slate-500 hover:text-slate-400 transition-colors">
+              <button type="button" onClick={clearAll} className="text-paper-4 hover:text-paper-3 transition-colors">
                 Clear
               </button>
             </div>
@@ -267,34 +267,34 @@ export default function NewBusinessPage() {
               return (
                 <label
                   key={product.id}
-                  className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                  className={`flex items-start gap-3 p-3  border cursor-pointer transition-colors ${
                     checked
-                      ? 'bg-violet-500/10 border-violet-500/30'
-                      : 'bg-white/[0.02] border-white/10 hover:bg-white/[0.04]'
+                      ? 'bg-signal-soft border-signal'
+                      : 'bg-ink-1 border-rule hover:bg-ink-2'
                   }`}
                 >
                   <input
                     type="checkbox"
                     checked={checked}
                     onChange={() => toggleModule(product.id)}
-                    className="mt-0.5 h-4 w-4 rounded border-white/20 bg-white/5 text-violet-500 focus:ring-violet-500/50 focus:ring-offset-0"
+                    className="mt-0.5 h-4 w-4 rounded border-white/20 bg-ink-2 text-signal focus:ring-signal/50 focus:ring-offset-0"
                   />
                   <div className="min-w-0">
-                    <span className="text-sm font-medium text-white">{product.label}</span>
-                    <p className="text-xs text-slate-500 mt-0.5">{product.description}</p>
+                    <span className="text-sm font-medium text-paper">{product.label}</span>
+                    <p className="text-xs text-paper-4 mt-0.5">{product.description}</p>
                   </div>
                 </label>
               );
             })}
           </div>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-paper-4">
             {selectedModules.size} of {PRODUCTS.length} products selected
           </p>
         </fieldset>
 
         {/* ── Notes ──────────────────────────────────────────────────────── */}
         <div>
-          <label htmlFor="notes" className="block text-sm font-medium text-slate-300 mb-1.5">
+          <label htmlFor="notes" className="block text-sm font-medium text-paper-2 mb-1.5">
             Notes
           </label>
           <textarea
@@ -311,11 +311,11 @@ export default function NewBusinessPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="px-6 py-2.5 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-6 py-2.5 bg-signal text-ink-0 text-paper text-sm font-semibold  hover:bg-paper hover:text-ink-0 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {submitting ? 'Onboarding...' : 'Onboard Business'}
           </button>
-          <a href="/businesses" className="text-sm text-slate-400 hover:text-slate-300 transition-colors">
+          <a href="/businesses" className="text-sm text-paper-3 hover:text-paper-2 transition-colors">
             Cancel
           </a>
         </div>

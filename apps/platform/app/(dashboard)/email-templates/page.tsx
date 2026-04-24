@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { Plus, X, FileText } from 'lucide-react';
+import { SectionHeader, HeroMetric, MetricBlock, Button } from '../../../components/ui/primitives';
 
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? process.env['API_BASE_URL'] ?? 'https://embedoapi-production.up.railway.app';
 
@@ -70,90 +72,118 @@ export default function EmailTemplatesPage() {
     await fetchTemplates();
   }
 
+  const totalSent = templates.reduce((a, t) => a + t.timesSent, 0);
+  const avgOpen = templates.length > 0 ? Math.round(templates.reduce((a, t) => a + t.openRate, 0) / templates.length) : 0;
+  const avgReply = templates.length > 0 ? Math.round(templates.reduce((a, t) => a + t.replyRate, 0) / templates.length) : 0;
+
   return (
-    <div className="p-8 animate-fade-up">
-      <div className="flex items-start justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Email Templates</h1>
-          <p className="text-sm text-slate-400 mt-1">Save, compare, and track performance of different email copy.</p>
+    <div className="pt-10 pb-24 px-8 max-w-[1400px] mx-auto space-y-14">
+      {/* Masthead */}
+      <section className="pb-10 hairline-b">
+        <div className="flex items-center gap-4 mb-3">
+          <span className="font-mono text-[10px] tracking-mega text-paper-4 uppercase">Chapter 06 · Copy</span>
+          <span className="h-px w-16 bg-rule" />
+          <span className="font-mono text-[10px] tracking-mega text-paper-3 uppercase">
+            {templates.length} on file
+          </span>
         </div>
-        <button onClick={() => setCreating(true)} className="px-4 py-2 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-500 transition-colors">
-          + New Template
-        </button>
-      </div>
+        <div className="flex items-end justify-between gap-8">
+          <h1 className="font-display italic font-light text-paper leading-[0.95] tracking-tight text-[64px] lg:text-[76px] max-w-3xl">
+            Email templates.
+          </h1>
+          <Button variant="primary" onClick={() => setCreating(true)}>
+            <Plus className="w-3 h-3" />
+            <span>New template</span>
+          </Button>
+        </div>
+        <p className="font-ui text-paper-2 text-[15px] mt-5 max-w-xl leading-relaxed">
+          Save, A/B, and track the performance of every cold email version you deploy.
+        </p>
+      </section>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
-        </div>
-      ) : templates.length === 0 ? (
-        <div className="text-center py-20">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7 text-slate-500"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
+      {/* Summary */}
+      {templates.length > 0 && (
+        <section className="grid grid-cols-12 gap-8">
+          <div className="col-span-12 lg:col-span-5">
+            <HeroMetric label="Deployed across" value={totalSent.toLocaleString()} unit="sends" caption={`Across ${templates.length} template versions`} size="md" />
           </div>
-          <h3 className="text-sm font-semibold text-white mb-1">No templates yet</h3>
-          <p className="text-xs text-slate-500 mb-4">Create your first email template to start tracking performance.</p>
-          <button onClick={() => setCreating(true)} className="px-4 py-2 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-500 transition-colors">
-            Create Template
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {templates.map((t) => (
-            <div key={t.id} className={`bg-white/[0.03] border rounded-2xl p-5 glow-card ${t.active ? 'border-white/[0.08]' : 'border-white/[0.04] opacity-50'}`}>
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-base font-bold text-white">{t.name}</h3>
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                      t.category === 'cold' ? 'bg-violet-500/10 text-violet-400' :
-                      t.category === 'followup' ? 'bg-amber-500/10 text-amber-400' :
-                      'bg-slate-500/10 text-slate-400'
-                    }`}>{t.category}</span>
-                    {!t.active && <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-500/10 text-red-400">Inactive</span>}
-                  </div>
-                  <p className="text-xs text-slate-500 mt-0.5">Subject: {t.subject}</p>
-                </div>
-
-                {/* Performance metrics */}
-                <div className="flex items-center gap-4">
-                  <div className="text-center">
-                    <p className="text-lg font-bold text-white tabular-nums">{t.timesSent}</p>
-                    <p className="text-[9px] text-slate-600 uppercase">Sent</p>
-                  </div>
-                  <div className="text-center">
-                    <p className={`text-lg font-bold tabular-nums ${t.openRate > 30 ? 'text-emerald-400' : t.openRate > 15 ? 'text-amber-400' : 'text-slate-400'}`}>{t.openRate}%</p>
-                    <p className="text-[9px] text-slate-600 uppercase">Opens</p>
-                  </div>
-                  <div className="text-center">
-                    <p className={`text-lg font-bold tabular-nums ${t.replyRate > 5 ? 'text-emerald-400' : t.replyRate > 2 ? 'text-amber-400' : 'text-slate-400'}`}>{t.replyRate}%</p>
-                    <p className="text-[9px] text-slate-600 uppercase">Replies</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Body preview */}
-              <div className="bg-white/[0.02] rounded-lg p-3 mb-3 max-h-32 overflow-y-auto">
-                <p className="text-xs text-slate-400 whitespace-pre-line leading-relaxed">{t.body.slice(0, 300)}{t.body.length > 300 ? '...' : ''}</p>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-2">
-                <button onClick={() => setEditing(t)} className="text-xs px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 hover:text-white transition-colors">
-                  Edit
-                </button>
-                <button onClick={() => handleDuplicate(t.id)} className="text-xs px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 hover:text-white transition-colors">
-                  Duplicate
-                </button>
-                <button onClick={() => handleDelete(t.id)} className="text-xs px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 hover:text-red-400 transition-colors">
-                  Archive
-                </button>
-                <span className="ml-auto text-[10px] text-slate-600">Created {new Date(t.createdAt).toLocaleDateString()}</span>
-              </div>
+          <div className="col-span-12 lg:col-span-7 panel">
+            <div className="grid grid-cols-3">
+              <MetricBlock label="Templates" value={templates.length} delta={`${templates.filter(t => t.active).length} active`} />
+              <MetricBlock label="Avg open" value={`${avgOpen}%`} trend={avgOpen > 15 ? 'up' : 'flat'} />
+              <MetricBlock label="Avg reply" value={`${avgReply}%`} trend={avgReply > 2 ? 'up' : 'flat'} />
             </div>
-          ))}
-        </div>
+          </div>
+        </section>
       )}
+
+      <section>
+        <SectionHeader numeral="1" title="The library" subtitle={`${templates.length} email template variants`} />
+
+        <div className="mt-6 space-y-3">
+          {loading ? (
+            <div className="panel p-16 text-center">
+              <p className="font-mono text-[11px] tracking-micro uppercase text-paper-4">Loading…</p>
+            </div>
+          ) : templates.length === 0 ? (
+            <div className="panel p-20 text-center">
+              <FileText className="w-8 h-8 text-paper-4 mx-auto mb-4" />
+              <p className="font-display italic text-paper-3 text-2xl font-light">No templates yet.</p>
+              <button onClick={() => setCreating(true)} className="font-mono text-[11px] tracking-micro uppercase text-signal hover:underline mt-4 inline-block">
+                Compose the first template →
+              </button>
+            </div>
+          ) : (
+            templates.map((t, idx) => (
+              <article key={t.id} className={`panel p-6 hover:border-paper-4 transition-colors ${!t.active ? 'opacity-40' : ''}`}>
+                <div className="grid grid-cols-12 gap-6">
+                  {/* LEFT — name + subject + body */}
+                  <div className="col-span-12 lg:col-span-8">
+                    <div className="flex items-start gap-4">
+                      <span className="font-mono text-[10px] tracking-mega text-paper-4 pt-1.5 shrink-0">
+                        №{(idx + 1).toString().padStart(3, '0')}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-3 mb-1">
+                          <span className={`font-mono text-[9px] tracking-mega uppercase ${
+                            t.category === 'cold' ? 'text-signal' : t.category === 'followup' ? 'text-amber' : 'text-paper-3'
+                          }`}>
+                            {t.category}
+                          </span>
+                          {!t.active && <span className="font-mono text-[9px] tracking-mega uppercase text-ember">Inactive</span>}
+                        </div>
+                        <h3 className="font-display italic text-paper text-[26px] font-light leading-tight">{t.name}</h3>
+                        <p className="label-sm mt-3 mb-1">Subject</p>
+                        <p className="font-ui text-sm text-paper-2">{t.subject}</p>
+                        <p className="label-sm mt-3 mb-1">Body</p>
+                        <p className="font-ui text-[12px] text-paper-3 leading-relaxed italic line-clamp-3">
+                          "{t.body.slice(0, 260)}{t.body.length > 260 ? '…' : ''}"
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* RIGHT — performance */}
+                  <div className="col-span-12 lg:col-span-4 grid grid-cols-3 gap-0 hairline border-t border-b content-start">
+                    <NumCell label="Sent" value={t.timesSent.toLocaleString()} />
+                    <NumCell label="Open" value={`${t.openRate}%`} accent={t.openRate > 20} />
+                    <NumCell label="Reply" value={`${t.replyRate}%`} accent={t.replyRate > 3} />
+                  </div>
+                </div>
+
+                <div className="mt-5 hairline-t pt-4 flex items-center gap-2">
+                  <Button size="sm" onClick={() => setEditing(t)}>Edit</Button>
+                  <Button size="sm" variant="ghost" onClick={() => handleDuplicate(t.id)}>Duplicate</Button>
+                  <Button size="sm" variant="ghost" onClick={() => handleDelete(t.id)}>Archive</Button>
+                  <span className="ml-auto font-mono text-[9px] tracking-micro text-paper-4 uppercase">
+                    Created {new Date(t.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </span>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+      </section>
 
       {/* Editor Modal */}
       {mounted && (creating || editing) && createPortal(
@@ -164,6 +194,15 @@ export default function EmailTemplatesPage() {
         />,
         document.body,
       )}
+    </div>
+  );
+}
+
+function NumCell({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className="px-3 py-3 hairline-r last:border-r-0">
+      <p className="label-sm">{label}</p>
+      <p className={`font-display italic font-light text-2xl nums leading-none mt-1 ${accent ? 'text-signal' : 'text-paper'}`}>{value}</p>
     </div>
   );
 }
@@ -187,41 +226,44 @@ function TemplateEditor({ template, onSave, onClose }: {
     { key: '{{calLink}}', label: 'Cal Link' },
   ];
 
-  const inputCls = 'w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors';
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-[#0f1117] border border-white/10 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 flex-shrink-0">
-          <h2 className="text-base font-semibold text-white">{template ? 'Edit Template' : 'New Template'}</h2>
-          <button onClick={onClose} className="text-slate-500 hover:text-white text-xl">&times;</button>
-        </div>
+      <div className="absolute inset-0 bg-ink-0/80" onClick={onClose} />
+      <div className="relative panel-2 w-full max-w-3xl max-h-[90vh] flex flex-col">
+        <header className="flex items-center justify-between px-6 py-4 hairline-b shrink-0">
+          <span className="font-mono text-[11px] tracking-mega uppercase text-paper-2">
+            {template ? 'Edit template' : 'New template'}
+          </span>
+          <button onClick={onClose} className="text-paper-4 hover:text-paper transition"><X className="w-4 h-4" /></button>
+        </header>
 
         {/* Tabs */}
-        <div className="flex gap-1 px-6 pt-4 flex-shrink-0">
+        <div className="flex px-6 pt-4 shrink-0 gap-4 hairline-b">
           {(['edit', 'preview'] as const).map((t) => (
-            <button key={t} onClick={() => setTab(t)}
-              className={`px-4 py-2 text-xs font-semibold rounded-t-lg border-b-2 transition-colors ${
-                tab === t ? 'text-white border-violet-500 bg-white/5' : 'text-slate-400 border-transparent hover:text-slate-200'
-              }`}>
-              {t === 'edit' ? 'Edit' : 'Preview'}
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`pb-3 font-mono text-[11px] tracking-mega uppercase transition-colors relative ${
+                tab === t ? 'text-signal' : 'text-paper-4 hover:text-paper'
+              }`}
+            >
+              {t}
+              {tab === t && <span className="absolute left-0 right-0 -bottom-px h-px bg-signal" />}
             </button>
           ))}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 border-t border-white/10">
+        <div className="flex-1 overflow-y-auto p-6 space-y-5">
           {tab === 'edit' ? (
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Template Name</label>
-                  <input value={name} onChange={(e) => setName(e.target.value)} className={inputCls} placeholder="Genuine Intro v1" />
+                  <label className="label-sm block mb-2">Template Name</label>
+                  <input value={name} onChange={(e) => setName(e.target.value)} className="input w-full" placeholder="Genuine Intro v1" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Category</label>
-                  <select value={category} onChange={(e) => setCategory(e.target.value)}
-                    className={`${inputCls} bg-[#12101f] appearance-none`}>
+                  <label className="label-sm block mb-2">Category</label>
+                  <select value={category} onChange={(e) => setCategory(e.target.value)} className="input w-full appearance-none">
                     <option value="cold">Cold Email</option>
                     <option value="followup">Follow-up</option>
                     <option value="breakup">Break-up</option>
@@ -229,48 +271,61 @@ function TemplateEditor({ template, onSave, onClose }: {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Subject</label>
-                <input value={subject} onChange={(e) => setSubject(e.target.value)} className={inputCls} />
+                <label className="label-sm block mb-2">Subject</label>
+                <input value={subject} onChange={(e) => setSubject(e.target.value)} className="input w-full" />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Body</label>
+                <label className="label-sm block mb-2">Body</label>
                 <div className="flex flex-wrap gap-1.5 mb-2">
                   {VARS.map((v) => (
-                    <button key={v.key} type="button" onClick={() => setBody(body + v.key)}
-                      className="px-2 py-1 text-[10px] font-semibold rounded-md bg-violet-500/10 border border-violet-500/20 text-violet-300 hover:bg-violet-500/20 transition-colors">
+                    <button
+                      key={v.key}
+                      type="button"
+                      onClick={() => setBody(body + v.key)}
+                      className="px-2 py-1 font-mono text-[9px] tracking-micro uppercase text-signal hairline hover:bg-signal-soft transition-colors"
+                    >
                       {v.label}
                     </button>
                   ))}
                 </div>
-                <textarea rows={12} value={body} onChange={(e) => setBody(e.target.value)}
-                  className={`${inputCls} resize-y leading-relaxed`}
-                  placeholder="Hey {{firstName}},&#10;&#10;Write your email here..." />
+                <textarea
+                  rows={12}
+                  value={body}
+                  onChange={(e) => setBody(e.target.value)}
+                  className="input w-full resize-y leading-relaxed font-mono text-[12px]"
+                  placeholder="Hey {{firstName}},&#10;&#10;Write your email here..."
+                />
               </div>
             </>
           ) : (
             <div>
-              <div className="bg-white/[0.03] rounded-lg px-3 py-2 mb-3 border border-white/[0.06]">
-                <span className="text-[9px] text-slate-600 uppercase tracking-wider">Subject: </span>
-                <span className="text-sm text-white">{applyVars(subject)}</span>
+              <div className="panel-2 px-4 py-3 mb-4">
+                <span className="label-sm block mb-1">Subject</span>
+                <span className="font-ui text-sm text-paper">{applyVars(subject)}</span>
               </div>
-              <div className="bg-white rounded-xl overflow-hidden border border-white/10">
-                <div className="p-5" style={{ fontFamily: '-apple-system, system-ui, sans-serif', fontSize: '14px', lineHeight: '1.7', color: '#222', maxWidth: 580 }}
-                  dangerouslySetInnerHTML={{ __html: applyVars(body).replace(/\n\n/g, '</p><p style="margin:0 0 16px">').replace(/\n/g, '<br/>').replace(/^/, '<p style="margin:0 0 16px">').replace(/$/, '</p>') }}
+              <div className="bg-paper rounded overflow-hidden">
+                <div
+                  className="p-6"
+                  style={{ fontFamily: '-apple-system, system-ui, sans-serif', fontSize: '14px', lineHeight: '1.7', color: '#222' }}
+                  dangerouslySetInnerHTML={{
+                    __html: applyVars(body)
+                      .replace(/\n\n/g, '</p><p style="margin:0 0 16px">')
+                      .replace(/\n/g, '<br/>')
+                      .replace(/^/, '<p style="margin:0 0 16px">')
+                      .replace(/$/, '</p>'),
+                  }}
                 />
               </div>
             </div>
           )}
         </div>
 
-        <div className="flex gap-3 px-6 py-4 border-t border-white/10 flex-shrink-0">
-          <button onClick={() => onSave({ name, subject, body, category })} disabled={!name || !subject || !body}
-            className="px-5 py-2 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-500 transition-colors disabled:opacity-50">
-            {template ? 'Save Changes' : 'Create Template'}
-          </button>
-          <button onClick={onClose} className="px-5 py-2 bg-white/5 text-slate-400 text-sm font-medium rounded-lg hover:bg-white/10 transition-colors border border-white/10">
-            Cancel
-          </button>
-        </div>
+        <footer className="flex gap-3 px-6 py-4 hairline-t shrink-0">
+          <Button variant="primary" onClick={() => onSave({ name, subject, body, category })} disabled={!name || !subject || !body}>
+            {template ? 'Save changes' : 'Create template'}
+          </Button>
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+        </footer>
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   LayoutDashboard, Building2, BarChart3, Calendar, Crosshair,
-  Mail, Users, Instagram, FileText, Download, Globe, Settings as SettingsIcon,
+  Mail, Users, FileText, Download, Globe, Settings as SettingsIcon,
   Plug, LogOut, ChevronLeft, Command,
 } from 'lucide-react';
 import NotificationBell from '../../components/NotificationBell';
@@ -15,7 +15,7 @@ import { createSupabaseBrowserClient } from '../../lib/supabase/client';
 
 const PLATFORM_API = process.env['NEXT_PUBLIC_API_URL'] ?? 'https://embedoapi-production.up.railway.app';
 
-type NavItemT = { href: string; label: string; code: string; icon: React.ComponentType<{ className?: string }> };
+type NavItemT = { href: string; label: string; icon: React.ComponentType<{ className?: string }> };
 type NavSection = { numeral: string; section: string; items: NavItemT[] };
 
 const NAV: NavSection[] = [
@@ -23,37 +23,36 @@ const NAV: NavSection[] = [
     numeral: 'I',
     section: 'Overview',
     items: [
-      { href: '/',           label: 'Dashboard',  code: 'DSH', icon: LayoutDashboard },
-      { href: '/businesses', label: 'Businesses', code: 'BIZ', icon: Building2 },
-      { href: '/analytics',  label: 'Analytics',  code: 'ANL', icon: BarChart3 },
-      { href: '/calendar',   label: 'Calendar',   code: 'CAL', icon: Calendar },
+      { href: '/',           label: 'Dashboard',  icon: LayoutDashboard },
+      { href: '/businesses', label: 'Businesses', icon: Building2 },
+      { href: '/analytics',  label: 'Analytics',  icon: BarChart3 },
+      { href: '/calendar',   label: 'Calendar',   icon: Calendar },
     ],
   },
   {
     numeral: 'II',
     section: 'Outbound',
     items: [
-      { href: '/campaigns', label: 'Campaigns', code: 'CMP', icon: Crosshair },
-      { href: '/emails',    label: 'Emails',    code: 'EML', icon: Mail },
-      { href: '/leads',     label: 'Leads',     code: 'LED', icon: Users },
-      { href: '/instagram', label: 'Instagram', code: 'IG',  icon: Instagram },
+      { href: '/campaigns', label: 'Campaigns', icon: Crosshair },
+      { href: '/emails',    label: 'Emails',    icon: Mail },
+      { href: '/leads',     label: 'Leads',     icon: Users },
     ],
   },
   {
     numeral: 'III',
     section: 'Tools',
     items: [
-      { href: '/email-templates', label: 'Templates', code: 'TPL', icon: FileText },
-      { href: '/export',          label: 'Export',    code: 'EXP', icon: Download },
-      { href: '/domains',         label: 'Domains',   code: 'DOM', icon: Globe },
+      { href: '/email-templates', label: 'Templates', icon: FileText },
+      { href: '/export',          label: 'Export',    icon: Download },
+      { href: '/domains',         label: 'Domains',   icon: Globe },
     ],
   },
   {
     numeral: 'IV',
     section: 'Account',
     items: [
-      { href: '/settings',     label: 'Settings',     code: 'STG', icon: SettingsIcon },
-      { href: '/integrations', label: 'Integrations', code: 'INT', icon: Plug },
+      { href: '/settings',     label: 'Settings',     icon: SettingsIcon },
+      { href: '/integrations', label: 'Integrations', icon: Plug },
     ],
   },
 ];
@@ -65,7 +64,7 @@ const MAX_WIDTH = 340;
 const SNAP_THRESHOLD = 130;
 
 function NavItem({
-  href, label, code, icon: Icon, isActive, collapsed,
+  href, label, icon: Icon, isActive, collapsed,
 }: NavItemT & { isActive: boolean; collapsed: boolean }) {
   return (
     <Link
@@ -79,19 +78,11 @@ function NavItem({
           : 'text-paper-3 hover:text-paper hover:bg-ink-2/60'
       }`}
     >
-      {/* Active left rail */}
       {isActive && !collapsed && (
         <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-signal" />
       )}
       <Icon className={`w-[14px] h-[14px] shrink-0 ${isActive ? 'text-signal' : ''}`} />
-      {!collapsed && (
-        <>
-          <span className="text-[13px] tracking-tight">{label}</span>
-          <span className={`ml-auto font-mono text-[9px] tracking-mega ${isActive ? 'text-paper-3' : 'text-paper-4'}`}>
-            {code}
-          </span>
-        </>
-      )}
+      {!collapsed && <span className="text-[13px] tracking-tight">{label}</span>}
     </Link>
   );
 }

@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+﻿import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ComposeEmail } from './compose-email';
 import { PendingSequence } from './pending-sequence';
@@ -76,18 +76,18 @@ function fmtFull(iso: string | null | undefined): string {
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { dot: string; label: string; bg: string; text: string }> = {
-    NEW:            { dot: 'bg-slate-500',   label: 'New',             bg: 'bg-slate-500/10',   text: 'text-slate-400' },
+    NEW:            { dot: 'bg-slate-500',   label: 'New',             bg: 'bg-slate-500/10',   text: 'text-paper-3' },
     ENRICHED:       { dot: 'bg-blue-400',    label: 'Has Email',       bg: 'bg-blue-500/10',    text: 'text-blue-400' },
-    CONTACTED:      { dot: 'bg-violet-400',  label: 'Emailed',         bg: 'bg-violet-500/10',  text: 'text-violet-400' },
+    CONTACTED:      { dot: 'bg-violet-400',  label: 'Emailed',         bg: 'bg-signal-soft',  text: 'text-signal' },
     OPENED:         { dot: 'bg-amber-400',   label: 'Opened',          bg: 'bg-amber-500/10',   text: 'text-amber-400' },
     REPLIED:        { dot: 'bg-emerald-400', label: 'Replied',         bg: 'bg-emerald-500/10', text: 'text-emerald-400' },
     MEETING_BOOKED: { dot: 'bg-cyan-400',    label: 'Meeting Booked',  bg: 'bg-cyan-500/10',    text: 'text-cyan-400' },
     CONVERTED:      { dot: 'bg-green-400',   label: 'Converted',       bg: 'bg-green-500/10',   text: 'text-green-400' },
     BOUNCED:        { dot: 'bg-red-400',     label: 'Bounced',         bg: 'bg-red-500/10',     text: 'text-red-400' },
-    DEAD:           { dot: 'bg-slate-600',   label: 'Dead',            bg: 'bg-slate-600/10',   text: 'text-slate-500' },
+    DEAD:           { dot: 'bg-slate-600',   label: 'Dead',            bg: 'bg-slate-600/10',   text: 'text-paper-4' },
     UNSUBSCRIBED:   { dot: 'bg-orange-400',  label: 'Unsub',           bg: 'bg-orange-500/10',  text: 'text-orange-400' },
   };
-  const cfg = map[status] ?? { dot: 'bg-slate-500', label: status, bg: 'bg-slate-500/10', text: 'text-slate-400' };
+  const cfg = map[status] ?? { dot: 'bg-slate-500', label: status, bg: 'bg-slate-500/10', text: 'text-paper-3' };
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${cfg.bg} ${cfg.text}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot} flex-shrink-0`} />
@@ -98,15 +98,15 @@ function StatusBadge({ status }: { status: string }) {
 
 function MessageStatusBadge({ status }: { status: string }) {
   const map: Record<string, { color: string; label: string }> = {
-    QUEUED:    { color: 'text-slate-500',   label: 'Queued' },
-    SENT:      { color: 'text-violet-400',  label: 'Sent' },
+    QUEUED:    { color: 'text-paper-4',   label: 'Queued' },
+    SENT:      { color: 'text-signal',  label: 'Sent' },
     DELIVERED: { color: 'text-blue-400',    label: 'Delivered' },
     OPENED:    { color: 'text-amber-400',   label: 'Opened' },
     REPLIED:   { color: 'text-emerald-400', label: 'Replied' },
     BOUNCED:   { color: 'text-red-400',     label: 'Bounced' },
     FAILED:    { color: 'text-red-500',     label: 'Failed' },
   };
-  const cfg = map[status] ?? { color: 'text-slate-400', label: status };
+  const cfg = map[status] ?? { color: 'text-paper-3', label: status };
   return <span className={`text-[10px] font-semibold uppercase tracking-wider ${cfg.color}`}>{cfg.label}</span>;
 }
 
@@ -170,34 +170,34 @@ export default async function EmailDetailPage({ params }: {
           <div className="absolute inset-0 rounded-full border border-violet-400 animate-orbital-slow" />
           <div className="absolute inset-[80px] rounded-full border border-indigo-400 animate-orbital-reverse" />
         </div>
-        <div className="absolute top-10 right-16 w-64 h-64 rounded-full bg-violet-600/8 blur-[90px] animate-float-orb" />
+        <div className="absolute top-10 right-16 w-64 h-64 rounded-full bg-signal text-ink-0/8 blur-[90px] animate-float-orb" />
         <div className="absolute bottom-20 left-10 w-48 h-48 rounded-full bg-indigo-600/6 blur-[70px] animate-float-orb-b" />
       </div>
 
       <div className="relative z-10 space-y-6 max-w-6xl">
         {/* Breadcrumb + header */}
         <div>
-          <div className="flex items-center gap-2 text-sm text-slate-500 mb-2">
-            <Link href="/" className="hover:text-violet-400 transition-colors flex items-center gap-1">
+          <div className="flex items-center gap-2 text-sm text-paper-4 mb-2">
+            <Link href="/" className="hover:text-signal transition-colors flex items-center gap-1">
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
               Overview
             </Link>
-            <span className="text-slate-700">/</span>
-            <Link href="/emails" className="hover:text-violet-400 transition-colors">Emails</Link>
-            <span className="text-slate-700">/</span>
-            <span className="text-white font-medium truncate max-w-[250px]">{prospect.name}</span>
+            <span className="text-paper-4">/</span>
+            <Link href="/emails" className="hover:text-signal transition-colors">Emails</Link>
+            <span className="text-paper-4">/</span>
+            <span className="text-paper font-medium truncate max-w-[250px]">{prospect.name}</span>
           </div>
 
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-white tracking-tight">{prospect.name}</h1>
+              <h1 className="text-2xl font-bold text-paper tracking-tight">{prospect.name}</h1>
               <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                 <StatusBadge status={prospect.status} />
-                {cityState && <span className="text-sm text-slate-300">{cityState}</span>}
+                {cityState && <span className="text-sm text-paper-2">{cityState}</span>}
                 {prospect.googleRating && (
                   <span className="text-sm text-amber-400">
                     ★ {prospect.googleRating}
-                    <span className="text-slate-500 ml-1">({prospect.googleReviewCount ?? 0})</span>
+                    <span className="text-paper-4 ml-1">({prospect.googleReviewCount ?? 0})</span>
                   </span>
                 )}
                 {isMeetingBooked && (
@@ -210,7 +210,7 @@ export default async function EmailDetailPage({ params }: {
             </div>
             <Link
               href={`/campaigns/${prospect.campaign.id}/prospects/${prospect.id}`}
-              className="flex-shrink-0 px-3 py-2 text-xs bg-white/5 border border-white/10 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              className="flex-shrink-0 px-3 py-2 text-xs bg-ink-2 border border-rule rounded-lg text-paper-3 hover:text-paper hover:bg-ink-3 transition-colors"
             >
               View Full Prospect →
             </Link>
@@ -220,49 +220,49 @@ export default async function EmailDetailPage({ params }: {
         {/* Top grid: Contact + Campaign + Quick Stats */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Contact Info */}
-          <div className="bg-white/[0.04] backdrop-blur-sm rounded-xl border border-white/10 p-5">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-violet-400/60"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
+          <div className="bg-ink-2 backdrop-blur-sm rounded-xl border border-rule p-5">
+            <h3 className="text-[10px] font-bold text-paper-3 uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-signal/60"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
               Contact Info
             </h3>
             <div className="space-y-3">
               {prospect.contactFirstName && (
                 <div>
-                  <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Name</p>
-                  <p className="text-sm text-white font-medium">{prospect.contactFirstName} {prospect.contactLastName ?? ''}</p>
-                  {prospect.contactTitle && <p className="text-xs text-slate-400">{prospect.contactTitle}</p>}
+                  <p className="text-[9px] text-paper-4 uppercase tracking-wider font-semibold">Name</p>
+                  <p className="text-sm text-paper font-medium">{prospect.contactFirstName} {prospect.contactLastName ?? ''}</p>
+                  {prospect.contactTitle && <p className="text-xs text-paper-3">{prospect.contactTitle}</p>}
                 </div>
               )}
               <div>
-                <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Email</p>
+                <p className="text-[9px] text-paper-4 uppercase tracking-wider font-semibold">Email</p>
                 {prospect.email ? (
                   <div className="flex items-center gap-2">
-                    <a href={`mailto:${prospect.email}`} className="text-sm text-violet-400 hover:text-violet-300 font-mono transition-colors">{prospect.email}</a>
+                    <a href={`mailto:${prospect.email}`} className="text-sm text-signal hover:text-signal font-mono transition-colors">{prospect.email}</a>
                     {prospect.emailSource && (
                       <span className="text-[8px] font-bold uppercase tracking-wider text-purple-400/50 bg-purple-400/5 px-1.5 py-0.5 rounded">via {prospect.emailSource}</span>
                     )}
                   </div>
                 ) : (
-                  <p className="text-sm text-slate-600 italic">No email found</p>
+                  <p className="text-sm text-paper-4 italic">No email found</p>
                 )}
               </div>
               {prospect.phone && (
                 <div>
-                  <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Phone</p>
+                  <p className="text-[9px] text-paper-4 uppercase tracking-wider font-semibold">Phone</p>
                   <a href={`tel:${prospect.phone}`} className="text-sm text-slate-200 font-mono">{prospect.phone}</a>
                 </div>
               )}
               {prospect.website && (
                 <div>
-                  <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Website</p>
-                  <a href={prospect.website} target="_blank" rel="noopener noreferrer" className="text-sm text-violet-400 hover:text-violet-300 truncate block transition-colors">
+                  <p className="text-[9px] text-paper-4 uppercase tracking-wider font-semibold">Website</p>
+                  <a href={prospect.website} target="_blank" rel="noopener noreferrer" className="text-sm text-signal hover:text-signal truncate block transition-colors">
                     {prospect.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
                   </a>
                 </div>
               )}
               {prospect.contactLinkedIn && (
                 <div>
-                  <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">LinkedIn</p>
+                  <p className="text-[9px] text-paper-4 uppercase tracking-wider font-semibold">LinkedIn</p>
                   <a href={prospect.contactLinkedIn} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:text-blue-300 truncate block transition-colors">
                     {prospect.contactLinkedIn.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, '')}
                   </a>
@@ -272,33 +272,33 @@ export default async function EmailDetailPage({ params }: {
           </div>
 
           {/* Campaign Info */}
-          <div className="bg-white/[0.04] backdrop-blur-sm rounded-xl border border-white/10 p-5">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-violet-400/60"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
+          <div className="bg-ink-2 backdrop-blur-sm rounded-xl border border-rule p-5">
+            <h3 className="text-[10px] font-bold text-paper-3 uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-signal/60"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
               Campaign
             </h3>
             <div className="space-y-3">
               <div>
-                <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Campaign</p>
-                <Link href={`/campaigns/${prospect.campaign.id}`} className="text-sm text-violet-400 hover:text-violet-300 transition-colors font-medium">
+                <p className="text-[9px] text-paper-4 uppercase tracking-wider font-semibold">Campaign</p>
+                <Link href={`/campaigns/${prospect.campaign.id}`} className="text-sm text-signal hover:text-signal transition-colors font-medium">
                   {prospect.campaign.name}
                 </Link>
               </div>
               <div>
-                <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Target</p>
+                <p className="text-[9px] text-paper-4 uppercase tracking-wider font-semibold">Target</p>
                 <p className="text-sm text-slate-200">{prospect.campaign.targetCity} · {prospect.campaign.targetIndustry}</p>
               </div>
               <div>
-                <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Sequence</p>
+                <p className="text-[9px] text-paper-4 uppercase tracking-wider font-semibold">Sequence</p>
                 <p className="text-sm text-slate-200">{sequenceSteps.length > 0 ? `${sequenceSteps.length + 1} steps` : '1 step (cold email only)'}</p>
               </div>
               <div>
-                <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">First Contact</p>
-                <p className="text-sm text-slate-300">{fmtFull(prospect.createdAt)}</p>
+                <p className="text-[9px] text-paper-4 uppercase tracking-wider font-semibold">First Contact</p>
+                <p className="text-sm text-paper-2">{fmtFull(prospect.createdAt)}</p>
               </div>
               {prospect.convertedToBusinessId && (
                 <div>
-                  <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Converted To</p>
+                  <p className="text-[9px] text-paper-4 uppercase tracking-wider font-semibold">Converted To</p>
                   <Link href="/businesses" className="text-sm text-green-400 hover:text-green-300 transition-colors font-medium">
                     View Business →
                   </Link>
@@ -308,36 +308,36 @@ export default async function EmailDetailPage({ params }: {
           </div>
 
           {/* Quick Stats */}
-          <div className="bg-white/[0.04] backdrop-blur-sm rounded-xl border border-white/10 p-5">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-violet-400/60"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
+          <div className="bg-ink-2 backdrop-blur-sm rounded-xl border border-rule p-5">
+            <h3 className="text-[10px] font-bold text-paper-3 uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-signal/60"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
               Email Stats
             </h3>
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-violet-500/5 rounded-lg p-3 border border-violet-500/10">
-                <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Sent</p>
-                <p className="text-2xl font-bold text-violet-400">{sentMessages.length}</p>
+                <p className="text-[9px] text-paper-4 uppercase tracking-wider font-semibold">Sent</p>
+                <p className="text-2xl font-bold text-signal">{sentMessages.length}</p>
               </div>
               <div className={`rounded-lg p-3 border ${sentMessages.filter((m) => m.openedAt).length > 0 ? 'bg-teal-500/5 border-teal-500/10' : 'bg-amber-500/5 border-amber-500/10'}`}>
-                <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Opened</p>
+                <p className="text-[9px] text-paper-4 uppercase tracking-wider font-semibold">Opened</p>
                 <p className={`text-2xl font-bold ${sentMessages.filter((m) => m.openedAt).length > 0 ? 'text-teal-400' : 'text-amber-400'}`}>{sentMessages.filter((m) => m.openedAt).length}</p>
               </div>
               <div className={`rounded-lg p-3 border ${replyMsg ? 'bg-emerald-500/5 border-emerald-500/10' : 'bg-orange-500/5 border-orange-500/10'}`}>
-                <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Replied</p>
+                <p className="text-[9px] text-paper-4 uppercase tracking-wider font-semibold">Replied</p>
                 <p className={`text-2xl font-bold ${replyMsg ? 'text-emerald-400' : 'text-orange-400'}`}>{replyMsg ? 'Yes' : 'No'}</p>
               </div>
               <div className="bg-sky-500/5 rounded-lg p-3 border border-sky-500/10">
-                <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Pending</p>
+                <p className="text-[9px] text-paper-4 uppercase tracking-wider font-semibold">Pending</p>
                 <p className="text-2xl font-bold text-sky-400">{pendingSteps.length}</p>
               </div>
             </div>
             {replyMsg?.replyCategory && (
-              <div className="mt-3 px-3 py-2.5 bg-white/[0.03] rounded-lg border border-white/5">
-                <p className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Reply Sentiment</p>
+              <div className="mt-3 px-3 py-2.5 bg-ink-2 rounded-lg border border-rule-soft">
+                <p className="text-[9px] text-paper-4 uppercase tracking-wider font-semibold">Reply Sentiment</p>
                 <p className={`text-sm font-bold mt-0.5 ${
                   replyMsg.replyCategory === 'POSITIVE' ? 'text-emerald-400' :
                   replyMsg.replyCategory === 'NEGATIVE' ? 'text-red-400' :
-                  replyMsg.replyCategory === 'OOO' ? 'text-amber-400' : 'text-slate-300'
+                  replyMsg.replyCategory === 'OOO' ? 'text-amber-400' : 'text-paper-2'
                 }`}>
                   {replyMsg.replyCategory}
                 </p>
@@ -371,13 +371,13 @@ export default async function EmailDetailPage({ params }: {
         )}
 
         {/* Email History */}
-        <div className="bg-white/[0.04] backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
-          <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
+        <div className="bg-ink-2 backdrop-blur-sm rounded-xl border border-rule overflow-hidden">
+          <div className="px-5 py-4 border-b border-rule flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-semibold text-white">Email History</h3>
-              <p className="text-xs text-slate-500 mt-0.5">{sentMessages.length} email{sentMessages.length !== 1 ? 's' : ''} sent to this business</p>
+              <h3 className="text-sm font-semibold text-paper">Email History</h3>
+              <p className="text-xs text-paper-4 mt-0.5">{sentMessages.length} email{sentMessages.length !== 1 ? 's' : ''} sent to this business</p>
             </div>
-            <div className="flex items-center gap-4 text-[10px] text-slate-600">
+            <div className="flex items-center gap-4 text-[10px] text-paper-4">
               <span className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-violet-400" /> Sent
               </span>
@@ -397,18 +397,18 @@ export default async function EmailDetailPage({ params }: {
 
           {sentMessages.length === 0 && pendingSteps.length === 0 ? (
             <div className="p-12 text-center">
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-8 h-8 text-slate-700 mx-auto mb-3">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-8 h-8 text-paper-4 mx-auto mb-3">
                 <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                 <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
               </svg>
-              <p className="text-slate-500 text-sm">No emails sent yet.</p>
-              <p className="text-slate-600 text-xs mt-1">Use the compose form above to send the first email.</p>
+              <p className="text-paper-4 text-sm">No emails sent yet.</p>
+              <p className="text-paper-4 text-xs mt-1">Use the compose form above to send the first email.</p>
             </div>
           ) : (
-            <div className="divide-y divide-white/5">
+            <div className="divide-y divide-rule">
               {/* Sent messages */}
               {sentMessages.map((msg, idx) => (
-                <div key={msg.id} className={`p-5 ${idx === 0 ? 'bg-white/[0.01]' : ''}`}>
+                <div key={msg.id} className={`p-5 ${idx === 0 ? 'bg-ink-1' : ''}`}>
                   {/* Message header */}
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
@@ -419,23 +419,23 @@ export default async function EmailDetailPage({ params }: {
                             ? 'bg-emerald-600/20 border-2 border-emerald-500/40 text-emerald-400'
                             : msg.openedAt
                               ? 'bg-amber-600/20 border-2 border-amber-500/40 text-amber-400'
-                              : 'bg-violet-600/20 border-2 border-violet-500/30 text-violet-400'
+                              : 'bg-signal-soft border-2 border-signal text-signal'
                         }`}>
                           {msg.stepNumber ?? 1}
                         </div>
                       </div>
                       <div>
-                        <p className="text-sm text-white font-medium">{msg.subject ?? '(no subject)'}</p>
+                        <p className="text-sm text-paper font-medium">{msg.subject ?? '(no subject)'}</p>
                         <div className="flex items-center gap-2 mt-0.5">
                           <MessageStatusBadge status={msg.status} />
-                          <span className="text-[10px] text-slate-600">
+                          <span className="text-[10px] text-paper-4">
                             Step {msg.stepNumber ?? 1}
                           </span>
                         </div>
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="text-xs text-slate-400">{fmtFull(msg.sentAt)}</p>
+                      <p className="text-xs text-paper-3">{fmtFull(msg.sentAt)}</p>
                       <div className="flex items-center gap-3 mt-1.5 justify-end">
                         {msg.openedAt && (
                           <span className="text-[10px] text-amber-400 flex items-center gap-1 bg-amber-500/5 px-2 py-0.5 rounded-full">
@@ -454,7 +454,7 @@ export default async function EmailDetailPage({ params }: {
                   </div>
 
                   {/* Email body preview — white background for readability */}
-                  <div className="rounded-lg border border-white/10 overflow-hidden shadow-lg">
+                  <div className="rounded-lg border border-rule overflow-hidden shadow-lg">
                     <iframe
                       srcDoc={prepareEmailHtml(msg.body)}
                       className="w-full border-0 rounded-lg"
@@ -475,14 +475,14 @@ export default async function EmailDetailPage({ params }: {
                             msg.replyCategory === 'POSITIVE' ? 'bg-emerald-500/15 text-emerald-400' :
                             msg.replyCategory === 'NEGATIVE' ? 'bg-red-500/15 text-red-400' :
                             msg.replyCategory === 'OOO' ? 'bg-amber-500/15 text-amber-400' :
-                            'bg-slate-500/15 text-slate-400'
+                            'bg-slate-500/15 text-paper-3'
                           }`}>
                             {msg.replyCategory}
                           </span>
                         )}
-                        <span className="text-[10px] text-slate-600 ml-auto">{fmt(msg.repliedAt)}</span>
+                        <span className="text-[10px] text-paper-4 ml-auto">{fmt(msg.repliedAt)}</span>
                       </div>
-                      <p className="text-sm text-white whitespace-pre-wrap leading-relaxed">{msg.replyBody}</p>
+                      <p className="text-sm text-paper whitespace-pre-wrap leading-relaxed">{msg.replyBody}</p>
                     </div>
                   )}
                 </div>
@@ -505,19 +505,19 @@ export default async function EmailDetailPage({ params }: {
                           </div>
                         </div>
                         <div>
-                          <p className="text-sm text-slate-300 font-medium">
+                          <p className="text-sm text-paper-2 font-medium">
                             {step.subject ? fillTemplate(step.subject) : `Follow-up #${step.stepNumber - 1}`}
                           </p>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-[10px] font-semibold uppercase tracking-wider text-sky-400">Scheduled</span>
-                            <span className="text-[10px] text-slate-600">
+                            <span className="text-[10px] text-paper-4">
                               Step {step.stepNumber}
                             </span>
                           </div>
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <p className="text-xs text-slate-500">{fmtFull(fireAt.toISOString())}</p>
+                        <p className="text-xs text-paper-4">{fmtFull(fireAt.toISOString())}</p>
                         <span className="inline-flex items-center gap-1 mt-1.5 text-[10px] text-sky-400 bg-sky-500/5 px-2 py-0.5 rounded-full">
                           <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.828a1 1 0 101.415-1.414L11 9.586V6z" clipRule="evenodd" />
@@ -543,8 +543,8 @@ export default async function EmailDetailPage({ params }: {
                         <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-sky-500/40 mx-auto mb-2">
                           <path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clipRule="evenodd" />
                         </svg>
-                        <p className="text-xs text-slate-500">AI-generated at send time</p>
-                        <p className="text-[10px] text-slate-600 mt-0.5">Content will be personalized using the template when this step fires</p>
+                        <p className="text-xs text-paper-4">AI-generated at send time</p>
+                        <p className="text-[10px] text-paper-4 mt-0.5">Content will be personalized using the template when this step fires</p>
                       </div>
                     )}
                   </div>

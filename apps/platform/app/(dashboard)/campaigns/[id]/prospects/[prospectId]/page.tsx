@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+﻿import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { SendButton } from '../../send-button';
 import { ConvertButton } from '../../convert-button';
@@ -85,19 +85,19 @@ function fmt(iso: string | null | undefined): string {
 }
 
 const STATUS_MAP: Record<ProspectStatus, { label: string; bg: string; text: string; dot: string }> = {
-  NEW:          { label: 'New',       bg: 'bg-slate-500/10',   text: 'text-slate-400',   dot: 'bg-slate-500' },
+  NEW:          { label: 'New',       bg: 'bg-slate-500/10',   text: 'text-paper-3',   dot: 'bg-slate-500' },
   ENRICHED:     { label: 'Has Email', bg: 'bg-blue-500/10',    text: 'text-blue-400',    dot: 'bg-blue-400' },
-  CONTACTED:    { label: 'Emailed',   bg: 'bg-violet-500/10',  text: 'text-violet-400',  dot: 'bg-violet-400' },
+  CONTACTED:    { label: 'Emailed',   bg: 'bg-signal-soft',  text: 'text-signal',  dot: 'bg-violet-400' },
   OPENED:       { label: 'Opened',    bg: 'bg-amber-500/10',   text: 'text-amber-400',   dot: 'bg-amber-400' },
   REPLIED:      { label: 'Replied',   bg: 'bg-emerald-500/10', text: 'text-emerald-400', dot: 'bg-emerald-400' },
   CONVERTED:    { label: 'Converted', bg: 'bg-green-500/10',   text: 'text-green-400',   dot: 'bg-green-400' },
   BOUNCED:      { label: 'Bounced',   bg: 'bg-red-500/10',     text: 'text-red-400',     dot: 'bg-red-400' },
-  DEAD:         { label: 'Dead',      bg: 'bg-slate-600/10',   text: 'text-slate-500',   dot: 'bg-slate-600' },
+  DEAD:         { label: 'Dead',      bg: 'bg-slate-600/10',   text: 'text-paper-4',   dot: 'bg-slate-600' },
   UNSUBSCRIBED: { label: 'Unsub',     bg: 'bg-orange-500/10',  text: 'text-orange-400',  dot: 'bg-orange-400' },
 };
 
 const MSG_STATUS_COLORS: Record<string, string> = {
-  SENT:      'text-slate-400',
+  SENT:      'text-paper-3',
   DELIVERED: 'text-blue-400',
   OPENED:    'text-amber-400',
   REPLIED:   'text-emerald-400',
@@ -115,7 +115,7 @@ const SOURCE_LABELS: Record<string, { label: string; color: string }> = {
 
 function SourceBadge({ source }: { source: string | null | undefined }) {
   if (!source) return null;
-  const s = SOURCE_LABELS[source] ?? { label: source, color: 'text-slate-600' };
+  const s = SOURCE_LABELS[source] ?? { label: source, color: 'text-paper-4' };
   return (
     <span className={`text-[9px] font-semibold uppercase tracking-wider ${s.color}`}>
       via {s.label}
@@ -139,14 +139,14 @@ export default async function ProspectDetailPage({ params }: {
   return (
     <div className="p-8 space-y-6 animate-fade-up max-w-4xl">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-slate-600">
-        <Link href="/campaigns" className="hover:text-violet-400 transition-colors">Campaigns</Link>
+      <div className="flex items-center gap-2 text-sm text-paper-4">
+        <Link href="/campaigns" className="hover:text-signal transition-colors">Campaigns</Link>
         <span>/</span>
-        <Link href={`/campaigns/${campaignId}`} className="hover:text-violet-400 transition-colors">
+        <Link href={`/campaigns/${campaignId}`} className="hover:text-signal transition-colors">
           {prospect.campaign.name}
         </Link>
         <span>/</span>
-        <span className="text-slate-400 truncate max-w-[200px]">{prospect.name}</span>
+        <span className="text-paper-3 truncate max-w-[200px]">{prospect.name}</span>
       </div>
 
       {/* Header */}
@@ -154,19 +154,19 @@ export default async function ProspectDetailPage({ params }: {
         <div>
           <div className="flex items-center gap-3">
             {prospect.logoUrl && (
-              <img src={prospect.logoUrl} alt="" className="w-10 h-10 rounded-lg object-contain bg-white/5" />
+              <img src={prospect.logoUrl} alt="" className="w-10 h-10 rounded-lg object-contain bg-ink-2" />
             )}
-            <h1 className="text-2xl font-bold text-white tracking-tight">{prospect.name}</h1>
+            <h1 className="text-2xl font-bold text-paper tracking-tight">{prospect.name}</h1>
           </div>
           <div className="flex items-center gap-3 mt-2">
             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${s.bg} ${s.text}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
               {s.label}
             </span>
-            {cityState && <span className="text-sm text-slate-500">{cityState}</span>}
+            {cityState && <span className="text-sm text-paper-4">{cityState}</span>}
             {prospect.googleRating && (
               <span className="text-sm text-amber-400/80">★ {prospect.googleRating}
-                <span className="text-slate-600 ml-1 text-xs">({prospect.googleReviewCount ?? 0})</span>
+                <span className="text-paper-4 ml-1 text-xs">({prospect.googleReviewCount ?? 0})</span>
               </span>
             )}
           </div>
@@ -183,38 +183,38 @@ export default async function ProspectDetailPage({ params }: {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Contact Info */}
-        <div className="bg-white/[0.03] backdrop-blur-sm rounded-2xl border border-white/[0.08] p-5 space-y-4 glow-card">
-          <h2 className="text-[9px] font-bold text-slate-600 uppercase tracking-[0.16em]">Contact Info</h2>
+        <div className="bg-ink-2 backdrop-blur-sm rounded-2xl border border-rule p-5 space-y-4 glow-card">
+          <h2 className="text-[9px] font-bold text-paper-4 uppercase tracking-[0.16em]">Contact Info</h2>
           <dl className="space-y-4">
             <div>
-              <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Email</dt>
+              <dt className="text-[10px] text-paper-4 uppercase tracking-wider mb-0.5">Email</dt>
               <dd>
                 {prospect.email ? (
-                  <a href={`mailto:${prospect.email}`} className="text-sm font-mono text-slate-300 hover:text-violet-400 transition-colors">
+                  <a href={`mailto:${prospect.email}`} className="text-sm font-mono text-paper-2 hover:text-signal transition-colors">
                     {prospect.email}
                   </a>
                 ) : (
-                  <span className="text-sm text-slate-700 italic">Not found</span>
+                  <span className="text-sm text-paper-4 italic">Not found</span>
                 )}
                 <div className="mt-0.5">
                   <SourceBadge source={prospect.emailSource} />
                 </div>
                 {prospect.emailVerificationStatus && (
-                  <div className="mt-1 text-[10px] uppercase tracking-wider text-slate-600">
+                  <div className="mt-1 text-[10px] uppercase tracking-wider text-paper-4">
                     {prospect.emailVerificationStatus}{prospect.emailVerificationScore != null ? ` · ${prospect.emailVerificationScore}` : ''}
                   </div>
                 )}
               </dd>
             </div>
             <div>
-              <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Phone</dt>
+              <dt className="text-[10px] text-paper-4 uppercase tracking-wider mb-0.5">Phone</dt>
               <dd>
                 {prospect.phone ? (
-                  <a href={`tel:${prospect.phone}`} className="text-sm text-slate-300 hover:text-violet-400 transition-colors">
+                  <a href={`tel:${prospect.phone}`} className="text-sm text-paper-2 hover:text-signal transition-colors">
                     {prospect.phone}
                   </a>
                 ) : (
-                  <span className="text-sm text-slate-700 italic">—</span>
+                  <span className="text-sm text-paper-4 italic">—</span>
                 )}
                 <div className="mt-0.5">
                   <SourceBadge source={prospect.phoneSource} />
@@ -222,27 +222,27 @@ export default async function ProspectDetailPage({ params }: {
               </dd>
             </div>
             <div>
-              <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">First Name</dt>
-              <dd className="text-sm text-slate-300">{prospect.contactFirstName ?? '—'}</dd>
+              <dt className="text-[10px] text-paper-4 uppercase tracking-wider mb-0.5">First Name</dt>
+              <dd className="text-sm text-paper-2">{prospect.contactFirstName ?? '—'}</dd>
             </div>
             <div>
-              <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Last Name</dt>
-              <dd className="text-sm text-slate-300">{prospect.contactLastName ?? '—'}</dd>
+              <dt className="text-[10px] text-paper-4 uppercase tracking-wider mb-0.5">Last Name</dt>
+              <dd className="text-sm text-paper-2">{prospect.contactLastName ?? '—'}</dd>
             </div>
             <div>
-              <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Title</dt>
-              <dd className="text-sm text-slate-300">{prospect.contactTitle ?? '—'}</dd>
+              <dt className="text-[10px] text-paper-4 uppercase tracking-wider mb-0.5">Title</dt>
+              <dd className="text-sm text-paper-2">{prospect.contactTitle ?? '—'}</dd>
             </div>
             <div>
-              <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">LinkedIn</dt>
+              <dt className="text-[10px] text-paper-4 uppercase tracking-wider mb-0.5">LinkedIn</dt>
               <dd>
                 {prospect.contactLinkedIn ? (
                   <a href={prospect.contactLinkedIn} target="_blank" rel="noopener noreferrer"
-                    className="text-sm text-violet-400 hover:text-violet-300 hover:underline transition-colors break-all">
+                    className="text-sm text-signal hover:text-signal hover:underline transition-colors break-all">
                     {prospect.contactLinkedIn}
                   </a>
                 ) : (
-                  <span className="text-sm text-slate-300">—</span>
+                  <span className="text-sm text-paper-2">—</span>
                 )}
               </dd>
             </div>
@@ -250,37 +250,37 @@ export default async function ProspectDetailPage({ params }: {
         </div>
 
         {/* Business Info */}
-        <div className="bg-white/[0.03] backdrop-blur-sm rounded-2xl border border-white/[0.08] p-5 space-y-4 glow-card">
-          <h2 className="text-[9px] font-bold text-slate-600 uppercase tracking-[0.16em]">Business Info</h2>
+        <div className="bg-ink-2 backdrop-blur-sm rounded-2xl border border-rule p-5 space-y-4 glow-card">
+          <h2 className="text-[9px] font-bold text-paper-4 uppercase tracking-[0.16em]">Business Info</h2>
           <dl className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Short Name</dt>
-                <dd className="text-sm text-slate-300">{prospect.shortName ?? <span className="text-slate-700 italic">not set</span>}</dd>
+                <dt className="text-[10px] text-paper-4 uppercase tracking-wider mb-0.5">Short Name</dt>
+                <dd className="text-sm text-paper-2">{prospect.shortName ?? <span className="text-paper-4 italic">not set</span>}</dd>
               </div>
               <div>
-                <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Type</dt>
+                <dt className="text-[10px] text-paper-4 uppercase tracking-wider mb-0.5">Type</dt>
                 <dd>
                   {prospect.businessType ? (
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                       {prospect.businessType}
                     </span>
                   ) : (
-                    <span className="text-sm text-slate-700 italic">not set</span>
+                    <span className="text-sm text-paper-4 italic">not set</span>
                   )}
                 </dd>
               </div>
             </div>
             <div>
-              <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Website</dt>
+              <dt className="text-[10px] text-paper-4 uppercase tracking-wider mb-0.5">Website</dt>
               <dd>
                 {prospect.website ? (
                   <a href={prospect.website} target="_blank" rel="noopener noreferrer"
-                    className="text-sm text-violet-400 hover:text-violet-300 hover:underline transition-colors break-all">
+                    className="text-sm text-signal hover:text-signal hover:underline transition-colors break-all">
                     {prospect.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
                   </a>
                 ) : (
-                  <span className="text-sm text-slate-700 italic">—</span>
+                  <span className="text-sm text-paper-4 italic">—</span>
                 )}
                 {prospect.website && (
                   <div className="mt-1.5">
@@ -297,9 +297,9 @@ export default async function ProspectDetailPage({ params }: {
               </dd>
             </div>
             <div>
-              <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Address</dt>
-              <dd className="text-sm text-slate-400">
-                {addr?.formatted ?? cityState ?? <span className="text-slate-700 italic">—</span>}
+              <dt className="text-[10px] text-paper-4 uppercase tracking-wider mb-0.5">Address</dt>
+              <dd className="text-sm text-paper-3">
+                {addr?.formatted ?? cityState ?? <span className="text-paper-4 italic">—</span>}
               </dd>
               {(addr?.formatted || cityState) && (
                 <div className="mt-0.5">
@@ -308,11 +308,11 @@ export default async function ProspectDetailPage({ params }: {
               )}
             </div>
             <div>
-              <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Google Rating</dt>
-              <dd className="text-sm text-slate-400">
+              <dt className="text-[10px] text-paper-4 uppercase tracking-wider mb-0.5">Google Rating</dt>
+              <dd className="text-sm text-paper-3">
                 {prospect.googleRating
                   ? `★ ${prospect.googleRating} (${prospect.googleReviewCount ?? 0} reviews)`
-                  : <span className="text-slate-700 italic">—</span>}
+                  : <span className="text-paper-4 italic">—</span>}
               </dd>
               {prospect.googleRating && (
                 <div className="mt-0.5">
@@ -322,22 +322,22 @@ export default async function ProspectDetailPage({ params }: {
             </div>
             {prospect.revenue && (
               <div>
-                <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Revenue</dt>
-                <dd className="text-sm text-slate-400">{prospect.revenue}</dd>
+                <dt className="text-[10px] text-paper-4 uppercase tracking-wider mb-0.5">Revenue</dt>
+                <dd className="text-sm text-paper-3">{prospect.revenue}</dd>
               </div>
             )}
             {prospect.foundedYear && (
               <div>
-                <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Founded</dt>
-                <dd className="text-sm text-slate-400">{prospect.foundedYear}</dd>
+                <dt className="text-[10px] text-paper-4 uppercase tracking-wider mb-0.5">Founded</dt>
+                <dd className="text-sm text-paper-3">{prospect.foundedYear}</dd>
               </div>
             )}
             {(prospect.linkedinUrl || prospect.facebookUrl || prospect.instagramHandle || prospect.twitterUrl) && (
               <div>
-                <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Social</dt>
+                <dt className="text-[10px] text-paper-4 uppercase tracking-wider mb-0.5">Social</dt>
                 <dd className="flex items-center gap-3">
                   {prospect.linkedinUrl && (
-                    <a href={prospect.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-violet-400 hover:text-violet-300 transition-colors">LinkedIn</a>
+                    <a href={prospect.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-signal hover:text-signal transition-colors">LinkedIn</a>
                   )}
                   {prospect.facebookUrl && (
                     <a href={prospect.facebookUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:text-blue-300 transition-colors">Facebook</a>
@@ -352,31 +352,31 @@ export default async function ProspectDetailPage({ params }: {
               </div>
             )}
             <div>
-              <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Industry</dt>
-              <dd className="text-sm text-slate-400 capitalize">{prospect.campaign.targetIndustry.toLowerCase()}</dd>
+              <dt className="text-[10px] text-paper-4 uppercase tracking-wider mb-0.5">Industry</dt>
+              <dd className="text-sm text-paper-3 capitalize">{prospect.campaign.targetIndustry.toLowerCase()}</dd>
             </div>
             <div>
-              <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Campaign</dt>
+              <dt className="text-[10px] text-paper-4 uppercase tracking-wider mb-0.5">Campaign</dt>
               <dd>
-                <Link href={`/campaigns/${campaignId}`} className="text-sm text-violet-400 hover:text-violet-300 transition-colors">
+                <Link href={`/campaigns/${campaignId}`} className="text-sm text-signal hover:text-signal transition-colors">
                   {prospect.campaign.name}
                 </Link>
               </dd>
             </div>
             <div>
-              <dt className="text-[10px] text-slate-600 uppercase tracking-wider mb-0.5">Added</dt>
-              <dd className="text-sm text-slate-500">{fmt(prospect.createdAt)}</dd>
+              <dt className="text-[10px] text-paper-4 uppercase tracking-wider mb-0.5">Added</dt>
+              <dd className="text-sm text-paper-4">{fmt(prospect.createdAt)}</dd>
             </div>
           </dl>
         </div>
       </div>
 
       {/* Activity Timeline */}
-      <div className="bg-white/[0.03] backdrop-blur-sm rounded-2xl border border-white/[0.08] p-5 glow-card">
-        <h2 className="text-[9px] font-bold text-slate-600 uppercase tracking-[0.16em] mb-4">Activity Timeline</h2>
+      <div className="bg-ink-2 backdrop-blur-sm rounded-2xl border border-rule p-5 glow-card">
+        <h2 className="text-[9px] font-bold text-paper-4 uppercase tracking-[0.16em] mb-4">Activity Timeline</h2>
         <div className="relative pl-6 space-y-0">
           {/* Vertical line */}
-          <div className="absolute left-[9px] top-1 bottom-1 w-px bg-white/10" />
+          <div className="absolute left-[9px] top-1 bottom-1 w-px bg-ink-3" />
 
           {/* Build timeline events */}
           {(() => {
@@ -405,13 +405,13 @@ export default async function ProspectDetailPage({ params }: {
 
             return events.map((ev, i) => (
               <div key={i} className="relative flex items-start gap-3 pb-4">
-                <div className={`absolute left-[-15px] top-1.5 w-2.5 h-2.5 rounded-full ${ev.color} ring-2 ring-[#0f1117]`} />
+                <div className={`absolute left-[-15px] top-1.5 w-2.5 h-2.5 rounded-full ${ev.color} ring-2 ring-[#171717]`} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-slate-300">{ev.label}</span>
-                    <span className="text-[10px] text-slate-700">{fmt(ev.date)}</span>
+                    <span className="text-xs font-semibold text-paper-2">{ev.label}</span>
+                    <span className="text-[10px] text-paper-4">{fmt(ev.date)}</span>
                   </div>
-                  {ev.detail && <p className="text-[11px] text-slate-500 mt-0.5 truncate">{ev.detail}</p>}
+                  {ev.detail && <p className="text-[11px] text-paper-4 mt-0.5 truncate">{ev.detail}</p>}
                 </div>
               </div>
             ));
@@ -435,54 +435,54 @@ export default async function ProspectDetailPage({ params }: {
       />
 
       {/* Email History */}
-      <div className="bg-white/[0.03] backdrop-blur-sm rounded-2xl border border-white/[0.08] glow-card">
-        <div className="px-5 py-4 border-b border-white/[0.06]">
-          <h2 className="text-[9px] font-bold text-slate-600 uppercase tracking-[0.16em]">
+      <div className="bg-ink-2 backdrop-blur-sm rounded-2xl border border-rule glow-card">
+        <div className="px-5 py-4 border-b border-rule">
+          <h2 className="text-[9px] font-bold text-paper-4 uppercase tracking-[0.16em]">
             Email History
-            <span className="ml-2 text-slate-700 normal-case font-normal text-xs tracking-normal">{prospect.messages.length} message{prospect.messages.length !== 1 ? 's' : ''}</span>
+            <span className="ml-2 text-paper-4 normal-case font-normal text-xs tracking-normal">{prospect.messages.length} message{prospect.messages.length !== 1 ? 's' : ''}</span>
           </h2>
         </div>
 
         {prospect.messages.length === 0 ? (
           <div className="px-5 py-12 text-center">
-            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-3">
-              <svg className="w-5 h-5 text-slate-600" viewBox="0 0 20 20" fill="currentColor">
+            <div className="w-10 h-10 rounded-full bg-ink-2 flex items-center justify-center mx-auto mb-3">
+              <svg className="w-5 h-5 text-paper-4" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
                 <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
               </svg>
             </div>
-            <p className="text-sm text-slate-600">No emails sent yet.</p>
+            <p className="text-sm text-paper-4">No emails sent yet.</p>
           </div>
         ) : (
-          <div className="divide-y divide-white/[0.04]">
+          <div className="divide-y divide-rule-soft">
             {prospect.messages.map((msg) => (
               <div key={msg.id} className="px-5 py-4 space-y-3">
                 {/* Message header */}
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest bg-white/5 px-1.5 py-0.5 rounded">
+                      <span className="text-[9px] font-bold text-paper-4 uppercase tracking-widest bg-ink-2 px-1.5 py-0.5 rounded">
                         {msg.stepNumber === 1 ? 'Cold Email' : msg.stepNumber ? `Follow-up ${msg.stepNumber - 1}` : 'Email'}
                       </span>
                     </div>
                     {msg.subject && (
-                      <p className="text-sm font-medium text-white">{msg.subject}</p>
+                      <p className="text-sm font-medium text-paper">{msg.subject}</p>
                     )}
                     <div className="flex items-center gap-3">
-                      <span className={`text-xs font-semibold ${MSG_STATUS_COLORS[msg.status] ?? 'text-slate-400'}`}>
+                      <span className={`text-xs font-semibold ${MSG_STATUS_COLORS[msg.status] ?? 'text-paper-3'}`}>
                         {msg.status}
                       </span>
-                      <span className="text-[10px] text-slate-700 uppercase tracking-wider">{msg.channel}</span>
+                      <span className="text-[10px] text-paper-4 uppercase tracking-wider">{msg.channel}</span>
                     </div>
                   </div>
-                  <p className="text-xs text-slate-600 whitespace-nowrap flex-shrink-0">{fmt(msg.createdAt)}</p>
+                  <p className="text-xs text-paper-4 whitespace-nowrap flex-shrink-0">{fmt(msg.createdAt)}</p>
                 </div>
 
                 {/* Timeline */}
                 <div className="flex flex-wrap gap-x-6 gap-y-1">
                   {msg.sentAt && (
-                    <p className="text-xs text-slate-500">
-                      <span className="text-slate-400 font-medium">Sent</span> {fmt(msg.sentAt)}
+                    <p className="text-xs text-paper-4">
+                      <span className="text-paper-3 font-medium">Sent</span> {fmt(msg.sentAt)}
                     </p>
                   )}
                   {msg.openedAt && (
@@ -500,13 +500,13 @@ export default async function ProspectDetailPage({ params }: {
                 {/* Sent email body — expanded by default */}
                 {msg.body && (
                   <details className="group" open>
-                    <summary className="text-[10px] font-semibold text-slate-600 uppercase tracking-wider cursor-pointer select-none hover:text-slate-400 transition-colors list-none flex items-center gap-1.5">
-                      <svg className="w-3 h-3 transition-transform group-open:rotate-90 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <summary className="text-[10px] font-semibold text-paper-4 uppercase tracking-wider cursor-pointer select-none hover:text-paper-3 transition-colors list-none flex items-center gap-1.5">
+                      <svg className="w-3 h-3 transition-transform group-open:rotate-90 text-paper-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
                       Sent Email
                     </summary>
-                    <div className="mt-2 bg-white rounded-xl overflow-hidden border border-white/10">
+                    <div className="mt-2 bg-white rounded-xl overflow-hidden border border-rule">
                       <iframe
                         srcDoc={stripTrackingPixels(msg.body)}
                         className="w-full border-0"
@@ -522,7 +522,7 @@ export default async function ProspectDetailPage({ params }: {
                 {msg.replyBody && (
                   <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-xl p-4">
                     <p className="text-[9px] font-bold text-emerald-500/70 uppercase tracking-widest mb-2">Their Reply</p>
-                    <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">{msg.replyBody}</p>
+                    <p className="text-sm text-paper-2 whitespace-pre-wrap leading-relaxed">{msg.replyBody}</p>
                   </div>
                 )}
 
