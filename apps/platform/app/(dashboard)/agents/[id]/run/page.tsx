@@ -26,6 +26,7 @@ interface AgentStatus {
     targetCities: string[];
     targetIndustries: string[];
   };
+  inventoryCount: number;
   todayRun: {
     id: string;
     status: string;
@@ -181,7 +182,7 @@ export default function AgentRunLiveView({ params }: { params: Promise<{ id: str
             <MetricBlock label="Sent" value={r?.emailsSent ?? 0} />
             <MetricBlock label="Failed" value={r?.emailsFailed ?? 0} trend={(r?.emailsFailed ?? 0) > 0 ? 'down' : 'flat'} />
             <MetricBlock label="Capacity" value={capacity.remaining} delta={`of ${capacity.totalCapacity}`} />
-            <MetricBlock label="Ready" value={campaigns.reduce((a, c) => a + c.sendableCount, 0)} delta="enriched prospects" />
+            <MetricBlock label="Inventory" value={status.inventoryCount} delta="enriched prospects across all campaigns" trend={status.inventoryCount > 0 ? 'up' : 'flat'} />
           </div>
         </div>
       </section>

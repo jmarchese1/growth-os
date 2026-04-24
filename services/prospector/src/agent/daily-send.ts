@@ -8,12 +8,12 @@
  *   4. Auto-rotates to new cities/industries when campaigns exhaust
  */
 
-import { db } from '@embedo/db';
+import { db, Prisma } from '@embedo/db';
 import { createLogger } from '@embedo/utils';
 import { sendColdEmail } from '../outreach/email-sender.js';
 import { getTotalDailyCapacity } from '../outreach/domain-rotator.js';
 import { EventBuffer } from './events.js';
-import { isCampaignExhausted, spawnNextCampaignForAgent } from './auto-rotate.js';
+import { spawnNextCampaignForAgent } from './auto-rotate.js';
 import { writeEmailRow, writeLogRow, writeDailySummary } from './sheets.js';
 
 const log = createLogger('agent:daily-send');
@@ -74,84 +74,65 @@ export async function runAgent(options: RunOptions): Promise<RunResult> {
       return { runId: run.id, status: 'failed', ...stats, durationMs: Date.now() - startedAt.getTime() };
     }
 
-    // Get campaigns owned by this agent
-    let campaigns = await db.outboundCampaign.findMany({
-      where: { agentId: agent.id, active: true },
-      orderBy: { agentLastRunAt: { sort: 'asc', nulls: 'first' } },
-    });
+    // ─── Pull existing inventory across ALL campaigns matching this agent's industries ───
+    // This includes prospects from old pre-agent campaigns that were already enriched.
+    const industries = (agent.targetIndustries as unknown as string[] | null) ?? [];
+    const cap = Math.min(agent.dailyCap - stats.emailsSent, capacity.remaining);
 
-    // If agent has no campaigns, spawn one immediately from the rotation
-    if (campaigns.length === 0 && agent.autoRotate) {
-      buffer.info(`Agent has no campaigns — spawning from rotation`);
-      const spawned = await spawnNextCampaignForAgent(agent, buffer);
-      if (spawned) {
-        stats.campaignsSpawned++;
-        campaigns = [spawned];
-      }
+    const where: Prisma.ProspectBusinessWhereInput = {
+      email: { not: null },
+      status: 'ENRICHED',
+      messages: { none: { stepNumber: 1 } },
+    };
+    if (industries.length > 0) {
+      where.campaign = { targetIndustry: { in: industries as ('RESTAURANT' | 'SALON' | 'RETAIL' | 'FITNESS' | 'MEDICAL' | 'OTHER')[] } };
     }
 
-    if (campaigns.length === 0) {
-      buffer.warn('No campaigns available and auto-rotate is off. Add rotation targets or create a campaign manually.');
+    const prospects = cap > 0
+      ? await db.prospectBusiness.findMany({
+          where,
+          include: { campaign: true },
+          take: cap,
+          orderBy: { createdAt: 'asc' },
+        })
+      : [];
+
+    if (prospects.length > 0) {
+      buffer.info(`Found ${prospects.length} unsent enriched prospect(s) ready in existing inventory`);
+    } else {
+      buffer.info('Inventory empty — will try to spawn a new campaign for discovery');
+
+      // Spawn from rotation if allowed (discovery happens in spawn + future ticks)
+      if (agent.autoRotate) {
+        const spawned = await spawnNextCampaignForAgent(agent, buffer);
+        if (spawned) {
+          stats.campaignsSpawned++;
+          buffer.info(`Spawned "${spawned.name}" — run Discovery via /campaigns/${spawned.id}/run or next cron will pick it up once enriched`);
+        }
+      }
+      // No inventory to send, exit gracefully
       await buffer.finalize('completed', stats, startedAt);
+      if (!options.dryRun) {
+        await db.agent.update({ where: { id: agent.id }, data: { lastRunAt: new Date(), lastRunStatus: 'completed' } });
+      }
       return { runId: run.id, status: 'completed', ...stats, durationMs: Date.now() - startedAt.getTime() };
     }
 
-    buffer.info(`Working across ${campaigns.length} campaign(s)`);
+    // Group prospects by their existing campaign so we can enable AI personalization once per campaign.
+    const byCampaign = new Map<string, typeof prospects>();
+    for (const p of prospects) {
+      const list = byCampaign.get(p.campaignId) ?? [];
+      list.push(p);
+      byCampaign.set(p.campaignId, list);
+    }
 
-    for (const campaign of campaigns) {
-      if (stats.emailsSent >= agent.dailyCap) {
-        buffer.warn(`Agent daily cap reached (${agent.dailyCap})`);
-        status = 'partial';
-        break;
-      }
+    buffer.info(`Dispatching across ${byCampaign.size} campaign(s): ${[...byCampaign.values()].map(l => `${l[0]!.campaign.name} (${l.length})`).join(', ')}`);
 
-      const exhausted = await isCampaignExhausted(campaign.id);
-      if (exhausted.exhausted) {
-        buffer.info(`Campaign "${campaign.name}" exhausted (${exhausted.reason})`, {
-          campaignId: campaign.id, campaignName: campaign.name,
-        });
-        await db.outboundCampaign.update({
-          where: { id: campaign.id },
-          data: { agentExhaustedAt: new Date(), active: false },
-        });
+    // ── Send loop ──
+    for (const [campaignId, batch] of byCampaign) {
+      if (stats.emailsSent >= agent.dailyCap) break;
 
-        if (agent.autoRotate) {
-          const spawned = await spawnNextCampaignForAgent(agent, buffer).catch((err) => {
-            buffer.error(`Failed to spawn next campaign: ${err instanceof Error ? err.message : String(err)}`);
-            return null;
-          });
-          if (spawned) {
-            stats.campaignsSpawned++;
-            // Work on the newly-spawned campaign in this same run
-            campaigns.push(spawned);
-          }
-        }
-        continue;
-      }
-
-      buffer.info(`Campaign "${campaign.name}" — ${exhausted.remaining} sendable prospects`, {
-        campaignId: campaign.id, campaignName: campaign.name,
-      });
-
-      const cap = Math.min(
-        agent.dailyCap - stats.emailsSent,
-        capacity.remaining - stats.emailsSent,
-      );
-      if (cap <= 0) break;
-
-      const prospects = await db.prospectBusiness.findMany({
-        where: {
-          campaignId: campaign.id,
-          email: { not: null },
-          status: 'ENRICHED',
-          messages: { none: { stepNumber: 1 } },
-        },
-        include: { campaign: true },
-        take: cap,
-        orderBy: { createdAt: 'asc' },
-      });
-
-      if (prospects.length === 0) continue;
+      const campaign = batch[0]!.campaign;
 
       // Enable AI personalization on this campaign (idempotent)
       const conf = (campaign.apolloConfig as Record<string, unknown> | null) ?? {};
@@ -163,14 +144,24 @@ export async function runAgent(options: RunOptions): Promise<RunResult> {
       }
 
       stats.campaignsTouched++;
-      buffer.info(`Dispatching ${prospects.length} for "${campaign.name}"`, { campaignId: campaign.id });
+      buffer.info(`Dispatching ${batch.length} for "${campaign.name}"`, { campaignId });
 
-      for (let i = 0; i < prospects.length; i++) {
-        const prospect = prospects[i]!;
+      // Idempotently enable AI personalization on this campaign (first touch)
+      const conf2 = (campaign.apolloConfig as Record<string, unknown> | null) ?? {};
+      if (conf2['aiPersonalization'] !== true) {
+        await db.outboundCampaign.update({
+          where: { id: campaignId },
+          data: { apolloConfig: { ...conf2, aiPersonalization: true, systemPrompt: agent.systemPrompt ?? undefined } },
+        });
+      }
+
+      for (let i = 0; i < batch.length; i++) {
+        if (stats.emailsSent >= agent.dailyCap) break;
+        const prospect = batch[i]!;
 
         if (options.dryRun) {
           buffer.info(`[dry-run] would send to ${prospect.email}`, {
-            campaignId: campaign.id, prospectId: prospect.id, prospectName: prospect.name,
+            campaignId, prospectId: prospect.id, prospectName: prospect.name,
           });
           continue;
         }
@@ -179,7 +170,6 @@ export async function runAgent(options: RunOptions): Promise<RunResult> {
           await sendColdEmail(prospect, campaign, { stepNumber: 1 });
           stats.emailsSent++;
 
-          // Grab the domain that was actually used
           const lastMsg = await db.outreachMessage.findFirst({
             where: { prospectId: prospect.id, stepNumber: 1 },
             orderBy: { createdAt: 'desc' },
@@ -187,10 +177,9 @@ export async function runAgent(options: RunOptions): Promise<RunResult> {
           });
 
           buffer.success(`Sent to ${prospect.name} (${prospect.email})`, {
-            campaignId: campaign.id, prospectId: prospect.id, prospectName: prospect.name,
+            campaignId, prospectId: prospect.id, prospectName: prospect.name,
           });
 
-          // Sheets: write email row + log
           void writeEmailRow(agent.id, {
             agentName: agent.name,
             campaignName: campaign.name,
@@ -214,7 +203,7 @@ export async function runAgent(options: RunOptions): Promise<RunResult> {
           const msg = err instanceof Error ? err.message : 'Unknown error';
           errors.push(`${prospect.name}: ${msg}`);
           buffer.error(`Failed for ${prospect.name}: ${msg}`, {
-            campaignId: campaign.id, prospectId: prospect.id, prospectName: prospect.name,
+            campaignId, prospectId: prospect.id, prospectName: prospect.name,
           });
           void writeLogRow(agent.id, {
             agentName: agent.name, runId: run.id, level: 'error',
@@ -222,13 +211,13 @@ export async function runAgent(options: RunOptions): Promise<RunResult> {
           });
         }
 
-        if (i < prospects.length - 1 && stats.emailsSent < agent.dailyCap) {
+        if (i < batch.length - 1 && stats.emailsSent < agent.dailyCap) {
           await new Promise((r) => setTimeout(r, 3 * 60 * 1000));
         }
       }
 
       await db.outboundCampaign.update({
-        where: { id: campaign.id },
+        where: { id: campaignId },
         data: { agentLastRunAt: new Date() },
       });
     }
@@ -284,6 +273,7 @@ export async function getAgentStatus(agentId: string): Promise<{
     targetCities: string[];
     targetIndustries: string[];
   };
+  inventoryCount: number;
   todayRun: {
     id: string;
     status: string;
@@ -314,11 +304,25 @@ export async function getAgentStatus(agentId: string): Promise<{
   const agent = await db.agent.findUnique({ where: { id: agentId } });
   if (!agent) return null;
 
-  const [mostRecentRun, runningRuns, campaigns, capacity] = await Promise.all([
+  const industries = (agent.targetIndustries as unknown as string[] | null) ?? [];
+
+  // Inventory query — any enriched prospect with email + no step-1 message,
+  // filtered by this agent's target industries (across ALL campaigns, including legacy)
+  const inventoryWhere: Prisma.ProspectBusinessWhereInput = {
+    email: { not: null },
+    status: 'ENRICHED',
+    messages: { none: { stepNumber: 1 } },
+  };
+  if (industries.length > 0) {
+    inventoryWhere.campaign = { targetIndustry: { in: industries as ('RESTAURANT' | 'SALON' | 'RETAIL' | 'FITNESS' | 'MEDICAL' | 'OTHER')[] } };
+  }
+
+  const [mostRecentRun, runningRuns, campaigns, capacity, inventoryCount] = await Promise.all([
     db.agentRun.findFirst({ where: { agentId }, orderBy: { startedAt: 'desc' } }),
     db.agentRun.findMany({ where: { agentId, status: 'running' }, take: 1 }),
     db.outboundCampaign.findMany({ where: { agentId, active: true }, orderBy: { createdAt: 'desc' } }),
     getTotalDailyCapacity(),
+    db.prospectBusiness.count({ where: inventoryWhere }),
   ]);
 
   const campaignsWithCounts = await Promise.all(
@@ -361,6 +365,7 @@ export async function getAgentStatus(agentId: string): Promise<{
       targetCities: (agent.targetCities as string[] | null) ?? [],
       targetIndustries: (agent.targetIndustries as string[] | null) ?? [],
     },
+    inventoryCount,
     todayRun: mostRecentRun ? {
       id: mostRecentRun.id,
       status: mostRecentRun.status,
