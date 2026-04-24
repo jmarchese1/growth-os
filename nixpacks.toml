@@ -1,0 +1,9 @@
+# Nixpacks config — applied by Railway when building any service in this monorepo.
+#
+# Why: Railway defaults NODE_ENV=production during build, which makes pnpm skip
+# devDependencies. But we need typescript and turbo (root devDeps) during the
+# build step to compile TypeScript services. Setting NPM_CONFIG_PRODUCTION=false
+# keeps dev deps installed so tsc and turbo are available.
+
+[variables]
+NPM_CONFIG_PRODUCTION = "false"
