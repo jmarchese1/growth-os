@@ -33,8 +33,8 @@ export async function getNextDomain(): Promise<SendingDomain | null> {
     // Skip if at daily limit
     if (domain.sentToday >= domain.dailyLimit) continue;
 
-    // Skip if bounce rate > 10% (with minimum 50 sends to avoid low-sample false positives)
-    if (domain.totalSent >= 50 && domain.bounceCount / domain.totalSent > 0.10) continue;
+    // Skip if bounce rate > 25% (with minimum 50 sends to avoid low-sample false positives)
+    if (domain.totalSent >= 50 && domain.bounceCount / domain.totalSent > 0.25) continue;
 
     return domain;
   }
@@ -57,7 +57,7 @@ export async function incrementDomainSend(domainId: string): Promise<void> {
 }
 
 /**
- * Record a bounce for a domain. Auto-disables if bounce rate exceeds 5%.
+ * Record a bounce for a domain. Auto-disables if bounce rate exceeds 25%.
  */
 export async function recordDomainBounce(domainId: string): Promise<void> {
   const domain = await db.sendingDomain.update({
@@ -65,12 +65,12 @@ export async function recordDomainBounce(domainId: string): Promise<void> {
     data: { bounceCount: { increment: 1 } },
   });
 
-  if (domain.totalSent >= 50 && domain.bounceCount / domain.totalSent > 0.10) {
+  if (domain.totalSent >= 50 && domain.bounceCount / domain.totalSent > 0.25) {
     await db.sendingDomain.update({
       where: { id: domainId },
       data: { active: false, disabledReason: 'bounce_rate_exceeded' },
     });
-    log.warn({ domainId, domain: domain.domain, bounceRate: (domain.bounceCount / domain.totalSent * 100).toFixed(1) }, 'Domain auto-disabled — bounce rate exceeded 10%');
+    log.warn({ domainId, domain: domain.domain, bounceRate: (domain.bounceCount / domain.totalSent * 100).toFixed(1) }, 'Domain auto-disabled — bounce rate exceeded 25%');
   }
 }
 
