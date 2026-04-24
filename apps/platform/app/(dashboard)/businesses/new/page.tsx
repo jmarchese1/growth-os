@@ -277,7 +277,7 @@ export default function NewBusinessPage() {
                     type="checkbox"
                     checked={checked}
                     onChange={() => toggleModule(product.id)}
-                    className="mt-0.5 h-4 w-4 rounded border-white/20 bg-ink-2 text-signal focus:ring-signal/50 focus:ring-offset-0"
+                    className="mt-0.5 h-4 w-4 rounded border-rule-strong bg-ink-2 text-signal focus:ring-signal/50 focus:ring-offset-0"
                   />
                   <div className="min-w-0">
                     <span className="text-sm font-medium text-paper">{product.label}</span>

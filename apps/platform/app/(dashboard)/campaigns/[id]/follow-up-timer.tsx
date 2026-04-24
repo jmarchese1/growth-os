@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 
@@ -28,10 +28,10 @@ export function FollowUpTimer({ scheduledAt, stepNumber }: { scheduledAt: string
 
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider">
+      <span className="text-[9px] font-semibold text-paper-4 uppercase tracking-wider">
         Follow-up {stepNumber}
       </span>
-      <span className={`text-xs font-mono font-medium ${isPast ? 'text-violet-400 animate-pulse' : 'text-amber-400'}`}>
+      <span className={`text-xs font-mono font-medium ${isPast ? 'text-signal animate-pulse' : 'text-amber-400'}`}>
         {isPast ? 'Sending soon…' : `in ${formatCountdown(ms)}`}
       </span>
     </div>

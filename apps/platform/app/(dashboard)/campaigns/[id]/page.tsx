@@ -104,7 +104,7 @@ function StatusBadge({ status }: { status: ProspectStatus }) {
   const map: Record<ProspectStatus, { dot: string; label: string; bg: string; text: string }> = {
     NEW:          { dot: 'bg-slate-500', label: 'New',       bg: 'bg-slate-500/10', text: 'text-paper-3' },
     ENRICHED:     { dot: 'bg-blue-400',  label: 'Has Email', bg: 'bg-blue-500/10',  text: 'text-blue-400'  },
-    CONTACTED:    { dot: 'bg-violet-400',label: 'Emailed',   bg: 'bg-signal-soft',text: 'text-signal'},
+    CONTACTED:    { dot: 'bg-signal',label: 'Emailed',   bg: 'bg-signal-soft',text: 'text-signal'},
     OPENED:       { dot: 'bg-amber-400', label: 'Opened',    bg: 'bg-amber-500/10', text: 'text-amber-400' },
     REPLIED:      { dot: 'bg-emerald-400',label: 'Replied',  bg: 'bg-emerald-500/10',text: 'text-emerald-400'},
     CONVERTED:    { dot: 'bg-green-400', label: 'Converted', bg: 'bg-green-500/10', text: 'text-green-400' },
@@ -170,21 +170,6 @@ export default async function CampaignDetailPage({ params, searchParams }: {
 
   return (
     <div className="relative p-8 animate-fade-up min-h-screen">
-
-      {/* ── Dynamic background layer ───────────────────────────────────────────── */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-
-        {/* Subtle orbital rings — top-right */}
-        <div className="absolute -top-32 right-[5%] w-[440px] h-[440px] opacity-[0.06]">
-          <div className="absolute inset-0 rounded-full border border-violet-400 animate-orbital-slow" />
-          <div className="absolute inset-[70px] rounded-full border border-indigo-400 animate-orbital-reverse" />
-          <div className="absolute inset-[140px] rounded-full border border-violet-300 animate-orbital-medium" />
-        </div>
-
-        {/* Ambient glow orbs — very subtle */}
-        <div className="absolute top-10 right-16 w-64 h-64 rounded-full bg-signal text-ink-0/8 blur-[90px] animate-float-orb" />
-        <div className="absolute bottom-20 right-0 w-48 h-48 rounded-full bg-indigo-600/6 blur-[70px] animate-float-orb-b" />
-      </div>
 
       {/* ── Page content ──────────────────────────────────────────────────────── */}
       <div className="relative z-10 space-y-6">
@@ -266,7 +251,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
       {/* Funnel stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
-          { label: 'Scraped', value: stats.total, pct: 100, color: 'text-slate-200', border: 'border-rule' },
+          { label: 'Scraped', value: stats.total, pct: 100, color: 'text-paper', border: 'border-rule' },
           { label: 'Has Email', value: hasEmail, pct: pct(hasEmail), color: 'text-blue-400', border: 'border-blue-500/20' },
           { label: 'Emailed', value: emailed, pct: pct(emailed), color: 'text-signal', border: 'border-rule' },
           { label: 'Opened', value: opened, pct: pct(opened), color: 'text-amber-400', border: 'border-amber-500/20' },
@@ -347,7 +332,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                 <tr key={p.id} className="hover:bg-ink-2 transition-colors group">
 
                   {/* Company — sticky left */}
-                  <td className="px-4 py-3 min-w-[180px] max-w-[220px] sticky left-0 bg-[#0a0a0a] group-hover:bg-[#0e0c1e] z-10 transition-colors">
+                  <td className="px-4 py-3 min-w-[180px] max-w-[220px] sticky left-0 bg-[#0a0a0a] group-hover:bg-[#171717] z-10 transition-colors">
                     <Link href={`/campaigns/${id}/prospects/${p.id}`} className="font-semibold text-paper hover:text-signal transition-colors truncate block text-sm">
                       {p.name}
                     </Link>
@@ -381,7 +366,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                         <div className="flex items-center gap-2">
                           {p.emailSource && (
                             <span className={`text-[9px] font-semibold uppercase tracking-wider ${
-                              p.emailSource === 'apollo' ? 'text-purple-400/60' :
+                              p.emailSource === 'apollo' ? 'text-paper-3' :
                               p.emailSource === 'website' ? 'text-blue-400/60' :
                               p.emailSource === 'brave_search' ? 'text-orange-400/60' :
                               'text-paper-3/60'
@@ -403,7 +388,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                   <td className="px-4 py-3 min-w-[160px]">
                     {p.contactFirstName || p.contactLastName ? (
                       <div>
-                        <span className="text-xs font-medium text-slate-200">
+                        <span className="text-xs font-medium text-paper">
                           {[p.contactFirstName, p.contactLastName].filter(Boolean).join(' ')}
                         </span>
                         {p.contactTitle && (
@@ -540,7 +525,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
                   </td>
 
                   {/* Actions — sticky right */}
-                  <td className="px-4 py-3 min-w-[180px] sticky right-0 bg-[#0a0a0a] group-hover:bg-[#0e0c1e] z-10 transition-colors">
+                  <td className="px-4 py-3 min-w-[180px] sticky right-0 bg-[#0a0a0a] group-hover:bg-[#171717] z-10 transition-colors">
                     <div className="flex items-center gap-2 flex-nowrap">
                       {p.email && (p.status === 'NEW' || p.status === 'ENRICHED') && (
                         <SendButton prospectId={p.id} prospectorUrl={PROSPECTOR_URL} nextFollowUpAt={p.nextFollowUpAt} status={p.status} />
@@ -581,7 +566,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
               {parseInt(page) > 1 && (
                 <Link
                   href={`/campaigns/${id}?${filterStatus ? `status=${filterStatus}&` : ''}page=${parseInt(page) - 1}`}
-                  className="text-xs text-violet-600 hover:underline"
+                  className="text-xs text-signal hover:underline"
                 >
                   Previous
                 </Link>
@@ -590,7 +575,7 @@ export default async function CampaignDetailPage({ params, searchParams }: {
               {total > parseInt(page) * 50 && (
                 <Link
                   href={`/campaigns/${id}?${filterStatus ? `status=${filterStatus}&` : ''}page=${parseInt(page) + 1}`}
-                  className="text-xs text-violet-600 hover:underline"
+                  className="text-xs text-signal hover:underline"
                 >
                   Next
                 </Link>

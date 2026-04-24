@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
@@ -105,7 +105,7 @@ function SuccessOverlay({ total, onClose }: { total: number; onClose: () => void
 
         <h2 className="text-2xl font-bold text-white mb-2">Campaign Ready</h2>
         <p className="text-lg text-emerald-400 font-semibold mb-1">{total} prospects discovered</p>
-        <p className="text-sm text-slate-400 mb-8">Emails enriched and ready to send</p>
+        <p className="text-sm text-paper-3 mb-8">Emails enriched and ready to send</p>
 
         {/* Particle burst effect */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -126,7 +126,7 @@ function SuccessOverlay({ total, onClose }: { total: number; onClose: () => void
 
         <button
           onClick={onClose}
-          className="px-6 py-3 bg-violet-600 text-white text-sm font-semibold rounded-xl hover:bg-violet-500 transition-colors shadow-lg shadow-violet-600/30"
+          className="px-6 py-3 bg-signal text-ink-0 text-white text-sm font-semibold rounded-xl hover:bg-paper hover:text-ink-0 transition-colors shadow-lg "
         >
           View Prospects
         </button>
@@ -139,7 +139,7 @@ function LoadingOverlay({ total, message }: { total: number; message: string }) 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(14px)' }}>
       {/* Ambient glow */}
-      <div className="absolute w-[400px] h-[400px] rounded-full bg-violet-600/10 blur-[100px]" />
+      <div className="absolute w-[400px] h-[400px] rounded-full bg-signal-soft blur-[100px]" />
 
       <div className="relative text-center">
         {/* Rotating cube */}
@@ -151,7 +151,7 @@ function LoadingOverlay({ total, message }: { total: number; message: string }) 
         <div className="h-8 flex items-center justify-center mb-3">
           <p
             key={message}
-            className="text-base text-slate-200 font-medium"
+            className="text-base text-paper font-medium"
             style={{ animation: 'fade-up-msg 0.5s ease both' }}
           >
             {message}
@@ -160,8 +160,8 @@ function LoadingOverlay({ total, message }: { total: number; message: string }) 
 
         {/* Live count */}
         <div className="flex items-center justify-center gap-2 mb-6">
-          <div className="w-2 h-2 rounded-full bg-violet-500 animate-pulse" />
-          <p className="text-sm text-violet-300 font-semibold tabular-nums">
+          <div className="w-2 h-2 rounded-full bg-signal text-ink-0 animate-pulse" />
+          <p className="text-sm text-signal font-semibold tabular-nums">
             {total > 0 ? `${total} prospects found` : 'Searching...'}
           </p>
         </div>
@@ -171,7 +171,7 @@ function LoadingOverlay({ total, message }: { total: number; message: string }) 
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="w-1.5 h-1.5 rounded-full bg-violet-400"
+              className="w-1.5 h-1.5 rounded-full bg-signal"
               style={{ animation: `pulse-dot 1.4s ease-in-out ${i * 0.2}s infinite` }}
             />
           ))}
@@ -273,7 +273,7 @@ export function RunCampaignButton({ campaignId, prospectorUrl, initialTotal = 0 
         </p>
         <button
           onClick={() => setState('idle')}
-          className="text-xs px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 hover:text-white transition-colors w-fit"
+          className="text-xs px-3 py-1.5 rounded-lg bg-ink-2 border border-rule text-paper-3 hover:text-white transition-colors w-fit"
         >
           Dismiss
         </button>
@@ -286,7 +286,7 @@ export function RunCampaignButton({ campaignId, prospectorUrl, initialTotal = 0 
       <button
         onClick={run}
         disabled={state !== 'idle'}
-        className="text-xs px-3 py-1.5 rounded-lg bg-violet-600 text-white hover:bg-violet-500 transition-colors font-medium disabled:opacity-50"
+        className="text-xs px-3 py-1.5 rounded-lg bg-signal text-ink-0 text-white hover:bg-paper hover:text-ink-0 transition-colors font-medium disabled:opacity-50"
       >
         Run
       </button>

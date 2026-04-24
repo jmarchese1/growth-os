@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
+import { Bell, X, MessageSquare, Calendar, Eye, AlertTriangle, FileBarChart2 } from 'lucide-react';
 
 interface Notification {
   id: string;
@@ -25,21 +26,24 @@ interface DailyReport {
     bounces: number;
     meetingsBooked: number;
   };
-  campaigns: Array<{
-    name: string;
-    sent: number;
-    opens: number;
-    replies: number;
-  }>;
+  campaigns: Array<{ name: string; sent: number; opens: number; replies: number }>;
   aiSummary: string | null;
 }
 
-const typeConfig: Record<string, { icon: string; color: string; bg: string }> = {
-  reply: { icon: '\u{1F4AC}', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-  bounce: { icon: '\u26A0', color: 'text-red-400', bg: 'bg-red-500/10' },
-  meeting_booked: { icon: '\u{1F4C5}', color: 'text-violet-400', bg: 'bg-violet-500/10' },
-  open: { icon: '\u{1F441}', color: 'text-blue-400', bg: 'bg-blue-500/10' },
-  daily_report: { icon: '\u{1F4CA}', color: 'text-amber-400', bg: 'bg-amber-500/10' },
+const typeIcon = {
+  reply: MessageSquare,
+  bounce: AlertTriangle,
+  meeting_booked: Calendar,
+  open: Eye,
+  daily_report: FileBarChart2,
+};
+
+const typeColor = {
+  reply: 'text-signal',
+  bounce: 'text-ember',
+  meeting_booked: 'text-signal',
+  open: 'text-[#63b7ff]',
+  daily_report: 'text-amber',
 };
 
 function timeAgo(dateStr: string): string {
@@ -48,11 +52,11 @@ function timeAgo(dateStr: string): string {
   const diff = Math.max(0, now - then);
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 60) return `${mins}m`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return `${hours}h`;
   const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  return `${days}d`;
 }
 
 export default function NotificationBell() {
@@ -60,13 +64,11 @@ export default function NotificationBell() {
   const [tab, setTab] = useState<'notifications' | 'report'>('notifications');
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [report, setReport] = useState<DailyReport | null>(null);
-  const [loadingReport, setLoadingReport] = useState(false);
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const bellRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [panelPos, setPanelPos] = useState({ top: 0, right: 0 });
 
-  // Load read IDs from localStorage
   useEffect(() => {
     try {
       const stored = localStorage.getItem('embedo-notif-read');
@@ -80,33 +82,25 @@ export default function NotificationBell() {
     try { localStorage.setItem('embedo-notif-read', JSON.stringify([...allIds])); } catch { /* ignore */ }
   }, [notifications]);
 
-  // Fetch notifications
   useEffect(() => {
     let cancelled = false;
     const fetchNotifs = async () => {
       try {
         const res = await fetch(`/api/notifications`);
-        if (res.ok && !cancelled) {
-          const data = await res.json();
-          setNotifications(data);
-        }
-      } catch { /* service not running */ }
+        if (res.ok && !cancelled) setNotifications(await res.json());
+      } catch { /* silent */ }
     };
     fetchNotifs();
     const interval = setInterval(fetchNotifs, 30_000);
     return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
-  // Fetch daily report — only if not already loaded for today
   const fetchReport = useCallback(async () => {
-    if (loadingReport) return;
-    // If we already have today's report, don't refetch
     if (report?.generatedAt) {
       const reportDate = new Date(report.generatedAt).toISOString().slice(0, 10);
       const today = new Date().toISOString().slice(0, 10);
       if (reportDate === today) return;
     }
-    setLoadingReport(true);
     try {
       const res = await fetch(`/api/daily-report`);
       if (res.ok) {
@@ -114,21 +108,15 @@ export default function NotificationBell() {
         if (data) setReport(data);
       }
     } catch { /* ignore */ }
-    setLoadingReport(false);
-  }, [loadingReport, report?.generatedAt]);
+  }, [report?.generatedAt]);
 
-  // Position panel below bell button
   useEffect(() => {
     if (open && bellRef.current) {
       const rect = bellRef.current.getBoundingClientRect();
-      setPanelPos({
-        top: rect.bottom + 8,
-        right: window.innerWidth - rect.right,
-      });
+      setPanelPos({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
     }
   }, [open]);
 
-  // Close on outside click
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
@@ -136,171 +124,138 @@ export default function NotificationBell() {
       if (
         bellRef.current && !bellRef.current.contains(target) &&
         panelRef.current && !panelRef.current.contains(target)
-      ) {
-        setOpen(false);
-      }
+      ) setOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
 
-  const unreadCount = notifications.filter((n) => !readIds.has(n.id)).length;
+  useEffect(() => {
+    if (tab === 'report' && open) fetchReport();
+  }, [tab, open, fetchReport]);
 
-  const handleBellClick = () => {
-    if (!open) {
-      setOpen(true);
-    } else {
-      setOpen(false);
-    }
-  };
+  const unreadCount = notifications.filter((n) => !readIds.has(n.id)).length;
 
   const panel = open ? createPortal(
     <div
       ref={panelRef}
-      className="fixed w-[420px] max-h-[520px] bg-[#151229] border border-white/10 rounded-2xl shadow-2xl shadow-black/40 overflow-hidden"
+      className="fixed w-[400px] max-h-[540px] panel-2 flex flex-col shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
       style={{ top: panelPos.top, right: panelPos.right, zIndex: 9999 }}
     >
       {/* Tabs */}
-      <div className="flex border-b border-white/[0.06]">
+      <div className="flex hairline-b shrink-0">
         <button
           onClick={() => setTab('notifications')}
-          className={`flex-1 py-3.5 text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
-            tab === 'notifications' ? 'text-white border-b-2 border-violet-500' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+          className={`flex-1 py-3 font-mono text-[10px] tracking-mega uppercase transition-colors relative ${
+            tab === 'notifications' ? 'text-signal' : 'text-paper-3 hover:text-paper'
           }`}
         >
-          Notifications {unreadCount > 0 && <span className="ml-1 px-1.5 py-0.5 rounded-full bg-violet-500/20 text-violet-400 text-[10px]">{unreadCount}</span>}
+          Activity {unreadCount > 0 && <span className="ml-1 text-signal nums">[{unreadCount}]</span>}
+          {tab === 'notifications' && <span className="absolute left-0 right-0 -bottom-px h-px bg-signal" />}
         </button>
         <button
-          onClick={() => { setTab('report'); fetchReport(); }}
-          className={`flex-1 py-3.5 text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
-            tab === 'report' ? 'text-white border-b-2 border-violet-500' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+          onClick={() => setTab('report')}
+          className={`flex-1 py-3 font-mono text-[10px] tracking-mega uppercase transition-colors relative ${
+            tab === 'report' ? 'text-signal' : 'text-paper-3 hover:text-paper'
           }`}
         >
-          Daily Report
+          Daily report
+          {tab === 'report' && <span className="absolute left-0 right-0 -bottom-px h-px bg-signal" />}
+        </button>
+        <button
+          onClick={() => setOpen(false)}
+          className="px-3 text-paper-4 hover:text-paper transition-colors"
+        >
+          <X className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      {/* Notifications tab */}
-      {tab === 'notifications' && (
-        <div className="overflow-y-auto max-h-[440px]">
-          {notifications.length > 0 && unreadCount > 0 && (
-            <div className="px-4 py-2 border-b border-white/[0.04]">
-              <button onClick={markAllRead} className="text-[10px] text-violet-400 hover:text-violet-300 font-medium">
-                Mark all as read
-              </button>
-            </div>
-          )}
-          {notifications.length === 0 ? (
-            <div className="px-4 py-12 text-center">
-              <p className="text-sm text-slate-600">No notifications yet</p>
-              <p className="text-xs text-slate-700 mt-1">Replies, opens, and bookings will appear here</p>
-            </div>
-          ) : (
-            notifications.map((n) => {
-              const conf = typeConfig[n.type] ?? typeConfig['open']!;
-              const isRead = readIds.has(n.id);
-              return (
-                <div
-                  key={n.id}
-                  className={`px-4 py-3 border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors ${
-                    !isRead ? 'bg-violet-500/[0.03]' : ''
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <span className={`flex-shrink-0 w-8 h-8 rounded-lg ${conf.bg} flex items-center justify-center text-sm`}>
-                      {conf.icon}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className={`text-sm font-medium ${isRead ? 'text-slate-400' : 'text-white'}`}>{n.title}</p>
-                        {!isRead && <span className="w-1.5 h-1.5 rounded-full bg-violet-400 flex-shrink-0" />}
-                      </div>
-                      <p className="text-xs text-slate-500 mt-0.5 truncate">{n.description}</p>
-                      <p className="text-[10px] text-slate-600 mt-1">{timeAgo(n.createdAt)}</p>
-                    </div>
-                    {n.campaignId && (
-                      <Link
-                        href={`/campaigns/${n.campaignId}`}
-                        className="flex-shrink-0 text-[10px] text-violet-400 hover:text-violet-300"
-                        onClick={() => setOpen(false)}
-                      >
-                        View
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      )}
-
-      {/* Daily Report tab */}
-      {tab === 'report' && (
-        <div className="overflow-y-auto max-h-[440px] p-4 space-y-4">
-          {loadingReport ? (
-            <div className="py-12 text-center">
-              <div className="w-6 h-6 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mx-auto" />
-              <p className="text-xs text-slate-500 mt-3">Generating report...</p>
-            </div>
-          ) : !report ? (
-            <div className="py-12 text-center">
-              <p className="text-sm text-slate-600">No report available</p>
-              <p className="text-xs text-slate-700 mt-1">Start the prospector service to generate reports</p>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { label: 'Sent', value: report.stats.emailsSent, color: 'text-white' },
-                  { label: 'Opens', value: report.stats.opens, color: 'text-blue-400' },
-                  { label: 'Replies', value: report.stats.replies, color: 'text-emerald-400' },
-                  { label: 'Bounces', value: report.stats.bounces, color: report.stats.bounces > 0 ? 'text-red-400' : 'text-slate-400' },
-                  { label: 'Meetings', value: report.stats.meetingsBooked, color: 'text-violet-400' },
-                  { label: 'Discovered', value: report.stats.prospectsDiscovered, color: 'text-slate-300' },
-                ].map((s) => (
-                  <div key={s.label} className="bg-white/[0.04] rounded-lg p-2.5 text-center">
-                    <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>
-                    <p className="text-[9px] text-slate-600 uppercase tracking-wider">{s.label}</p>
-                  </div>
-                ))}
-              </div>
-
-              {report.aiSummary && (
-                <div className="bg-gradient-to-br from-violet-500/[0.08] to-indigo-500/[0.04] rounded-xl border border-violet-500/10 p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-semibold text-violet-400">AI Insights</span>
-                    <span className="px-1.5 py-0.5 rounded text-[9px] bg-violet-500/20 text-violet-300 font-medium">Claude</span>
-                  </div>
-                  <div className="text-xs text-slate-300 leading-relaxed whitespace-pre-line">
-                    {report.aiSummary}
-                  </div>
-                </div>
-              )}
-
-              {report.campaigns.length > 0 && (
-                <div>
-                  <p className="text-[10px] text-slate-600 uppercase tracking-wider font-semibold mb-2">Campaign Activity (24h)</p>
-                  <div className="space-y-1.5">
-                    {report.campaigns.map((c) => (
-                      <div key={c.name} className="flex items-center justify-between bg-white/[0.03] rounded-lg px-3 py-2">
-                        <span className="text-xs text-slate-300 truncate flex-1">{c.name}</span>
-                        <div className="flex items-center gap-3 text-[10px] flex-shrink-0">
-                          <span className="text-slate-500">{c.sent} sent</span>
-                          <span className="text-blue-400">{c.opens} opens</span>
-                          <span className="text-emerald-400">{c.replies} replies</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <p className="text-[10px] text-slate-700 text-center">
-                Generated {new Date(report.generatedAt).toLocaleString()}
+      {/* Panel body */}
+      <div className="flex-1 overflow-y-auto">
+        {tab === 'notifications' ? (
+          <>
+            {notifications.length === 0 ? (
+              <p className="p-12 text-center font-display italic text-paper-3 text-lg font-light">
+                No activity yet.
               </p>
-            </>
-          )}
+            ) : (
+              <div className="divide-y divide-rule">
+                {notifications.map((n) => {
+                  const Icon = typeIcon[n.type] ?? Bell;
+                  const color = typeColor[n.type] ?? 'text-paper-3';
+                  const isUnread = !readIds.has(n.id);
+                  return (
+                    <Link
+                      key={n.id}
+                      href={n.campaignId ? `/campaigns/${n.campaignId}` : '/emails'}
+                      className="flex items-start gap-3 p-4 hover:bg-ink-2 transition-colors group"
+                    >
+                      <div className="shrink-0 pt-0.5">
+                        <Icon className={`w-3.5 h-3.5 ${color}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="font-ui text-sm text-paper leading-tight">{n.title}</p>
+                          {isUnread && <span className="w-1.5 h-1.5 bg-signal shrink-0 mt-1" />}
+                        </div>
+                        <p className="font-ui text-[12px] text-paper-3 mt-0.5 leading-snug">{n.description}</p>
+                        <p className="font-mono text-[9px] tracking-mega uppercase text-paper-4 mt-1">
+                          {timeAgo(n.createdAt)} ago
+                          {n.prospectName && <span className="text-paper-4"> · {n.prospectName}</span>}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="p-5">
+            {report ? (
+              <div className="space-y-5">
+                <div>
+                  <p className="font-mono text-[10px] tracking-mega uppercase text-paper-4">
+                    {report.period} · Generated {new Date(report.generatedAt).toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                  </p>
+                </div>
+                <div className="grid grid-cols-3 gap-0 hairline border">
+                  <StatCell label="Sent" value={report.stats.emailsSent} />
+                  <StatCell label="Opens" value={report.stats.opens} />
+                  <StatCell label="Replies" value={report.stats.replies} accent />
+                </div>
+                <div className="grid grid-cols-3 gap-0 hairline border">
+                  <StatCell label="Booked" value={report.stats.meetingsBooked} accent />
+                  <StatCell label="Bounces" value={report.stats.bounces} />
+                  <StatCell label="Discovered" value={report.stats.prospectsDiscovered} />
+                </div>
+                {report.aiSummary && (
+                  <div className="panel p-4">
+                    <span className="label-sm block mb-2">Summary</span>
+                    <p className="font-display italic text-paper-2 text-sm leading-relaxed">
+                      "{report.aiSummary}"
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="p-8 text-center font-mono text-[10px] tracking-mega uppercase text-paper-4">
+                Loading today's report…
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      {tab === 'notifications' && unreadCount > 0 && (
+        <div className="hairline-t shrink-0">
+          <button
+            onClick={markAllRead}
+            className="w-full py-3 font-mono text-[10px] tracking-mega uppercase text-paper-3 hover:text-signal transition-colors"
+          >
+            Mark all read
+          </button>
         </div>
       )}
     </div>,
@@ -311,19 +266,29 @@ export default function NotificationBell() {
     <>
       <button
         ref={bellRef}
-        onClick={handleBellClick}
-        className="relative p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors"
+        onClick={() => setOpen((v) => !v)}
+        className="relative w-8 h-8 hairline flex items-center justify-center text-paper-3 hover:text-paper hover:border-paper-3 transition-colors"
+        title="Notifications"
       >
-        <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-          <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
-        </svg>
+        <Bell className="w-3.5 h-3.5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center rounded-full bg-violet-500 text-[9px] font-bold text-white min-w-[18px] h-[18px] px-1">
-            {unreadCount > 99 ? '99+' : unreadCount}
+          <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-1 bg-signal text-ink-0 font-mono text-[9px] tracking-tight nums font-bold flex items-center justify-center">
+            {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
       {panel}
     </>
+  );
+}
+
+function StatCell({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
+  return (
+    <div className="px-3 py-3 hairline-r last:border-r-0">
+      <p className="label-sm">{label}</p>
+      <p className={`font-display italic font-light text-xl nums leading-none mt-1 ${accent ? 'text-signal' : 'text-paper'}`}>
+        {value.toLocaleString()}
+      </p>
+    </div>
   );
 }

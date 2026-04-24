@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -149,16 +149,16 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
     }
   }
 
-  const inputCls = "w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 transition-colors";
-  const selectCls = "w-full px-3 py-2.5 bg-[#12101f] border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 transition-colors appearance-none";
-  const optionCls = "bg-[#12101f] text-white";
-  const labelCls = "block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wide";
+  const inputCls = "w-full px-3 py-2.5 bg-ink-2 border border-rule rounded-lg text-sm text-paper placeholder:text-paper-4 focus:outline-none focus:ring-1 focus:ring-signal focus:border-signal transition-colors";
+  const selectCls = "w-full px-3 py-2.5 bg-[#171717] border border-rule rounded-lg text-sm text-paper focus:outline-none focus:ring-1 focus:ring-signal focus:border-signal transition-colors appearance-none";
+  const optionCls = "bg-[#171717] text-paper";
+  const labelCls = "block text-xs font-semibold text-paper-3 mb-1.5 uppercase tracking-wide";
 
   if (!open) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="px-4 py-2 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-500 transition-colors"
+        className="px-4 py-2 bg-signal text-ink-0 text-paper text-sm font-semibold rounded-lg hover:bg-paper hover:text-ink-0 transition-colors"
       >
         + New Campaign
       </button>
@@ -205,8 +205,8 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
               onClick={() => setDiscoverySource('geoapify')}
               className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 discoverySource === 'geoapify'
-                  ? 'bg-violet-600 text-white'
-                  : 'bg-white/5 text-slate-400 border border-white/10 hover:border-white/20'
+                  ? 'bg-signal text-ink-0 text-paper'
+                  : 'bg-ink-2 text-paper-3 border border-rule hover:border-rule-strong'
               }`}
             >
               Geoapify (Places)
@@ -216,14 +216,14 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
               onClick={() => setDiscoverySource('apollo')}
               className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 discoverySource === 'apollo'
-                  ? 'bg-violet-600 text-white'
-                  : 'bg-white/5 text-slate-400 border border-white/10 hover:border-white/20'
+                  ? 'bg-signal text-ink-0 text-paper'
+                  : 'bg-ink-2 text-paper-3 border border-rule hover:border-rule-strong'
               }`}
             >
               Apollo (People)
             </button>
           </div>
-          <p className="text-[10px] text-slate-600 mt-1.5">
+          <p className="text-[10px] text-paper-4 mt-1.5">
             {discoverySource === 'geoapify'
               ? 'Finds businesses via Google Maps data. Best for discovering local restaurants by location.'
               : 'Finds businesses and their owners/managers via Apollo.io. Best for finding decision-makers with verified emails.'}
@@ -232,8 +232,8 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
 
         {/* Apollo-specific options */}
         {discoverySource === 'apollo' && (
-          <div className="space-y-4 p-4 bg-violet-500/5 border border-violet-500/15 rounded-lg">
-            <p className="text-xs font-semibold text-violet-400 uppercase tracking-wide">Apollo Settings</p>
+          <div className="space-y-4 p-4 bg-signal-soft border border-rule rounded-lg">
+            <p className="text-xs font-semibold text-signal uppercase tracking-wide">Apollo Settings</p>
 
             <div>
               <label className={labelCls}>Industries</label>
@@ -249,15 +249,15 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
                     }
                     className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                       apolloIndustries.includes(ind.id)
-                        ? 'bg-violet-600 text-white border-violet-500'
-                        : 'bg-white/5 text-slate-400 border-white/10 hover:border-white/20'
+                        ? 'bg-signal text-ink-0 text-paper border-signal'
+                        : 'bg-ink-2 text-paper-3 border-rule hover:border-rule-strong'
                     }`}
                   >
                     {ind.label}
                   </button>
                 ))}
               </div>
-              <p className="text-[10px] text-slate-600 mt-1.5">Select one or more. These map directly to Apollo.io industry tags.</p>
+              <p className="text-[10px] text-paper-4 mt-1.5">Select one or more. These map directly to Apollo.io industry tags.</p>
             </div>
 
             <div>
@@ -281,7 +281,7 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
         <div>
           <label className={labelCls}>
             Target Location
-            <span className="text-slate-600 normal-case font-normal tracking-normal ml-1">— type any location, AI will set the boundary</span>
+            <span className="text-paper-4 normal-case font-normal tracking-normal ml-1">— type any location, AI will set the boundary</span>
           </label>
 
           <div className="flex gap-2">
@@ -319,8 +319,8 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
                 resolvedLocation
                   ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30'
                   : resolving
-                    ? 'bg-violet-600/20 text-violet-300 border border-violet-500/30'
-                    : 'bg-violet-600 text-white hover:bg-violet-500'
+                    ? 'bg-signal-soft text-signal border border-signal'
+                    : 'bg-signal text-ink-0 text-paper hover:bg-paper hover:text-ink-0'
               } disabled:opacity-50`}
             >
               {resolving ? (
@@ -344,8 +344,8 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
             <div className="mt-2 p-3 bg-emerald-500/5 border border-emerald-500/15 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-white">{resolvedLocation.city}, {resolvedLocation.state}</p>
-                  <p className="text-[10px] text-slate-500 mt-0.5 font-mono">
+                  <p className="text-sm font-semibold text-paper">{resolvedLocation.city}, {resolvedLocation.state}</p>
+                  <p className="text-[10px] text-paper-4 mt-0.5 font-mono">
                     bbox: {resolvedLocation.bbox.lat1.toFixed(4)},{resolvedLocation.bbox.lon1.toFixed(4)} to {resolvedLocation.bbox.lat2.toFixed(4)},{resolvedLocation.bbox.lon2.toFixed(4)}
                   </p>
                 </div>
@@ -356,7 +356,7 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
                     setLocationText('');
                     inputRef.current?.focus();
                   }}
-                  className="text-xs text-slate-500 hover:text-white transition-colors px-2 py-1 rounded hover:bg-white/5"
+                  className="text-xs text-paper-4 hover:text-paper transition-colors px-2 py-1 rounded hover:bg-ink-2"
                 >
                   Change
                 </button>
@@ -365,14 +365,14 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
           )}
 
           {!resolvedLocation && !resolveError && locationText.length > 0 && (
-            <p className="text-[10px] text-slate-600 mt-1.5">Press Enter or click Resolve to set the search boundary via AI.</p>
+            <p className="text-[10px] text-paper-4 mt-1.5">Press Enter or click Resolve to set the search boundary via AI.</p>
           )}
         </div>
 
         <div>
           <label className={labelCls}>
             Max Businesses to Contact
-            <span className="text-slate-600 normal-case font-normal tracking-normal ml-1">— per run</span>
+            <span className="text-paper-4 normal-case font-normal tracking-normal ml-1">— per run</span>
           </label>
           <select
             value={form.maxProspects}
@@ -388,7 +388,7 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
           </select>
         </div>
 
-        <p className="text-[10px] text-slate-500 bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2">
+        <p className="text-[10px] text-paper-4 bg-ink-2 border border-rule rounded-lg px-3 py-2">
           Emails are configured after campaign creation using the sequence editor and email builder.
         </p>
 
@@ -398,14 +398,14 @@ export function NewCampaignForm({ prospectorUrl }: { prospectorUrl: string }) {
           <button
             type="submit"
             disabled={loading || !resolvedLocation}
-            className="px-5 py-2.5 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-500 transition-colors disabled:opacity-50"
+            className="px-5 py-2.5 bg-signal text-ink-0 text-paper text-sm font-semibold rounded-lg hover:bg-paper hover:text-ink-0 transition-colors disabled:opacity-50"
           >
             {loading ? 'Creating...' : 'Create & Run Campaign'}
           </button>
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="px-5 py-2.5 bg-white/5 text-slate-400 text-sm font-medium rounded-lg hover:bg-white/10 hover:text-white transition-colors border border-white/10"
+            className="px-5 py-2.5 bg-ink-2 text-paper-3 text-sm font-medium rounded-lg hover:bg-ink-3 hover:text-paper transition-colors border border-rule"
           >
             Cancel
           </button>

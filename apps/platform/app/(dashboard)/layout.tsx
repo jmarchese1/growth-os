@@ -6,14 +6,12 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   LayoutDashboard, Building2, BarChart3, Calendar, Crosshair,
   Mail, Users, FileText, Download, Globe, Settings as SettingsIcon,
-  Plug, LogOut, ChevronLeft, Command,
+  Plug, LogOut, ChevronLeft, Command, Zap,
 } from 'lucide-react';
 import NotificationBell from '../../components/NotificationBell';
+import { AgentStatusWidget } from '../../components/AgentStatusWidget';
 import { useSession } from '../../components/auth/session-provider';
-import { CubeyChat } from '../../components/ui/cubey-chat';
 import { createSupabaseBrowserClient } from '../../lib/supabase/client';
-
-const PLATFORM_API = process.env['NEXT_PUBLIC_API_URL'] ?? 'https://embedoapi-production.up.railway.app';
 
 type NavItemT = { href: string; label: string; icon: React.ComponentType<{ className?: string }> };
 type NavSection = { numeral: string; section: string; items: NavItemT[] };
@@ -21,12 +19,11 @@ type NavSection = { numeral: string; section: string; items: NavItemT[] };
 const NAV: NavSection[] = [
   {
     numeral: 'I',
-    section: 'Overview',
+    section: 'Agent',
     items: [
+      { href: '/agent',      label: 'Agent',      icon: Zap },
       { href: '/',           label: 'Dashboard',  icon: LayoutDashboard },
-      { href: '/businesses', label: 'Businesses', icon: Building2 },
       { href: '/analytics',  label: 'Analytics',  icon: BarChart3 },
-      { href: '/calendar',   label: 'Calendar',   icon: Calendar },
     ],
   },
   {
@@ -40,6 +37,14 @@ const NAV: NavSection[] = [
   },
   {
     numeral: 'III',
+    section: 'Clients',
+    items: [
+      { href: '/businesses', label: 'Businesses', icon: Building2 },
+      { href: '/calendar',   label: 'Calendar',   icon: Calendar },
+    ],
+  },
+  {
+    numeral: 'IV',
     section: 'Tools',
     items: [
       { href: '/email-templates', label: 'Templates', icon: FileText },
@@ -48,7 +53,7 @@ const NAV: NavSection[] = [
     ],
   },
   {
-    numeral: 'IV',
+    numeral: 'V',
     section: 'Account',
     items: [
       { href: '/settings',     label: 'Settings',     icon: SettingsIcon },
@@ -226,13 +231,8 @@ function TopBar({ path }: { path: string }) {
         </span>
       </div>
 
-      {/* Center — ticker */}
-      <div className="hidden lg:flex items-center gap-6 font-mono text-[10px] tracking-micro uppercase text-paper-3">
-        <span className="flex items-center gap-2">
-          <span className="w-1.5 h-1.5 bg-signal signal-dot relative" />
-          <span>All systems nominal</span>
-        </span>
-      </div>
+      {/* Center intentionally left bare — the agent widget bottom-right carries status */}
+      <div className="flex-1" />
 
       {/* Right — time + actions */}
       <div className="flex items-center gap-5">
@@ -285,41 +285,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setSidebarWidth((w) => (w <= COLLAPSED_WIDTH + 10 ? DEFAULT_WIDTH : COLLAPSED_WIDTH));
   }, []);
 
-  // Cubey context
-  const [platformContext, setPlatformContext] = useState('');
-  useEffect(() => {
-    async function fetchContext() {
-      try {
-        const [bizRes, campaignRes] = await Promise.all([
-          fetch(`${PLATFORM_API}/businesses?limit=100`).catch(() => null),
-          fetch(`${PLATFORM_API}/campaigns?limit=20`).catch(() => null),
-        ]);
-        const lines: string[] = [];
-        if (bizRes?.ok) {
-          const bizData = await bizRes.json();
-          const businesses = bizData.businesses ?? bizData ?? [];
-          lines.push(`Total businesses onboarded: ${businesses.length}`);
-          if (businesses.length > 0) {
-            const names = businesses.slice(0, 10).map((b: { name: string; status: string }) => `${b.name} (${b.status})`);
-            lines.push(`Recent businesses: ${names.join(', ')}`);
-          }
-        }
-        if (campaignRes?.ok) {
-          const campData = await campaignRes.json();
-          const campaigns = campData.campaigns ?? campData ?? [];
-          lines.push(`Active outbound campaigns: ${campaigns.length}`);
-          for (const c of campaigns.slice(0, 5)) {
-            lines.push(`Campaign "${c.name ?? c.id}": ${c.status ?? 'unknown'}, ${c.prospectCount ?? 0} prospects, targeting ${c.targetCity ?? 'unknown city'}`);
-          }
-        }
-        if (lines.length > 0) setPlatformContext(lines.join('\n'));
-      } catch { /* non-critical */ }
-    }
-    fetchContext();
-    const interval = setInterval(fetchContext, 120_000);
-    return () => clearInterval(interval);
-  }, []);
-
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
       if (!isDragging.current) return;
@@ -364,14 +329,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </main>
       </div>
 
-      {/* Cubey retained */}
-      <CubeyChat
-        mode="support"
-        businessId="embedo-platform"
-        headerTitle="Cubey"
-        welcomeMessage="Operator here. Ask me about campaigns, prospects, leads — anything in the CRM."
-        systemContext={platformContext}
-      />
+      {/* Agent status — floating */}
+      <AgentStatusWidget />
     </div>
   );
 }

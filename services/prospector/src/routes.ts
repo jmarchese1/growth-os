@@ -11,6 +11,7 @@ import { findEmailViaHunter, extractDomain as extractHunterDomain } from './scra
 import { findEmailViaApollo, extractDomain as extractApolloDomain, discoverViaApollo, verifyEmailViaApollo } from './scraper/apollo.js';
 import { isDuplicate } from './dedup/isDuplicate.js';
 import { scoreWebsite } from './scraper/website-score.js';
+import { registerAgentRoutes } from './agent/routes.js';
 import { env } from './config.js';
 
 const log = createLogger('prospector:routes');
@@ -67,6 +68,9 @@ const createCampaignSchema = z.object({
 
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.get('/health', async () => ({ ok: true, service: 'prospector' }));
+
+  // ─── Agent routes (autonomous outreach orchestrator) ─────────────────────
+  await registerAgentRoutes(app);
 
   // ─── AI Location Resolver ────────────────────────────────────────────────
   // Two-step: Haiku parses user intent → Geoapify geocoder provides precise coords + bbox

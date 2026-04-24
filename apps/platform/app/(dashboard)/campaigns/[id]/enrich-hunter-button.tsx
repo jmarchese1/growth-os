@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -41,7 +41,7 @@ export function EnrichHunterButton({ campaignId, prospectorUrl, newCount }: Prop
         onClick={run}
         disabled={loading || newCount === 0}
         title={newCount === 0 ? 'No prospects without emails' : `Find emails for ${newCount} prospects via Hunter.io`}
-        className="px-3 py-1.5 bg-white/5 border border-white/10 text-slate-400 text-xs font-medium rounded-lg hover:bg-white/10 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+        className="px-3 py-1.5 bg-ink-2 border border-rule text-paper-3 text-xs font-medium rounded-lg hover:bg-ink-3 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
       >
         {loading ? (
           <>

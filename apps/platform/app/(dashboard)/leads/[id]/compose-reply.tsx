@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -87,13 +87,13 @@ export function ComposeReply({
   if (!prospectEmail) return null;
 
   return (
-    <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-6">
+    <div className="bg-ink-2 border border-rule rounded-xl p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Reply to {prospectName}</h3>
+        <h3 className="text-xs font-semibold text-paper-4 uppercase tracking-widest">Reply to {prospectName}</h3>
         {!expanded && (
           <button
             onClick={() => setExpanded(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-violet-400 bg-violet-500/10 border border-violet-500/20 rounded-lg hover:bg-violet-500/20 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-signal bg-signal-soft border border-rule rounded-lg hover:bg-signal-soft transition-colors"
           >
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
               <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
@@ -114,12 +114,12 @@ export function ComposeReply({
               value={aiPrompt}
               onChange={(e) => setAiPrompt(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAiGenerate()}
-              className="flex-1 px-3 py-2 text-sm text-white bg-white/[0.04] border border-white/[0.08] rounded-lg placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-violet-500/40 focus:border-violet-500/40"
+              className="flex-1 px-3 py-2 text-sm text-white bg-ink-2 border border-rule rounded-lg placeholder:text-paper-4 focus:outline-none focus:ring-1 focus:ring-signal/40 focus:border-signal"
             />
             <button
               onClick={handleAiGenerate}
               disabled={aiGenerating || !aiPrompt.trim()}
-              className="px-3 py-2 text-xs font-medium text-violet-400 bg-violet-500/10 border border-violet-500/20 rounded-lg hover:bg-violet-500/20 transition-colors disabled:opacity-50 whitespace-nowrap"
+              className="px-3 py-2 text-xs font-medium text-signal bg-signal-soft border border-rule rounded-lg hover:bg-signal-soft transition-colors disabled:opacity-50 whitespace-nowrap"
             >
               {aiGenerating ? 'Generating...' : 'AI Draft'}
             </button>
@@ -131,7 +131,7 @@ export function ComposeReply({
             placeholder="Subject"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            className="w-full px-3 py-2.5 text-sm text-white bg-white/[0.04] border border-white/[0.08] rounded-lg placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-violet-500/40 focus:border-violet-500/40"
+            className="w-full px-3 py-2.5 text-sm text-white bg-ink-2 border border-rule rounded-lg placeholder:text-paper-4 focus:outline-none focus:ring-1 focus:ring-signal/40 focus:border-signal"
           />
 
           {/* Body */}
@@ -140,11 +140,11 @@ export function ComposeReply({
             value={body}
             onChange={(e) => setBody(e.target.value)}
             rows={6}
-            className="w-full px-3 py-2.5 text-sm text-white bg-white/[0.04] border border-white/[0.08] rounded-lg placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-violet-500/40 focus:border-violet-500/40 resize-y"
+            className="w-full px-3 py-2.5 text-sm text-white bg-ink-2 border border-rule rounded-lg placeholder:text-paper-4 focus:outline-none focus:ring-1 focus:ring-signal/40 focus:border-signal resize-y"
           />
 
           <div className="flex items-center justify-between">
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-paper-4">
               To: {prospectEmail}
             </p>
             <div className="flex items-center gap-2">
@@ -152,14 +152,14 @@ export function ComposeReply({
               {sent && <p className="text-xs text-emerald-400">Sent!</p>}
               <button
                 onClick={() => setExpanded(false)}
-                className="px-3 py-1.5 text-xs font-medium text-slate-400 bg-white/[0.04] border border-white/[0.08] rounded-lg hover:bg-white/[0.08] transition-colors"
+                className="px-3 py-1.5 text-xs font-medium text-paper-3 bg-ink-2 border border-rule rounded-lg hover:bg-ink-3 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSend}
                 disabled={sending || !subject.trim() || !body.trim()}
-                className="px-4 py-1.5 text-xs font-medium text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors disabled:opacity-50"
+                className="px-4 py-1.5 text-xs font-medium text-white bg-signal text-ink-0 rounded-lg hover:bg-paper hover:text-ink-0 transition-colors disabled:opacity-50"
               >
                 {sending ? 'Sending...' : 'Send Reply'}
               </button>

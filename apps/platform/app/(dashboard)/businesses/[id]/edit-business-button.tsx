@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -107,15 +107,15 @@ export function EditBusinessButton({ business }: Props) {
     }
   }
 
-  const inputCls = 'w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 transition-colors';
-  const labelCls = 'block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wide';
+  const inputCls = 'w-full px-3 py-2.5 bg-ink-2 border border-rule rounded-lg text-sm text-white placeholder:text-paper-4 focus:outline-none focus:ring-1 focus:ring-signal focus:border-signal transition-colors';
+  const labelCls = 'block text-xs font-semibold text-paper-3 mb-1.5 uppercase tracking-wide';
   const selectCls = inputCls + ' cursor-pointer';
 
   return (
     <>
       <button
         onClick={() => setOpen(true)}
-        className="px-4 py-2 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-500 transition-colors"
+        className="px-4 py-2 bg-signal text-ink-0 text-white text-sm font-semibold rounded-lg hover:bg-paper hover:text-ink-0 transition-colors"
       >
         Edit Business
       </button>
@@ -123,22 +123,22 @@ export function EditBusinessButton({ business }: Props) {
       {mounted && open && createPortal(
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <div className="relative bg-[#0f1117] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+          <div className="relative bg-[#171717] border border-rule rounded-2xl w-full max-w-2xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
 
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 flex-shrink-0">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-rule flex-shrink-0">
               <div>
                 <h2 className="text-base font-semibold text-white">Edit Business</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Update business information and integrations</p>
+                <p className="text-xs text-paper-4 mt-0.5">Update business information and integrations</p>
               </div>
-              <button onClick={() => setOpen(false)} className="text-slate-500 hover:text-white transition-colors text-xl leading-none">✕</button>
+              <button onClick={() => setOpen(false)} className="text-paper-4 hover:text-white transition-colors text-xl leading-none">✕</button>
             </div>
 
             {/* Body */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {/* Basic Info */}
               <div className="space-y-4">
-                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Basic Info</h3>
+                <h3 className="text-xs font-semibold text-paper-3 uppercase tracking-wide">Basic Info</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className={labelCls}>Name</label>
@@ -174,7 +174,7 @@ export function EditBusinessButton({ business }: Props) {
 
               {/* Contact Info */}
               <div className="space-y-4">
-                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Contact</h3>
+                <h3 className="text-xs font-semibold text-paper-3 uppercase tracking-wide">Contact</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className={labelCls}>Phone</label>
@@ -193,7 +193,7 @@ export function EditBusinessButton({ business }: Props) {
 
               {/* Location */}
               <div className="space-y-4">
-                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Location</h3>
+                <h3 className="text-xs font-semibold text-paper-3 uppercase tracking-wide">Location</h3>
                 <div className="space-y-4">
                   <div>
                     <label className={labelCls}>Street</label>
@@ -218,7 +218,7 @@ export function EditBusinessButton({ business }: Props) {
 
               {/* Integrations */}
               <div className="space-y-4">
-                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Integrations</h3>
+                <h3 className="text-xs font-semibold text-paper-3 uppercase tracking-wide">Integrations</h3>
                 <div className="space-y-4">
                   <div>
                     <label className={labelCls}>Twilio Phone Number</label>
@@ -241,17 +241,17 @@ export function EditBusinessButton({ business }: Props) {
             </div>
 
             {/* Footer */}
-            <div className="flex gap-3 px-6 py-4 border-t border-white/10 flex-shrink-0">
+            <div className="flex gap-3 px-6 py-4 border-t border-rule flex-shrink-0">
               <button
                 onClick={handleSave}
                 disabled={loading}
-                className="px-5 py-2 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-500 transition-colors disabled:opacity-50"
+                className="px-5 py-2 bg-signal text-ink-0 text-white text-sm font-semibold rounded-lg hover:bg-paper hover:text-ink-0 transition-colors disabled:opacity-50"
               >
                 {loading ? 'Saving…' : 'Save Changes'}
               </button>
               <button
                 onClick={() => setOpen(false)}
-                className="px-5 py-2 bg-white/5 text-slate-400 text-sm font-medium rounded-lg hover:bg-white/10 hover:text-white transition-colors border border-white/10"
+                className="px-5 py-2 bg-ink-2 text-paper-3 text-sm font-medium rounded-lg hover:bg-ink-3 hover:text-white transition-colors border border-rule"
               >
                 Cancel
               </button>

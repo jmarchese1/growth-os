@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -198,8 +198,8 @@ export function PendingSequence({
         </div>
 
         <div className="p-4 space-y-1">
-          <p className="text-xs text-slate-400 mb-3">
-            These emails will send automatically. Editing a step updates it for all prospects in <span className="text-violet-400 font-medium">{campaignName}</span>.
+          <p className="text-xs text-paper-3 mb-3">
+            These emails will send automatically. Editing a step updates it for all prospects in <span className="text-signal font-medium">{campaignName}</span>.
           </p>
 
           {feedback && !editingStep && (
@@ -216,7 +216,7 @@ export function PendingSequence({
             return (
               <div
                 key={step.stepNumber}
-                className="flex items-center gap-3 px-4 py-3 bg-white/[0.03] hover:bg-white/[0.06] rounded-lg border border-white/5 transition-colors group"
+                className="flex items-center gap-3 px-4 py-3 bg-ink-2 hover:bg-ink-2 rounded-lg border border-rule-soft transition-colors group"
               >
                 {/* Step number */}
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
@@ -231,10 +231,10 @@ export function PendingSequence({
                     {step.subject ?? `Follow-up #${step.stepNumber - 1}`}
                   </p>
                   <div className="flex items-center gap-3 mt-0.5">
-                    <span className="text-[10px] text-slate-500">
+                    <span className="text-[10px] text-paper-4">
                       {step.delayHours}h after first contact
                     </span>
-                    <span className="text-[10px] text-slate-600">|</span>
+                    <span className="text-[10px] text-paper-4">|</span>
                     <span className={`text-[10px] font-medium ${isFuture ? 'text-sky-400' : 'text-sky-400'}`}>
                       {isFuture ? `Fires ${fmtDate(fireAt.toISOString())}` : 'Sending soon'}
                     </span>
@@ -254,7 +254,7 @@ export function PendingSequence({
                 <div className="flex items-center gap-1 opacity-70 hover:opacity-100 transition-opacity flex-shrink-0">
                   <button
                     onClick={() => openEdit(step)}
-                    className="p-1.5 rounded-md bg-white/5 border border-white/10 text-slate-400 hover:text-violet-400 hover:bg-violet-500/10 hover:border-violet-500/30 transition-colors"
+                    className="p-1.5 rounded-md bg-ink-2 border border-rule text-paper-3 hover:text-signal hover:bg-signal-soft hover:border-signal transition-colors"
                     title="Edit step"
                   >
                     <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
@@ -264,7 +264,7 @@ export function PendingSequence({
                   <button
                     onClick={() => handleDeleteStep(step.stepNumber)}
                     disabled={isDeleting}
-                    className="p-1.5 rounded-md bg-white/5 border border-white/10 text-slate-400 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/30 transition-colors disabled:opacity-50"
+                    className="p-1.5 rounded-md bg-ink-2 border border-rule text-paper-3 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/30 transition-colors disabled:opacity-50"
                     title="Remove step"
                   >
                     {isDeleting ? (
@@ -286,13 +286,13 @@ export function PendingSequence({
       {editingStep && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setEditingStep(null)} />
-          <div className="relative bg-[#0f1117] border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl">
+          <div className="relative bg-[#171717] border border-rule rounded-2xl w-full max-w-lg shadow-2xl">
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-rule">
               <h3 className="text-sm font-semibold text-white">
                 Edit Step {editingStep.stepNumber}
               </h3>
-              <button onClick={() => setEditingStep(null)} className="text-slate-500 hover:text-white transition-colors">
+              <button onClick={() => setEditingStep(null)} className="text-paper-4 hover:text-white transition-colors">
                 <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                   <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
@@ -321,7 +321,7 @@ export function PendingSequence({
                     value={aiPrompt}
                     onChange={(e) => setAiPrompt(e.target.value)}
                     placeholder="e.g. make it shorter, add urgency, mention a case study..."
-                    className="flex-1 px-2.5 py-1.5 bg-white/5 border border-white/10 rounded text-xs text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="flex-1 px-2.5 py-1.5 bg-ink-2 border border-rule rounded text-xs text-white placeholder:text-paper-4 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAiRewrite(); } }}
                   />
                   <button
@@ -340,45 +340,45 @@ export function PendingSequence({
                     {aiGenerating ? 'Generating...' : 'Rewrite'}
                   </button>
                 </div>
-                <p className="text-[10px] text-slate-600 mt-1.5">Claude will rewrite the subject and body based on your instructions</p>
+                <p className="text-[10px] text-paper-4 mt-1.5">Claude will rewrite the subject and body based on your instructions</p>
               </div>
 
               {/* Subject */}
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">Subject</label>
+                <label className="block text-xs font-medium text-paper-3 mb-1">Subject</label>
                 <input
                   type="text"
                   value={editSubject}
                   onChange={(e) => setEditSubject(e.target.value)}
                   placeholder="Follow-up subject..."
-                  className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                  className="w-full px-3 py-2.5 bg-ink-2 border border-rule rounded-lg text-sm text-white placeholder:text-paper-4 focus:outline-none focus:ring-1 focus:ring-signal"
                 />
-                <p className="text-[10px] text-slate-600 mt-1">
+                <p className="text-[10px] text-paper-4 mt-1">
                   Use {'{{businessName}}'} for the prospect&apos;s name
                 </p>
               </div>
 
               {/* Delay */}
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">Delay (hours after first contact)</label>
+                <label className="block text-xs font-medium text-paper-3 mb-1">Delay (hours after first contact)</label>
                 <input
                   type="number"
                   value={editDelay}
                   onChange={(e) => setEditDelay(Number(e.target.value))}
                   min={0}
-                  className="w-32 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-1 focus:ring-violet-500"
+                  className="w-32 px-3 py-2.5 bg-ink-2 border border-rule rounded-lg text-sm text-white focus:outline-none focus:ring-1 focus:ring-signal"
                 />
               </div>
 
               {/* Body HTML */}
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">Email Body (HTML)</label>
+                <label className="block text-xs font-medium text-paper-3 mb-1">Email Body (HTML)</label>
                 <textarea
                   value={editBody}
                   onChange={(e) => setEditBody(e.target.value)}
                   rows={8}
                   placeholder="<p>Hi {{businessName}},</p>..."
-                  className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-violet-500 font-mono resize-y"
+                  className="w-full px-3 py-2.5 bg-ink-2 border border-rule rounded-lg text-sm text-white placeholder:text-paper-4 focus:outline-none focus:ring-1 focus:ring-signal font-mono resize-y"
                 />
               </div>
 
@@ -390,17 +390,17 @@ export function PendingSequence({
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-white/10">
+            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-rule">
               <button
                 onClick={() => setEditingStep(null)}
-                className="px-3 py-2 text-xs text-slate-400 hover:text-white transition-colors"
+                className="px-3 py-2 text-xs text-paper-3 hover:text-white transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveEdit}
                 disabled={saving}
-                className="px-4 py-2 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-500 disabled:opacity-50 transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-signal text-ink-0 text-white text-sm font-semibold rounded-lg hover:bg-paper hover:text-ink-0 disabled:opacity-50 transition-colors flex items-center gap-2"
               >
                 {saving ? (
                   <>

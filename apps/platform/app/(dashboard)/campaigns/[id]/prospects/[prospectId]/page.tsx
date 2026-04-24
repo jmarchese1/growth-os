@@ -87,7 +87,7 @@ function fmt(iso: string | null | undefined): string {
 const STATUS_MAP: Record<ProspectStatus, { label: string; bg: string; text: string; dot: string }> = {
   NEW:          { label: 'New',       bg: 'bg-slate-500/10',   text: 'text-paper-3',   dot: 'bg-slate-500' },
   ENRICHED:     { label: 'Has Email', bg: 'bg-blue-500/10',    text: 'text-blue-400',    dot: 'bg-blue-400' },
-  CONTACTED:    { label: 'Emailed',   bg: 'bg-signal-soft',  text: 'text-signal',  dot: 'bg-violet-400' },
+  CONTACTED:    { label: 'Emailed',   bg: 'bg-signal-soft',  text: 'text-signal',  dot: 'bg-signal' },
   OPENED:       { label: 'Opened',    bg: 'bg-amber-500/10',   text: 'text-amber-400',   dot: 'bg-amber-400' },
   REPLIED:      { label: 'Replied',   bg: 'bg-emerald-500/10', text: 'text-emerald-400', dot: 'bg-emerald-400' },
   CONVERTED:    { label: 'Converted', bg: 'bg-green-500/10',   text: 'text-green-400',   dot: 'bg-green-400' },
@@ -109,8 +109,8 @@ const SOURCE_LABELS: Record<string, { label: string; color: string }> = {
   geoapify:      { label: 'Geoapify',  color: 'text-sky-500/50' },
   website_scrape:{ label: 'Website',   color: 'text-emerald-500/50' },
   brave_search:  { label: 'Brave',     color: 'text-orange-400/50' },
-  apollo:        { label: 'Apollo.io', color: 'text-purple-400/60' },
-  hunter:        { label: 'Hunter.io', color: 'text-purple-400/50' }, // legacy
+  apollo:        { label: 'Apollo.io', color: 'text-paper-3' },
+  hunter:        { label: 'Hunter.io', color: 'text-signal/50' }, // legacy
 };
 
 function SourceBadge({ source }: { source: string | null | undefined }) {
@@ -393,7 +393,7 @@ export default async function ProspectDetailPage({ params }: {
               }
             }
             for (const msg of prospect.messages) {
-              if (msg.sentAt) events.push({ date: msg.sentAt, label: msg.stepNumber === 1 ? 'Cold email sent' : `Follow-up ${(msg.stepNumber ?? 1) - 1} sent`, detail: msg.subject ?? undefined, color: 'bg-violet-400' });
+              if (msg.sentAt) events.push({ date: msg.sentAt, label: msg.stepNumber === 1 ? 'Cold email sent' : `Follow-up ${(msg.stepNumber ?? 1) - 1} sent`, detail: msg.subject ?? undefined, color: 'bg-signal' });
               if (msg.openedAt) events.push({ date: msg.openedAt, label: 'Email opened', color: 'bg-amber-400' });
               if (msg.repliedAt) events.push({ date: msg.repliedAt, label: 'Reply received', detail: msg.replyBody?.slice(0, 80) ?? undefined, color: 'bg-emerald-400' });
             }

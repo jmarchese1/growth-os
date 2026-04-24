@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -92,7 +92,7 @@ export function SendButton({ prospectId, prospectorUrl, nextFollowUpAt, status }
     <button
       onClick={send}
       disabled={state === 'sending'}
-      className="text-xs px-3 py-1.5 rounded-lg bg-violet-600 text-white hover:bg-violet-500 border border-violet-500/50 transition-colors disabled:opacity-50 font-medium"
+      className="text-xs px-3 py-1.5 rounded-lg bg-signal text-ink-0 text-white hover:bg-paper hover:text-ink-0 border border-signal transition-colors disabled:opacity-50 font-medium"
     >
       {state === 'sending' ? 'Sending…' : 'Send Now'}
     </button>

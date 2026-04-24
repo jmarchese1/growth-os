@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -27,7 +27,7 @@ export function DeleteCampaignButton({ campaignId, campaignName, prospectorUrl }
   if (confirm) {
     return (
       <div className="flex items-center gap-1.5">
-        <span className="text-[10px] text-slate-400 whitespace-nowrap">Delete &ldquo;{campaignName}&rdquo;?</span>
+        <span className="text-[10px] text-paper-3 whitespace-nowrap">Delete &ldquo;{campaignName}&rdquo;?</span>
         <button
           onClick={handleDelete}
           disabled={deleting}
@@ -37,7 +37,7 @@ export function DeleteCampaignButton({ campaignId, campaignName, prospectorUrl }
         </button>
         <button
           onClick={() => setConfirm(false)}
-          className="text-xs px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 hover:text-white transition-colors"
+          className="text-xs px-2.5 py-1.5 rounded-lg bg-ink-2 border border-rule text-paper-3 hover:text-white transition-colors"
         >
           Cancel
         </button>
@@ -48,7 +48,7 @@ export function DeleteCampaignButton({ campaignId, campaignName, prospectorUrl }
   return (
     <button
       onClick={() => setConfirm(true)}
-      className="text-xs px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-600 hover:text-red-400 hover:border-red-500/25 transition-colors"
+      className="text-xs px-2.5 py-1.5 rounded-lg bg-ink-2 border border-rule text-paper-4 hover:text-red-400 hover:border-red-500/25 transition-colors"
       title="Delete campaign"
     >
       Delete

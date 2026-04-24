@@ -78,7 +78,7 @@ function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { dot: string; label: string; bg: string; text: string }> = {
     NEW:            { dot: 'bg-slate-500',   label: 'New',             bg: 'bg-slate-500/10',   text: 'text-paper-3' },
     ENRICHED:       { dot: 'bg-blue-400',    label: 'Has Email',       bg: 'bg-blue-500/10',    text: 'text-blue-400' },
-    CONTACTED:      { dot: 'bg-violet-400',  label: 'Emailed',         bg: 'bg-signal-soft',  text: 'text-signal' },
+    CONTACTED:      { dot: 'bg-signal',  label: 'Emailed',         bg: 'bg-signal-soft',  text: 'text-signal' },
     OPENED:         { dot: 'bg-amber-400',   label: 'Opened',          bg: 'bg-amber-500/10',   text: 'text-amber-400' },
     REPLIED:        { dot: 'bg-emerald-400', label: 'Replied',         bg: 'bg-emerald-500/10', text: 'text-emerald-400' },
     MEETING_BOOKED: { dot: 'bg-cyan-400',    label: 'Meeting Booked',  bg: 'bg-cyan-500/10',    text: 'text-cyan-400' },
@@ -164,15 +164,6 @@ export default async function EmailDetailPage({ params }: {
 
   return (
     <div className="relative p-8 animate-fade-up min-h-screen">
-      {/* Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute -top-20 right-[10%] w-[380px] h-[380px] opacity-[0.05]">
-          <div className="absolute inset-0 rounded-full border border-violet-400 animate-orbital-slow" />
-          <div className="absolute inset-[80px] rounded-full border border-indigo-400 animate-orbital-reverse" />
-        </div>
-        <div className="absolute top-10 right-16 w-64 h-64 rounded-full bg-signal text-ink-0/8 blur-[90px] animate-float-orb" />
-        <div className="absolute bottom-20 left-10 w-48 h-48 rounded-full bg-indigo-600/6 blur-[70px] animate-float-orb-b" />
-      </div>
 
       <div className="relative z-10 space-y-6 max-w-6xl">
         {/* Breadcrumb + header */}
@@ -239,7 +230,7 @@ export default async function EmailDetailPage({ params }: {
                   <div className="flex items-center gap-2">
                     <a href={`mailto:${prospect.email}`} className="text-sm text-signal hover:text-signal font-mono transition-colors">{prospect.email}</a>
                     {prospect.emailSource && (
-                      <span className="text-[8px] font-bold uppercase tracking-wider text-purple-400/50 bg-purple-400/5 px-1.5 py-0.5 rounded">via {prospect.emailSource}</span>
+                      <span className="text-[8px] font-bold uppercase tracking-wider text-signal/50 bg-signal/5 px-1.5 py-0.5 rounded">via {prospect.emailSource}</span>
                     )}
                   </div>
                 ) : (
@@ -249,7 +240,7 @@ export default async function EmailDetailPage({ params }: {
               {prospect.phone && (
                 <div>
                   <p className="text-[9px] text-paper-4 uppercase tracking-wider font-semibold">Phone</p>
-                  <a href={`tel:${prospect.phone}`} className="text-sm text-slate-200 font-mono">{prospect.phone}</a>
+                  <a href={`tel:${prospect.phone}`} className="text-sm text-paper font-mono">{prospect.phone}</a>
                 </div>
               )}
               {prospect.website && (
@@ -286,11 +277,11 @@ export default async function EmailDetailPage({ params }: {
               </div>
               <div>
                 <p className="text-[9px] text-paper-4 uppercase tracking-wider font-semibold">Target</p>
-                <p className="text-sm text-slate-200">{prospect.campaign.targetCity} · {prospect.campaign.targetIndustry}</p>
+                <p className="text-sm text-paper">{prospect.campaign.targetCity} · {prospect.campaign.targetIndustry}</p>
               </div>
               <div>
                 <p className="text-[9px] text-paper-4 uppercase tracking-wider font-semibold">Sequence</p>
-                <p className="text-sm text-slate-200">{sequenceSteps.length > 0 ? `${sequenceSteps.length + 1} steps` : '1 step (cold email only)'}</p>
+                <p className="text-sm text-paper">{sequenceSteps.length > 0 ? `${sequenceSteps.length + 1} steps` : '1 step (cold email only)'}</p>
               </div>
               <div>
                 <p className="text-[9px] text-paper-4 uppercase tracking-wider font-semibold">First Contact</p>
@@ -314,7 +305,7 @@ export default async function EmailDetailPage({ params }: {
               Email Stats
             </h3>
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-violet-500/5 rounded-lg p-3 border border-violet-500/10">
+              <div className="bg-signal-soft rounded-lg p-3 border border-rule">
                 <p className="text-[9px] text-paper-4 uppercase tracking-wider font-semibold">Sent</p>
                 <p className="text-2xl font-bold text-signal">{sentMessages.length}</p>
               </div>
@@ -379,7 +370,7 @@ export default async function EmailDetailPage({ params }: {
             </div>
             <div className="flex items-center gap-4 text-[10px] text-paper-4">
               <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-violet-400" /> Sent
+                <span className="w-1.5 h-1.5 rounded-full bg-signal" /> Sent
               </span>
               <span className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400" /> Opened

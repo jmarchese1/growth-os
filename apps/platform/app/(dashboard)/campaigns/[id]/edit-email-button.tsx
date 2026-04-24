@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -173,8 +173,8 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
     }
   }
 
-  const inputCls = 'w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 transition-colors';
-  const labelCls = 'block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wide';
+  const inputCls = 'w-full px-3 py-2.5 bg-ink-2 border border-rule rounded-lg text-sm text-paper placeholder:text-paper-4 focus:outline-none focus:ring-1 focus:ring-signal focus:border-signal transition-colors';
+  const labelCls = 'block text-xs font-semibold text-paper-3 mb-1.5 uppercase tracking-wide';
 
   const tabs = [
     { label: 'Step 1', sub: 'Cold Email', active: true },
@@ -192,7 +192,7 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
     <>
       <button
         onClick={() => setOpen(true)}
-        className="px-3 py-1.5 bg-violet-600/20 border border-violet-500/30 text-violet-300 text-xs font-medium rounded-lg hover:bg-violet-600/30 hover:text-violet-200 transition-colors"
+        className="px-3 py-1.5 bg-signal-soft border border-signal text-signal text-xs font-medium rounded-lg hover:bg-signal-soft hover:text-signal transition-colors"
       >
         Edit Emails
       </button>
@@ -200,17 +200,17 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
       {mounted && open && createPortal(
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <div className="relative bg-[#0f1117] border border-white/10 rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl">
+          <div className="relative bg-[#171717] border border-rule rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl">
 
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 flex-shrink-0">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-rule flex-shrink-0">
               <div>
-                <h2 className="text-base font-semibold text-white">Edit Campaign Emails</h2>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <h2 className="text-base font-semibold text-paper">Edit Campaign Emails</h2>
+                <p className="text-xs text-paper-4 mt-0.5">
                   Plain text with variables — signature and unsubscribe added automatically
                 </p>
               </div>
-              <button onClick={() => setOpen(false)} className="text-slate-500 hover:text-white transition-colors text-xl leading-none">&times;</button>
+              <button onClick={() => setOpen(false)} className="text-paper-4 hover:text-paper transition-colors text-xl leading-none">&times;</button>
             </div>
 
             {/* Tabs */}
@@ -222,21 +222,21 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
                   disabled={!tab.active}
                   className={`px-4 py-2 rounded-t-lg text-xs font-semibold border-b-2 transition-colors ${
                     !tab.active
-                      ? 'text-slate-700 border-transparent cursor-not-allowed'
+                      ? 'text-paper-4 border-transparent cursor-not-allowed'
                       : activeTab === i
-                      ? 'text-white border-violet-500 bg-white/5'
-                      : 'text-slate-400 border-transparent hover:text-slate-200 hover:bg-white/5'
+                      ? 'text-paper border-signal bg-ink-2'
+                      : 'text-paper-3 border-transparent hover:text-paper hover:bg-ink-2'
                   }`}
                 >
                   {tab.label}
                   <span className="ml-1.5 text-[10px] font-normal opacity-60">{tab.sub}</span>
-                  {!tab.active && <span className="ml-1.5 text-[10px] text-slate-700">off</span>}
+                  {!tab.active && <span className="ml-1.5 text-[10px] text-paper-4">off</span>}
                 </button>
               ))}
             </div>
 
             {/* Body */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 border-t border-white/10">
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 border-t border-rule">
 
               <div>
                 <label className={labelCls}>Subject</label>
@@ -257,7 +257,7 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
                       type="button"
                       title={v.desc}
                       onClick={() => insertVar(textareaId, v.key, currentBodyValue, setCurrentBody)}
-                      className="px-2 py-1 text-[10px] font-semibold rounded-md bg-violet-500/10 border border-violet-500/20 text-violet-300 hover:bg-violet-500/20 transition-colors"
+                      className="px-2 py-1 text-[10px] font-semibold rounded-md bg-signal-soft border border-rule text-signal hover:bg-signal-soft transition-colors"
                     >
                       {v.label}
                     </button>
@@ -271,7 +271,7 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
                   className={inputCls + ' resize-y leading-relaxed'}
                 />
                 <div className="flex items-center justify-between mt-2 gap-4">
-                  <p className="text-[10px] text-slate-600">
+                  <p className="text-[10px] text-paper-4">
                     Plain text — unsubscribe link added automatically at send time.
                   </p>
                   <div className="flex items-center gap-5 flex-shrink-0">
@@ -302,7 +302,7 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
               {currentBodyValue && (
                 <div>
                   <label className={labelCls}>Preview</label>
-                  <div className="bg-white rounded-xl overflow-hidden border border-white/10">
+                  <div className="bg-white rounded-xl overflow-hidden border border-rule">
                     <iframe
                       srcDoc={textToHtml(applyPreviewVars(currentBodyValue), showSignature)}
                       className="w-full border-0"
@@ -320,17 +320,17 @@ export function EditEmailButton({ campaignId, currentSubject, currentBodyHtml, s
             </div>
 
             {/* Footer */}
-            <div className="flex gap-3 px-6 py-4 border-t border-white/10 flex-shrink-0">
+            <div className="flex gap-3 px-6 py-4 border-t border-rule flex-shrink-0">
               <button
                 onClick={handleSave}
                 disabled={loading}
-                className="px-5 py-2 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-500 transition-colors disabled:opacity-50"
+                className="px-5 py-2 bg-signal text-ink-0 text-paper text-sm font-semibold rounded-lg hover:bg-paper hover:text-ink-0 transition-colors disabled:opacity-50"
               >
                 {loading ? 'Saving...' : 'Save All Emails'}
               </button>
               <button
                 onClick={() => setOpen(false)}
-                className="px-5 py-2 bg-white/5 text-slate-400 text-sm font-medium rounded-lg hover:bg-white/10 hover:text-white transition-colors border border-white/10"
+                className="px-5 py-2 bg-ink-2 text-paper-3 text-sm font-medium rounded-lg hover:bg-ink-3 hover:text-paper transition-colors border border-rule"
               >
                 Cancel
               </button>

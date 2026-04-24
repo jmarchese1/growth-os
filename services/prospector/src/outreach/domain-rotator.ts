@@ -131,3 +131,38 @@ export async function resetDailyCounts(): Promise<void> {
   });
   log.info({ domainsReset: result.count }, 'Daily send counts reset (midnight ET)');
 }
+
+/**
+ * Total sending capacity across all active, verified domains today.
+ */
+export async function getTotalDailyCapacity(): Promise<{
+  totalCapacity: number;
+  totalSentToday: number;
+  remaining: number;
+  domains: Array<{ domain: string; limit: number; sent: number; stage: number }>;
+}> {
+  const domains = await db.sendingDomain.findMany({
+    where: { active: true, verified: true },
+    orderBy: { domain: 'asc' },
+  });
+
+  let totalCapacity = 0;
+  let totalSentToday = 0;
+  const list = domains.map((d) => {
+    totalCapacity += d.dailyLimit;
+    totalSentToday += d.sentToday;
+    return {
+      domain: d.domain,
+      limit: d.dailyLimit,
+      sent: d.sentToday,
+      stage: d.warmupStage,
+    };
+  });
+
+  return {
+    totalCapacity,
+    totalSentToday,
+    remaining: Math.max(0, totalCapacity - totalSentToday),
+    domains: list,
+  };
+}

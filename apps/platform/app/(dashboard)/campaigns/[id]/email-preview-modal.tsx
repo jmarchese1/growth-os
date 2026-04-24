@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 
@@ -22,7 +22,7 @@ export function EmailPreviewModal({ subject, bodyHtml, label = 'View Email' }: P
     <>
       <button
         onClick={(e) => { e.stopPropagation(); setOpen(true); }}
-        className="text-[10px] px-2 py-1 rounded-md bg-white/5 border border-white/10 text-slate-500 hover:text-violet-400 hover:border-violet-500/30 transition-colors whitespace-nowrap"
+        className="text-[10px] px-2 py-1 rounded-md bg-ink-2 border border-rule text-paper-4 hover:text-signal hover:border-signal transition-colors whitespace-nowrap"
       >
         {label}
       </button>
@@ -37,20 +37,20 @@ export function EmailPreviewModal({ subject, bodyHtml, label = 'View Email' }: P
 
           {/* Modal */}
           <div
-            className="relative z-10 w-full max-w-2xl bg-[#0f0c1e] border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+            className="relative z-10 w-full max-w-2xl bg-[#0f0c1e] border border-rule rounded-2xl shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.07]">
               <div>
-                <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-0.5">Email Preview</p>
+                <p className="text-[9px] font-bold text-paper-4 uppercase tracking-widest mb-0.5">Email Preview</p>
                 <p className="text-sm font-semibold text-white truncate max-w-[480px]">
                   {subject ?? '(no subject)'}
                 </p>
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="text-slate-600 hover:text-white transition-colors ml-4 flex-shrink-0"
+                className="text-paper-4 hover:text-white transition-colors ml-4 flex-shrink-0"
               >
                 <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                   <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>

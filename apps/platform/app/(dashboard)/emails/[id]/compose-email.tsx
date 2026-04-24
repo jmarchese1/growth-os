@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -103,7 +103,7 @@ export function ComposeEmail({ prospectId, prospectName, prospectEmail, prospect
     return (
       <button
         onClick={() => setExpanded(true)}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold rounded-xl transition-colors"
+        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-signal text-ink-0 hover:bg-paper hover:text-ink-0 text-white text-sm font-semibold rounded-xl transition-colors"
       >
         <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
           <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
@@ -115,16 +115,16 @@ export function ComposeEmail({ prospectId, prospectName, prospectEmail, prospect
   }
 
   return (
-    <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-violet-500/30 overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-violet-600/10">
+    <div className="bg-ink-2 backdrop-blur-sm rounded-xl border border-signal overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-rule bg-signal-soft">
         <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-violet-400">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-signal">
             <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
             <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
           </svg>
           New Email
         </h3>
-        <button onClick={() => setExpanded(false)} className="text-slate-500 hover:text-white transition-colors">
+        <button onClick={() => setExpanded(false)} className="text-paper-4 hover:text-white transition-colors">
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
             <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
           </svg>
@@ -145,7 +145,7 @@ export function ComposeEmail({ prospectId, prospectName, prospectEmail, prospect
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
                 placeholder="Optional: tell Claude what to write about..."
-                className="flex-1 px-2.5 py-1.5 bg-white/5 border border-white/10 rounded text-xs text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="flex-1 px-2.5 py-1.5 bg-ink-2 border border-rule rounded text-xs text-white placeholder:text-paper-4 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAiGenerate('compose'); } }}
               />
               <button
@@ -160,11 +160,11 @@ export function ComposeEmail({ prospectId, prospectName, prospectEmail, prospect
                 type="button"
                 onClick={() => handleAiGenerate('followup')}
                 disabled={generating}
-                className="px-2.5 py-1.5 rounded text-xs font-medium bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 disabled:opacity-50 transition-colors whitespace-nowrap"
+                className="px-2.5 py-1.5 rounded text-xs font-medium bg-ink-2 border border-rule text-paper-2 hover:bg-ink-3 disabled:opacity-50 transition-colors whitespace-nowrap"
               >
                 Follow-up
               </button>
-              <button type="button" onClick={() => setShowAiPrompt(false)} className="text-slate-500 hover:text-white transition-colors">
+              <button type="button" onClick={() => setShowAiPrompt(false)} className="text-paper-4 hover:text-white transition-colors">
                 <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
               </button>
             </div>
@@ -181,7 +181,7 @@ export function ComposeEmail({ prospectId, prospectName, prospectEmail, prospect
 
         {/* Email Style Picker */}
         <div>
-          <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Email Style</p>
+          <p className="text-[10px] font-semibold text-paper-4 uppercase tracking-wide mb-1.5">Email Style</p>
           <div className="flex gap-1.5">
             {EMAIL_STYLES.map((style) => (
               <button
@@ -190,11 +190,11 @@ export function ComposeEmail({ prospectId, prospectName, prospectEmail, prospect
                 onClick={() => setSelectedStyle(style.id)}
                 className={`flex-1 px-2 py-2 rounded-lg border text-center transition-all ${
                   selectedStyle === style.id
-                    ? 'bg-violet-600/15 border-violet-500/40 ring-1 ring-violet-500/30'
-                    : 'bg-white/[0.03] border-white/10 hover:bg-white/[0.06] hover:border-white/20'
+                    ? 'bg-signal text-ink-0/15 border-signal ring-1 ring-signal/30'
+                    : 'bg-ink-2 border-rule hover:bg-ink-2 hover:border-rule-strong'
                 }`}
               >
-                <span className={`block text-[10px] font-semibold ${selectedStyle === style.id ? 'text-violet-300' : 'text-slate-400'}`}>
+                <span className={`block text-[10px] font-semibold ${selectedStyle === style.id ? 'text-signal' : 'text-paper-3'}`}>
                   {style.name}
                 </span>
               </button>
@@ -204,19 +204,19 @@ export function ComposeEmail({ prospectId, prospectName, prospectEmail, prospect
 
         {/* To */}
         <div className="flex items-center gap-2 text-xs">
-          <span className="text-slate-500 font-medium w-12">To:</span>
-          <span className="text-slate-300 font-mono">{prospectEmail}</span>
+          <span className="text-paper-4 font-medium w-12">To:</span>
+          <span className="text-paper-2 font-mono">{prospectEmail}</span>
         </div>
 
         {/* Subject */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500 font-medium w-12">Subject:</span>
+          <span className="text-xs text-paper-4 font-medium w-12">Subject:</span>
           <input
             type="text"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             placeholder="Email subject..."
-            className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-violet-500"
+            className="flex-1 px-3 py-2 bg-ink-2 border border-rule rounded-lg text-sm text-white placeholder:text-paper-4 focus:outline-none focus:ring-1 focus:ring-signal"
             required
           />
         </div>
@@ -227,7 +227,7 @@ export function ComposeEmail({ prospectId, prospectName, prospectEmail, prospect
           onChange={(e) => setBody(e.target.value)}
           placeholder="Write your message here..."
           rows={8}
-          className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-violet-500 resize-y"
+          className="w-full px-3 py-2 bg-ink-2 border border-rule rounded-lg text-sm text-white placeholder:text-paper-4 focus:outline-none focus:ring-1 focus:ring-signal resize-y"
           required
         />
 
@@ -237,7 +237,7 @@ export function ComposeEmail({ prospectId, prospectName, prospectEmail, prospect
             <button
               type="button"
               onClick={() => setShowPreview(!showPreview)}
-              className="text-xs text-violet-400 hover:text-violet-300 font-medium transition-colors flex items-center gap-1"
+              className="text-xs text-signal hover:text-signal font-medium transition-colors flex items-center gap-1"
             >
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
                 <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
@@ -246,7 +246,7 @@ export function ComposeEmail({ prospectId, prospectName, prospectEmail, prospect
               {showPreview ? 'Hide Preview' : 'Show Preview'}
             </button>
             {showPreview && (
-              <div className="mt-2 bg-white rounded-xl overflow-hidden border border-white/10">
+              <div className="mt-2 bg-white rounded-xl overflow-hidden border border-rule">
                 <iframe
                   srcDoc={buildHtml(body)}
                   className="w-full border-0"
@@ -261,7 +261,7 @@ export function ComposeEmail({ prospectId, prospectName, prospectEmail, prospect
 
         {/* Actions */}
         <div className="flex items-center justify-between">
-          <p className="text-[10px] text-slate-600">
+          <p className="text-[10px] text-paper-4">
             Sent from jason@embedo.io via SendGrid. Open tracking enabled.
           </p>
           <div className="flex items-center gap-2">
@@ -273,7 +273,7 @@ export function ComposeEmail({ prospectId, prospectName, prospectEmail, prospect
             <button
               type="submit"
               disabled={sending || !subject.trim() || !body.trim()}
-              className="px-4 py-2 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-signal text-ink-0 text-white text-sm font-semibold rounded-lg hover:bg-paper hover:text-ink-0 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
             >
               {sending ? (
                 <>

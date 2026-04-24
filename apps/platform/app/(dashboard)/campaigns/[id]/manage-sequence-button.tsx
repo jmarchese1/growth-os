@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -100,10 +100,10 @@ export function ManageSequenceButton({ campaignId, currentSteps, prospectorUrl, 
     <>
       <button
         onClick={() => setOpen(true)}
-        className="px-3 py-1.5 bg-white/5 border border-white/10 text-slate-400 text-xs font-medium rounded-lg hover:bg-white/10 hover:text-white transition-colors"
+        className="px-3 py-1.5 bg-ink-2 border border-rule text-paper-3 text-xs font-medium rounded-lg hover:bg-ink-3 hover:text-white transition-colors"
       >
         Sequence
-        <span className="ml-1.5 px-1.5 py-0.5 bg-violet-600/30 text-violet-300 rounded text-[10px]">
+        <span className="ml-1.5 px-1.5 py-0.5 bg-signal-soft text-signal rounded text-[10px]">
           {sequenceLength} email{sequenceLength !== 1 ? 's' : ''}
         </span>
       </button>
@@ -111,21 +111,21 @@ export function ManageSequenceButton({ campaignId, currentSteps, prospectorUrl, 
       {mounted && open && createPortal(
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <div className="relative bg-[#0f1117] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl">
+          <div className="relative bg-[#171717] border border-rule rounded-2xl w-full max-w-md shadow-2xl">
 
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-rule">
               <div>
                 <h2 className="text-base font-semibold text-white">Follow-up Sequence</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Set length and timing. Edit email copy via "Edit Emails".</p>
+                <p className="text-xs text-paper-4 mt-0.5">Set length and timing. Edit email copy via "Edit Emails".</p>
               </div>
-              <button onClick={() => setOpen(false)} className="text-slate-500 hover:text-white transition-colors text-xl leading-none">✕</button>
+              <button onClick={() => setOpen(false)} className="text-paper-4 hover:text-white transition-colors text-xl leading-none">✕</button>
             </div>
 
             <div className="p-6 space-y-6">
 
               {/* Length picker */}
               <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Sequence Length</p>
+                <p className="text-xs font-semibold text-paper-3 uppercase tracking-wide mb-3">Sequence Length</p>
                 <div className="flex gap-2">
                   {([1, 2, 3] as const).map((n) => (
                     <button
@@ -133,8 +133,8 @@ export function ManageSequenceButton({ campaignId, currentSteps, prospectorUrl, 
                       onClick={() => setSequenceLength(n)}
                       className={`flex-1 py-3 rounded-xl text-sm font-semibold border transition-colors ${
                         sequenceLength === n
-                          ? 'bg-violet-600/30 border-violet-500/50 text-violet-200'
-                          : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10'
+                          ? 'bg-signal-soft border-signal text-signal'
+                          : 'bg-ink-2 border-rule text-paper-3 hover:text-white hover:bg-ink-3'
                       }`}
                     >
                       {n}
@@ -148,25 +148,25 @@ export function ManageSequenceButton({ campaignId, currentSteps, prospectorUrl, 
 
               {/* Timing per step */}
               <div className="space-y-2">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Timing</p>
+                <p className="text-xs font-semibold text-paper-3 uppercase tracking-wide mb-3">Timing</p>
 
-                <div className="flex items-center justify-between py-2.5 px-3 bg-white/[0.03] rounded-lg border border-white/5">
+                <div className="flex items-center justify-between py-2.5 px-3 bg-ink-2 rounded-lg border border-rule-soft">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-6 h-6 rounded-full bg-violet-600/30 border border-violet-500/30 flex items-center justify-center flex-shrink-0">
-                      <span className="text-[10px] font-bold text-violet-300">1</span>
+                    <div className="w-6 h-6 rounded-full bg-signal-soft border border-signal flex items-center justify-center flex-shrink-0">
+                      <span className="text-[10px] font-bold text-signal">1</span>
                     </div>
-                    <p className="text-xs font-medium text-slate-300">Cold Email</p>
+                    <p className="text-xs font-medium text-paper-2">Cold Email</p>
                   </div>
-                  <span className="text-xs text-slate-600">Day 0 — immediate</span>
+                  <span className="text-xs text-paper-4">Day 0 — immediate</span>
                 </div>
 
                 {activeFollowUps.map((step, idx) => (
-                  <div key={idx} className="flex items-center justify-between py-2.5 px-3 bg-white/[0.03] rounded-lg border border-white/10">
+                  <div key={idx} className="flex items-center justify-between py-2.5 px-3 bg-ink-2 rounded-lg border border-rule">
                     <div className="flex items-center gap-2.5">
                       <div className="w-6 h-6 rounded-full bg-indigo-600/30 border border-indigo-500/30 flex items-center justify-center flex-shrink-0">
                         <span className="text-[10px] font-bold text-indigo-300">{step.stepNumber}</span>
                       </div>
-                      <p className="text-xs font-medium text-slate-300">{idx === 0 ? 'Follow-up' : 'Break-up'}</p>
+                      <p className="text-xs font-medium text-paper-2">{idx === 0 ? 'Follow-up' : 'Break-up'}</p>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <input
@@ -174,10 +174,10 @@ export function ManageSequenceButton({ campaignId, currentSteps, prospectorUrl, 
                         min={1}
                         value={step.delayHours}
                         onChange={(e) => updateDelay(idx, parseInt(e.target.value) || 72)}
-                        className="w-16 px-2 py-1 bg-white/5 border border-white/10 rounded text-xs text-white text-center focus:outline-none focus:ring-1 focus:ring-violet-500"
+                        className="w-16 px-2 py-1 bg-ink-2 border border-rule rounded text-xs text-white text-center focus:outline-none focus:ring-1 focus:ring-signal"
                       />
-                      <span className="text-[10px] text-slate-500">hrs</span>
-                      <span className="text-[10px] text-slate-600 ml-1">
+                      <span className="text-[10px] text-paper-4">hrs</span>
+                      <span className="text-[10px] text-paper-4 ml-1">
                         (Day {Math.round(step.delayHours / 24)})
                       </span>
                     </div>
@@ -187,16 +187,16 @@ export function ManageSequenceButton({ campaignId, currentSteps, prospectorUrl, 
 
               {/* Apply to existing */}
               {contactedCount > 0 && sequenceLength > 1 && (
-                <label className="flex items-start gap-3 bg-violet-500/5 border border-violet-500/20 rounded-xl px-4 py-3 cursor-pointer">
+                <label className="flex items-start gap-3 bg-signal-soft border border-rule rounded-xl px-4 py-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={applyToExisting}
                     onChange={(e) => setApplyToExisting(e.target.checked)}
-                    className="mt-0.5 accent-violet-500"
+                    className="mt-0.5 accent-signal"
                   />
                   <div>
-                    <p className="text-xs font-semibold text-violet-300">Apply to {contactedCount} existing prospects</p>
-                    <p className="text-[11px] text-slate-500 mt-0.5">Queue follow-ups for prospects who already received the cold email.</p>
+                    <p className="text-xs font-semibold text-signal">Apply to {contactedCount} existing prospects</p>
+                    <p className="text-[11px] text-paper-4 mt-0.5">Queue follow-ups for prospects who already received the cold email.</p>
                   </div>
                 </label>
               )}
@@ -205,17 +205,17 @@ export function ManageSequenceButton({ campaignId, currentSteps, prospectorUrl, 
               {success && <p className="text-emerald-400 text-sm bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">{success}</p>}
             </div>
 
-            <div className="flex gap-3 px-6 py-4 border-t border-white/10">
+            <div className="flex gap-3 px-6 py-4 border-t border-rule">
               <button
                 onClick={handleSave}
                 disabled={loading || requeueing}
-                className="px-5 py-2 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-500 transition-colors disabled:opacity-50"
+                className="px-5 py-2 bg-signal text-ink-0 text-white text-sm font-semibold rounded-lg hover:bg-paper hover:text-ink-0 transition-colors disabled:opacity-50"
               >
                 {requeueing ? 'Applying…' : loading ? 'Saving…' : 'Save'}
               </button>
               <button
                 onClick={() => setOpen(false)}
-                className="px-5 py-2 bg-white/5 text-slate-400 text-sm font-medium rounded-lg hover:bg-white/10 hover:text-white transition-colors border border-white/10"
+                className="px-5 py-2 bg-ink-2 text-paper-3 text-sm font-medium rounded-lg hover:bg-ink-3 hover:text-white transition-colors border border-rule"
               >
                 Cancel
               </button>

@@ -717,12 +717,19 @@ model OutboundCampaign {
   instagramDmEnabled Boolean  @default(false)
   instagramDmBody    String?  // DM template with {{variables}}
   active         Boolean      @default(true)
+  // ─── Agent automation ────
+  agentActive    Boolean      @default(false)       // opt in per campaign
+  agentDailyCap  Int          @default(10)          // sends per day by the agent
+  agentLastRunAt DateTime?                          // last time agent touched this campaign
+  agentExhaustedAt DateTime?                        // set when no more prospects to send to
+  agentRotationSource String?                       // "auto-spawned" if created by rotation agent
   prospects      ProspectBusiness[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([active])
+  @@index([agentActive])
 }
 
 model ProspectBusiness {
@@ -1482,3 +1489,43 @@ model InstagramDM {
   @@index([sessionId])
   @@index([status])
 }
+
+// ─── Outreach Agent ──────────────────────────────────────────────────────────
+// The autonomous orchestrator that drives daily cold-email dispatch across
+// every active campaign. A singleton config + per-invocation run log.
+
+model AgentConfig {
+  id               String    @id @default("singleton")
+  active           Boolean   @default(false)       // global kill switch
+  runHourET        Int       @default(9)           // run at 9am ET daily
+  globalDailyCap   Int       @default(200)         // platform-wide safety cap
+  autoRotate       Boolean   @default(true)        // spawn new campaigns when old ones exhaust
+  rotationCities   Json?                           // ["Brooklyn, NY", "Queens, NY", "Jersey City, NJ", ...]
+  rotationIndustries Json?                         // ["RESTAURANT", "SALON", ...] (BusinessType values)
+  lastRunAt        DateTime?
+  lastRunStatus    String?                         // "success", "partial", "failed"
+  nextRunAt        DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model AgentRun {
+  id               String    @id @default(cuid())
+  startedAt        DateTime  @default(now())
+  completedAt      DateTime?
+  status           String    @default("running")   // running, completed, failed, partial
+  trigger          String    @default("cron")      // cron, manual, webhook
+  // Aggregates
+  campaignsTouched Int       @default(0)
+  emailsSent       Int       @default(0)
+  emailsFailed     Int       @default(0)
+  campaignsSpawned Int       @default(0)           // new campaigns auto-created
+  // Detail logs — JSON array of per-step events for the live view
+  events           Json?                           // [{ ts, level, msg, campaignId?, prospectId? }]
+  errors           Json?
+  durationMs       Int?
+
+  @@index([startedAt])
+  @@index([status])
+}
+

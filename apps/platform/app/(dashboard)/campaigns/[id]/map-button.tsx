@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
@@ -132,24 +132,24 @@ export function MapButton({ campaignName, targetCity, lat, lon, bbox }: Props) {
       {mounted && open && createPortal(
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <div className="relative bg-[#0f1117] border border-white/10 rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden">
+          <div className="relative bg-[#171717] border border-rule rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden">
 
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-rule">
               <div>
                 <h2 className="text-base font-semibold text-white">Search Area</h2>
-                <p className="text-xs text-slate-500 mt-0.5">{campaignName} — {targetCity}</p>
+                <p className="text-xs text-paper-4 mt-0.5">{campaignName} — {targetCity}</p>
               </div>
               <div className="flex items-center gap-3">
                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
                   isBbox
-                    ? 'bg-violet-500/10 text-violet-400 border border-violet-500/20'
+                    ? 'bg-signal-soft text-signal border border-rule'
                     : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                 }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${isBbox ? 'bg-violet-400' : 'bg-amber-400'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full ${isBbox ? 'bg-signal' : 'bg-amber-400'}`} />
                   {isBbox ? 'AI Bounding Box' : '15km Circle'}
                 </span>
-                <button onClick={() => setOpen(false)} className="text-slate-500 hover:text-white transition-colors text-xl leading-none">&times;</button>
+                <button onClick={() => setOpen(false)} className="text-paper-4 hover:text-white transition-colors text-xl leading-none">&times;</button>
               </div>
             </div>
 
@@ -157,8 +157,8 @@ export function MapButton({ campaignName, targetCity, lat, lon, bbox }: Props) {
             <div ref={mapRef} style={{ height: '500px', width: '100%' }} />
 
             {/* Footer with coords */}
-            <div className="px-6 py-3 border-t border-white/10 flex items-center justify-between">
-              <div className="text-[11px] text-slate-500 font-mono">
+            <div className="px-6 py-3 border-t border-rule flex items-center justify-between">
+              <div className="text-[11px] text-paper-4 font-mono">
                 {bbox ? (
                   <>SW: {bbox.lat1.toFixed(4)}, {bbox.lon1.toFixed(4)} — NE: {bbox.lat2.toFixed(4)}, {bbox.lon2.toFixed(4)}</>
                 ) : (

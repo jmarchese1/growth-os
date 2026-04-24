@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -38,7 +38,7 @@ export function CloneCampaignButton({ campaignId, campaignName, prospectorUrl }:
     <button
       onClick={handleClone}
       disabled={loading}
-      className="px-3 py-1.5 bg-white/5 border border-white/10 text-slate-400 text-xs font-medium rounded-lg hover:bg-white/10 hover:text-white transition-colors disabled:opacity-50"
+      className="px-3 py-1.5 bg-ink-2 border border-rule text-paper-3 text-xs font-medium rounded-lg hover:bg-ink-3 hover:text-white transition-colors disabled:opacity-50"
     >
       {loading ? 'Cloning...' : 'Clone'}
     </button>

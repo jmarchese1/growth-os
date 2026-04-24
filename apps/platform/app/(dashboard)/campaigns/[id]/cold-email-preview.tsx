@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 
@@ -53,7 +53,7 @@ export function ColdEmailPreview({ subjectTemplate, bodyTemplate, prospect, calL
     <>
       <button
         onClick={(e) => { e.stopPropagation(); setOpen(true); }}
-        className="text-[10px] px-2 py-1 rounded-md bg-violet-500/10 border border-violet-500/20 text-violet-400 hover:text-violet-300 hover:border-violet-500/40 transition-colors whitespace-nowrap"
+        className="text-[10px] px-2 py-1 rounded-md bg-signal-soft border border-rule text-signal hover:text-signal hover:border-signal transition-colors whitespace-nowrap"
       >
         Preview
       </button>
@@ -61,17 +61,17 @@ export function ColdEmailPreview({ subjectTemplate, bodyTemplate, prospect, calL
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setOpen(false)}>
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-          <div className="relative z-10 w-full max-w-2xl bg-[#0f0c1e] border border-white/10 rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+          <div className="relative z-10 w-full max-w-2xl bg-[#0f0c1e] border border-rule rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.07]">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[9px] font-bold text-violet-400 uppercase tracking-widest">Cold Email Preview</span>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-violet-500/15 text-violet-300 font-medium">Step 1</span>
+                  <span className="text-[9px] font-bold text-signal uppercase tracking-widest">Cold Email Preview</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-signal-soft text-signal font-medium">Step 1</span>
                 </div>
                 <p className="text-sm font-semibold text-white truncate max-w-[480px]">{subject}</p>
-                <p className="text-[10px] text-slate-500 mt-0.5">To: {prospect.email ?? 'no email'} · {prospect.name}</p>
+                <p className="text-[10px] text-paper-4 mt-0.5">To: {prospect.email ?? 'no email'} · {prospect.name}</p>
               </div>
-              <button onClick={() => setOpen(false)} className="text-slate-600 hover:text-white transition-colors ml-4 flex-shrink-0">
+              <button onClick={() => setOpen(false)} className="text-paper-4 hover:text-white transition-colors ml-4 flex-shrink-0">
                 <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                   <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
                 </svg>
@@ -86,8 +86,8 @@ export function ColdEmailPreview({ subjectTemplate, bodyTemplate, prospect, calL
                 sandbox="allow-same-origin"
               />
             </div>
-            <div className="px-5 py-3 border-t border-white/[0.07] bg-white/[0.02]">
-              <p className="text-[10px] text-slate-600">Variables filled from prospect data. Signature + unsubscribe added automatically at send time.</p>
+            <div className="px-5 py-3 border-t border-white/[0.07] bg-ink-1">
+              <p className="text-[10px] text-paper-4">Variables filled from prospect data. Signature + unsubscribe added automatically at send time.</p>
             </div>
           </div>
         </div>
