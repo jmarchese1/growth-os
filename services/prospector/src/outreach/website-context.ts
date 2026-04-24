@@ -12,7 +12,8 @@ import { createLogger } from '@embedo/utils';
 const log = createLogger('prospector:website-context');
 
 const FETCH_TIMEOUT_MS = 8000;
-const MAX_CHARS = 2400; // ~600 tokens, enough for Claude to find something specific
+const MAX_CHARS_PER_PAGE = 1800;  // per-page cap
+const MAX_TOTAL_CHARS = 4500;     // across all pages combined — gives Claude real material to work with
 
 async function fetchHtml(url: string): Promise<string | null> {
   try {
@@ -72,7 +73,7 @@ function extractCleanText(html: string): string {
   text = text.replace(/(cookies?\s+to\s+improve.*?(accept|agree|ok)[^.]*\.)/gi, '');
   text = text.replace(/(this\s+website\s+uses\s+cookies[^.]*\.)/gi, '');
 
-  return text.slice(0, MAX_CHARS);
+  return text.slice(0, MAX_CHARS_PER_PAGE);
 }
 
 function normalizeUrl(url: string): string {
@@ -83,32 +84,42 @@ function normalizeUrl(url: string): string {
 }
 
 /**
- * Fetch a cleaned text snapshot of the prospect's website.
- * Tries homepage first. If that returns nothing useful, tries /about.
- * Returns null if both fail.
+ * Fetch a cleaned, labeled text snapshot of the prospect's website.
+ * Scrapes homepage + /menu + /about in parallel, combines into labeled sections,
+ * truncates to MAX_TOTAL_CHARS. More signal = more specific emails.
+ *
+ * Returns null if nothing usable is found.
  */
 export async function fetchWebsiteContext(rawUrl: string | null | undefined): Promise<string | null> {
   if (!rawUrl) return null;
   const url = normalizeUrl(rawUrl);
 
-  const homepage = await fetchHtml(url);
+  // Fetch homepage + common specific pages in parallel
+  const [homepage, menuPage, aboutPage] = await Promise.all([
+    fetchHtml(url),
+    fetchHtml(`${url}/menu`),
+    fetchHtml(`${url}/about`),
+  ]);
+
+  const sections: string[] = [];
+
   if (homepage) {
-    const cleaned = extractCleanText(homepage);
-    if (cleaned.length > 200) {
-      log.debug({ url, chars: cleaned.length }, 'Scraped homepage');
-      return cleaned;
-    }
+    const text = extractCleanText(homepage);
+    if (text.length > 150) sections.push(`[Homepage]\n${text}`);
+  }
+  if (menuPage) {
+    const text = extractCleanText(menuPage);
+    if (text.length > 150) sections.push(`[Menu / Services page]\n${text}`);
+  }
+  if (aboutPage) {
+    const text = extractCleanText(aboutPage);
+    if (text.length > 150) sections.push(`[About page]\n${text}`);
   }
 
-  // Fallback: /about
-  const about = await fetchHtml(`${url}/about`);
-  if (about) {
-    const cleaned = extractCleanText(about);
-    if (cleaned.length > 200) {
-      log.debug({ url, chars: cleaned.length }, 'Scraped /about fallback');
-      return cleaned;
-    }
-  }
+  if (sections.length === 0) return null;
 
-  return null;
+  const combined = sections.join('\n\n---\n\n');
+  const result = combined.slice(0, MAX_TOTAL_CHARS);
+  log.debug({ url, pages: sections.length, chars: result.length }, 'Scraped website context');
+  return result;
 }

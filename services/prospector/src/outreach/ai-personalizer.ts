@@ -65,40 +65,70 @@ export async function generatePersonalizedEmail(
       ? `\n\nQuick glance at their website (use ONLY if something stands out naturally; otherwise ignore):\n"""\n${prospect.websiteContent}\n"""`
       : '';
 
+    // Rotate opener + CTA styles so emails don't all read identical.
+    // Claude sees a hash-seeded choice; output varies across prospects even with same pitch.
+    const seed = Math.abs(
+      [...prospect.name].reduce((a, c) => a + c.charCodeAt(0), 0),
+    );
+
+    const OPENER_STYLES = ['observation', 'question', 'direct-context'] as const;
+    const CTA_STYLES = ['loom', 'mockup', 'reply', 'short-zoom'] as const;
+    type OpenerStyle = typeof OPENER_STYLES[number];
+    type CtaStyle = typeof CTA_STYLES[number];
+
+    const openerStyle: OpenerStyle = OPENER_STYLES[seed % OPENER_STYLES.length] ?? 'observation';
+    const ctaStyle: CtaStyle = CTA_STYLES[seed % CTA_STYLES.length] ?? 'reply';
+
+    const OPENER_GUIDES: Record<OpenerStyle, string> = {
+      'observation':    `Open with ONE specific thing you noticed about their business — a dish, a service, a vibe, a detail from the website or their type. Skip the "I was checking out X" cliché. Just drop the observation.`,
+      'question':       `Open with a sharp question relevant to a business like theirs (e.g. "who handles the phone when you're cooking a full Saturday rush?"). Don't answer your own question in the email, let it breathe.`,
+      'direct-context': `Open by naming what you do (one short line) and immediately connect it to their type of business with a concrete hook. Skip any "how are you" or "hope this finds you well" warm-up.`,
+    };
+
+    const CTA_GUIDES: Record<CtaStyle, string> = {
+      'loom':        `End by offering a 90-second Loom walkthrough showing what a system like this would actually do for a business like theirs. Make it clear no call is needed to see it.`,
+      'mockup':      `End by offering to mock something up and send it over, no call needed. Frame it as zero commitment.`,
+      'reply':       `End with a simple "want me to send more?", invite a one-word reply.`,
+      'short-zoom':  `End by proposing a 10-min Zoom if they're curious. Explicitly say 10 minutes, nothing more.`,
+    };
+
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 450,
+      max_tokens: 500,
       messages: [
         {
           role: 'user',
-          content: `You are ${senderName}. You're writing a short, friendly cold email introducing yourself to a local business owner. This is NOT a sales pitch — it's an introduction with an open-ended offer to chat.
+          content: `You are ${senderName}. Writing a SHORT, specific cold email introducing yourself to a local business owner. This is not a sales pitch — it's a real person reaching out.
 
-WHO YOU ARE AND WHAT YOU OFFER:
+BACKGROUND — who you are and what you actually build:
 ${pitch}
 
-ABOUT THE BUSINESS:
+BUSINESS YOU'RE EMAILING:
 ${buildContext(prospect)}${siteBlock}
 
-THE EMAIL:
-Write a friendly introduction email that:
-1. Opens with a warm "Hey ${firstName}," on its own line
-2. Briefly says who you are and that you build AI agents, chatbots, voice agents, and automation for businesses like theirs
-3. Offers to hop on a quick call, chat, or send more info about how any of these could help them (pick ONE simple ask, don't list every option)
-4. Closes with no sign-off — that gets added separately
+STRUCTURE YOU MUST USE:
+1. "Hey ${firstName},"
+2. OPENER — ${OPENER_GUIDES[openerStyle]}
+3. MIDDLE — briefly mention you build AI agents / chatbots / voice agents / automation. Then name ONE concrete outcome a system like this would deliver for THIS business (based on their type + anything from the website). Example outcomes, not to copy: "answers the phone at 11pm when you're closing", "takes reservations in English and Spanish", "handles Sunday brunch questions without your team touching it". Make yours specific to them.
+4. CTA — ${CTA_GUIDES[ctaStyle]}
+5. NO sign-off. No "Best". No name at the bottom. It gets appended separately.
 
-TONE:
-- Sound like a real person reaching out, not a company
-- Warm, low-pressure, open-ended
-- Feel like "hey, wanted to introduce myself" — NOT "here's what you're missing"
-- Do NOT use cringe phrases like "killing it", "noticed you're crushing it", "saw you're doing great on Google", or anything that sounds like a sales opener
-- It's fine to naturally say "AI agents", "chatbots", "voice agents", "automation" — that's what you actually build
+HARD VOICE RULES:
+- 50 to 90 words total.
+- Sound like a real human texting a smart friend. Warm, direct.
+- Natural to say "AI agents", "chatbots", "voice agents", "automation" — those are the actual products.
+- DO NOT use these banned phrases:
+    * "killing it", "crushing it", "doing great on Google"
+    * "I was checking out", "I came across", "I stumbled on"
+    * "smooth things out", "worth a chat", "worth a quick chat", "worth a conversation"
+    * "No pressure", "no strings attached", "no pressure at all"
+    * "figured I'd say hi", "figured I'd reach out", "just wanted to introduce myself"
+    * "I hope this finds you well"
+- DO NOT use dashes, em dashes, en dashes, or colons anywhere. Use periods and commas.
+- DO NOT paraphrase the website content verbatim. Reference it naturally, like you're someone who glanced at it.
+- DO NOT say "AI agents, chatbots, voice agents, and automation" as a list. Weave it into natural speech.
 
-HARD RULES:
-- 50 to 90 words total. Short.
-- Start with "Hey ${firstName},"
-- No sign-off, no name, no "Best".
-- Do NOT use dashes, em dashes, en dashes, or colons. Use periods and commas.
-- Output ONLY the email paragraphs. Plain text. No HTML, no markdown.`,
+Output ONLY the email paragraphs. Plain text. No HTML. No markdown. No headers.`,
         },
       ],
     });
