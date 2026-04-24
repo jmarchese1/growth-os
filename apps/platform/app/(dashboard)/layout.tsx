@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  LayoutDashboard, Settings as SettingsIcon, LogOut, ChevronLeft, Command, Zap,
+  LayoutDashboard, Settings as SettingsIcon, LogOut, ChevronLeft, Command, Zap, Crosshair,
 } from 'lucide-react';
 import NotificationBell from '../../components/NotificationBell';
 import { AgentStatusWidget } from '../../components/AgentStatusWidget';
@@ -19,9 +19,10 @@ const NAV: NavSection[] = [
     numeral: 'I',
     section: 'Operator',
     items: [
-      { href: '/',         label: 'Dashboard',  icon: LayoutDashboard },
-      { href: '/agents',   label: 'Agents',     icon: Zap },
-      { href: '/settings', label: 'Settings',   icon: SettingsIcon },
+      { href: '/',          label: 'Dashboard',  icon: LayoutDashboard },
+      { href: '/agents',    label: 'Agents',     icon: Zap },
+      { href: '/campaigns', label: 'Campaigns',  icon: Crosshair },
+      { href: '/settings',  label: 'Settings',   icon: SettingsIcon },
     ],
   },
 ];
