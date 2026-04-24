@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Embedo — hero</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #07070c;
+        --bg-card: #13131a;
+        --bg-card-hover: #1b1b24;
+        --border: #20202a;
+        --border-strong: #2e2e3a;
+        --text: #f7f5f1;
+        --text-dim: #9994a0;
+        --blue: #60a5fa;
+        --violet: #a78bfa;
+        --pink: #f472b6;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; padding: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Inter", -apple-system, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .stage {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 60px;
+        overflow: hidden;
+      }
+
+      /* Ambient layered background */
+      .stage::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(900px 560px at 16% 22%, rgba(96, 165, 250, 0.16), transparent 55%),
+          radial-gradient(900px 560px at 84% 78%, rgba(167, 139, 250, 0.13), transparent 55%),
+          radial-gradient(700px 480px at 50% 110%, rgba(236, 72, 153, 0.08), transparent 60%);
+        opacity: 0;
+        transition: opacity 1.4s ease;
+        pointer-events: none;
+      }
+      .stage::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+        background-size: 56px 56px;
+        mask-image: radial-gradient(ellipse at center, black 35%, transparent 85%);
+        -webkit-mask-image: radial-gradient(ellipse at center, black 35%, transparent 85%);
+        opacity: 0;
+        transition: opacity 1.4s 0.2s ease;
+        pointer-events: none;
+      }
+      .stage.lit::before { opacity: 1; }
+      .stage.lit::after  { opacity: 1; }
+
+      /* Drifting soft orbs — slow, cinematic */
+      .orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(60px);
+        opacity: 0;
+        transition: opacity 1.8s ease;
+        pointer-events: none;
+      }
+      .orb-a {
+        width: 420px; height: 420px;
+        left: -140px; top: -100px;
+        background: radial-gradient(circle, rgba(96, 165, 250, 0.55), transparent 70%);
+        animation: drift-a 18s ease-in-out infinite;
+      }
+      .orb-b {
+        width: 520px; height: 520px;
+        right: -180px; bottom: -140px;
+        background: radial-gradient(circle, rgba(167, 139, 250, 0.45), transparent 70%);
+        animation: drift-b 22s ease-in-out infinite;
+      }
+      .stage.lit .orb { opacity: 1; }
+      @keyframes drift-a {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50%       { transform: translate(60px, 40px) scale(1.08); }
+      }
+      @keyframes drift-b {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50%       { transform: translate(-50px, -30px) scale(1.12); }
+      }
+
+      .inner {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        max-width: 1100px;
+      }
+
+      /* Eyebrow */
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--blue);
+        margin-bottom: 26px;
+        opacity: 0;
+        transform: translateY(-8px);
+        transition: opacity 0.7s 0.15s ease, transform 0.7s 0.15s ease;
+      }
+      .eyebrow::before {
+        content: "";
+        width: 28px;
+        height: 1.5px;
+        background: var(--blue);
+      }
+      .stage.lit .eyebrow { opacity: 1; transform: translateY(0); }
+
+      /* Logo mark — embedo cube as inline SVG (no external file dependency) */
+      .logo-plate {
+        position: relative;
+        width: 132px;
+        height: 132px;
+        margin-bottom: 38px;
+        border-radius: 28px;
+        background: linear-gradient(145deg, #1a1a24 0%, #0f0f16 100%);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.1),
+          0 30px 60px -20px rgba(0, 0, 0, 0.6),
+          0 0 0 1px rgba(167, 139, 250, 0.12);
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        opacity: 0;
+        transform: scale(0.7);
+        transition: opacity 0.9s 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+                    transform 0.9s 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .stage.lit .logo-plate {
+        opacity: 1;
+        transform: scale(1);
+      }
+      /* Rotating gradient ring behind the logo */
+      .logo-plate::before {
+        content: "";
+        position: absolute;
+        inset: -4px;
+        border-radius: inherit;
+        background: conic-gradient(from 0deg,
+          var(--blue), var(--violet), var(--pink), var(--blue));
+        filter: blur(12px);
+        opacity: 0.35;
+        animation: spin 14s linear infinite;
+        z-index: 0;
+      }
+      .logo-plate svg { position: relative; z-index: 1; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      /* Title */
+      h1 {
+        margin: 0 0 24px;
+        font-family: "Fraunces", Georgia, serif;
+        font-weight: 500;
+        font-size: clamp(52px, 6.2vw, 92px);
+        line-height: 1.04;
+        letter-spacing: -0.035em;
+        opacity: 0;
+        transform: translateY(14px);
+        transition: opacity 0.9s 0.55s ease, transform 0.9s 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      h1 em {
+        font-style: italic;
+        background: linear-gradient(120deg, var(--blue) 0%, var(--violet) 55%, var(--pink) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: hue 10s ease-in-out infinite alternate;
+      }
+      .stage.lit h1 { opacity: 1; transform: translateY(0); }
+      @keyframes hue {
+        from { filter: hue-rotate(0deg); }
+        to   { filter: hue-rotate(18deg); }
+      }
+
+      /* Lede */
+      .lede {
+        margin: 0 auto 46px;
+        max-width: 62ch;
+        font-size: clamp(16px, 1.2vw, 20px);
+        color: var(--text-dim);
+        line-height: 1.6;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity 0.9s 0.75s ease, transform 0.9s 0.75s ease;
+      }
+      .stage.lit .lede { opacity: 1; transform: translateY(0); }
+
+      /* Pills */
+      .pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 10px;
+        justify-content: center;
+        max-width: 1000px;
+      }
+      .pill {
+        --brand: var(--text-dim);
+        padding: 10px 18px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.035);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        font-size: 13.5px;
+        font-weight: 500;
+        color: var(--text);
+        letter-spacing: 0.01em;
+        cursor: pointer;
+        user-select: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        opacity: 0;
+        transform: translateY(10px);
+        transition:
+          opacity 0.5s ease,
+          transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+          background 0.25s,
+          border-color 0.25s,
+          color 0.25s;
+      }
+      .stage.lit .pill { opacity: 1; transform: translateY(0); }
+      /* Staggered pill entrance */
+      .pill:nth-child(1) { transition-delay: 0.95s, 0.95s, 0s, 0s, 0s; }
+      .pill:nth-child(2) { transition-delay: 1.03s, 1.03s, 0s, 0s, 0s; }
+      .pill:nth-child(3) { transition-delay: 1.11s, 1.11s, 0s, 0s, 0s; }
+      .pill:nth-child(4) { transition-delay: 1.19s, 1.19s, 0s, 0s, 0s; }
+      .pill:nth-child(5) { transition-delay: 1.27s, 1.27s, 0s, 0s, 0s; }
+      .pill:nth-child(6) { transition-delay: 1.35s, 1.35s, 0s, 0s, 0s; }
+      .pill:nth-child(7) { transition-delay: 1.43s, 1.43s, 0s, 0s, 0s; }
+      .pill:nth-child(8) { transition-delay: 1.51s, 1.51s, 0s, 0s, 0s; }
+      .pill:nth-child(9) { transition-delay: 1.59s, 1.59s, 0s, 0s, 0s; }
+
+      .pill:hover,
+      .pill.on {
+        background: rgba(167, 139, 250, 0.14);
+        border-color: rgba(167, 139, 250, 0.55);
+        color: #ffffff;
+      }
+      .pill .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--brand);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 25%, transparent);
+      }
+      .pill[data-brand="voice"]    { --brand: #60a5fa; }
+      .pill[data-brand="chat"]     { --brand: #34d399; }
+      .pill[data-brand="crm"]      { --brand: #f59e0b; }
+      .pill[data-brand="sms"]      { --brand: #a78bfa; }
+      .pill[data-brand="sched"]    { --brand: #22d3ee; }
+      .pill[data-brand="social"]   { --brand: #f472b6; }
+      .pill[data-brand="survey"]   { --brand: #fbbf24; }
+      .pill[data-brand="web"]      { --brand: #818cf8; }
+      .pill[data-brand="proposal"] { --brand: #ef4444; }
+
+      /* Pill detail tooltip (hover + active) */
+      .pill-detail {
+        position: fixed;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 80px;
+        max-width: 560px;
+        padding: 14px 20px;
+        border-radius: 14px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-strong);
+        box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.7);
+        font-size: 14px;
+        line-height: 1.55;
+        color: var(--text);
+        opacity: 0;
+        transform: translateX(-50%) translateY(12px);
+        transition: opacity 0.28s, transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+        pointer-events: none;
+        z-index: 30;
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      .pill-detail.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+      .pill-detail .dot-lg {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-top: 5px;
+        flex-shrink: 0;
+      }
+      .pill-detail .label {
+        font-weight: 600;
+        color: #fff;
+        margin-right: 6px;
+      }
+
+      /* Footer */
+      .brand-line {
+        position: absolute;
+        bottom: 32px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        opacity: 0;
+        transition: opacity 0.9s 1.9s ease;
+        z-index: 3;
+      }
+      .stage.lit .brand-line { opacity: 1; }
+    </style>
+  </head>
+  <body>
+    <section class="stage" id="stage">
+      <span class="orb orb-a"></span>
+      <span class="orb orb-b"></span>
+
+      <div class="inner">
+        <span class="eyebrow">AI infrastructure</span>
+
+        <div class="logo-plate">
+          <svg width="70" height="70" viewBox="0 0 64 64" aria-hidden="true">
+            <defs>
+              <linearGradient id="cube-front" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#a78bfa"/>
+                <stop offset="100%" stop-color="#8b5cf6"/>
+              </linearGradient>
+              <linearGradient id="cube-right" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#818cf8"/>
+                <stop offset="100%" stop-color="#6366f1"/>
+              </linearGradient>
+              <linearGradient id="cube-top" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#c4b5fd"/>
+                <stop offset="100%" stop-color="#a78bfa"/>
+              </linearGradient>
+            </defs>
+            <!-- Left face (front) -->
+            <polygon points="8,20 32,32 32,60 8,48" fill="url(#cube-front)"/>
+            <!-- Right face -->
+            <polygon points="32,32 56,20 56,48 32,60" fill="url(#cube-right)"/>
+            <!-- Top face -->
+            <polygon points="8,20 32,8 56,20 32,32" fill="url(#cube-top)"/>
+            <!-- Subtle edge highlights -->
+            <polyline points="8,20 32,32 56,20" stroke="rgba(255,255,255,0.35)" stroke-width="0.6" fill="none"/>
+            <polyline points="32,32 32,60" stroke="rgba(255,255,255,0.25)" stroke-width="0.6" fill="none"/>
+          </svg>
+        </div>
+
+        <h1>An <em>agency</em> in a box.<br/>For every local business.</h1>
+        <p class="lede">
+          Voice receptionist, website chatbot, CRM, follow-ups, content, scheduling,
+          proposals — installed into a local business in one onboarding flow.
+        </p>
+
+        <div class="pills" id="pills">
+          <button class="pill" data-brand="voice"    data-desc="ElevenLabs-powered agent answers the phone in the business's voice. Handles scheduling, captures leads, routes emergencies — 24/7."><span class="dot"></span>📞 Voice AI</button>
+          <button class="pill" data-brand="chat"     data-desc="Claude-powered website widget trained on the business's services + hours + pricing. Converts visitors into booked appointments."><span class="dot"></span>💬 Chatbot</button>
+          <button class="pill" data-brand="crm"      data-desc="Every touchpoint — call, chat, form, review — funnels into one CRM. Automatic qualification and assignment."><span class="dot"></span>🎯 Lead gen + CRM</button>
+          <button class="pill" data-brand="sms"      data-desc="Triggered drips: new lead, appointment reminder, post-service review request, win-back. Twilio + SendGrid."><span class="dot"></span>📱 SMS + email</button>
+          <button class="pill" data-brand="sched"    data-desc="Calendly integration. Chatbot and voice agent can book directly. Double-booking prevented."><span class="dot"></span>📅 Scheduling</button>
+          <button class="pill" data-brand="social"   data-desc="Weekly content pipeline — drafts scheduled posts from the business's voice, tracks performance, suggests what to post next."><span class="dot"></span>📝 Social content</button>
+          <button class="pill" data-brand="survey"   data-desc="Post-service surveys + NPS. Happy customers route to Google reviews. Unhappy customers fire an internal alert."><span class="dot"></span>🗂️ Surveys</button>
+          <button class="pill" data-brand="web"      data-desc="Auto-generated website from the business's onboarding data. Mobile-first, SEO-ready, live in minutes."><span class="dot"></span>🌐 Website gen</button>
+          <button class="pill" data-brand="proposal" data-desc="For service businesses — custom proposals drafted from client briefs. Claude writes, you approve, client signs."><span class="dot"></span>📄 Proposals</button>
+        </div>
+      </div>
+
+      <div class="brand-line">Embedo · AI infrastructure for local business</div>
+    </section>
+
+    <div class="pill-detail" id="detail">
+      <span class="dot-lg" id="detail-dot"></span>
+      <div><span class="label" id="detail-label"></span><span id="detail-text"></span></div>
+    </div>
+
+    <script>
+      const stage = document.getElementById("stage");
+      const pills = [...document.querySelectorAll(".pill")];
+      const detail = document.getElementById("detail");
+      const detailDot = document.getElementById("detail-dot");
+      const detailLabel = document.getElementById("detail-label");
+      const detailText = document.getElementById("detail-text");
+
+      const brandColor = {
+        voice: "#60a5fa", chat: "#34d399", crm: "#f59e0b", sms: "#a78bfa",
+        sched: "#22d3ee", social: "#f472b6", survey: "#fbbf24",
+        web: "#818cf8", proposal: "#ef4444",
+      };
+
+      function showDetail(pill) {
+        const brand = pill.dataset.brand;
+        const label = pill.textContent.trim();
+        const desc = pill.dataset.desc || "";
+        detailDot.style.background = brandColor[brand];
+        detailDot.style.boxShadow = `0 0 0 4px ${brandColor[brand]}33`;
+        detailLabel.textContent = label + " · ";
+        detailText.textContent = desc;
+        detail.style.borderColor = brandColor[brand];
+        detail.classList.add("show");
+      }
+      function hideDetail() {
+        detail.classList.remove("show");
+      }
+
+      function activate(pill) {
+        const wasOn = pill.classList.contains("on");
+        pills.forEach((p) => p.classList.remove("on"));
+        if (!wasOn) {
+          pill.classList.add("on");
+          showDetail(pill);
+        } else {
+          hideDetail();
+        }
+      }
+
+      pills.forEach((pill, i) => {
+        pill.addEventListener("mouseenter", () => {
+          if (!pills.some((p) => p.classList.contains("on"))) {
+            showDetail(pill);
+          }
+        });
+        pill.addEventListener("mouseleave", () => {
+          if (!pills.some((p) => p.classList.contains("on"))) {
+            hideDetail();
+          }
+        });
+        pill.addEventListener("click", () => activate(pill));
+        pill.setAttribute("tabindex", "0");
+        pill.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            activate(pill);
+          }
+        });
+      });
+
+      // Autoplay reveal
+      window.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => stage.classList.add("lit"), 180);
+      });
+
+      // Keyboard — 1-9 activate a pill, Space replay, R reset, Esc close detail
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          pills.forEach((p) => p.classList.remove("on"));
+          hideDetail();
+          return;
+        }
+        if (e.key === "r" || e.key === "R") {
+          pills.forEach((p) => p.classList.remove("on"));
+          hideDetail();
+          return;
+        }
+        if (e.key === " " || e.code === "Space") {
+          e.preventDefault();
+          stage.classList.remove("lit");
+          pills.forEach((p) => p.classList.remove("on"));
+          hideDetail();
+          setTimeout(() => stage.classList.add("lit"), 60);
+          return;
+        }
+        const n = parseInt(e.key, 10);
+        if (Number.isFinite(n) && n >= 1 && n <= pills.length) {
+          activate(pills[n - 1]);
+        }
+      });
+    </script>
+  </body>
+</html>
