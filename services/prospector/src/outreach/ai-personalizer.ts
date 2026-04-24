@@ -93,42 +93,67 @@ export async function generatePersonalizedEmail(
     };
 
     const response = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-sonnet-4-6',
       max_tokens: 500,
       messages: [
         {
           role: 'user',
-          content: `You are ${senderName}. Writing a SHORT, specific cold email introducing yourself to a local business owner. This is not a sales pitch — it's a real person reaching out.
+          content: `You are ${senderName}. Write a SHORT, specific cold email to a local business owner. Real person voice, not salesy.
 
-BACKGROUND — who you are and what you actually build:
+===== AUTO-REJECT PHRASES =====
+The email will be rejected and rewritten if it contains ANY of these. Treat them as radioactive:
+- "I was checking out" / "I came across" / "I stumbled on" / "I noticed you"
+- "worth a chat" / "worth a quick chat" / "worth a conversation" / "worth exploring"
+- "No pressure" / "no pressure at all" / "no strings attached"
+- "figured I'd say hi" / "figured I'd reach out" / "just wanted to introduce myself" / "wanted to say hi"
+- "I hope this finds you well" / "hope you're doing well"
+- "killing it" / "crushing it" / "doing great on Google"
+- "smooth things out" / "help you out" / "take things to the next level"
+- Listing "AI agents, chatbots, voice agents, and automation" as a series — weave naturally
+
+===== STYLE EXAMPLES =====
+These are the KIND of email to write. Study the specificity, length, and energy. Do NOT copy the wording.
+
+EXAMPLE A (observation-first, Loom CTA):
+Hey Dana,
+You've got a Sunday brunch waitlist wrapped around the block in the photos, which tells me your host is probably drowning at 10:30am on weekends.
+I build voice agents that pick up calls during rushes like that. They quote the wait, take walk-in numbers, and don't sound robotic. Nothing for you to install.
+If you want, I can record a 90 second Loom showing what it'd do with Casa Bella's actual menu. Would that be useful?
+
+EXAMPLE B (question-first, mockup CTA):
+Hey Mike,
+Quick question. Who takes the call at 8:47pm when someone asks if the kitchen is still open?
+If the answer is "my manager, if he can hear the phone over the speaker", I might be able to help. I build AI voice agents that handle after hours orders and common questions in the owner's tone. Works in English and Spanish.
+Happy to build a mockup on your actual menu and send it over. No call needed.
+
+EXAMPLE C (direct-context, one-word-reply CTA):
+Hey Elena,
+I build website chatbots and phone AI for restaurants. Ran one for a spot in Queens last month that started booking parties of 10+ at 2am without anyone there.
+The Trattoria page looks like it'd fit the same setup. Want me to send the details? One word is fine.
+
+===== CONTEXT =====
+
+Your background (who you are, what you actually sell):
 ${pitch}
 
-BUSINESS YOU'RE EMAILING:
+The business you're emailing:
 ${buildContext(prospect)}${siteBlock}
 
-STRUCTURE YOU MUST USE:
-1. "Hey ${firstName},"
+===== WRITING INSTRUCTIONS =====
+
+Structure:
+1. "Hey ${firstName}," on its own line.
 2. OPENER — ${OPENER_GUIDES[openerStyle]}
-3. MIDDLE — briefly mention you build AI agents / chatbots / voice agents / automation. Then name ONE concrete outcome a system like this would deliver for THIS business (based on their type + anything from the website). Example outcomes, not to copy: "answers the phone at 11pm when you're closing", "takes reservations in English and Spanish", "handles Sunday brunch questions without your team touching it". Make yours specific to them.
+3. Middle — name AI agents / chatbots / voice agents / automation naturally (not as a list). State ONE concrete thing a system would do for this specific business. Specificity beats polish.
 4. CTA — ${CTA_GUIDES[ctaStyle]}
-5. NO sign-off. No "Best". No name at the bottom. It gets appended separately.
+5. No sign-off. No name at the end.
 
-HARD VOICE RULES:
-- 50 to 90 words total.
-- Sound like a real human texting a smart friend. Warm, direct.
-- Natural to say "AI agents", "chatbots", "voice agents", "automation" — those are the actual products.
-- DO NOT use these banned phrases:
-    * "killing it", "crushing it", "doing great on Google"
-    * "I was checking out", "I came across", "I stumbled on"
-    * "smooth things out", "worth a chat", "worth a quick chat", "worth a conversation"
-    * "No pressure", "no strings attached", "no pressure at all"
-    * "figured I'd say hi", "figured I'd reach out", "just wanted to introduce myself"
-    * "I hope this finds you well"
-- DO NOT use dashes, em dashes, en dashes, or colons anywhere. Use periods and commas.
-- DO NOT paraphrase the website content verbatim. Reference it naturally, like you're someone who glanced at it.
-- DO NOT say "AI agents, chatbots, voice agents, and automation" as a list. Weave it into natural speech.
-
-Output ONLY the email paragraphs. Plain text. No HTML. No markdown. No headers.`,
+Rules:
+- 50 to 90 words. Short.
+- No dashes, em dashes, en dashes, colons. Use periods and commas.
+- If scraped website text is provided, reference something specific from it (a dish, a service, a hook). Don't quote verbatim.
+- If no website text, use industry + city to make it feel custom anyway.
+- Plain text output only. No HTML, no markdown, no headers. Start with "Hey ${firstName},".`,
         },
       ],
     });
