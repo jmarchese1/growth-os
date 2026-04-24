@@ -1,9 +1,16 @@
 # Nixpacks config — applied by Railway when building any service in this monorepo.
 #
-# Why: Railway defaults NODE_ENV=production during build, which makes pnpm skip
-# devDependencies. But we need typescript and turbo (root devDeps) during the
-# build step to compile TypeScript services. Setting NPM_CONFIG_PRODUCTION=false
-# keeps dev deps installed so tsc and turbo are available.
+# Problem: Railway sets service-level NODE_ENV=production during builds. pnpm reads
+# that env var and skips devDependencies — which means `typescript`, `turbo`, and
+# friends (all root devDeps) don't get installed, and the build step dies with
+# "Command turbo not found" or similar.
+#
+# Fix: override the install command to inline NODE_ENV=development JUST for that
+# command. By the time the build phase runs, node_modules already contains dev
+# deps, so tsc / turbo work even though the build itself runs with NODE_ENV=production.
 
-[variables]
-NPM_CONFIG_PRODUCTION = "false"
+[phases.install]
+cmds = [
+  "npm install -g corepack@0.24.1 && corepack enable",
+  "NODE_ENV=development pnpm i --frozen-lockfile",
+]
