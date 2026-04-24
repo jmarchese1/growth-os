@@ -5,6 +5,7 @@ import { db } from '@embedo/db';
 import type { OutboundCampaign, ProspectBusiness } from '@embedo/db';
 import { renderEmailHtml, buildTemplateVars } from './templates.js';
 import { generatePersonalizedEmail } from './ai-personalizer.js';
+import { fetchWebsiteContext } from './website-context.js';
 import { isSuppressed } from './suppression.js';
 import { getNextDomain, incrementDomainSend } from './domain-rotator.js';
 import { env } from '../config.js';
@@ -44,8 +45,18 @@ export async function sendColdEmail(
   const apolloConf = (campaign.apolloConfig as Record<string, unknown> | null) ?? {};
   const appendSig = apolloConf['appendSignature'] === true;
   const aiEnabled = apolloConf['aiPersonalization'] === true; // OFF by default, must be explicitly enabled
+  // Custom agent-provided pitch instructions (from Agent.systemPrompt, stored on campaign's apolloConfig)
+  const customSystemPrompt =
+    typeof apolloConf['systemPrompt'] === 'string' && (apolloConf['systemPrompt'] as string).trim().length >= 20
+      ? (apolloConf['systemPrompt'] as string)
+      : null;
+
   let bodyHtml: string;
   if (env.ANTHROPIC_API_KEY && aiEnabled && !options?.disableAi && !options?.bodyHtmlOverride) {
+    // Scrape the prospect's homepage so Claude can reference real content
+    // (~5-8s when site is slow, cached within the same process by the HTTP layer)
+    const websiteContent = await fetchWebsiteContext(prospect.website).catch(() => null);
+
     const aiText = await generatePersonalizedEmail(
       {
         name: prospect.name,
@@ -55,9 +66,15 @@ export async function sendColdEmail(
         googleRating: prospect.googleRating,
         googleReviewCount: prospect.googleReviewCount,
         contactFirstName: prospect.contactFirstName,
+        businessType: vars['type'] ?? (prospect as { businessType?: string | null }).businessType ?? null,
+        websiteContent,
       },
       replyEmail,
       env.ANTHROPIC_API_KEY,
+      {
+        systemPrompt: customSystemPrompt,
+        senderName: process.env['SENDGRID_FROM_NAME'] ?? 'Jason',
+      },
     );
     // AI returns plain text with greeting included. Render to HTML + add sign-off + unsubscribe.
     // Fall back to static template if AI fails.

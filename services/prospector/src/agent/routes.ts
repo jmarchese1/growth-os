@@ -8,6 +8,7 @@ import { createLogger } from '@embedo/utils';
 import { db } from '@embedo/db';
 import { runAgent, getAgentStatus } from './daily-send.js';
 import { provisionAgentSheet } from './sheets.js';
+import { defaultSystemPromptForIndustries } from '../outreach/ai-personalizer.js';
 
 const log = createLogger('agent:routes');
 
@@ -49,6 +50,12 @@ export async function registerAgentRoutes(app: FastifyInstance): Promise<void> {
     });
     const body = schema.parse(req.body);
 
+    // If caller didn't provide a systemPrompt, seed an industry-aware default
+    // so new agents get a relevant voice out of the box.
+    const systemPrompt = body.systemPrompt?.trim()
+      ? body.systemPrompt
+      : defaultSystemPromptForIndustries(body.targetIndustries);
+
     const created = await db.agent.create({
       data: {
         name: body.name,
@@ -60,7 +67,7 @@ export async function registerAgentRoutes(app: FastifyInstance): Promise<void> {
         autoRotate: body.autoRotate,
         emailSubject: body.emailSubject,
         emailBody: body.emailBody,
-        ...(body.systemPrompt !== undefined ? { systemPrompt: body.systemPrompt } : {}),
+        systemPrompt,
         toneStyle: body.toneStyle,
       },
     });
