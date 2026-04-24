@@ -7,6 +7,7 @@
 import { db } from '@embedo/db';
 import type { BusinessType, OutboundCampaign, Agent } from '@embedo/db';
 import type { EventBuffer } from './events.js';
+import { triggerGeoapifyDiscovery } from './trigger-discovery.js';
 
 export async function isCampaignExhausted(campaignId: string): Promise<{
   exhausted: boolean;
@@ -94,6 +95,16 @@ export async function spawnNextCampaignForAgent(
 
   buffer.success(`Spawned "${created.name}" for agent "${agent.name}"`, {
     campaignId: created.id, campaignName: created.name,
+  });
+
+  // Fire-and-forget discovery — Geoapify scrape + enrichment run async.
+  // The new campaign gets populated with prospects over the next 1–3 min so
+  // the NEXT agent run can start sending to them. Fully hands-off rotation.
+  buffer.info(`Kicking off auto-discovery on new campaign (enrichment in background)`, {
+    campaignId: created.id, campaignName: created.name,
+  });
+  void triggerGeoapifyDiscovery(created.id).catch(() => {
+    /* errors are logged inside trigger-discovery; don't fail the agent run */
   });
 
   return created;
