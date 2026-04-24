@@ -50,7 +50,7 @@ interface ContactsResponse {
 
 async function getBusiness(id: string): Promise<Business | null> {
   try {
-    const res = await fetch(`${API_URL}/businesses/${id}`, { cache: 'no-store' });
+    const res = await fetch(`${API_URL}/businesses/${id}`, { next: { revalidate: 30 } });
     if (!res.ok) return null;
     return res.json();
   } catch {
@@ -60,7 +60,7 @@ async function getBusiness(id: string): Promise<Business | null> {
 
 async function getContacts(businessId: string): Promise<ContactsResponse> {
   try {
-    const res = await fetch(`${API_URL}/businesses/${businessId}/contacts?pageSize=20`, { cache: 'no-store' });
+    const res = await fetch(`${API_URL}/businesses/${businessId}/contacts?pageSize=20`, { next: { revalidate: 30 } });
     if (!res.ok) return { items: [], total: 0 };
     return res.json();
   } catch {

@@ -106,10 +106,25 @@ export default function AgentPage() {
     }
   }, []);
 
+  // Conditional polling: fast (3s) when agent is running; slow (30s) when idle.
+  // After every fetch we reconfigure the interval based on fresh state.
   useEffect(() => {
-    loadStatus();
-    const interval = setInterval(loadStatus, 3000);
-    return () => clearInterval(interval);
+    let timeout: NodeJS.Timeout;
+    let cancelled = false;
+
+    const tick = async () => {
+      await loadStatus();
+      if (cancelled) return;
+      // Re-read latest status via state getter by closing over setState
+      setStatus((current) => {
+        const interval = current?.isRunning ? 3000 : 30000;
+        timeout = setTimeout(tick, interval);
+        return current;
+      });
+    };
+
+    tick();
+    return () => { cancelled = true; clearTimeout(timeout); };
   }, [loadStatus]);
 
   async function handleTrigger() {

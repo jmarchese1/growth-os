@@ -1,4 +1,4 @@
-import { SectionHeader, HeroMetric, MetricBlock, Panel, FunnelBar } from '../../../components/ui/primitives';
+﻿import { SectionHeader, HeroMetric, MetricBlock, Panel, FunnelBar } from '../../../components/ui/primitives';
 
 const PROSPECTOR_URL = process.env['PROSPECTOR_URL'] ?? 'http://localhost:3009';
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? process.env['API_BASE_URL'] ?? 'https://embedoapi-production.up.railway.app';
@@ -13,13 +13,13 @@ interface DomainData { domain: string; totalSent: number; bounceCount: number; o
 interface TemplateData { id: string; name: string; subject: string; category: string; timesSent: number; timesOpened: number; timesReplied: number; openRate: number; replyRate: number }
 
 async function getAnalytics(): Promise<AnalyticsData | null> {
-  try { const res = await fetch(`${PROSPECTOR_URL}/analytics`, { cache: 'no-store' }); if (!res.ok) return null; return res.json(); } catch { return null; }
+  try { const res = await fetch(`${PROSPECTOR_URL}/analytics`, { next: { revalidate: 30 } }); if (!res.ok) return null; return res.json(); } catch { return null; }
 }
 async function getDomains(): Promise<DomainData[]> {
-  try { const res = await fetch(`${API_URL}/sending-domains`, { cache: 'no-store' }); if (!res.ok) return []; return res.json(); } catch { return []; }
+  try { const res = await fetch(`${API_URL}/sending-domains`, { next: { revalidate: 30 } }); if (!res.ok) return []; return res.json(); } catch { return []; }
 }
 async function getTemplates(): Promise<TemplateData[]> {
-  try { const res = await fetch(`${API_URL}/email-templates`, { cache: 'no-store' }); if (!res.ok) return []; return res.json(); } catch { return []; }
+  try { const res = await fetch(`${API_URL}/email-templates`, { next: { revalidate: 30 } }); if (!res.ok) return []; return res.json(); } catch { return []; }
 }
 
 function formatHour(h: number): string {

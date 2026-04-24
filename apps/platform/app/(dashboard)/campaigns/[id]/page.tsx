@@ -129,11 +129,11 @@ export default async function CampaignDetailPage({ params, searchParams }: {
   const { status: filterStatus, page = '1' } = await searchParams;
 
   const [campaignRes, statsRes, prospectsRes] = await Promise.all([
-    fetch(`${PROSPECTOR_URL}/campaigns`, { cache: 'no-store' }),
-    fetch(`${PROSPECTOR_URL}/campaigns/${id}/stats`, { cache: 'no-store' }),
+    fetch(`${PROSPECTOR_URL}/campaigns`, { next: { revalidate: 30 } }),
+    fetch(`${PROSPECTOR_URL}/campaigns/${id}/stats`, { next: { revalidate: 30 } }),
     fetch(
       `${PROSPECTOR_URL}/campaigns/${id}/prospects?${filterStatus ? `status=${filterStatus}&` : ''}page=${page}&pageSize=50`,
-      { cache: 'no-store' }
+      { next: { revalidate: 30 } }
     ),
   ]);
 

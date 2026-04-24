@@ -128,7 +128,7 @@ export default async function ProspectDetailPage({ params }: {
 }) {
   const { id: campaignId, prospectId } = await params;
 
-  const res = await fetch(`${PROSPECTOR_URL}/prospects/${prospectId}`, { cache: 'no-store' });
+  const res = await fetch(`${PROSPECTOR_URL}/prospects/${prospectId}`, { next: { revalidate: 30 } });
   if (!res.ok) notFound();
 
   const prospect = (await res.json()) as ProspectDetail;

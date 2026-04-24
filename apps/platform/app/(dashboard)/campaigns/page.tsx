@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { ArrowUpRight, Plus } from 'lucide-react';
 import { NewCampaignForm } from './new-campaign-form';
 import { RunCampaignButton } from './run-campaign-button';
@@ -38,7 +38,7 @@ interface CampaignStats {
 
 async function getCampaigns(): Promise<CampaignStats[]> {
   try {
-    const res = await fetch(`${PROSPECTOR_URL}/campaigns`, { cache: 'no-store' });
+    const res = await fetch(`${PROSPECTOR_URL}/campaigns`, { next: { revalidate: 30 } });
     if (!res.ok) return [];
     return res.json() as Promise<CampaignStats[]>;
   } catch {
@@ -48,7 +48,7 @@ async function getCampaigns(): Promise<CampaignStats[]> {
 
 async function getEnrichedCount(campaignId: string): Promise<number> {
   try {
-    const res = await fetch(`${PROSPECTOR_URL}/campaigns/${campaignId}/stats`, { cache: 'no-store' });
+    const res = await fetch(`${PROSPECTOR_URL}/campaigns/${campaignId}/stats`, { next: { revalidate: 30 } });
     if (!res.ok) return 0;
     const data = (await res.json()) as { byStatus?: Record<string, number> };
     return data.byStatus?.['ENRICHED'] ?? 0;

@@ -28,6 +28,8 @@ export function AgentStatusWidget() {
 
   useEffect(() => {
     let canceled = false;
+    let timeout: NodeJS.Timeout;
+
     const load = async () => {
       try {
         const res = await fetch(`${PROSPECTOR_URL}/agent/status`);
@@ -35,9 +37,9 @@ export function AgentStatusWidget() {
         const data = await res.json();
         if (canceled) return;
 
-        // Pull last event from today's run if available
+        // Only fetch events when expanded (saves a request on every page)
         let lastEvent: MiniStatus['lastEvent'];
-        if (data.todayRun?.id) {
+        if (expanded && data.todayRun?.id) {
           const runRes = await fetch(`${PROSPECTOR_URL}/agent/runs/${data.todayRun.id}`);
           if (runRes.ok) {
             const run = await runRes.json();
@@ -52,14 +54,21 @@ export function AgentStatusWidget() {
           emailsSentToday: data.todayRun?.emailsSent ?? 0,
           globalDailyCap: data.config.globalDailyCap,
           campaignsActive: data.campaigns.filter((c: { agentActive: boolean }) => c.agentActive).length,
-          lastEvent,
+          ...(lastEvent ? { lastEvent } : {}),
         });
-      } catch { /* silent */ }
+
+        // Conditional polling: fast when running/expanded, slow when idle
+        if (canceled) return;
+        const nextInterval = data.isRunning ? 5000 : expanded ? 15000 : 60000;
+        timeout = setTimeout(load, nextInterval);
+      } catch {
+        if (!canceled) timeout = setTimeout(load, 60000);
+      }
     };
+
     load();
-    const interval = setInterval(load, 5000);
-    return () => { canceled = true; clearInterval(interval); };
-  }, []);
+    return () => { canceled = true; clearTimeout(timeout); };
+  }, [expanded]);
 
   if (!status) return null;
 

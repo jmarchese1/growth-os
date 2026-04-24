@@ -47,7 +47,7 @@ interface ProspectDetail {
 
 async function getProspect(id: string): Promise<ProspectDetail | null> {
   try {
-    const res = await fetch(`${PROSPECTOR_URL}/prospects/${id}`, { cache: 'no-store' });
+    const res = await fetch(`${PROSPECTOR_URL}/prospects/${id}`, { next: { revalidate: 30 } });
     if (!res.ok) return null;
     return await res.json();
   } catch {

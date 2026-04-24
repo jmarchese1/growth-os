@@ -34,23 +34,31 @@ interface Campaign { id: string; name: string; targetCity: string; }
 
 async function getLeads(): Promise<{ items: ProspectLead[]; total: number }> {
   try {
-    const campaignsRes = await fetch(`${PROSPECTOR_URL}/campaigns`, { cache: 'no-store' });
+    const campaignsRes = await fetch(`${PROSPECTOR_URL}/campaigns`, { next: { revalidate: 30 } });
     if (!campaignsRes.ok) return { items: [], total: 0 };
     const campaigns: Campaign[] = await campaignsRes.json();
-    const allLeads: ProspectLead[] = [];
-    for (const campaign of campaigns) {
-      const res = await fetch(
-        `${PROSPECTOR_URL}/campaigns/${campaign.id}/prospects?status=REPLIED,MEETING_BOOKED,CONVERTED&pageSize=100`,
-        { cache: 'no-store' },
-      );
-      if (!res.ok) continue;
-      const data = await res.json();
-      const items = (data.items ?? []).map((p: ProspectLead) => ({
-        ...p,
-        campaign: { id: campaign.id, name: campaign.name, targetCity: campaign.targetCity },
-      }));
-      allLeads.push(...items);
-    }
+
+    // Parallel fetch all campaign prospects
+    const results = await Promise.all(
+      campaigns.map(async (campaign) => {
+        try {
+          const res = await fetch(
+            `${PROSPECTOR_URL}/campaigns/${campaign.id}/prospects?status=REPLIED,MEETING_BOOKED,CONVERTED&pageSize=100`,
+            { next: { revalidate: 30 } },
+          );
+          if (!res.ok) return [];
+          const data = await res.json();
+          return (data.items ?? []).map((p: ProspectLead) => ({
+            ...p,
+            campaign: { id: campaign.id, name: campaign.name, targetCity: campaign.targetCity },
+          }));
+        } catch {
+          return [];
+        }
+      }),
+    );
+
+    const allLeads = results.flat();
     const activeLeads = allLeads.filter((l) => !l.convertedToBusinessId);
     activeLeads.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
     return { items: activeLeads, total: activeLeads.length };

@@ -135,7 +135,7 @@ export default async function EmailDetailPage({ params }: {
 
   let prospect: Prospect;
   try {
-    const res = await fetch(`${PROSPECTOR_URL}/prospects/${id}`, { cache: 'no-store' });
+    const res = await fetch(`${PROSPECTOR_URL}/prospects/${id}`, { next: { revalidate: 30 } });
     if (!res.ok) notFound();
     prospect = await res.json();
   } catch {

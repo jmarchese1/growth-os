@@ -1,4 +1,4 @@
-import CalSyncButton from './sync-button';
+﻿import CalSyncButton from './sync-button';
 import { ArrowUpRight } from 'lucide-react';
 import { SectionHeader, Panel } from '../../../components/ui/primitives';
 
@@ -18,7 +18,7 @@ interface Appointment {
 
 async function getAppointments(startDate: string, endDate: string): Promise<Appointment[]> {
   try {
-    const res = await fetch(`${API_URL}/appointments?startDate=${startDate}&endDate=${endDate}`, { cache: 'no-store' });
+    const res = await fetch(`${API_URL}/appointments?startDate=${startDate}&endDate=${endDate}`, { next: { revalidate: 30 } });
     if (!res.ok) return [];
     const data = await res.json() as { items: Appointment[] };
     return data.items ?? [];

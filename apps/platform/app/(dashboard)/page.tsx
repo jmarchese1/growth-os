@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { ArrowUpRight, Crosshair, Mail, Users, Building2, FileText } from 'lucide-react';
 import {
   SectionHeader,
@@ -47,13 +47,13 @@ const INDUSTRY_LABELS: Record<Industry, string> = {
 
 async function getData(): Promise<EnrichedCampaign[]> {
   try {
-    const res = await fetch(`${PROSPECTOR_URL}/campaigns`, { cache: 'no-store' });
+    const res = await fetch(`${PROSPECTOR_URL}/campaigns`, { next: { revalidate: 30 } });
     if (!res.ok) return [];
     const campaigns = (await res.json()) as CampaignSummary[];
     const enriched = await Promise.all(
       campaigns.map(async (c) => {
         try {
-          const s = await fetch(`${PROSPECTOR_URL}/campaigns/${c.id}/stats`, { cache: 'no-store' });
+          const s = await fetch(`${PROSPECTOR_URL}/campaigns/${c.id}/stats`, { next: { revalidate: 30 } });
           const stats = (await s.json()) as CampaignStats;
           return { ...c, stats };
         } catch {
@@ -84,11 +84,11 @@ function funnelStages(stats: CampaignStats) {
 }
 
 const QUICK_NAV = [
+  { href: '/agent',      label: 'Agent',      code: 'AGT', icon: FileText,   sub: 'Autonomous outreach' },
   { href: '/campaigns',  label: 'Campaigns',  code: 'CMP', icon: Crosshair,  sub: 'Outbound sequences' },
   { href: '/emails',     label: 'Emails',     code: 'EML', icon: Mail,       sub: 'Inbox & replies' },
   { href: '/leads',      label: 'Leads',      code: 'LED', icon: Users,      sub: 'Engaged prospects' },
   { href: '/businesses', label: 'Businesses', code: 'BIZ', icon: Building2,  sub: 'Signed clients' },
-  { href: '/proposals',  label: 'Proposals',  code: 'PRP', icon: FileText,   sub: 'AI-generated docs' },
 ];
 
 export default async function DashboardPage({

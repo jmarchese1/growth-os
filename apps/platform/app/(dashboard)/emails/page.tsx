@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { ArrowUpRight, Clock, Calendar as CalendarIcon } from 'lucide-react';
 import { SearchInput } from './search-input';
 import { SectionHeader, HeroMetric, MetricBlock } from '../../../components/ui/primitives';
@@ -24,7 +24,7 @@ interface EmailStats {
 
 async function getEmailStats(): Promise<EmailStats> {
   try {
-    const res = await fetch(`${PROSPECTOR_URL}/emails/stats`, { cache: 'no-store' });
+    const res = await fetch(`${PROSPECTOR_URL}/emails/stats`, { next: { revalidate: 30 } });
     if (!res.ok) return { totalContacted: 0, totalMessages: 0, sent: 0, opened: 0, openRate: 0, replied: 0, meetingBooked: 0, replyRate: 0, bounced: 0, bounceRate: 0 };
     return res.json();
   } catch {
@@ -45,7 +45,7 @@ async function getEmails(params: { tab: string; search?: string; status?: string
     } else {
       if (params.status) qs.set('status', params.status);
     }
-    const res = await fetch(`${PROSPECTOR_URL}/emails/all?${qs}`, { cache: 'no-store' });
+    const res = await fetch(`${PROSPECTOR_URL}/emails/all?${qs}`, { next: { revalidate: 30 } });
     if (!res.ok) return { items: [], total: 0 };
     return res.json();
   } catch {
