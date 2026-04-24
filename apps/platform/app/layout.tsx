@@ -1,33 +1,37 @@
 import type { Metadata } from 'next';
-import { Plus_Jakarta_Sans, DM_Sans, Lexend } from 'next/font/google';
+import { Fraunces, Geist, JetBrains_Mono } from 'next/font/google';
 import { createSupabaseServerClient } from '../lib/supabase/server';
 import { SessionProvider } from '../components/auth/session-provider';
 import './globals.css';
 
-const fontSans = Plus_Jakarta_Sans({
+// Editorial display — variable serif with optical sizing + soft/wonk axes
+const fontDisplay = Fraunces({
   subsets: ['latin'],
-  variable: '--font-sans',
+  variable: '--font-display',
   display: 'swap',
-  weight: ['300', '400', '500', '600', '700', '800'],
+  style: ['normal', 'italic'],
+  axes: ['opsz', 'SOFT', 'WONK'],
 });
 
-const fontHeading = DM_Sans({
+// UI sans — Geist for precision
+const fontUI = Geist({
   subsets: ['latin'],
-  variable: '--font-heading',
+  variable: '--font-ui',
   display: 'swap',
   weight: ['400', '500', '600', '700'],
 });
 
-const fontBody = Lexend({
+// Data / labels — JetBrains Mono
+const fontMono = JetBrains_Mono({
   subsets: ['latin'],
-  variable: '--font-body',
+  variable: '--font-mono',
   display: 'swap',
-  weight: ['300', '400', '500'],
+  weight: ['400', '500', '600', '700'],
 });
 
 export const metadata: Metadata = {
-  title: 'Embedo — Admin',
-  description: 'Embedo internal operations platform',
+  title: 'Embedo — Operator',
+  description: 'Embedo internal outreach operations',
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -35,8 +39,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const { data: { user } } = await supabase.auth.getUser();
 
   return (
-    <html lang="en" className={`${fontSans.variable} ${fontHeading.variable} ${fontBody.variable}`}>
-      <body className="font-sans antialiased">
+    <html lang="en" className={`${fontDisplay.variable} ${fontUI.variable} ${fontMono.variable}`}>
+      <body className="font-ui antialiased">
         <SessionProvider initialUser={user}>
           {children}
         </SessionProvider>

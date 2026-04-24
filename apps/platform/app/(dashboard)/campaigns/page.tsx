@@ -1,9 +1,17 @@
 import Link from 'next/link';
+import { ArrowUpRight, Plus } from 'lucide-react';
 import { NewCampaignForm } from './new-campaign-form';
 import { RunCampaignButton } from './run-campaign-button';
 import { SendCampaignButton } from './send-campaign-button';
 import { DeleteCampaignButton } from './delete-campaign-button';
 import { CloneCampaignButton } from './clone-campaign-button';
+import {
+  SectionHeader,
+  HeroMetric,
+  MetricBlock,
+  Panel,
+  Button,
+} from '../../../components/ui/primitives';
 
 const PROSPECTOR_URL = process.env['PROSPECTOR_URL'] ?? 'http://localhost:3009';
 
@@ -49,21 +57,19 @@ async function getEnrichedCount(campaignId: string): Promise<number> {
   }
 }
 
-/** Truncate email body for preview — strip HTML and show first ~80 chars */
 function emailPreview(body: string): string {
   const plain = body
     .replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-  return plain.length > 100 ? plain.slice(0, 100) + '...' : plain;
+  return plain.length > 140 ? plain.slice(0, 140) + '…' : plain;
 }
 
 export default async function CampaignsPage() {
   const campaigns = await getCampaigns();
   const enrichedCounts = await Promise.all(campaigns.map((c) => getEnrichedCount(c.id)));
 
-  // Aggregate stats across all campaigns
   const totals = campaigns.reduce(
     (acc, c) => ({
       prospects: acc.prospects + c._count.prospects,
@@ -74,149 +80,274 @@ export default async function CampaignsPage() {
     { prospects: 0, emailed: 0, opened: 0, replied: 0 },
   );
 
+  const activeCount = campaigns.filter(c => c.active).length;
+  const openRate = totals.emailed > 0 ? Math.round((totals.opened / totals.emailed) * 100) : 0;
+  const replyRate = totals.emailed > 0 ? Math.round((totals.replied / totals.emailed) * 100) : 0;
+
   return (
-    <div className="p-8 space-y-8 animate-fade-up">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">Campaigns</h1>
-        <p className="text-slate-400 mt-1 text-sm">Scrape local businesses and send personalized cold outreach.</p>
-      </div>
+    <div className="pt-10 pb-24 px-8 max-w-[1400px] mx-auto space-y-14">
 
-      {/* Global Stats */}
+      {/* ── Masthead ── */}
+      <section className="pb-10 hairline-b">
+        <div className="flex items-center gap-4 mb-3">
+          <span className="font-mono text-[10px] tracking-mega text-paper-4 uppercase">
+            Chapter 02 · Campaigns
+          </span>
+          <span className="h-px w-16 bg-rule" />
+          <span className="font-mono text-[10px] tracking-mega text-paper-3 uppercase">
+            {activeCount} of {campaigns.length} live
+          </span>
+        </div>
+        <h1 className="font-display italic font-light text-paper leading-[0.95] tracking-tight text-[64px] lg:text-[76px] max-w-3xl">
+          Where we cast the net.
+        </h1>
+        <p className="font-ui text-paper-2 text-[15px] mt-5 max-w-xl leading-relaxed">
+          Geo-scrape local businesses, enrich, and deliver personalized cold emails.
+          Each campaign is its own ledger — targeted, tracked, and re-runnable.
+        </p>
+      </section>
+
+      {/* ── Top-line numbers ── */}
       {campaigns.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white/5 rounded-xl border border-white/10 p-4">
-            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Total Prospects</p>
-            <p className="text-2xl font-bold text-white mt-1">{totals.prospects}</p>
+        <section className="grid grid-cols-12 gap-8">
+          <div className="col-span-12 lg:col-span-5">
+            <HeroMetric
+              label="Prospects across the ledger"
+              value={totals.prospects.toLocaleString()}
+              caption={`${campaigns.length} campaigns, ${activeCount} running`}
+              size="md"
+            />
           </div>
-          <div className="bg-white/5 rounded-xl border border-white/10 p-4">
-            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Emailed</p>
-            <p className="text-2xl font-bold text-white mt-1">{totals.emailed}</p>
+          <div className="col-span-12 lg:col-span-7 panel">
+            <div className="grid grid-cols-3 hairline-b">
+              <MetricBlock
+                label="Emailed"
+                value={totals.emailed.toLocaleString()}
+                delta={`${totals.prospects > 0 ? Math.round((totals.emailed / totals.prospects) * 100) : 0}% of prospects`}
+              />
+              <MetricBlock
+                label="Opens"
+                value={totals.opened.toLocaleString()}
+                delta={`${openRate}% rate`}
+                trend={openRate > 15 ? 'up' : 'flat'}
+              />
+              <MetricBlock
+                label="Replies"
+                value={totals.replied.toLocaleString()}
+                delta={`${replyRate}% rate`}
+                trend={replyRate > 3 ? 'up' : 'flat'}
+              />
+            </div>
           </div>
-          <div className="bg-white/5 rounded-xl border border-white/10 p-4">
-            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Opened</p>
-            <p className="text-2xl font-bold text-white mt-1">{totals.opened}</p>
-            {totals.emailed > 0 && (
-              <p className="text-xs text-slate-500 mt-0.5">{Math.round((totals.opened / totals.emailed) * 100)}% rate</p>
-            )}
-          </div>
-          <div className="bg-white/5 rounded-xl border border-white/10 p-4">
-            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Replied</p>
-            <p className="text-2xl font-bold text-white mt-1">{totals.replied}</p>
-            {totals.emailed > 0 && (
-              <p className="text-xs text-slate-500 mt-0.5">{Math.round((totals.replied / totals.emailed) * 100)}% rate</p>
-            )}
-          </div>
-        </div>
+        </section>
       )}
 
-      {/* New Campaign Form */}
-      <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6">
-        <h2 className="text-sm font-semibold text-white mb-5 flex items-center gap-2">
-          <svg className="w-4 h-4 text-violet-400" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
-          </svg>
-          New Campaign
-        </h2>
-        <NewCampaignForm prospectorUrl={PROSPECTOR_URL} />
-      </div>
+      {/* ── New campaign composer ── */}
+      <section>
+        <SectionHeader
+          numeral="1"
+          title="New dispatch"
+          subtitle="Define target, compose copy, release."
+          action={
+            <span className="font-mono text-[10px] tracking-mega text-paper-4 uppercase">
+              <Plus className="inline w-3 h-3 mr-1" />
+              Compose
+            </span>
+          }
+        />
 
-      {/* Campaigns Table */}
-      {campaigns.length === 0 ? (
-        <div className="bg-white/5 rounded-2xl border border-white/10 p-16 text-center">
-          <p className="text-slate-500 text-sm">No campaigns yet. Create one above to get started.</p>
-        </div>
-      ) : (
-        <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10">
-          <div className="px-6 py-4 border-b border-white/5">
-            <h2 className="text-sm font-semibold text-white">{campaigns.length} Campaign{campaigns.length !== 1 ? 's' : ''}</h2>
+        <div className="mt-6 panel">
+          <div className="p-8">
+            <NewCampaignForm prospectorUrl={PROSPECTOR_URL} />
           </div>
-          <div className="divide-y divide-slate-800/60">
-            {campaigns.map((c, idx) => (
-              <div key={c.id} className="px-6 py-5 hover:bg-violet-950/20 transition-colors">
-                <div className="flex items-start justify-between gap-4">
-                  {/* Left: Campaign info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3">
-                      <Link href={`/campaigns/${c.id}`} className="font-semibold text-sm text-white hover:text-violet-300 transition-colors">
-                        {c.name}
-                      </Link>
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                        c.active
-                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25'
-                          : 'bg-slate-500/10 text-slate-500 border border-slate-500/20'
-                      }`}>
-                        <span className={`w-1 h-1 rounded-full ${c.active ? 'bg-emerald-400' : 'bg-slate-500'}`} />
-                        {c.active ? 'Active' : 'Inactive'}
-                      </span>
-                    </div>
+        </div>
+      </section>
 
-                    <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-500">
-                      <span>{c.targetCity}{c.targetState ? `, ${c.targetState}` : ''}</span>
-                      <span>·</span>
-                      <span>{c.targetIndustry}</span>
-                      <span>·</span>
-                      <span>{new Date(c.createdAt).toLocaleDateString()}</span>
-                    </div>
+      {/* ── Campaign ledger ── */}
+      <section>
+        <SectionHeader
+          numeral="2"
+          title="The ledger"
+          subtitle={`${campaigns.length} campaigns on the books`}
+        />
 
-                    {/* Email template preview */}
-                    <div className="mt-2.5 px-3 py-2 bg-white/[0.03] border border-white/5 rounded-lg">
-                      <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Subject</p>
-                      <p className="text-xs text-slate-300">{c.emailSubject}</p>
-                      <p className="text-[10px] text-slate-600 mt-1.5 leading-relaxed">{emailPreview(c.emailBodyHtml)}</p>
-                    </div>
-
-                    {/* Performance stats row */}
-                    {c.stats && c.stats.emailed > 0 && (
-                      <div className="flex items-center gap-4 mt-2.5">
-                        <span className="text-xs text-slate-500">
-                          <span className="font-semibold text-white">{c.stats.emailed}</span> sent
+        <div className="mt-6">
+          {campaigns.length === 0 ? (
+            <div className="panel p-20 text-center">
+              <p className="font-display italic text-paper-3 text-2xl font-light">
+                The ledger is empty.
+              </p>
+              <p className="font-mono text-[11px] tracking-micro uppercase text-paper-4 mt-3">
+                Compose your first dispatch above.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {campaigns.map((c, idx) => {
+                const cOpen = c.stats?.openRate ?? 0;
+                const cReply = c.stats?.replyRate ?? 0;
+                return (
+                  <article
+                    key={c.id}
+                    className="panel grid grid-cols-12 gap-0 hover:border-paper-4 transition-colors"
+                  >
+                    {/* LEFT — index + name + meta */}
+                    <div className="col-span-12 lg:col-span-5 p-6 hairline-r">
+                      <div className="flex items-start gap-4">
+                        <span className="font-mono text-[10px] tracking-mega text-paper-4 pt-1.5 shrink-0">
+                          №{(idx + 1).toString().padStart(3, '0')}
                         </span>
-                        <span className="text-xs text-slate-500">
-                          <span className={`font-semibold ${c.stats.openRate >= 20 ? 'text-emerald-400' : c.stats.openRate >= 10 ? 'text-yellow-400' : 'text-red-400'}`}>
-                            {c.stats.openRate}%
-                          </span> opens
-                        </span>
-                        <span className="text-xs text-slate-500">
-                          <span className={`font-semibold ${c.stats.replyRate >= 5 ? 'text-emerald-400' : c.stats.replyRate >= 2 ? 'text-yellow-400' : 'text-slate-400'}`}>
-                            {c.stats.replyRate}%
-                          </span> replies
-                        </span>
-                        {c.stats.converted > 0 && (
-                          <span className="text-xs text-slate-500">
-                            <span className="font-semibold text-violet-400">{c.stats.converted}</span> converted
-                          </span>
-                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span
+                              className={`w-1.5 h-1.5 shrink-0 relative ${
+                                c.active ? 'bg-signal signal-dot' : 'bg-paper-4'
+                              }`}
+                            />
+                            <span className="font-mono text-[10px] tracking-mega uppercase text-paper-3">
+                              {c.active ? 'Active' : 'Paused'}
+                            </span>
+                          </div>
+                          <Link
+                            href={`/campaigns/${c.id}`}
+                            className="font-display italic font-light text-paper text-[28px] leading-tight hover:text-signal transition-colors block"
+                          >
+                            {c.name}
+                          </Link>
+                          <div className="flex items-center gap-3 mt-2 font-mono text-[10px] tracking-micro uppercase text-paper-4">
+                            <span>{c.targetCity}{c.targetState ? `, ${c.targetState}` : ''}</span>
+                            <span>·</span>
+                            <span>{c.targetIndustry}</span>
+                            <span>·</span>
+                            <span>{new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                          </div>
+                        </div>
                       </div>
-                    )}
-                  </div>
 
-                  {/* Right: Prospect count + actions */}
-                  <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                    <div className="text-right">
-                      <span className="text-lg font-bold text-white">{c._count.prospects}</span>
-                      <span className="text-xs text-slate-500 ml-1">prospects</span>
+                      {/* Email preview */}
+                      <div className="mt-5 pl-8">
+                        <p className="label-sm mb-1">Subject</p>
+                        <p className="font-ui text-sm text-paper-2 mb-3">{c.emailSubject}</p>
+                        <p className="label-sm mb-1">Body</p>
+                        <p className="font-ui text-[12px] text-paper-3 leading-relaxed italic">
+                          “{emailPreview(c.emailBodyHtml)}”
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Link
-                        href={`/campaigns/${c.id}`}
-                        className="text-xs px-3 py-1.5 rounded-lg bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white transition-colors border border-white/10"
-                      >
-                        View
-                      </Link>
-                      <RunCampaignButton campaignId={c.id} prospectorUrl={PROSPECTOR_URL} initialTotal={c._count.prospects} />
-                      <SendCampaignButton campaignId={c.id} prospectorUrl={PROSPECTOR_URL} enrichedCount={enrichedCounts[idx] ?? 0} />
-                      <CloneCampaignButton campaignId={c.id} campaignName={c.name} prospectorUrl={PROSPECTOR_URL} />
-                      <DeleteCampaignButton campaignId={c.id} campaignName={c.name} prospectorUrl={PROSPECTOR_URL} />
+
+                    {/* MIDDLE — numbers */}
+                    <div className="col-span-12 lg:col-span-4 p-6 hairline-r grid grid-cols-2 gap-y-5 gap-x-4 content-start">
+                      <NumCell
+                        label="Prospects"
+                        value={c._count.prospects.toLocaleString()}
+                      />
+                      <NumCell
+                        label="Emailed"
+                        value={(c.stats?.emailed ?? 0).toLocaleString()}
+                      />
+                      <NumCell
+                        label="Opens"
+                        value={(c.stats?.opened ?? 0).toLocaleString()}
+                        suffix={`${cOpen}%`}
+                      />
+                      <NumCell
+                        label="Replies"
+                        value={(c.stats?.replied ?? 0).toLocaleString()}
+                        suffix={`${cReply}%`}
+                        accent={(c.stats?.replied ?? 0) > 0}
+                      />
                     </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+
+                    {/* RIGHT — actions */}
+                    <div className="col-span-12 lg:col-span-3 p-6 flex flex-col gap-2 justify-between">
+                      <div className="flex flex-col gap-2">
+                        <Link href={`/campaigns/${c.id}`}>
+                          <Button size="sm" className="w-full justify-between">
+                            <span>Inspect</span>
+                            <ArrowUpRight className="w-3 h-3" />
+                          </Button>
+                        </Link>
+                        <div className="flex gap-1.5">
+                          <div className="flex-1">
+                            <RunCampaignButton
+                              campaignId={c.id}
+                              prospectorUrl={PROSPECTOR_URL}
+                              initialTotal={c._count.prospects}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <SendCampaignButton
+                              campaignId={c.id}
+                              prospectorUrl={PROSPECTOR_URL}
+                              enrichedCount={enrichedCounts[idx] ?? 0}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-1.5 mt-auto">
+                        <div className="flex-1">
+                          <CloneCampaignButton
+                            campaignId={c.id}
+                            campaignName={c.name}
+                            prospectorUrl={PROSPECTOR_URL}
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <DeleteCampaignButton
+                            campaignId={c.id}
+                            campaignName={c.name}
+                            prospectorUrl={PROSPECTOR_URL}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
         </div>
-      )}
+      </section>
+
+      {/* ── Footer ── */}
+      <section className="hairline-t pt-6 flex items-center justify-between">
+        <span className="font-mono text-[10px] tracking-mega text-paper-4 uppercase">
+          § 02 · Campaigns
+        </span>
+        <span className="font-mono text-[10px] tracking-mega text-paper-4 uppercase">
+          {campaigns.length} records
+        </span>
+      </section>
+    </div>
+  );
+}
+
+function NumCell({
+  label,
+  value,
+  suffix,
+  accent,
+}: {
+  label: string;
+  value: string;
+  suffix?: string;
+  accent?: boolean;
+}) {
+  return (
+    <div>
+      <p className="label-sm mb-1">{label}</p>
+      <div className="flex items-baseline gap-1.5">
+        <span
+          className={`font-display italic font-light nums text-[28px] leading-none tracking-tight ${
+            accent ? 'text-signal' : 'text-paper'
+          }`}
+        >
+          {value}
+        </span>
+        {suffix && (
+          <span className="font-mono text-[10px] text-paper-4 tracking-micro">{suffix}</span>
+        )}
+      </div>
     </div>
   );
 }

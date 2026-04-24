@@ -3,183 +3,93 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import EmbedoLogo from '../../components/EmbedoLogo';
+import {
+  LayoutDashboard, Building2, BarChart3, Calendar, Crosshair,
+  Mail, Users, Instagram, FileText, Download, Globe, Settings as SettingsIcon,
+  Plug, LogOut, ChevronLeft, Command,
+} from 'lucide-react';
 import NotificationBell from '../../components/NotificationBell';
 import { useSession } from '../../components/auth/session-provider';
 import { CubeyChat } from '../../components/ui/cubey-chat';
 import { createSupabaseBrowserClient } from '../../lib/supabase/client';
 
-const PLATFORM_API = process.env['NEXT_PUBLIC_API_URL'] ?? process.env['API_BASE_URL'] ?? 'https://embedoapi-production.up.railway.app';
+const PLATFORM_API = process.env['NEXT_PUBLIC_API_URL'] ?? 'https://embedoapi-production.up.railway.app';
 
-const NAV = [
+type NavItemT = { href: string; label: string; code: string; icon: React.ComponentType<{ className?: string }> };
+type NavSection = { numeral: string; section: string; items: NavItemT[] };
+
+const NAV: NavSection[] = [
   {
-    section: 'OVERVIEW',
+    numeral: 'I',
+    section: 'Overview',
     items: [
-      {
-        href: '/',
-        label: 'Dashboard',
-        icon: (
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-            <path d="M2 10a8 8 0 1116 0 8 8 0 01-16 0zm8-3a1 1 0 100 2 1 1 0 000-2zm-1 4a1 1 0 011-1h1a1 1 0 110 2v2a1 1 0 11-2 0v-3z" />
-          </svg>
-        ),
-      },
-      {
-        href: '/businesses',
-        label: 'Businesses',
-        icon: (
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-            <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4zm3 1h2v2H7V5zm4 0h2v2h-2V5zM7 9h2v2H7V9zm4 0h2v2h-2V9zm-4 4h2v2H7v-2zm4 0h2v2h-2v-2z" clipRule="evenodd" />
-          </svg>
-        ),
-      },
-      {
-        href: '/analytics',
-        label: 'Analytics',
-        icon: (
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-          </svg>
-        ),
-      },
-      {
-        href: '/calendar',
-        label: 'Calendar',
-        icon: (
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-            <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-          </svg>
-        ),
-      },
+      { href: '/',           label: 'Dashboard',  code: 'DSH', icon: LayoutDashboard },
+      { href: '/businesses', label: 'Businesses', code: 'BIZ', icon: Building2 },
+      { href: '/analytics',  label: 'Analytics',  code: 'ANL', icon: BarChart3 },
+      { href: '/calendar',   label: 'Calendar',   code: 'CAL', icon: Calendar },
     ],
   },
   {
-    section: 'OUTBOUND',
+    numeral: 'II',
+    section: 'Outbound',
     items: [
-      {
-        href: '/campaigns',
-        label: 'Campaigns',
-        icon: (
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-            <path d="M5 3a2 2 0 00-2 2v2.586l-1.293-1.293a1 1 0 00-1.414 1.414L2.586 10 .293 12.293a1 1 0 101.414 1.414L3 12.414V15a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 5h10v10H5V5z" />
-          </svg>
-        ),
-      },
-      {
-        href: '/emails',
-        label: 'Emails',
-        icon: (
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-          </svg>
-        ),
-      },
-      {
-        href: '/leads',
-        label: 'Leads',
-        icon: (
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 14.094A5.973 5.973 0 004 17v1H1v-1a3 3 0 013.75-2.906z" />
-          </svg>
-        ),
-      },
-      {
-        href: '/instagram',
-        label: 'Instagram',
-        icon: (
-          <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
-          </svg>
-        ),
-      },
+      { href: '/campaigns', label: 'Campaigns', code: 'CMP', icon: Crosshair },
+      { href: '/emails',    label: 'Emails',    code: 'EML', icon: Mail },
+      { href: '/leads',     label: 'Leads',     code: 'LED', icon: Users },
+      { href: '/instagram', label: 'Instagram', code: 'IG',  icon: Instagram },
     ],
   },
   {
-    section: 'TOOLS',
+    numeral: 'III',
+    section: 'Tools',
     items: [
-      {
-        href: '/email-templates',
-        label: 'Templates',
-        icon: (
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-            <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-          </svg>
-        ),
-      },
-      {
-        href: '/export',
-        label: 'Export',
-        icon: (
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-            <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-          </svg>
-        ),
-      },
-      {
-        href: '/domains',
-        label: 'Domains',
-        icon: (
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0 2 2 0 011.523-1.943A5.977 5.977 0 0116 10c0 .34-.028.675-.083 1H15a2 2 0 00-2 2v2.197A5.973 5.973 0 0110 16v-2a2 2 0 00-2-2 2 2 0 01-2-2 2 2 0 00-1.668-1.973z" clipRule="evenodd" />
-          </svg>
-        ),
-      },
+      { href: '/email-templates', label: 'Templates', code: 'TPL', icon: FileText },
+      { href: '/export',          label: 'Export',    code: 'EXP', icon: Download },
+      { href: '/domains',         label: 'Domains',   code: 'DOM', icon: Globe },
     ],
   },
   {
-    section: 'ACCOUNT',
+    numeral: 'IV',
+    section: 'Account',
     items: [
-      {
-        href: '/settings',
-        label: 'Settings',
-        icon: (
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-            <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-          </svg>
-        ),
-      },
-      {
-        href: '/integrations',
-        label: 'Integrations',
-        icon: (
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-            <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
-          </svg>
-        ),
-      },
+      { href: '/settings',     label: 'Settings',     code: 'STG', icon: SettingsIcon },
+      { href: '/integrations', label: 'Integrations', code: 'INT', icon: Plug },
     ],
   },
 ];
 
-const DEFAULT_WIDTH = 240;
+const DEFAULT_WIDTH = 248;
 const COLLAPSED_WIDTH = 60;
-const MIN_EXPANDED = 160;
-const MAX_WIDTH = 360;
-const SNAP_THRESHOLD = 110;
+const MIN_EXPANDED = 200;
+const MAX_WIDTH = 340;
+const SNAP_THRESHOLD = 130;
 
 function NavItem({
-  href, label, icon, isActive, collapsed,
-}: {
-  href: string; label: string; icon: React.ReactNode; isActive: boolean; collapsed: boolean;
-}) {
+  href, label, code, icon: Icon, isActive, collapsed,
+}: NavItemT & { isActive: boolean; collapsed: boolean }) {
   return (
     <Link
       href={href}
       title={collapsed ? label : undefined}
-      className={`flex items-center gap-3 rounded-lg text-sm font-medium transition-all duration-150 ${
-        collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5'
+      className={`group relative flex items-center transition-all duration-150 ${
+        collapsed ? 'justify-center h-10 w-10 mx-auto' : 'h-9 pl-4 pr-3 gap-3'
       } ${
         isActive
-          ? 'text-white bg-violet-600/20 border border-violet-500/30 shadow-[0_0_16px_rgba(124,58,237,0.18),inset_0_0_16px_rgba(124,58,237,0.04)]'
-          : 'text-slate-400 hover:text-white hover:bg-white/[0.04] border border-transparent'
+          ? 'text-paper bg-ink-2'
+          : 'text-paper-3 hover:text-paper hover:bg-ink-2/60'
       }`}
     >
-      <span className={`flex-shrink-0 ${isActive ? 'text-violet-400' : 'text-slate-500'}`}>{icon}</span>
+      {/* Active left rail */}
+      {isActive && !collapsed && (
+        <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-signal" />
+      )}
+      <Icon className={`w-[14px] h-[14px] shrink-0 ${isActive ? 'text-signal' : ''}`} />
       {!collapsed && (
         <>
-          {label}
-          {isActive && <span className="ml-auto w-1 h-4 rounded-full bg-violet-400/60" />}
+          <span className="text-[13px] tracking-tight">{label}</span>
+          <span className={`ml-auto font-mono text-[9px] tracking-mega ${isActive ? 'text-paper-3' : 'text-paper-4'}`}>
+            {code}
+          </span>
         </>
       )}
     </Link>
@@ -187,13 +97,7 @@ function NavItem({
 }
 
 function Sidebar({
-  width,
-  collapsed,
-  onDragStart,
-  onToggle,
-  userEmail,
-  userInitial,
-  onLogout,
+  width, collapsed, onDragStart, onToggle, userEmail, userInitial, onLogout,
 }: {
   width: number;
   collapsed: boolean;
@@ -207,34 +111,47 @@ function Sidebar({
 
   return (
     <aside
-      className="flex-shrink-0 border-r border-white/[0.06] flex flex-col h-screen sticky top-0 relative overflow-hidden select-none"
-      style={{ width, background: 'linear-gradient(180deg, #0f0c1f 0%, #0d0b1a 100%)' }}
+      className="flex-shrink-0 hairline-r flex flex-col h-screen sticky top-0 bg-ink-0 select-none relative"
+      style={{ width }}
     >
-      {/* Ambient glow */}
-      <div className="absolute -top-16 -left-16 w-48 h-48 rounded-full bg-violet-600/10 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-violet-950/20 to-transparent pointer-events-none" />
-
-      {/* Logo */}
-      <div className={`relative border-b border-white/[0.06] flex items-center ${collapsed ? 'justify-center py-5 px-2' : 'px-5 py-5 gap-3'}`}>
-        <EmbedoLogo size={collapsed ? 28 : 36} />
+      {/* Wordmark */}
+      <div className={`hairline-b flex items-center ${collapsed ? 'justify-center h-16' : 'h-16 px-5 gap-3'}`}>
+        {/* Mark */}
+        <div className="relative w-7 h-7 shrink-0 border border-paper flex items-center justify-center">
+          <span className="font-display italic font-light text-paper text-[15px] leading-none">E</span>
+        </div>
         {!collapsed && (
-          <div>
-            <p className="text-sm font-bold text-white leading-none tracking-tight">Embedo</p>
-            <p className="text-[10px] text-violet-400/60 mt-0.5 leading-none font-medium uppercase tracking-widest">Growth OS</p>
+          <div className="flex-1 min-w-0">
+            <p className="font-display italic font-light text-paper text-[17px] leading-none">
+              Embedo
+            </p>
+            <p className="font-mono text-[9px] tracking-mega text-paper-4 mt-1 uppercase">
+              Operator · v0.1
+            </p>
           </div>
+        )}
+        {!collapsed && (
+          <span className="font-mono text-[9px] tracking-mega text-paper-4 uppercase shrink-0">
+            NYC
+          </span>
         )}
       </div>
 
       {/* Nav */}
-      <nav className={`relative flex-1 py-5 space-y-5 overflow-y-auto ${collapsed ? 'px-2' : 'px-3'}`}>
-        {NAV.map((group) => (
-          <div key={group.section}>
+      <nav className="flex-1 overflow-y-auto py-4">
+        {NAV.map((group, i) => (
+          <div key={group.section} className={i > 0 ? 'mt-6' : ''}>
             {!collapsed && (
-              <p className="px-3 mb-2 text-[9px] font-bold text-slate-700 uppercase tracking-[0.18em]">
-                {group.section}
-              </p>
+              <div className="px-5 mb-2 flex items-baseline gap-2">
+                <span className="font-mono text-[9px] tracking-mega text-paper-4 leading-none">
+                  §{group.numeral}
+                </span>
+                <span className="font-mono text-[9px] tracking-mega text-paper-4 uppercase leading-none">
+                  {group.section}
+                </span>
+              </div>
             )}
-            <div className="space-y-0.5">
+            <div>
               {group.items.map((item) => {
                 const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
                 return (
@@ -247,55 +164,108 @@ function Sidebar({
       </nav>
 
       {/* Footer */}
-      <div className={`relative border-t border-white/[0.06] flex items-center ${collapsed ? 'justify-center py-4 px-2' : 'px-4 py-4 gap-2.5'}`}>
-        <div className="relative w-7 h-7 flex-shrink-0">
-          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold">
-            {userInitial}
-          </div>
-          <div className="absolute inset-0 rounded-full bg-violet-500/30 blur-sm" />
+      <div className={`hairline-t ${collapsed ? 'h-14 flex items-center justify-center' : 'px-5 py-4 flex items-center gap-3'}`}>
+        <div className="relative w-7 h-7 shrink-0 bg-signal flex items-center justify-center">
+          <span className="font-display italic font-semibold text-ink-0 text-xs">{userInitial}</span>
         </div>
         {!collapsed && (
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-slate-300 leading-none truncate">{userEmail ?? 'User'}</p>
-            <p className="text-[10px] text-slate-600 mt-0.5 leading-none">Owner</p>
-          </div>
-        )}
-        {!collapsed && (
-          <button
-            onClick={onLogout}
-            title="Sign out"
-            className="flex-shrink-0 p-1.5 rounded-md text-slate-600 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-          >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
-              <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H3zm11 4.414l-4.293 4.293a1 1 0 01-1.414-1.414L11.586 7H7a1 1 0 110-2h6a1 1 0 011 1v6a1 1 0 11-2 0V7.414z" clipRule="evenodd" />
-            </svg>
-          </button>
+          <>
+            <div className="flex-1 min-w-0">
+              <p className="font-ui text-[12px] font-medium text-paper leading-none truncate">
+                {userEmail?.split('@')[0] ?? 'operator'}
+              </p>
+              <p className="font-mono text-[9px] tracking-micro text-paper-4 mt-1 uppercase">
+                Owner
+              </p>
+            </div>
+            <button
+              onClick={onLogout}
+              title="Sign out"
+              className="shrink-0 w-7 h-7 flex items-center justify-center text-paper-4 hover:text-ember hairline transition"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </>
         )}
       </div>
 
-      {/* Collapse/expand toggle button */}
+      {/* Collapse toggle */}
       <button
         onClick={onToggle}
-        className="absolute bottom-16 -right-3 w-6 h-6 rounded-full bg-[#1a1730] border border-white/10 flex items-center justify-center text-slate-500 hover:text-violet-400 hover:border-violet-500/40 transition-colors z-50 shadow-md"
-        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        className="absolute top-[52px] -right-3 w-6 h-6 bg-ink-0 hairline flex items-center justify-center text-paper-3 hover:text-signal hover:border-signal transition z-50"
+        title={collapsed ? 'Expand' : 'Collapse'}
       >
-        <svg viewBox="0 0 20 20" fill="currentColor" className={`w-3 h-3 transition-transform ${collapsed ? 'rotate-0' : 'rotate-180'}`}>
-          <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-        </svg>
+        <ChevronLeft className={`w-3 h-3 transition-transform ${collapsed ? 'rotate-180' : ''}`} />
       </button>
 
       {/* Drag handle */}
       <div
-        className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-violet-500/25 active:bg-violet-500/40 transition-colors z-40"
+        className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-signal/20 transition-colors z-40"
         onMouseDown={onDragStart}
       />
     </aside>
   );
 }
 
+/* ─── Header bar ─────────────────────────────────────────────── */
+
+function TopBar({ path }: { path: string }) {
+  const now = new Date();
+  const timeString = now.toLocaleTimeString('en-US', {
+    timeZone: 'America/New_York',
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  const dateString = now.toLocaleDateString('en-US', {
+    timeZone: 'America/New_York',
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  }).toUpperCase();
+
+  const breadcrumb = path === '/' ? 'DASHBOARD' : path.slice(1).split('/')[0]?.toUpperCase();
+
+  return (
+    <header className="flex-shrink-0 h-14 hairline-b flex items-center justify-between px-8 bg-ink-0/90 backdrop-blur-sm sticky top-0 z-30">
+      {/* Left — breadcrumb */}
+      <div className="flex items-center gap-5">
+        <span className="font-mono text-[10px] tracking-mega text-paper-4 uppercase">
+          Embedo / {breadcrumb}
+        </span>
+      </div>
+
+      {/* Center — ticker */}
+      <div className="hidden lg:flex items-center gap-6 font-mono text-[10px] tracking-micro uppercase text-paper-3">
+        <span className="flex items-center gap-2">
+          <span className="w-1.5 h-1.5 bg-signal signal-dot relative" />
+          <span>All systems nominal</span>
+        </span>
+      </div>
+
+      {/* Right — time + actions */}
+      <div className="flex items-center gap-5">
+        <div className="hidden md:flex items-baseline gap-3 font-mono text-[10px] tracking-micro text-paper-3 uppercase">
+          <span>{dateString}</span>
+          <span className="text-paper nums">{timeString} ET</span>
+        </div>
+        <button
+          className="hidden md:inline-flex items-center gap-1.5 hairline px-2.5 py-1 font-mono text-[10px] tracking-mega text-paper-3 hover:text-paper hover:border-paper-3 transition"
+          title="Command palette"
+        >
+          <Command className="w-3 h-3" />
+          <span>K</span>
+        </button>
+        <NotificationBell />
+      </div>
+    </header>
+  );
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_WIDTH);
   const isDragging = useRef(false);
   const startX = useRef(0);
@@ -324,7 +294,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setSidebarWidth((w) => (w <= COLLAPSED_WIDTH + 10 ? DEFAULT_WIDTH : COLLAPSED_WIDTH));
   }, []);
 
-  // Fetch live platform context for Cubey
+  // Cubey context
   const [platformContext, setPlatformContext] = useState('');
   useEffect(() => {
     async function fetchContext() {
@@ -366,7 +336,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       const raw = startWidth.current + delta;
       setSidebarWidth(Math.max(COLLAPSED_WIDTH, Math.min(MAX_WIDTH, raw)));
     };
-
     const onMouseUp = () => {
       if (!isDragging.current) return;
       isDragging.current = false;
@@ -376,7 +345,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return w;
       });
     };
-
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
     return () => {
@@ -386,14 +354,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
 
   return (
-    <div className="min-h-screen flex bg-[#0c0a18]">
-      {/* Global ambient background orbs */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-32 left-1/4 w-[560px] h-[560px] rounded-full bg-violet-700/8 blur-[110px] animate-float-orb" />
-        <div className="absolute top-2/3 -right-20 w-[420px] h-[420px] rounded-full bg-indigo-600/6 blur-[100px] animate-float-orb-b" />
-        <div className="absolute bottom-0 left-10 w-[300px] h-[300px] rounded-full bg-violet-900/8 blur-[80px] animate-shimmer" />
-      </div>
-
+    <div className="min-h-screen flex bg-ink-0 text-paper">
       <Sidebar
         width={sidebarWidth}
         collapsed={collapsed}
@@ -403,22 +364,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         userInitial={userInitial}
         onLogout={handleLogout}
       />
-      <div className="relative flex-1 flex flex-col overflow-hidden" style={{ zIndex: 2 }}>
-        {/* Top header bar */}
-        <header className="flex-shrink-0 h-14 border-b border-white/[0.06] flex items-center justify-end px-6 bg-[#0c0a18]/80 backdrop-blur-sm">
-          <NotificationBell />
-        </header>
-        <main className="flex-1 overflow-auto bg-grid-dark">
-          {children}
+      <div className="relative flex-1 flex flex-col overflow-hidden min-w-0">
+        <TopBar path={pathname} />
+        <main className="flex-1 overflow-auto bg-ink-0">
+          <div className="animate-fade-up">
+            {children}
+          </div>
         </main>
       </div>
 
-      {/* Cubey — internal platform assistant */}
+      {/* Cubey retained */}
       <CubeyChat
         mode="support"
         businessId="embedo-platform"
-        headerTitle="Cubey Assistant"
-        welcomeMessage="Hey Jason! I'm Cubey, your platform assistant. Ask me about campaigns, prospects, leads, analytics — anything about what's happening in the CRM."
+        headerTitle="Cubey"
+        welcomeMessage="Operator here. Ask me about campaigns, prospects, leads — anything in the CRM."
         systemContext={platformContext}
       />
     </div>
