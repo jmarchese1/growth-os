@@ -1,14 +1,11 @@
 /**
- * Daily Send Agent — the brain of the outreach automation.
+ * Daily Send Agent — agent-scoped orchestrator.
  *
- * Runs once per day. For every agent-active campaign:
- *   1. Picks up to `agentDailyCap` enriched prospects that haven't been sent to
- *   2. Sends AI-personalized cold emails via `sendColdEmail()` (rotates domains)
- *   3. Staggers sends by 3 minutes
- *   4. When a campaign has no more prospects → marks it exhausted and (if autoRotate)
- *      spawns a new campaign in the next city/industry from the rotation list
- *
- * All activity is recorded to AgentRun + events, which the /agent UI polls.
+ * For a given Agent:
+ *   1. Finds its active campaigns (or spawns one from rotation if none)
+ *   2. For each campaign, sends up to `agent.dailyCap` AI-personalized emails
+ *   3. Writes every event to Google Sheets in real-time
+ *   4. Auto-rotates to new cities/industries when campaigns exhaust
  */
 
 import { db } from '@embedo/db';
@@ -16,7 +13,8 @@ import { createLogger } from '@embedo/utils';
 import { sendColdEmail } from '../outreach/email-sender.js';
 import { getTotalDailyCapacity } from '../outreach/domain-rotator.js';
 import { EventBuffer } from './events.js';
-import { isCampaignExhausted, spawnNextCampaign } from './auto-rotate.js';
+import { isCampaignExhausted, spawnNextCampaignForAgent } from './auto-rotate.js';
+import { writeEmailRow, writeLogRow, writeDailySummary } from './sheets.js';
 
 const log = createLogger('agent:daily-send');
 
@@ -31,93 +29,78 @@ interface RunResult {
 }
 
 export interface RunOptions {
+  agentId: string;
   trigger?: 'cron' | 'manual' | 'webhook';
-  campaignId?: string; // if set, run only against this campaign (for testing)
   dryRun?: boolean;
 }
 
-/**
- * Entry point — run one agent pass.
- */
-export async function runAgent(options: RunOptions = {}): Promise<RunResult> {
+export async function runAgent(options: RunOptions): Promise<RunResult> {
   const startedAt = new Date();
   const trigger = options.trigger ?? 'manual';
 
-  // Create AgentRun row immediately so UI can pick up "running" state
+  const agent = await db.agent.findUnique({ where: { id: options.agentId } });
+  if (!agent) {
+    throw new Error(`Agent ${options.agentId} not found`);
+  }
+
   const run = await db.agentRun.create({
-    data: {
-      status: 'running',
-      trigger,
-      startedAt,
-      events: [] as unknown as object,
-    },
+    data: { agentId: agent.id, status: 'running', trigger, startedAt, events: [] as unknown as object },
   });
 
   const buffer = new EventBuffer(run.id);
-  buffer.info(`Agent run started (trigger: ${trigger})`);
+  buffer.info(`Agent "${agent.name}" started — trigger: ${trigger}`);
+
+  // Sheets log — start event
+  void writeLogRow(agent.id, { agentName: agent.name, runId: run.id, level: 'info', message: `Agent run started (${trigger})` });
 
   let status: 'completed' | 'failed' | 'partial' = 'completed';
   const stats = { campaignsTouched: 0, emailsSent: 0, emailsFailed: 0, campaignsSpawned: 0 };
   const errors: string[] = [];
 
   try {
-    // Global kill switch check
-    const config = await db.agentConfig.findUnique({ where: { id: 'singleton' } });
-    if (!options.dryRun && config && !config.active) {
-      buffer.warn('Agent is globally paused (AgentConfig.active=false). Run aborted.');
+    // Kill switch
+    if (!options.dryRun && !agent.active) {
+      buffer.warn(`Agent "${agent.name}" is paused — aborting.`);
       await buffer.finalize('failed', { ...stats, errors: ['agent_paused'] }, startedAt);
-      return {
-        runId: run.id,
-        status: 'failed',
-        ...stats,
-        durationMs: Date.now() - startedAt.getTime(),
-      };
+      return { runId: run.id, status: 'failed', ...stats, durationMs: Date.now() - startedAt.getTime() };
     }
 
-    // Check capacity across all sending domains
     const capacity = await getTotalDailyCapacity();
-    buffer.info(`Sending capacity: ${capacity.remaining} / ${capacity.totalCapacity} across ${capacity.domains.length} domains`);
+    buffer.info(`Sending capacity: ${capacity.remaining}/${capacity.totalCapacity} across ${capacity.domains.length} domains`);
 
     if (capacity.remaining <= 0) {
-      buffer.warn('All sending domains at daily cap. No sends possible.');
+      buffer.warn('All sending domains at daily cap.');
       await buffer.finalize('failed', { ...stats, errors: ['no_capacity'] }, startedAt);
-      return {
-        runId: run.id,
-        status: 'failed',
-        ...stats,
-        durationMs: Date.now() - startedAt.getTime(),
-      };
+      return { runId: run.id, status: 'failed', ...stats, durationMs: Date.now() - startedAt.getTime() };
     }
 
-    const globalDailyCap = config?.globalDailyCap ?? 200;
-
-    // Get active campaigns (scoped if campaignId given)
-    const where = options.campaignId
-      ? { id: options.campaignId }
-      : { agentActive: true, active: true };
-
-    const campaigns = await db.outboundCampaign.findMany({
-      where,
-      orderBy: { agentLastRunAt: { sort: 'asc', nulls: 'first' } }, // round-robin: LRU first
+    // Get campaigns owned by this agent
+    let campaigns = await db.outboundCampaign.findMany({
+      where: { agentId: agent.id, active: true },
+      orderBy: { agentLastRunAt: { sort: 'asc', nulls: 'first' } },
     });
 
-    if (campaigns.length === 0) {
-      buffer.warn('No agent-active campaigns to dispatch. Enable the agent on one or more campaigns.');
-      await buffer.finalize('completed', stats, startedAt);
-      return {
-        runId: run.id,
-        status: 'completed',
-        ...stats,
-        durationMs: Date.now() - startedAt.getTime(),
-      };
+    // If agent has no campaigns, spawn one immediately from the rotation
+    if (campaigns.length === 0 && agent.autoRotate) {
+      buffer.info(`Agent has no campaigns — spawning from rotation`);
+      const spawned = await spawnNextCampaignForAgent(agent, buffer);
+      if (spawned) {
+        stats.campaignsSpawned++;
+        campaigns = [spawned];
+      }
     }
 
-    buffer.info(`Found ${campaigns.length} agent-active campaign(s)`);
+    if (campaigns.length === 0) {
+      buffer.warn('No campaigns available and auto-rotate is off. Add rotation targets or create a campaign manually.');
+      await buffer.finalize('completed', stats, startedAt);
+      return { runId: run.id, status: 'completed', ...stats, durationMs: Date.now() - startedAt.getTime() };
+    }
 
-    // For each campaign — send up to agentDailyCap emails
+    buffer.info(`Working across ${campaigns.length} campaign(s)`);
+
     for (const campaign of campaigns) {
-      if (stats.emailsSent >= globalDailyCap) {
-        buffer.warn(`Global daily cap reached (${globalDailyCap}). Halting for today.`);
+      if (stats.emailsSent >= agent.dailyCap) {
+        buffer.warn(`Agent daily cap reached (${agent.dailyCap})`);
         status = 'partial';
         break;
       }
@@ -125,42 +108,36 @@ export async function runAgent(options: RunOptions = {}): Promise<RunResult> {
       const exhausted = await isCampaignExhausted(campaign.id);
       if (exhausted.exhausted) {
         buffer.info(`Campaign "${campaign.name}" exhausted (${exhausted.reason})`, {
-          campaignId: campaign.id,
-          campaignName: campaign.name,
+          campaignId: campaign.id, campaignName: campaign.name,
         });
-
-        // Mark exhausted + try to rotate
         await db.outboundCampaign.update({
           where: { id: campaign.id },
-          data: { agentExhaustedAt: new Date(), agentActive: false },
+          data: { agentExhaustedAt: new Date(), active: false },
         });
 
-        if (config?.autoRotate !== false) {
-          const spawned = await spawnNextCampaign(campaign, buffer).catch((err) => {
+        if (agent.autoRotate) {
+          const spawned = await spawnNextCampaignForAgent(agent, buffer).catch((err) => {
             buffer.error(`Failed to spawn next campaign: ${err instanceof Error ? err.message : String(err)}`);
             return null;
           });
-          if (spawned) stats.campaignsSpawned++;
+          if (spawned) {
+            stats.campaignsSpawned++;
+            // Work on the newly-spawned campaign in this same run
+            campaigns.push(spawned);
+          }
         }
         continue;
       }
 
-      buffer.info(`Campaign "${campaign.name}" has ${exhausted.remaining} sendable prospects`, {
-        campaignId: campaign.id,
-        campaignName: campaign.name,
+      buffer.info(`Campaign "${campaign.name}" — ${exhausted.remaining} sendable prospects`, {
+        campaignId: campaign.id, campaignName: campaign.name,
       });
 
-      // Get the next N prospects to send to
       const cap = Math.min(
-        campaign.agentDailyCap,
+        agent.dailyCap - stats.emailsSent,
         capacity.remaining - stats.emailsSent,
-        globalDailyCap - stats.emailsSent,
       );
-      if (cap <= 0) {
-        buffer.warn('Capacity exhausted before we could send to this campaign.');
-        status = 'partial';
-        break;
-      }
+      if (cap <= 0) break;
 
       const prospects = await db.prospectBusiness.findMany({
         where: {
@@ -171,40 +148,29 @@ export async function runAgent(options: RunOptions = {}): Promise<RunResult> {
         },
         include: { campaign: true },
         take: cap,
-        orderBy: { createdAt: 'asc' }, // oldest first
+        orderBy: { createdAt: 'asc' },
       });
 
-      if (prospects.length === 0) {
-        buffer.info(`No eligible prospects found for "${campaign.name}"`, {
-          campaignId: campaign.id,
-        });
-        continue;
-      }
+      if (prospects.length === 0) continue;
 
-      // Flip AI personalization ON for agent-sent emails, preserving rest of config
-      const currentConf = (campaign.apolloConfig as Record<string, unknown> | null) ?? {};
-      if (currentConf['aiPersonalization'] !== true) {
+      // Enable AI personalization on this campaign (idempotent)
+      const conf = (campaign.apolloConfig as Record<string, unknown> | null) ?? {};
+      if (conf['aiPersonalization'] !== true) {
         await db.outboundCampaign.update({
           where: { id: campaign.id },
-          data: {
-            apolloConfig: { ...currentConf, aiPersonalization: true },
-          },
+          data: { apolloConfig: { ...conf, aiPersonalization: true, systemPrompt: agent.systemPrompt ?? undefined } },
         });
       }
 
       stats.campaignsTouched++;
-      buffer.info(`Dispatching ${prospects.length} personalized email(s) for "${campaign.name}"`, {
-        campaignId: campaign.id,
-      });
+      buffer.info(`Dispatching ${prospects.length} for "${campaign.name}"`, { campaignId: campaign.id });
 
       for (let i = 0; i < prospects.length; i++) {
         const prospect = prospects[i]!;
 
         if (options.dryRun) {
-          buffer.info(`[DRY-RUN] would send to ${prospect.email}`, {
-            campaignId: campaign.id,
-            prospectId: prospect.id,
-            prospectName: prospect.name,
+          buffer.info(`[dry-run] would send to ${prospect.email}`, {
+            campaignId: campaign.id, prospectId: prospect.id, prospectName: prospect.name,
           });
           continue;
         }
@@ -212,9 +178,35 @@ export async function runAgent(options: RunOptions = {}): Promise<RunResult> {
         try {
           await sendColdEmail(prospect, campaign, { stepNumber: 1 });
           stats.emailsSent++;
+
+          // Grab the domain that was actually used
+          const lastMsg = await db.outreachMessage.findFirst({
+            where: { prospectId: prospect.id, stepNumber: 1 },
+            orderBy: { createdAt: 'desc' },
+            include: { sendingDomain: true },
+          });
+
           buffer.success(`Sent to ${prospect.name} (${prospect.email})`, {
-            campaignId: campaign.id,
-            prospectId: prospect.id,
+            campaignId: campaign.id, prospectId: prospect.id, prospectName: prospect.name,
+          });
+
+          // Sheets: write email row + log
+          void writeEmailRow(agent.id, {
+            agentName: agent.name,
+            campaignName: campaign.name,
+            businessName: prospect.name,
+            toEmail: prospect.email ?? '',
+            subject: lastMsg?.subject ?? campaign.emailSubject,
+            fromDomain: lastMsg?.sendingDomain?.domain ?? '',
+            stepNumber: 1,
+            status: 'SENT',
+          });
+          void writeLogRow(agent.id, {
+            agentName: agent.name,
+            runId: run.id,
+            level: 'success',
+            message: `Sent to ${prospect.name}`,
+            campaignName: campaign.name,
             prospectName: prospect.name,
           });
         } catch (err) {
@@ -222,14 +214,15 @@ export async function runAgent(options: RunOptions = {}): Promise<RunResult> {
           const msg = err instanceof Error ? err.message : 'Unknown error';
           errors.push(`${prospect.name}: ${msg}`);
           buffer.error(`Failed for ${prospect.name}: ${msg}`, {
-            campaignId: campaign.id,
-            prospectId: prospect.id,
-            prospectName: prospect.name,
+            campaignId: campaign.id, prospectId: prospect.id, prospectName: prospect.name,
+          });
+          void writeLogRow(agent.id, {
+            agentName: agent.name, runId: run.id, level: 'error',
+            message: `Failed: ${msg}`, campaignName: campaign.name, prospectName: prospect.name,
           });
         }
 
-        // 3-minute stagger between sends (skip wait for dry-run and last send)
-        if (i < prospects.length - 1) {
+        if (i < prospects.length - 1 && stats.emailsSent < agent.dailyCap) {
           await new Promise((r) => setTimeout(r, 3 * 60 * 1000));
         }
       }
@@ -240,16 +233,26 @@ export async function runAgent(options: RunOptions = {}): Promise<RunResult> {
       });
     }
 
-    // Success — update AgentConfig.lastRun
     if (!options.dryRun) {
-      await db.agentConfig.upsert({
-        where: { id: 'singleton' },
-        create: { id: 'singleton', active: true, lastRunAt: new Date(), lastRunStatus: status },
-        update: { lastRunAt: new Date(), lastRunStatus: status },
+      await db.agent.update({
+        where: { id: agent.id },
+        data: { lastRunAt: new Date(), lastRunStatus: status },
       });
     }
 
-    buffer.success(`Run complete. Sent ${stats.emailsSent}, failed ${stats.emailsFailed}, spawned ${stats.campaignsSpawned} new campaigns.`);
+    buffer.success(`Run complete. Sent ${stats.emailsSent}, failed ${stats.emailsFailed}, spawned ${stats.campaignsSpawned}`);
+
+    // Daily summary row
+    void writeDailySummary(agent.id, {
+      agentName: agent.name,
+      prospectsAdded: 0, // filled by discovery, not send
+      emailsSent: stats.emailsSent,
+      opens: 0,
+      replies: 0,
+      meetingsBooked: 0,
+      bounces: 0,
+      campaignsSpawned: stats.campaignsSpawned,
+    });
   } catch (err) {
     status = 'failed';
     const msg = err instanceof Error ? err.message : String(err);
@@ -265,17 +268,21 @@ export async function runAgent(options: RunOptions = {}): Promise<RunResult> {
 }
 
 /**
- * Quick-fire a lightweight status poll (used by UI).
+ * Agent-scoped status poll for the /agents/[id]/run UI.
  */
-export async function getAgentStatus(): Promise<{
-  config: {
+export async function getAgentStatus(agentId: string): Promise<{
+  agent: {
+    id: string;
+    name: string;
+    description: string | null;
     active: boolean;
-    runHourET: number;
-    globalDailyCap: number;
+    dailyCap: number;
     autoRotate: boolean;
+    sheetUrl: string | null;
     lastRunAt: Date | null;
     lastRunStatus: string | null;
-    nextRunAt: Date | null;
+    targetCities: string[];
+    targetIndustries: string[];
   };
   todayRun: {
     id: string;
@@ -292,8 +299,7 @@ export async function getAgentStatus(): Promise<{
     id: string;
     name: string;
     targetCity: string;
-    agentActive: boolean;
-    agentDailyCap: number;
+    targetIndustry: string;
     agentLastRunAt: Date | null;
     agentExhaustedAt: Date | null;
     prospectCount: number;
@@ -304,20 +310,17 @@ export async function getAgentStatus(): Promise<{
     totalSentToday: number;
     remaining: number;
   };
-}> {
-  const [config, mostRecent, runningRuns, campaigns, capacity] = await Promise.all([
-    db.agentConfig.findUnique({ where: { id: 'singleton' } }),
-    db.agentRun.findFirst({ orderBy: { startedAt: 'desc' } }),
-    db.agentRun.findMany({ where: { status: 'running' }, take: 1 }),
-    db.outboundCampaign.findMany({
-      where: { active: true },
-      orderBy: { createdAt: 'desc' },
-      take: 100,
-    }),
+} | null> {
+  const agent = await db.agent.findUnique({ where: { id: agentId } });
+  if (!agent) return null;
+
+  const [mostRecentRun, runningRuns, campaigns, capacity] = await Promise.all([
+    db.agentRun.findFirst({ where: { agentId }, orderBy: { startedAt: 'desc' } }),
+    db.agentRun.findMany({ where: { agentId, status: 'running' }, take: 1 }),
+    db.outboundCampaign.findMany({ where: { agentId, active: true }, orderBy: { createdAt: 'desc' } }),
     getTotalDailyCapacity(),
   ]);
 
-  // Enrich each campaign with sendable/prospect counts
   const campaignsWithCounts = await Promise.all(
     campaigns.map(async (c) => {
       const [prospectCount, sendableCount] = await Promise.all([
@@ -335,8 +338,7 @@ export async function getAgentStatus(): Promise<{
         id: c.id,
         name: c.name,
         targetCity: c.targetCity,
-        agentActive: c.agentActive,
-        agentDailyCap: c.agentDailyCap,
+        targetIndustry: c.targetIndustry,
         agentLastRunAt: c.agentLastRunAt,
         agentExhaustedAt: c.agentExhaustedAt,
         prospectCount,
@@ -346,27 +348,29 @@ export async function getAgentStatus(): Promise<{
   );
 
   return {
-    config: {
-      active: config?.active ?? false,
-      runHourET: config?.runHourET ?? 9,
-      globalDailyCap: config?.globalDailyCap ?? 200,
-      autoRotate: config?.autoRotate ?? true,
-      lastRunAt: config?.lastRunAt ?? null,
-      lastRunStatus: config?.lastRunStatus ?? null,
-      nextRunAt: config?.nextRunAt ?? null,
+    agent: {
+      id: agent.id,
+      name: agent.name,
+      description: agent.description,
+      active: agent.active,
+      dailyCap: agent.dailyCap,
+      autoRotate: agent.autoRotate,
+      sheetUrl: agent.sheetUrl,
+      lastRunAt: agent.lastRunAt,
+      lastRunStatus: agent.lastRunStatus,
+      targetCities: (agent.targetCities as string[] | null) ?? [],
+      targetIndustries: (agent.targetIndustries as string[] | null) ?? [],
     },
-    todayRun: mostRecent
-      ? {
-          id: mostRecent.id,
-          status: mostRecent.status,
-          startedAt: mostRecent.startedAt,
-          completedAt: mostRecent.completedAt,
-          emailsSent: mostRecent.emailsSent,
-          emailsFailed: mostRecent.emailsFailed,
-          campaignsTouched: mostRecent.campaignsTouched,
-          campaignsSpawned: mostRecent.campaignsSpawned,
-        }
-      : null,
+    todayRun: mostRecentRun ? {
+      id: mostRecentRun.id,
+      status: mostRecentRun.status,
+      startedAt: mostRecentRun.startedAt,
+      completedAt: mostRecentRun.completedAt,
+      emailsSent: mostRecentRun.emailsSent,
+      emailsFailed: mostRecentRun.emailsFailed,
+      campaignsTouched: mostRecentRun.campaignsTouched,
+      campaignsSpawned: mostRecentRun.campaignsSpawned,
+    } : null,
     isRunning: runningRuns.length > 0,
     campaigns: campaignsWithCounts,
     capacity: {

@@ -1,41 +1,13 @@
 /**
- * Campaign auto-rotation — when an agent-active campaign runs out of prospects
- * to email, spawn a new campaign in the next city/industry from the rotation
- * list, and carry forward the email subject + body.
+ * Campaign auto-rotation — agent-scoped.
+ * When an agent runs out of prospects in its current campaign, spawn a new
+ * one in the next (city × industry) slot from its own rotation list.
  */
 
 import { db } from '@embedo/db';
-import type { BusinessType, OutboundCampaign } from '@embedo/db';
+import type { BusinessType, OutboundCampaign, Agent } from '@embedo/db';
 import type { EventBuffer } from './events.js';
 
-const DEFAULT_ROTATION_CITIES = [
-  'Brooklyn, NY', 'Queens, NY', 'Manhattan, NY', 'Bronx, NY', 'Staten Island, NY',
-  'Jersey City, NJ', 'Hoboken, NJ', 'Newark, NJ',
-  'Long Island City, NY', 'Astoria, NY', 'Williamsburg, NY',
-  'Philadelphia, PA', 'Boston, MA', 'Washington DC',
-];
-
-const DEFAULT_ROTATION_INDUSTRIES: BusinessType[] = [
-  'RESTAURANT', 'SALON', 'FITNESS', 'RETAIL', 'MEDICAL',
-];
-
-interface RotationConfig {
-  cities: string[];
-  industries: BusinessType[];
-}
-
-export async function getRotationConfig(): Promise<RotationConfig> {
-  const config = await db.agentConfig.findUnique({ where: { id: 'singleton' } });
-  const cities = (config?.rotationCities as string[] | null) ?? DEFAULT_ROTATION_CITIES;
-  const industries = (config?.rotationIndustries as BusinessType[] | null) ?? DEFAULT_ROTATION_INDUSTRIES;
-  return { cities, industries };
-}
-
-/**
- * Check if a campaign has exhausted its agent pool — i.e. no more prospects
- * that can be emailed via the agent today or future. Returns true if the
- * campaign is out of work.
- */
 export async function isCampaignExhausted(campaignId: string): Promise<{
   exhausted: boolean;
   reason: string;
@@ -57,19 +29,18 @@ export async function isCampaignExhausted(campaignId: string): Promise<{
 }
 
 /**
- * Pick the next (city, industry) combo that isn't already running.
- * Goes row-by-row through the cross product.
+ * Find the next (city, industry) not already used by any campaign.
  */
-async function pickNextRotation(config: RotationConfig): Promise<{ city: string; industry: BusinessType } | null> {
-  // Existing campaigns — city + industry pairs already in use
+async function pickNextSlot(cities: string[], industries: BusinessType[]): Promise<{ city: string; industry: BusinessType } | null> {
   const existing = await db.outboundCampaign.findMany({
     select: { targetCity: true, targetIndustry: true },
   });
   const taken = new Set(existing.map((c) => `${c.targetCity.toLowerCase().trim()}::${c.targetIndustry}`));
 
-  for (const industry of config.industries) {
-    for (const city of config.cities) {
-      const key = `${city.toLowerCase().trim()}::${industry}`;
+  for (const industry of industries) {
+    for (const city of cities) {
+      const cityShort = city.split(',')[0]?.trim() ?? city;
+      const key = `${cityShort.toLowerCase()}::${industry}`;
       if (!taken.has(key)) {
         return { city, industry };
       }
@@ -79,50 +50,50 @@ async function pickNextRotation(config: RotationConfig): Promise<{ city: string;
 }
 
 /**
- * Spawn a new agent-active campaign, cloning email copy from a reference campaign.
+ * Spawn a new campaign for the given agent — uses its rotation list,
+ * its email copy, its system prompt.
  */
-export async function spawnNextCampaign(
-  referenceCampaign: OutboundCampaign,
+export async function spawnNextCampaignForAgent(
+  agent: Agent,
   buffer: EventBuffer,
 ): Promise<OutboundCampaign | null> {
-  const config = await getRotationConfig();
-  const next = await pickNextRotation(config);
+  const cities = (agent.targetCities as unknown as string[] | null) ?? [];
+  const industries = (agent.targetIndustries as unknown as BusinessType[] | null) ?? ['RESTAURANT' as BusinessType];
 
-  if (!next) {
-    buffer.warn('No rotation slots left (all city×industry pairs used).');
+  if (cities.length === 0) {
+    buffer.warn(`Agent "${agent.name}" has no target cities — cannot rotate`);
     return null;
   }
 
-  const humanCity = next.city.split(',')[0]?.trim() ?? next.city;
+  const slot = await pickNextSlot(cities, industries);
+  if (!slot) {
+    buffer.warn(`All (city × industry) slots used for "${agent.name}"`);
+    return null;
+  }
+
+  const cityShort = slot.city.split(',')[0]?.trim() ?? slot.city;
+  const stateCode = slot.city.includes(',') ? (slot.city.split(',')[1]?.trim() ?? null) : null;
+  const label = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
   const data: Parameters<typeof db.outboundCampaign.create>[0]['data'] = {
-    name: `${humanCity} ${next.industry.toLowerCase()} ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
-    targetCity: next.city.split(',')[0]?.trim() ?? next.city,
-    targetState: next.city.includes(',') ? (next.city.split(',')[1]?.trim() ?? null) : null,
+    name: `${cityShort} · ${slot.industry.toLowerCase()} · ${label}`,
+    targetCity: cityShort,
+    targetState: stateCode,
     targetCountry: 'US',
-    targetIndustry: next.industry,
+    targetIndustry: slot.industry,
     discoverySource: 'geoapify',
-    emailSubject: referenceCampaign.emailSubject,
-    emailBodyHtml: referenceCampaign.emailBodyHtml,
-    maxProspects: referenceCampaign.maxProspects ?? 200,
+    emailSubject: agent.emailSubject,
+    emailBodyHtml: agent.emailBody,
+    maxProspects: 200,
     active: true,
-    agentActive: true,
-    agentDailyCap: referenceCampaign.agentDailyCap,
+    agentId: agent.id,
     agentRotationSource: 'auto-spawned',
   };
-  // Conditionally add JSON fields (can't pass undefined with exactOptionalPropertyTypes)
-  if (referenceCampaign.sequenceSteps !== null) {
-    data.sequenceSteps = referenceCampaign.sequenceSteps as object;
-  }
-  if (referenceCampaign.apolloConfig !== null) {
-    data.apolloConfig = referenceCampaign.apolloConfig as object;
-  }
 
   const created = await db.outboundCampaign.create({ data });
 
-  buffer.success(`Spawned new campaign in ${humanCity} (${next.industry})`, {
-    campaignId: created.id,
-    campaignName: created.name,
+  buffer.success(`Spawned "${created.name}" for agent "${agent.name}"`, {
+    campaignId: created.id, campaignName: created.name,
   });
 
   return created;

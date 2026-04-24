@@ -1,5 +1,5 @@
 /**
- * Agent HTTP routes — mounts under /agent/* in the prospector service.
+ * Agent HTTP routes — mounts under /agents/* in the prospector service.
  */
 
 import type { FastifyInstance } from 'fastify';
@@ -7,132 +7,198 @@ import { z } from 'zod';
 import { createLogger } from '@embedo/utils';
 import { db } from '@embedo/db';
 import { runAgent, getAgentStatus } from './daily-send.js';
+import { provisionAgentSheet } from './sheets.js';
 
 const log = createLogger('agent:routes');
 
 export async function registerAgentRoutes(app: FastifyInstance): Promise<void> {
-  // ── Status — polled by the /agent UI for live updates ──
-  app.get('/agent/status', async (_req, reply) => {
-    const status = await getAgentStatus();
+  // ── List all agents ──
+  app.get('/agents', async (_req, reply) => {
+    const agents = await db.agent.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        _count: { select: { campaigns: true, runs: true } },
+      },
+    });
+    return reply.send(agents);
+  });
+
+  // ── Get one agent ──
+  app.get('/agents/:id', async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const agent = await db.agent.findUnique({ where: { id } });
+    if (!agent) return reply.status(404).send({ error: 'Agent not found' });
+    return reply.send(agent);
+  });
+
+  // ── Create agent ──
+  app.post('/agents', async (req, reply) => {
+    const schema = z.object({
+      name: z.string().min(2),
+      description: z.string().optional(),
+      targetCities: z.array(z.string()).default([]),
+      targetIndustries: z.array(z.string()).default(['RESTAURANT']),
+      dailyCap: z.number().int().min(1).max(500).default(10),
+      runHourET: z.number().int().min(0).max(23).default(9),
+      autoRotate: z.boolean().default(true),
+      emailSubject: z.string().default('quick question about {{company}}'),
+      emailBody: z.string().default(''),
+      systemPrompt: z.string().optional(),
+      toneStyle: z.string().default('friendly'),
+      ownerEmail: z.string().email().optional(), // for sheet sharing
+    });
+    const body = schema.parse(req.body);
+
+    const created = await db.agent.create({
+      data: {
+        name: body.name,
+        ...(body.description !== undefined ? { description: body.description } : {}),
+        targetCities: body.targetCities,
+        targetIndustries: body.targetIndustries,
+        dailyCap: body.dailyCap,
+        runHourET: body.runHourET,
+        autoRotate: body.autoRotate,
+        emailSubject: body.emailSubject,
+        emailBody: body.emailBody,
+        ...(body.systemPrompt !== undefined ? { systemPrompt: body.systemPrompt } : {}),
+        toneStyle: body.toneStyle,
+      },
+    });
+
+    // Provision a Google Sheet for this agent (async — don't block)
+    void (async () => {
+      const sheet = await provisionAgentSheet(created.name, body.ownerEmail);
+      if (sheet) {
+        await db.agent.update({
+          where: { id: created.id },
+          data: { googleSheetId: sheet.sheetId, sheetUrl: sheet.url, sheetProvisioned: true },
+        });
+      }
+    })();
+
+    return reply.send(created);
+  });
+
+  // ── Update agent ──
+  app.patch('/agents/:id', async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const schema = z.object({
+      name: z.string().min(2).optional(),
+      description: z.string().nullable().optional(),
+      targetCities: z.array(z.string()).optional(),
+      targetIndustries: z.array(z.string()).optional(),
+      active: z.boolean().optional(),
+      dailyCap: z.number().int().min(1).max(500).optional(),
+      runHourET: z.number().int().min(0).max(23).optional(),
+      autoRotate: z.boolean().optional(),
+      emailSubject: z.string().optional(),
+      emailBody: z.string().optional(),
+      systemPrompt: z.string().nullable().optional(),
+      toneStyle: z.string().optional(),
+    });
+    const parsed = schema.parse(req.body);
+
+    const data: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(parsed)) {
+      if (v !== undefined) data[k] = v;
+    }
+
+    const updated = await db.agent.update({ where: { id }, data });
+    return reply.send(updated);
+  });
+
+  // ── Delete agent ──
+  app.delete('/agents/:id', async (req, reply) => {
+    const { id } = req.params as { id: string };
+    // Soft-delete: deactivate + detach campaigns
+    await db.agent.update({ where: { id }, data: { active: false } });
+    await db.outboundCampaign.updateMany({ where: { agentId: id }, data: { active: false } });
+    return reply.send({ ok: true });
+  });
+
+  // ── Status for live view ──
+  app.get('/agents/:id/status', async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const status = await getAgentStatus(id);
+    if (!status) return reply.status(404).send({ error: 'Agent not found' });
     return reply.send(status);
   });
 
-  // ── Recent runs with their events ──
-  app.get('/agent/runs', async (req, reply) => {
+  // ── Run history ──
+  app.get('/agents/:id/runs', async (req, reply) => {
+    const { id } = req.params as { id: string };
     const query = req.query as { limit?: string };
-    const limit = Math.min(100, parseInt(query.limit ?? '20'));
-
+    const limit = Math.min(50, parseInt(query.limit ?? '20'));
     const runs = await db.agentRun.findMany({
+      where: { agentId: id },
       orderBy: { startedAt: 'desc' },
       take: limit,
     });
-
     return reply.send({ runs });
   });
 
-  // ── Single run — full event log ──
-  app.get('/agent/runs/:id', async (req, reply) => {
-    const { id } = req.params as { id: string };
-    const run = await db.agentRun.findUnique({ where: { id } });
+  app.get('/agents/:id/runs/:runId', async (req, reply) => {
+    const { runId } = req.params as { id: string; runId: string };
+    const run = await db.agentRun.findUnique({ where: { id: runId } });
     if (!run) return reply.status(404).send({ error: 'Run not found' });
     return reply.send(run);
   });
 
   // ── Trigger a run (manual) ──
-  app.post('/agent/trigger', async (req, reply) => {
-    const body = (req.body ?? {}) as { campaignId?: string; dryRun?: boolean };
+  app.post('/agents/:id/trigger', async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const body = (req.body ?? {}) as { dryRun?: boolean };
 
-    // Fire-and-forget: don't block the request on a multi-hour send loop
-    // The UI polls /agent/status for progress
-    const opts: { trigger: 'manual'; campaignId?: string; dryRun?: boolean } = { trigger: 'manual' };
-    if (body.campaignId !== undefined) opts.campaignId = body.campaignId;
+    const opts: { agentId: string; trigger: 'manual'; dryRun?: boolean } = { agentId: id, trigger: 'manual' };
     if (body.dryRun !== undefined) opts.dryRun = body.dryRun;
+
     void runAgent(opts).catch((err: unknown) => log.error({ err }, 'Agent run failed'));
 
-    // Small delay so the AgentRun row is definitely in the DB before the UI polls
     await new Promise((r) => setTimeout(r, 300));
-
-    const latestRun = await db.agentRun.findFirst({
-      orderBy: { startedAt: 'desc' },
-    });
-
-    return reply.send({
-      ok: true,
-      runId: latestRun?.id,
-      message: 'Agent run started. Poll /agent/status for progress.',
-    });
+    const latestRun = await db.agentRun.findFirst({ where: { agentId: id }, orderBy: { startedAt: 'desc' } });
+    return reply.send({ ok: true, runId: latestRun?.id });
   });
 
-  // ── Cron-fired daily run (same as trigger but fixed trigger=cron) ──
-  app.post('/agent/cron/daily', async (_req, reply) => {
-    void runAgent({ trigger: 'cron' }).catch((err: unknown) => log.error({ err }, 'Cron agent run failed'));
-    return reply.send({ ok: true, triggered: true });
-  });
-
-  // ── Pause / resume the agent globally ──
-  app.post('/agent/pause', async (_req, reply) => {
-    await db.agentConfig.upsert({
-      where: { id: 'singleton' },
-      create: { id: 'singleton', active: false },
-      update: { active: false },
-    });
+  // ── Pause / resume ──
+  app.post('/agents/:id/pause', async (req, reply) => {
+    const { id } = req.params as { id: string };
+    await db.agent.update({ where: { id }, data: { active: false } });
     return reply.send({ ok: true, active: false });
   });
 
-  app.post('/agent/resume', async (_req, reply) => {
-    await db.agentConfig.upsert({
-      where: { id: 'singleton' },
-      create: { id: 'singleton', active: true },
-      update: { active: true },
-    });
+  app.post('/agents/:id/resume', async (req, reply) => {
+    const { id } = req.params as { id: string };
+    await db.agent.update({ where: { id }, data: { active: true } });
     return reply.send({ ok: true, active: true });
   });
 
-  // ── Config — fetch + update ──
-  app.get('/agent/config', async (_req, reply) => {
-    const config = await db.agentConfig.findUnique({ where: { id: 'singleton' } });
-    return reply.send(config ?? { id: 'singleton', active: false, globalDailyCap: 200, autoRotate: true });
-  });
-
-  app.patch('/agent/config', async (req, reply) => {
-    const schema = z.object({
-      active: z.boolean().optional(),
-      runHourET: z.number().int().min(0).max(23).optional(),
-      globalDailyCap: z.number().int().min(1).max(10000).optional(),
-      autoRotate: z.boolean().optional(),
-      rotationCities: z.array(z.string()).nullable().optional(),
-      rotationIndustries: z.array(z.string()).nullable().optional(),
-    });
-    const data = schema.parse(req.body);
-
-    const updated = await db.agentConfig.upsert({
-      where: { id: 'singleton' },
-      create: { id: 'singleton', ...data } as never,
-      update: data as never,
-    });
-
-    return reply.send(updated);
-  });
-
-  // ── Per-campaign agent toggle + cap ──
-  app.patch('/agent/campaign/:id', async (req, reply) => {
+  // ── Provision/re-provision sheet ──
+  app.post('/agents/:id/provision-sheet', async (req, reply) => {
     const { id } = req.params as { id: string };
-    const schema = z.object({
-      agentActive: z.boolean().optional(),
-      agentDailyCap: z.number().int().min(1).max(200).optional(),
-    });
-    const parsed = schema.parse(req.body);
+    const body = (req.body ?? {}) as { ownerEmail?: string };
+    const agent = await db.agent.findUnique({ where: { id } });
+    if (!agent) return reply.status(404).send({ error: 'Agent not found' });
 
-    // Can't pass undefined with exactOptionalPropertyTypes; build minimal update
-    const data: { agentActive?: boolean; agentDailyCap?: number } = {};
-    if (parsed.agentActive !== undefined) data.agentActive = parsed.agentActive;
-    if (parsed.agentDailyCap !== undefined) data.agentDailyCap = parsed.agentDailyCap;
+    const sheet = await provisionAgentSheet(agent.name, body.ownerEmail);
+    if (!sheet) {
+      return reply.status(500).send({ error: 'Failed to provision sheet. Check GOOGLE_SERVICE_ACCOUNT_KEY env var.' });
+    }
 
-    const updated = await db.outboundCampaign.update({
+    const updated = await db.agent.update({
       where: { id },
-      data,
+      data: { googleSheetId: sheet.sheetId, sheetUrl: sheet.url, sheetProvisioned: true },
     });
-
     return reply.send(updated);
+  });
+
+  // ── Cron daily trigger — runs all active agents ──
+  app.post('/agents/cron/daily', async (_req, reply) => {
+    const agents = await db.agent.findMany({ where: { active: true } });
+    for (const agent of agents) {
+      void runAgent({ agentId: agent.id, trigger: 'cron' }).catch((err: unknown) =>
+        log.error({ err, agentId: agent.id }, 'Cron agent run failed'),
+      );
+    }
+    return reply.send({ ok: true, triggered: agents.length });
   });
 }

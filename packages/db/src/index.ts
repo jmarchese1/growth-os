@@ -66,4 +66,6 @@ export type {
   TableStatus,
   GiftCard,
   GiftCardStatus,
+  Agent,
+  AgentRun,
 } from '@prisma/client';

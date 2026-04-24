@@ -4,9 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  LayoutDashboard, Building2, BarChart3, Calendar, Crosshair,
-  Mail, Users, FileText, Download, Globe, Settings as SettingsIcon,
-  Plug, LogOut, ChevronLeft, Command, Zap,
+  LayoutDashboard, Settings as SettingsIcon, LogOut, ChevronLeft, Command, Zap,
 } from 'lucide-react';
 import NotificationBell from '../../components/NotificationBell';
 import { AgentStatusWidget } from '../../components/AgentStatusWidget';
@@ -19,45 +17,11 @@ type NavSection = { numeral: string; section: string; items: NavItemT[] };
 const NAV: NavSection[] = [
   {
     numeral: 'I',
-    section: 'Agent',
+    section: 'Operator',
     items: [
-      { href: '/agent',      label: 'Agent',      icon: Zap },
-      { href: '/',           label: 'Dashboard',  icon: LayoutDashboard },
-      { href: '/analytics',  label: 'Analytics',  icon: BarChart3 },
-    ],
-  },
-  {
-    numeral: 'II',
-    section: 'Outbound',
-    items: [
-      { href: '/campaigns', label: 'Campaigns', icon: Crosshair },
-      { href: '/emails',    label: 'Emails',    icon: Mail },
-      { href: '/leads',     label: 'Leads',     icon: Users },
-    ],
-  },
-  {
-    numeral: 'III',
-    section: 'Clients',
-    items: [
-      { href: '/businesses', label: 'Businesses', icon: Building2 },
-      { href: '/calendar',   label: 'Calendar',   icon: Calendar },
-    ],
-  },
-  {
-    numeral: 'IV',
-    section: 'Tools',
-    items: [
-      { href: '/email-templates', label: 'Templates', icon: FileText },
-      { href: '/export',          label: 'Export',    icon: Download },
-      { href: '/domains',         label: 'Domains',   icon: Globe },
-    ],
-  },
-  {
-    numeral: 'V',
-    section: 'Account',
-    items: [
-      { href: '/settings',     label: 'Settings',     icon: SettingsIcon },
-      { href: '/integrations', label: 'Integrations', icon: Plug },
+      { href: '/',         label: 'Dashboard',  icon: LayoutDashboard },
+      { href: '/agents',   label: 'Agents',     icon: Zap },
+      { href: '/settings', label: 'Settings',   icon: SettingsIcon },
     ],
   },
 ];

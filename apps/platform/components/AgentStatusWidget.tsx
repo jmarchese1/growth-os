@@ -1,9 +1,8 @@
 "use client";
 
 /**
- * Floating agent status widget — bottom-right corner, minimal.
- * Shows live stats when running, quiet pulse when armed, dim when paused.
- * Click → opens /agent.
+ * Floating multi-agent status widget — bottom-right.
+ * Shows aggregate across all agents. Click → /agents.
  */
 
 import { useEffect, useState } from 'react';
@@ -13,78 +12,43 @@ import { Zap, ArrowUpRight, X } from 'lucide-react';
 const PROSPECTOR_URL = process.env['NEXT_PUBLIC_PROSPECTOR_URL']
   ?? 'https://prospector-production-bc03.up.railway.app';
 
-interface MiniStatus {
+interface AgentSummary {
+  id: string;
+  name: string;
   active: boolean;
-  isRunning: boolean;
-  emailsSentToday: number;
-  globalDailyCap: number;
-  campaignsActive: number;
-  lastEvent?: { ts: string; msg: string; level: string };
+  dailyCap: number;
+  lastRunAt: string | null;
+  lastRunStatus: string | null;
 }
 
 export function AgentStatusWidget() {
-  const [status, setStatus] = useState<MiniStatus | null>(null);
+  const [agents, setAgents] = useState<AgentSummary[]>([]);
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
-    let canceled = false;
+    let cancelled = false;
     let timeout: NodeJS.Timeout;
 
     const load = async () => {
       try {
-        const res = await fetch(`${PROSPECTOR_URL}/agent/status`);
+        const res = await fetch(`${PROSPECTOR_URL}/agents`);
         if (!res.ok) return;
         const data = await res.json();
-        if (canceled) return;
-
-        // Only fetch events when expanded (saves a request on every page)
-        let lastEvent: MiniStatus['lastEvent'];
-        if (expanded && data.todayRun?.id) {
-          const runRes = await fetch(`${PROSPECTOR_URL}/agent/runs/${data.todayRun.id}`);
-          if (runRes.ok) {
-            const run = await runRes.json();
-            const events = (run.events as Array<{ ts: string; msg: string; level: string }>) ?? [];
-            if (events.length > 0) lastEvent = events[events.length - 1];
-          }
-        }
-
-        setStatus({
-          active: data.config.active,
-          isRunning: data.isRunning,
-          emailsSentToday: data.todayRun?.emailsSent ?? 0,
-          globalDailyCap: data.config.globalDailyCap,
-          campaignsActive: data.campaigns.filter((c: { agentActive: boolean }) => c.agentActive).length,
-          ...(lastEvent ? { lastEvent } : {}),
-        });
-
-        // Conditional polling: fast when running/expanded, slow when idle
-        if (canceled) return;
-        const nextInterval = data.isRunning ? 5000 : expanded ? 15000 : 60000;
-        timeout = setTimeout(load, nextInterval);
+        if (!cancelled) setAgents(Array.isArray(data) ? data : []);
+        timeout = setTimeout(load, expanded ? 15000 : 60000);
       } catch {
-        if (!canceled) timeout = setTimeout(load, 60000);
+        if (!cancelled) timeout = setTimeout(load, 60000);
       }
     };
-
     load();
-    return () => { canceled = true; clearTimeout(timeout); };
+    return () => { cancelled = true; clearTimeout(timeout); };
   }, [expanded]);
 
-  if (!status) return null;
+  if (agents.length === 0) return null;
 
-  const sendPct = status.globalDailyCap > 0
-    ? Math.min(100, (status.emailsSentToday / status.globalDailyCap) * 100)
-    : 0;
+  const activeCount = agents.filter((a) => a.active).length;
+  const totalCap = agents.reduce((a, ag) => a + (ag.active ? ag.dailyCap : 0), 0);
 
-  const state = status.isRunning ? 'running' : status.active ? 'armed' : 'paused';
-  const stateLabel = { running: 'Running', armed: 'Armed', paused: 'Paused' }[state];
-  const stateColor = {
-    running: 'text-signal',
-    armed: 'text-signal',
-    paused: 'text-paper-4',
-  }[state];
-
-  // ── Collapsed pill ────
   if (!expanded) {
     return (
       <button
@@ -93,33 +57,30 @@ export function AgentStatusWidget() {
         style={{ minWidth: 220 }}
       >
         <span className="relative w-2 h-2 shrink-0">
-          <span className={`absolute inset-0 ${state === 'paused' ? 'bg-paper-4' : 'bg-signal'} ${state === 'running' ? 'signal-dot' : ''}`} />
+          <span className={`absolute inset-0 ${activeCount > 0 ? 'bg-signal signal-dot' : 'bg-paper-4'}`} />
         </span>
         <div className="flex-1 text-left">
           <div className="flex items-center gap-2">
-            <Zap className={`w-3 h-3 ${stateColor}`} />
-            <span className={`font-mono text-[10px] tracking-mega uppercase ${stateColor}`}>
-              Agent {stateLabel}
+            <Zap className={`w-3 h-3 ${activeCount > 0 ? 'text-signal' : 'text-paper-4'}`} />
+            <span className={`font-mono text-[10px] tracking-mega uppercase ${activeCount > 0 ? 'text-signal' : 'text-paper-4'}`}>
+              {activeCount > 0 ? `${activeCount} Agent${activeCount !== 1 ? 's' : ''} active` : 'All agents paused'}
             </span>
           </div>
           <div className="font-mono text-[10px] text-paper-3 nums mt-0.5">
-            {status.emailsSentToday} / {status.globalDailyCap} sent today
+            {totalCap} emails/day capacity
           </div>
         </div>
       </button>
     );
   }
 
-  // ── Expanded card ────
   return (
-    <div
-      className="fixed bottom-6 right-6 z-50 panel w-[320px] shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
-    >
+    <div className="fixed bottom-6 right-6 z-50 panel w-[320px] shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
       <header className="flex items-center justify-between px-4 py-3 hairline-b">
         <div className="flex items-center gap-2">
-          <Zap className={`w-3.5 h-3.5 ${stateColor}`} />
-          <span className={`font-mono text-[10px] tracking-mega uppercase ${stateColor}`}>
-            Agent · {stateLabel}
+          <Zap className={`w-3.5 h-3.5 ${activeCount > 0 ? 'text-signal' : 'text-paper-4'}`} />
+          <span className="font-mono text-[10px] tracking-mega uppercase text-paper-2">
+            Agents · {activeCount}/{agents.length} active
           </span>
         </div>
         <button onClick={() => setExpanded(false)} className="text-paper-4 hover:text-paper transition-colors">
@@ -127,49 +88,33 @@ export function AgentStatusWidget() {
         </button>
       </header>
 
-      <div className="p-4 space-y-4">
-        {/* Today's progress bar */}
-        <div>
-          <div className="flex items-baseline justify-between mb-1.5">
-            <span className="font-mono text-[9px] tracking-mega uppercase text-paper-4">Today</span>
-            <span className="font-display italic font-light text-paper text-2xl nums leading-none">
-              {status.emailsSentToday}<span className="text-paper-4 text-sm"> / {status.globalDailyCap}</span>
-            </span>
-          </div>
-          <div className="h-[2px] bg-rule overflow-hidden">
-            <div className="h-full bg-signal transition-all duration-500" style={{ width: `${sendPct}%` }} />
-          </div>
-        </div>
-
-        {/* Campaigns */}
-        <div className="flex items-center justify-between">
-          <span className="font-mono text-[10px] tracking-micro uppercase text-paper-3">Campaigns armed</span>
-          <span className="font-mono text-sm text-paper nums">{status.campaignsActive}</span>
-        </div>
-
-        {/* Last event */}
-        {status.lastEvent && (
-          <div className="hairline-t pt-3">
-            <span className="font-mono text-[9px] tracking-mega uppercase text-paper-4 block mb-1.5">Latest</span>
-            <p className={`font-mono text-[11px] leading-relaxed line-clamp-2 ${
-              status.lastEvent.level === 'success' ? 'text-signal' :
-              status.lastEvent.level === 'error' ? 'text-ember' :
-              status.lastEvent.level === 'warn' ? 'text-amber' :
-              'text-paper-2'
-            }`}>
-              {status.lastEvent.msg}
-            </p>
-          </div>
-        )}
+      <div className="divide-y divide-rule">
+        {agents.slice(0, 6).map((agent) => (
+          <Link
+            key={agent.id}
+            href={`/agents/${agent.id}`}
+            className="flex items-center gap-3 p-3 hover:bg-ink-2 transition-colors group"
+          >
+            <span className={`w-1.5 h-1.5 shrink-0 ${agent.active ? 'bg-signal' : 'bg-paper-4'}`} />
+            <div className="flex-1 min-w-0">
+              <p className="font-display italic text-paper text-sm font-light leading-tight truncate">
+                {agent.name}
+              </p>
+              <p className="font-mono text-[9px] tracking-mega uppercase text-paper-4 mt-0.5">
+                {agent.lastRunAt
+                  ? `Last ran ${new Date(agent.lastRunAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                  : 'Never run'}
+              </p>
+            </div>
+            <span className="font-mono text-[10px] text-paper-3 nums shrink-0">{agent.dailyCap}/day</span>
+          </Link>
+        ))}
       </div>
 
       <footer className="hairline-t">
-        <Link
-          href="/agent"
-          className="flex items-center justify-between px-4 py-3 hover:bg-ink-2 transition-colors group"
-        >
+        <Link href="/agents" className="flex items-center justify-between px-4 py-3 hover:bg-ink-2 transition-colors group">
           <span className="font-mono text-[10px] tracking-mega uppercase text-paper-3 group-hover:text-signal transition-colors">
-            Open control room
+            All agents
           </span>
           <ArrowUpRight className="w-3 h-3 text-paper-3 group-hover:text-signal transition-colors" />
         </Link>
