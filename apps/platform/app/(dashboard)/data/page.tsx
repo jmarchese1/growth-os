@@ -94,12 +94,13 @@ export default function DataPage() {
     setLoading(true);
     try {
       const baseParams = new URLSearchParams();
-      // Only show agent-driven sends from start-of-today (ET) onward.
-      // Computes today's date in NY timezone, then anchors midnight ET.
+      // Show every email created today (ET) onward, regardless of whether the
+      // campaign is explicitly linked to an agent. Tomorrow's run, manual
+      // trigger, agent-spawned campaigns — all show up. Historical emails
+      // pre-today are excluded.
       const todayET = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
-      const startOfTodayET = new Date(`${todayET}T04:00:00.000Z`); // 00:00 ET ≈ 04:00 UTC (5:00 in winter, fine for filter purposes)
+      const startOfTodayET = new Date(`${todayET}T04:00:00.000Z`); // 00:00 ET ≈ 04:00 UTC (close enough for filter)
       baseParams.set('since', startOfTodayET.toISOString());
-      baseParams.set('agentsOnly', 'true');
       if (agentId) baseParams.set('agentId', agentId);
       if (campaignId) baseParams.set('campaignId', campaignId);
 
@@ -181,79 +182,98 @@ export default function DataPage() {
         </div>
       </section>
 
-      {/* Table */}
+      {/* Spreadsheet — Google-Sheets-style grid */}
       <section>
         <SectionHeader
           title="All emails"
           subtitle={loading ? 'Loading…' : `Showing ${messages.length} of ${total.toLocaleString()}`}
         />
-        <div className="mt-4 panel overflow-hidden">
+        <div className="mt-4 panel overflow-hidden p-0">
           {messages.length === 0 ? (
             <div className="p-16 text-center">
               <Mail className="w-7 h-7 text-paper-4 mx-auto mb-4" />
-              <p className="text-paper text-[16px] font-medium">No emails yet</p>
+              <p className="text-paper text-[16px] font-medium">No emails sent today yet</p>
               <p className="text-[13px] text-paper-3 mt-1.5">
                 Once an agent sends, every message will show up here.
               </p>
             </div>
           ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-rule bg-ink-1">
-                  <Th>Recipient</Th>
-                  <Th>Subject</Th>
-                  <Th>Campaign</Th>
-                  <Th>Sent</Th>
-                  <Th>Status</Th>
-                </tr>
-              </thead>
-              <tbody>
-                {messages.map((m) => {
-                  const badge = statusBadge(m);
-                  return (
-                    <tr
-                      key={m.id}
-                      onClick={() => setSelected(m)}
-                      className="border-b border-rule last:border-0 hover:bg-ink-2 transition-colors cursor-pointer"
-                    >
-                      <td className="px-5 py-3 min-w-[200px]">
-                        <p className="text-[13px] text-paper font-medium truncate">{m.prospect.name}</p>
-                        <p className="text-[12px] text-paper-3 truncate">{m.prospect.email ?? '—'}</p>
-                      </td>
-                      <td className="px-4 py-3 min-w-[260px]">
-                        <p className="text-[13px] text-paper-2 truncate max-w-[340px]">
-                          {m.subject ?? '—'}
-                        </p>
-                        {m.stepNumber && m.stepNumber > 1 && (
-                          <span className="text-[11px] text-paper-3">Follow-up {m.stepNumber}</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 min-w-[180px]">
-                        {m.prospect.campaign ? (
-                          <Link
-                            href={`/campaigns/${m.prospect.campaign.id}`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="text-[13px] text-paper-2 hover:text-signal font-medium"
-                          >
-                            {m.prospect.campaign.name}
-                          </Link>
-                        ) : (
-                          <span className="text-[12px] text-paper-3">—</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-[12px] text-paper-3">{formatDate(m.sentAt ?? m.createdAt)}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${badge.cls}`}>
-                          {badge.label}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <div className="overflow-auto max-h-[70vh]">
+              <table className="w-full border-collapse text-[13px]" style={{ tableLayout: 'fixed' }}>
+                <colgroup>
+                  <col style={{ width: 44 }} />
+                  <col style={{ width: 220 }} />
+                  <col style={{ width: 220 }} />
+                  <col style={{ width: 320 }} />
+                  <col style={{ width: 200 }} />
+                  <col style={{ width: 140 }} />
+                  <col style={{ width: 110 }} />
+                </colgroup>
+                <thead className="sticky top-0 z-10">
+                  <tr>
+                    <Hd className="text-center bg-ink-2 sticky left-0 z-20"> </Hd>
+                    <Hd>Business</Hd>
+                    <Hd>Email</Hd>
+                    <Hd>Subject</Hd>
+                    <Hd>Campaign</Hd>
+                    <Hd>Sent (ET)</Hd>
+                    <Hd>Status</Hd>
+                  </tr>
+                </thead>
+                <tbody>
+                  {messages.map((m, idx) => {
+                    const badge = statusBadge(m);
+                    const rowNum = (page - 1) * pageSize + idx + 1;
+                    return (
+                      <tr
+                        key={m.id}
+                        onClick={() => setSelected(m)}
+                        className="hover:bg-signal/5 transition-colors cursor-pointer"
+                      >
+                        <Cell className="text-center text-[11px] text-paper-3 nums bg-ink-1 sticky left-0 z-10 font-medium">
+                          {rowNum}
+                        </Cell>
+                        <Cell>
+                          <span className="text-paper font-medium truncate block">{m.prospect.name}</span>
+                        </Cell>
+                        <Cell>
+                          <span className="text-paper-2 truncate block font-mono text-[12px]">{m.prospect.email ?? '—'}</span>
+                        </Cell>
+                        <Cell>
+                          <div className="truncate">
+                            <span className="text-paper-2 truncate">{m.subject ?? '—'}</span>
+                            {m.stepNumber && m.stepNumber > 1 && (
+                              <span className="ml-2 text-[11px] text-paper-3">· Follow-up {m.stepNumber}</span>
+                            )}
+                          </div>
+                        </Cell>
+                        <Cell>
+                          {m.prospect.campaign ? (
+                            <Link
+                              href={`/campaigns/${m.prospect.campaign.id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-paper-2 hover:text-signal font-medium truncate block"
+                            >
+                              {m.prospect.campaign.name}
+                            </Link>
+                          ) : (
+                            <span className="text-paper-3">—</span>
+                          )}
+                        </Cell>
+                        <Cell>
+                          <span className="text-paper-2 text-[12px] nums whitespace-nowrap">{formatDate(m.sentAt ?? m.createdAt)}</span>
+                        </Cell>
+                        <Cell>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${badge.cls}`}>
+                            {badge.label}
+                          </span>
+                        </Cell>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
@@ -289,11 +309,23 @@ export default function DataPage() {
   );
 }
 
-function Th({ children }: { children: React.ReactNode }) {
+function Hd({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <th className="px-4 py-2.5 text-left text-[11px] uppercase tracking-wide text-paper-3 font-medium">
+    <th
+      className={`px-3 py-2 text-left text-[11px] font-semibold text-paper-2 bg-ink-2 border-r border-b border-rule last:border-r-0 ${className}`}
+    >
       {children}
     </th>
+  );
+}
+
+function Cell({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return (
+    <td
+      className={`px-3 py-2 border-r border-b border-rule last:border-r-0 align-middle overflow-hidden whitespace-nowrap ${className}`}
+    >
+      {children}
+    </td>
   );
 }
 

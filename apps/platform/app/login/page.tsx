@@ -45,8 +45,25 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen grid grid-cols-12 bg-ink-1 text-paper">
-      {/* LEFT — clean Apple panel */}
-      <aside className="col-span-12 lg:col-span-7 relative hairline-r flex flex-col justify-between p-10 lg:p-16 bg-ink-0 overflow-hidden">
+      {/* LEFT — Apple panel with generated hero backdrop */}
+      <aside className="col-span-12 lg:col-span-7 relative hairline-r flex flex-col justify-between p-10 lg:p-16 overflow-hidden">
+        <div
+          aria-hidden
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: 'url(/auth-hero.jpg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.92) 100%)',
+          }}
+        />
         <header className="relative z-10 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <EmbedoMark size={32} />
