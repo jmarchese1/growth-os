@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Search, Mail, Eye, MessageSquare, AlertTriangle, X } from 'lucide-react';
@@ -313,12 +314,49 @@ function StatCell({
   );
 }
 
+/**
+ * Convert stored HTML email body into clean paragraph strings.
+ * - splits on </p> / <br><br>
+ * - strips remaining tags
+ * - decodes &nbsp; / &amp; / &#39;
+ * - drops the legacy "Not interested? Unsubscribe" footer line
+ * - inserts space after "Best," when run-together with the name
+ */
+function bodyToParagraphs(html: string): string[] {
+  const blocked = /not\s+interested\?\s*unsubscribe/i;
+  const cleaned = html
+    .replace(/<br\s*\/?>(\s*<br\s*\/?>)+/gi, '</p><p>')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<br\s*\/?>(?!\s*<\/?br)/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/Best,\s*([A-Z])/g, 'Best,\n$1');  // split "Best,Jason" into two lines
+
+  return cleaned
+    .split(/\n{2,}|\n(?=Hey |Best,|Hi )/)
+    .map((p) =>
+      p
+        .split('\n')
+        .map((line) => line.replace(/^\s+|\s+$/g, ''))
+        .filter((line) => line.length > 0)
+        .join('\n'),
+    )
+    .filter((p) => p.length > 0 && !blocked.test(p));
+}
+
 function MessageDetail({ message, onClose }: { message: Message; onClose: () => void }) {
   const badge = statusBadge(message);
-  const plain = message.body.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').trim();
+  const paragraphs = bodyToParagraphs(message.body);
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+  if (typeof window === 'undefined') return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-paper/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative panel rounded-apple-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <header className="flex items-center justify-between px-6 py-4 border-b border-rule sticky top-0 bg-ink-0 z-10">
@@ -356,8 +394,10 @@ function MessageDetail({ message, onClose }: { message: Message; onClose: () => 
 
           <div>
             <p className="text-[12px] text-paper-3 mb-2">Email body</p>
-            <div className="rounded-apple bg-ink-2 p-4 text-[13px] text-paper-2 leading-relaxed whitespace-pre-wrap">
-              {plain || message.body}
+            <div className="rounded-apple bg-ink-2 p-5 text-[14px] text-paper leading-[1.65] space-y-4">
+              {paragraphs.map((p, i) => (
+                <p key={i} className="whitespace-pre-line">{p}</p>
+              ))}
             </div>
           </div>
 
@@ -366,14 +406,15 @@ function MessageDetail({ message, onClose }: { message: Message; onClose: () => 
               <p className="text-[12px] text-paper-3 mb-2">
                 Reply{message.replyCategory ? ` · ${message.replyCategory}` : ''}
               </p>
-              <div className="rounded-apple bg-signal/5 border border-signal/30 p-4 text-[13px] text-paper-2 leading-relaxed whitespace-pre-wrap">
+              <div className="rounded-apple bg-signal/5 border border-signal/30 p-5 text-[14px] text-paper leading-[1.65] whitespace-pre-wrap">
                 {message.replyBody}
               </div>
             </div>
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
