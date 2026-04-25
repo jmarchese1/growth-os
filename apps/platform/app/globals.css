@@ -3,62 +3,68 @@
 @tailwind utilities;
 
 /* ─────────────────────────────────────────────────────────────────
-   OPERATOR — Embedo internal design system
-   A cold-outreach terminal. Editorial serif + mono labels +
-   one signal-green accent. Structure from type, not shadow.
+   Embedo platform — Apple-themed light system
+   White / grey surfaces, Apple-blue accent, generous whitespace,
+   soft 8px corners, hairline borders.
    ───────────────────────────────────────────────────────────────── */
 
 :root {
-  /* Surfaces — warm near-black */
-  --ink-0: #0a0a0a;       /* canvas */
-  --ink-1: #121212;       /* panel */
-  --ink-2: #171717;       /* raised */
-  --ink-3: #1d1d1d;       /* input / hover */
+  /* Surfaces — light to dark grey */
+  --ink-0: #ffffff;        /* canvas */
+  --ink-1: #fbfbfd;        /* panel — off-white */
+  --ink-2: #f5f5f7;        /* raised — Apple light grey */
+  --ink-3: #ebebed;        /* input / hover */
 
   /* Hairlines */
-  --rule: #222222;
-  --rule-soft: #1a1a1a;
-  --rule-strong: #2d2d2d;
+  --rule: #d2d2d7;
+  --rule-soft: #ebebed;
+  --rule-strong: #86868b;
 
   /* Text */
-  --paper: #fafaf5;        /* primary */
-  --paper-2: #c9c9c3;      /* secondary */
-  --paper-3: #8a8a85;      /* tertiary / captions */
-  --paper-4: #55554f;      /* disabled / meta */
+  --paper: #1d1d1f;        /* primary — Apple near-black */
+  --paper-2: #424245;      /* secondary */
+  --paper-3: #86868b;      /* tertiary / captions */
+  --paper-4: #b8b8be;      /* disabled / meta */
 
-  /* Accent — single signal colour, used sparingly */
-  --signal: #d6f84c;
-  --signal-dim: #a8c53a;
-  --signal-glow: rgba(214, 248, 76, 0.14);
+  /* Accent — Apple blue */
+  --signal: #0071e3;
+  --signal-dim: #0058b9;
+  --signal-glow: rgba(0, 113, 227, 0.10);
 
-  /* Semantic */
-  --amber: #f5a623;
-  --ember: #e0632a;
-  --sky:   #63b7ff;
+  /* Semantic — Apple system colors */
+  --amber: #ff9500;
+  --ember: #ff3b30;
+  --sky:   #5ac8fa;
 
-  /* Spacing scale (for reference — use Tailwind) */
+  /* Radius scale */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
 }
 
 html {
   background: var(--ink-0);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: "cv02", "cv04", "ss01";
   scrollbar-gutter: stable;
 }
 
 body {
   background: var(--ink-0);
   color: var(--paper);
-  font-family: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-ui), -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
   font-feature-settings: "ss01", "cv02";
 }
 
 /* ── Typography utilities ────────────────────────────────────── */
 
+/* Display now resolves to UI sans for an Apple-style feel.
+   Fraunces is still loaded but no longer drives display text
+   because Apple-themed UIs avoid editorial italics in chrome. */
 .font-display {
-  font-family: var(--font-display), "Times New Roman", serif;
+  font-family: var(--font-ui), -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
   font-feature-settings: "ss01";
+  letter-spacing: -0.015em;
 }
 
 .font-mono {
@@ -67,7 +73,7 @@ body {
 }
 
 .font-ui {
-  font-family: var(--font-ui), system-ui, sans-serif;
+  font-family: var(--font-ui), -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
 }
 
 .nums {
@@ -75,11 +81,11 @@ body {
   font-feature-settings: "tnum";
 }
 
-/* Mono uppercase micro-label */
+/* Mono uppercase micro-label — toned down for light theme */
 .label {
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 10px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.10em;
   text-transform: uppercase;
   color: var(--paper-3);
   font-weight: 500;
@@ -88,28 +94,28 @@ body {
 .label-sm {
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 9px;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--paper-4);
   font-weight: 500;
 }
 
-/* Editorial hero numeric — italic serif with optical size */
+/* Hero numeric — Apple-style large light tabular sans */
 .hero-num {
-  font-family: var(--font-display), serif;
-  font-weight: 300;
-  font-style: italic;
+  font-family: var(--font-ui), -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
+  font-weight: 200;
+  font-style: normal;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.03em;
-  line-height: 0.9;
-  font-feature-settings: "tnum", "ss01";
-  font-variation-settings: "opsz" 144, "SOFT" 40, "WONK" 1;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+  font-feature-settings: "tnum";
+  color: var(--paper);
 }
 
+/* Optional editorial accent — kept on the off-chance any page uses it */
 .serif-italic {
   font-family: var(--font-display), serif;
   font-style: italic;
-  font-variation-settings: "opsz" 24, "SOFT" 50, "WONK" 0;
 }
 
 /* ── Surfaces ───────────────────────────────────────────────── */
@@ -117,11 +123,13 @@ body {
 .panel {
   background: var(--ink-1);
   border: 1px solid var(--rule);
+  border-radius: var(--r-md);
 }
 
 .panel-2 {
   background: var(--ink-2);
   border: 1px solid var(--rule);
+  border-radius: var(--r-md);
 }
 
 .hairline {
@@ -133,10 +141,10 @@ body {
 .hairline-r { border-right: 1px solid var(--rule); }
 .hairline-l { border-left: 1px solid var(--rule); }
 
-/* ── Signal ─────────────────────────────────────────────────── */
+/* ── Signal (Apple blue) ────────────────────────────────────── */
 
 .signal { color: var(--signal); }
-.bg-signal { background: var(--signal); color: var(--ink-0); }
+.bg-signal { background: var(--signal); color: #ffffff; }
 .bg-signal-soft { background: var(--signal-glow); color: var(--signal); }
 .ring-signal { box-shadow: inset 0 0 0 1px var(--signal); }
 
@@ -162,40 +170,41 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  padding: 8px 16px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  letter-spacing: -0.005em;
+  text-transform: none;
   font-weight: 500;
   border: 1px solid var(--rule);
-  background: var(--ink-2);
+  background: var(--ink-0);
   color: var(--paper);
+  border-radius: var(--r-md);
   transition: all 150ms ease;
   cursor: pointer;
 }
 
 .btn:hover {
-  border-color: var(--paper-3);
-  background: var(--ink-3);
+  border-color: var(--rule-strong);
+  background: var(--ink-2);
 }
 
 .btn-primary {
   background: var(--signal);
-  color: var(--ink-0);
+  color: #ffffff;
   border-color: var(--signal);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .btn-primary:hover {
-  background: var(--paper);
-  border-color: var(--paper);
+  background: var(--signal-dim);
+  border-color: var(--signal-dim);
 }
 
 .btn-ghost {
   background: transparent;
   border-color: transparent;
-  color: var(--paper-3);
+  color: var(--paper-2);
 }
 
 .btn-ghost:hover {
@@ -207,18 +216,22 @@ body {
 /* ── Input ──────────────────────────────────────────────────── */
 
 .input {
-  background: var(--ink-2);
+  background: var(--ink-0);
   border: 1px solid var(--rule);
   color: var(--paper);
   padding: 10px 12px;
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: 14px;
+  border-radius: var(--r-md);
   outline: none;
-  transition: border-color 150ms ease;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
 .input::placeholder { color: var(--paper-4); }
-.input:focus { border-color: var(--signal); }
+.input:focus {
+  border-color: var(--signal);
+  box-shadow: 0 0 0 3px var(--signal-glow);
+}
 
 /* ── Dotted separator ──────────────────────────────────────── */
 
@@ -235,7 +248,7 @@ body {
   margin-bottom: 0.35em;
 }
 
-/* ── Grid overlay (subtle, not dominant) ───────────────────── */
+/* ── Grid overlay (very subtle on white) ───────────────────── */
 
 .bg-grid-fine {
   background-image:
@@ -245,20 +258,12 @@ body {
   background-position: -1px -1px;
 }
 
-/* ── Film grain for texture ────────────────────────────────── */
+/* ── Grain effect — disabled in light theme ────────────────── */
 
 .grain {
   position: relative;
 }
-.grain::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.55'/></svg>");
-  opacity: 0.025;
-  mix-blend-mode: overlay;
-}
+/* Intentionally no ::after — clean Apple surfaces have no film grain. */
 
 /* ── Animations ────────────────────────────────────────────── */
 
@@ -279,7 +284,6 @@ body {
   animation: marquee-tick 60s linear infinite;
 }
 
-/* Subtle number count shimmer */
 @keyframes num-enter {
   0% { opacity: 0; filter: blur(4px); }
   100% { opacity: 1; filter: blur(0); }
@@ -288,25 +292,25 @@ body {
   animation: num-enter 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* ── Scrollbar ─────────────────────────────────────────────── */
+/* ── Scrollbar — light theme ───────────────────────────────── */
 
-::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: var(--rule-strong);
+  background: var(--rule);
   border: 2px solid var(--ink-0);
-  border-radius: 0;
+  border-radius: 8px;
 }
-::-webkit-scrollbar-thumb:hover { background: var(--paper-4); }
+::-webkit-scrollbar-thumb:hover { background: var(--rule-strong); }
 
 /* ── Selection ─────────────────────────────────────────────── */
 
 ::selection {
   background: var(--signal);
-  color: var(--ink-0);
+  color: #ffffff;
 }
 
-/* ── Status squares (alternative to pill badges) ─────────── */
+/* ── Status indicators ─────────────────────────────────────── */
 
 .status-sq {
   display: inline-flex;
@@ -314,18 +318,20 @@ body {
   gap: 6px;
   font-family: var(--font-mono);
   font-size: 10px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.10em;
   text-transform: uppercase;
   font-weight: 500;
+  color: var(--paper-2);
 }
 .status-sq::before {
   content: "";
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   display: inline-block;
+  border-radius: 9999px;
 }
 
-.status-active::before { background: var(--signal); }
+.status-active::before { background: #34c759; }   /* Apple green */
 .status-warn::before   { background: var(--amber); }
 .status-idle::before   { background: var(--paper-4); }
 .status-fire::before   { background: var(--ember); }

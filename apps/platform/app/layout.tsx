@@ -30,7 +30,7 @@ const fontMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Embedo — Operator',
+  title: 'Embedo',
   description: 'Embedo internal outreach operations',
 };
 
