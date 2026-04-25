@@ -45,3 +45,6 @@ coverage/
 # Prisma
 packages/db/src/generated/
 apps/platform/tsconfig.tsbuildinfo
+
+# fal API temp payloads
+.tmp_fal*.json
