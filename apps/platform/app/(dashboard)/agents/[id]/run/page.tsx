@@ -116,8 +116,8 @@ export default function AgentRunLiveView({ params }: { params: Promise<{ id: str
 
   if (!status) {
     return (
-      <div className="pt-10 pb-24 px-8 max-w-[1400px] mx-auto">
-        <p className="font-mono text-[11px] tracking-micro uppercase text-paper-4">Loading agent…</p>
+      <div className="pt-10 pb-24 px-10 max-w-[1400px] mx-auto">
+        <p className="text-[13px] text-paper-3">Loading agent…</p>
       </div>
     );
   }
@@ -126,39 +126,43 @@ export default function AgentRunLiveView({ params }: { params: Promise<{ id: str
   const events = currentRun?.events ?? [];
 
   return (
-    <div className="pt-10 pb-24 px-8 max-w-[1400px] mx-auto space-y-12">
-      {/* Masthead */}
+    <div className="pt-10 pb-24 px-10 max-w-[1400px] mx-auto space-y-10">
+      {/* Header */}
       <section className="pb-8 hairline-b">
-        <Link href="/agents" className="flex items-center gap-2 font-mono text-[10px] tracking-mega uppercase text-paper-4 hover:text-signal transition-colors mb-4">
-          <ArrowLeft className="w-3 h-3" />
+        <Link href="/agents" className="flex items-center gap-1.5 text-[13px] text-paper-3 hover:text-signal transition-colors mb-4">
+          <ArrowLeft className="w-3.5 h-3.5" />
           <span>All agents</span>
         </Link>
         <div className="flex items-end justify-between gap-8">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className={`w-1.5 h-1.5 shrink-0 relative ${agent.active ? (isRunning ? 'bg-signal signal-dot' : 'bg-signal') : 'bg-paper-4'}`} />
-              <span className={`font-mono text-[10px] tracking-mega uppercase ${agent.active ? 'text-signal' : 'text-paper-4'}`}>
+            <div className="mb-2">
+              <span
+                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${
+                  agent.active ? 'bg-signal/10 text-signal' : 'bg-ink-2 text-paper-3'
+                }`}
+              >
+                <span className={`relative inline-flex w-1.5 h-1.5 rounded-full ${agent.active ? 'bg-signal' : 'bg-paper-4'} ${isRunning ? 'signal-dot' : ''}`} />
                 {agent.active ? (isRunning ? 'Running now' : 'Armed, idle') : 'Paused'}
               </span>
             </div>
-            <h1 className="font-display italic font-light text-paper leading-[0.95] tracking-tight text-[60px] lg:text-[76px]">
+            <h1 className="text-paper text-[36px] font-semibold leading-tight tracking-tight">
               {agent.name}
             </h1>
             {agent.description && (
-              <p className="font-ui text-paper-2 text-[14px] mt-3 max-w-xl">{agent.description}</p>
+              <p className="text-paper-2 text-[14px] mt-2 max-w-xl">{agent.description}</p>
             )}
           </div>
           <div className="flex flex-col gap-2 shrink-0 items-end">
             <div className="flex gap-2">
               <Button variant={agent.active ? 'ghost' : 'primary'} onClick={togglePower}>
-                {agent.active ? <><PowerOff className="w-3 h-3" /><span>Pause</span></> : <><Power className="w-3 h-3" /><span>Arm</span></>}
+                {agent.active ? <><PowerOff className="w-3.5 h-3.5" /><span>Pause</span></> : <><Power className="w-3.5 h-3.5" /><span>Arm</span></>}
               </Button>
               <Button variant="primary" onClick={triggerRun} disabled={isRunning}>
-                <Play className="w-3 h-3" />
+                <Play className="w-3.5 h-3.5" />
                 <span>{isRunning ? 'Running…' : 'Run now'}</span>
               </Button>
             </div>
-            <Link href={`/agents/${id}`} className="inline-flex items-center gap-1.5 font-mono text-[10px] tracking-mega uppercase text-paper-3 hover:text-signal transition-colors mt-1">
+            <Link href={`/agents/${id}`} className="inline-flex items-center gap-1.5 text-[12px] text-paper-3 hover:text-signal transition-colors mt-1">
               <SettingsIcon className="w-3 h-3" />
               <span>Edit config</span>
             </Link>
@@ -191,12 +195,12 @@ export default function AgentRunLiveView({ params }: { params: Promise<{ id: str
       {agent.sheetUrl && (
         <section className="panel p-5 flex items-center justify-between">
           <div>
-            <p className="label-sm mb-1">Google Sheet</p>
-            <p className="font-mono text-xs text-paper-2 truncate">Every prospect · every email · every event logged live</p>
+            <p className="text-[12px] text-paper-3 mb-1">Google Sheet</p>
+            <p className="text-[13px] text-paper-2">Every prospect, email, and event logged live.</p>
           </div>
-          <a href={agent.sheetUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
+          <a href={agent.sheetUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary shrink-0">
             <span>Open sheet</span>
-            <ExternalLink className="w-3 h-3" />
+            <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </section>
       )}
@@ -205,27 +209,26 @@ export default function AgentRunLiveView({ params }: { params: Promise<{ id: str
       <section className="grid grid-cols-12 gap-8">
         <div className="col-span-12 lg:col-span-8">
           <SectionHeader
-            numeral="1"
             title="Live log"
             subtitle={isRunning ? 'Refreshing every 3s' : 'Most recent run'}
             action={isRunning ? (
-              <span className="font-mono text-[10px] tracking-mega uppercase text-signal flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-signal signal-dot relative" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-signal/10 text-signal text-[11px] font-medium">
+                <span className="relative inline-flex w-1.5 h-1.5 rounded-full bg-signal signal-dot" />
                 Live
               </span>
             ) : null}
           />
-          <div className="mt-6 panel">
-            <div className="px-5 py-3 hairline-b flex items-center justify-between">
-              <div className="flex items-center gap-3">
+          <div className="mt-4 panel">
+            <div className="px-5 py-3 border-b border-rule flex items-center justify-between">
+              <div className="flex items-center gap-2">
                 <Terminal className="w-3.5 h-3.5 text-paper-3" />
-                <span className="font-mono text-[10px] tracking-mega uppercase text-paper-3">agent.log</span>
+                <span className="text-[12px] font-medium text-paper-2">agent.log</span>
               </div>
-              <span className="font-mono text-[10px] tracking-mega uppercase text-paper-4">{events.length} events</span>
+              <span className="text-[12px] text-paper-3">{events.length} events</span>
             </div>
-            <div className="p-5 font-mono text-[11px] max-h-[480px] overflow-y-auto space-y-1 leading-relaxed">
+            <div className="p-5 font-mono text-[12px] max-h-[480px] overflow-y-auto space-y-1 leading-relaxed">
               {events.length === 0 ? (
-                <p className="text-paper-4 tracking-micro uppercase">&gt; no events yet — hit Run now to dispatch</p>
+                <p className="text-paper-3">No events yet — hit Run now to dispatch.</p>
               ) : (
                 events.slice().reverse().map((ev, i) => {
                   const color = ev.level === 'success' ? 'text-signal' : ev.level === 'warn' ? 'text-amber' : ev.level === 'error' ? 'text-ember' : 'text-paper-2';
@@ -248,11 +251,11 @@ export default function AgentRunLiveView({ params }: { params: Promise<{ id: str
         </div>
 
         <div className="col-span-12 lg:col-span-4">
-          <Panel title="Current campaigns" numeral="2">
+          <Panel title="Current campaigns">
             {campaigns.length === 0 ? (
-              <p className="p-6 text-center font-display italic text-paper-3 text-lg font-light">
+              <p className="p-6 text-center text-paper-3 text-[14px]">
                 No active campaigns.
-                <br /><span className="font-mono text-[10px] tracking-micro uppercase text-paper-4 block mt-2 not-italic">Auto-rotate will spawn one</span>
+                <br /><span className="text-[12px] text-paper-3 block mt-1.5">Auto-rotate will spawn one.</span>
               </p>
             ) : (
               <div className="divide-y divide-rule">
@@ -260,22 +263,22 @@ export default function AgentRunLiveView({ params }: { params: Promise<{ id: str
                   <div key={c.id} className="p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
-                        <p className="font-display italic text-paper text-base font-light leading-tight">{c.name}</p>
-                        <p className="font-mono text-[10px] tracking-micro uppercase text-paper-4 mt-0.5">
-                          {c.targetCity} · {c.targetIndustry}
+                        <p className="text-paper text-[14px] font-semibold leading-tight tracking-tight truncate">{c.name}</p>
+                        <p className="text-[12px] text-paper-3 mt-1">
+                          {c.targetCity} · {c.targetIndustry.charAt(0) + c.targetIndustry.slice(1).toLowerCase()}
                         </p>
                         {c.agentExhaustedAt && (
-                          <span className="inline-block mt-1 font-mono text-[9px] tracking-mega uppercase text-amber">Exhausted</span>
+                          <span className="inline-block mt-1.5 px-2 py-0.5 rounded-full bg-amber/10 text-amber text-[11px] font-medium">Exhausted</span>
                         )}
                       </div>
                       <div className="text-right shrink-0">
-                        <p className={`font-display italic font-light nums text-2xl leading-none ${c.sendableCount > 0 ? 'text-signal' : 'text-paper-4'}`}>
+                        <p className={`nums text-[22px] font-semibold leading-none tracking-tight ${c.sendableCount > 0 ? 'text-signal' : 'text-paper-3'}`}>
                           {c.sendableCount}
                         </p>
-                        <p className="font-mono text-[9px] tracking-mega uppercase text-paper-4 mt-1">ready</p>
+                        <p className="text-[11px] text-paper-3 mt-1">ready</p>
                       </div>
                     </div>
-                    <div className="mt-2 font-mono text-[10px] text-paper-4 tracking-micro">
+                    <div className="mt-2 text-[12px] text-paper-3">
                       {c.prospectCount} total prospects
                     </div>
                   </div>

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
-import { SectionHeader, Panel, Button } from '../../../components/ui/primitives';
+import { SectionHeader, Button } from '../../../components/ui/primitives';
 
 const settings = [
   {
@@ -35,39 +35,33 @@ function maskKey(val: string): string {
 
 export default function SettingsPage() {
   return (
-    <div className="pt-10 pb-24 px-8 max-w-[1400px] mx-auto space-y-14">
-      {/* Masthead */}
-      <section className="pb-10 hairline-b">
-        <div className="flex items-center gap-4 mb-3">
-          <span className="font-mono text-[10px] tracking-mega text-paper-4 uppercase">
-            Chapter 10 · Configuration
-          </span>
-          <span className="h-px w-16 bg-rule" />
-        </div>
-        <h1 className="font-display italic font-light text-paper leading-[0.95] tracking-tight text-[64px] lg:text-[76px] max-w-3xl">
-          The wiring.
+    <div className="pt-10 pb-24 px-10 max-w-[1400px] mx-auto space-y-10">
+      {/* Header */}
+      <section className="pb-8 hairline-b">
+        <h1 className="text-paper text-[36px] font-semibold leading-tight tracking-tight">
+          Settings
         </h1>
-        <p className="font-ui text-paper-2 text-[15px] mt-5 max-w-xl leading-relaxed">
-          Environment variables driving the platform. Configured in <code className="font-mono text-signal">.env.local</code>,
+        <p className="text-paper-2 text-[14px] mt-3 max-w-xl leading-relaxed">
+          Environment variables driving the platform. Configured in <code className="px-1.5 py-0.5 rounded-md bg-ink-2 text-signal text-[12px]">.env.local</code>,
           require a service restart to take effect.
         </p>
       </section>
 
-      {settings.map((group, idx) => (
+      {settings.map((group) => (
         <section key={group.section}>
-          <SectionHeader numeral={(idx + 1).toString()} title={group.section} />
-          <div className="mt-6 panel">
+          <SectionHeader title={group.section} />
+          <div className="mt-4 panel">
             {group.items.map((item) => (
-              <div key={item.label} className="px-6 py-5 hairline-b last:border-0 flex items-center justify-between gap-6">
+              <div key={item.label} className="px-6 py-5 border-b border-rule last:border-0 flex items-center justify-between gap-6">
                 <div className="min-w-0">
-                  <p className="font-ui text-[15px] text-paper">{item.label}</p>
-                  <p className="font-mono text-[10px] tracking-micro uppercase text-paper-4 mt-1">{item.envKey}</p>
+                  <p className="text-[14px] text-paper font-medium">{item.label}</p>
+                  <p className="text-[11px] text-paper-3 mt-1 font-mono">{item.envKey}</p>
                 </div>
-                <span className="font-mono text-[12px] hairline px-3 py-1.5 shrink-0">
+                <span className="font-mono text-[12px] px-3 py-1.5 rounded-md border border-rule bg-ink-1 shrink-0">
                   {item.value ? (
                     <span className="text-paper">{maskKey(item.value)}</span>
                   ) : (
-                    <span className="text-ember tracking-micro uppercase">Not set</span>
+                    <span className="text-ember">Not set</span>
                   )}
                 </span>
               </div>
@@ -79,15 +73,15 @@ export default function SettingsPage() {
       <section>
         <div className="panel p-6 flex items-center justify-between">
           <div>
-            <p className="font-display italic text-paper text-xl font-light">Managing integrations</p>
-            <p className="font-mono text-[11px] tracking-micro uppercase text-paper-3 mt-1">
-              Edit .env.local · restart the service · check status
+            <p className="text-paper text-[16px] font-semibold tracking-tight">Managing integrations</p>
+            <p className="text-[13px] text-paper-3 mt-1">
+              Edit .env.local, restart the service, then check status.
             </p>
           </div>
           <Link href="/integrations">
             <Button>
               <span>Integrations</span>
-              <ArrowUpRight className="w-3 h-3" />
+              <ArrowUpRight className="w-3.5 h-3.5" />
             </Button>
           </Link>
         </div>

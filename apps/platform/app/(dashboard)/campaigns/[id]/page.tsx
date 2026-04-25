@@ -91,8 +91,8 @@ export default function CampaignDetail({ params }: { params: Promise<{ id: strin
 
   if (!campaign) {
     return (
-      <div className="pt-10 pb-24 px-8 max-w-[1400px] mx-auto">
-        <p className="font-mono text-[11px] tracking-micro uppercase text-paper-4">Loading campaign…</p>
+      <div className="pt-10 pb-24 px-10 max-w-[1400px] mx-auto">
+        <p className="text-[13px] text-paper-3">Loading campaign…</p>
       </div>
     );
   }
@@ -109,48 +109,48 @@ export default function CampaignDetail({ params }: { params: Promise<{ id: strin
     { label: 'Dead', value: 'BOUNCED,DEAD,UNSUBSCRIBED' },
   ];
 
+  const industryLabel = campaign.targetIndustry.charAt(0) + campaign.targetIndustry.slice(1).toLowerCase();
+
   return (
-    <div className="pt-10 pb-24 px-8 max-w-[1400px] mx-auto space-y-12">
-      {/* Back + masthead */}
+    <div className="pt-10 pb-24 px-10 max-w-[1400px] mx-auto space-y-10">
+      {/* Header */}
       <section className="pb-6 hairline-b">
-        <Link href="/campaigns" className="flex items-center gap-2 font-mono text-[10px] tracking-mega uppercase text-paper-4 hover:text-signal transition-colors mb-4">
-          <ArrowLeft className="w-3 h-3" />
+        <Link href="/campaigns" className="flex items-center gap-1.5 text-[13px] text-paper-3 hover:text-signal transition-colors mb-4">
+          <ArrowLeft className="w-3.5 h-3.5" />
           <span>All campaigns</span>
         </Link>
         <div className="flex items-end justify-between gap-8">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <span className={`w-1.5 h-1.5 shrink-0 ${
-                campaign.agentExhaustedAt ? 'bg-amber' :
-                campaign.active ? 'bg-signal' : 'bg-paper-4'
-              }`} />
-              <span className={`font-mono text-[10px] tracking-mega uppercase ${
-                campaign.agentExhaustedAt ? 'text-amber' :
-                campaign.active ? 'text-signal' : 'text-paper-4'
+              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${
+                campaign.agentExhaustedAt ? 'bg-amber/10 text-amber' :
+                campaign.active ? 'bg-signal/10 text-signal' : 'bg-ink-2 text-paper-3'
               }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${
+                  campaign.agentExhaustedAt ? 'bg-amber' :
+                  campaign.active ? 'bg-signal' : 'bg-paper-4'
+                }`} />
                 {campaign.agentExhaustedAt ? 'Exhausted' : campaign.active ? 'Active' : 'Paused'}
               </span>
-              <span className="font-mono text-[10px] tracking-mega text-paper-4 uppercase ml-3">
-                {campaign.targetIndustry}
-              </span>
+              <span className="text-[12px] text-paper-3">{industryLabel}</span>
             </div>
-            <h1 className="font-display italic font-light text-paper leading-[0.95] tracking-tight text-[52px] lg:text-[68px]">
+            <h1 className="text-paper text-[36px] font-semibold leading-tight tracking-tight">
               {campaign.name}
             </h1>
-            <p className="font-mono text-[11px] tracking-micro text-paper-3 uppercase mt-3 flex items-center gap-2">
-              <MapPin className="w-3 h-3" />
+            <p className="text-[13px] text-paper-3 mt-2 flex items-center gap-1.5">
+              <MapPin className="w-3.5 h-3.5" />
               <span>{campaign.targetCity}{campaign.targetState ? `, ${campaign.targetState}` : ''}</span>
             </p>
           </div>
           <div className="flex flex-col gap-2 shrink-0">
             <Button variant="primary" onClick={runDiscovery} disabled={running}>
-              <Play className="w-3 h-3" />
+              <Play className="w-3.5 h-3.5" />
               <span>{running ? 'Running…' : 'Run discovery'}</span>
             </Button>
             {campaign.agentId && (
               <Link href={`/agents/${campaign.agentId}`}>
                 <Button variant="ghost" className="w-full">
-                  <Zap className="w-3 h-3" />
+                  <Zap className="w-3.5 h-3.5" />
                   <span>View agent</span>
                 </Button>
               </Link>
@@ -181,15 +181,15 @@ export default function CampaignDetail({ params }: { params: Promise<{ id: strin
 
       {/* Email preview */}
       <section>
-        <SectionHeader numeral="1" title="Email template" />
-        <div className="mt-6 panel p-6 space-y-3">
+        <SectionHeader title="Email template" />
+        <div className="mt-4 panel p-6 space-y-3">
           <div>
             <span className="label-sm block mb-1.5">Subject</span>
-            <p className="font-ui text-sm text-paper">{campaign.emailSubject}</p>
+            <p className="text-[14px] text-paper">{campaign.emailSubject}</p>
           </div>
           <div>
             <span className="label-sm block mb-1.5">Body</span>
-            <p className="font-display italic text-paper-2 text-[13px] leading-relaxed whitespace-pre-wrap">
+            <p className="text-paper-2 text-[13px] leading-relaxed whitespace-pre-wrap">
               {campaign.emailBodyHtml.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ')}
             </p>
           </div>
@@ -199,18 +199,17 @@ export default function CampaignDetail({ params }: { params: Promise<{ id: strin
       {/* Prospects */}
       <section>
         <SectionHeader
-          numeral="2"
           title="Prospects"
           subtitle={`${prospects.length} shown${filter ? ` · filtered` : ''}`}
         />
 
-        <div className="mt-6 flex gap-2 mb-4">
+        <div className="mt-4 flex gap-2 mb-4">
           {statusFilters.map((f) => (
             <button
               key={f.label}
               onClick={() => setFilter(f.value)}
-              className={`px-3 py-1.5 font-mono text-[10px] tracking-mega uppercase hairline transition-colors ${
-                filter === f.value ? 'border-signal bg-signal-soft text-signal' : 'border-rule text-paper-3 hover:text-paper'
+              className={`px-3 py-1.5 rounded-full text-[12px] font-medium border transition-colors ${
+                filter === f.value ? 'border-signal bg-signal/10 text-signal' : 'border-rule text-paper-3 hover:text-paper hover:bg-ink-2'
               }`}
             >
               {f.label}
@@ -220,20 +219,20 @@ export default function CampaignDetail({ params }: { params: Promise<{ id: strin
 
         <div className="panel overflow-hidden">
           {prospects.length === 0 ? (
-            <div className="p-16 text-center">
-              <p className="font-display italic text-paper-3 text-xl font-light">
+            <div className="p-12 text-center">
+              <p className="text-paper text-[16px] font-medium">
                 {filter ? 'No matches in that filter.' : 'No prospects yet.'}
               </p>
               {!filter && (
-                <p className="font-mono text-[11px] tracking-micro uppercase text-paper-4 mt-3">
-                  Click "Run discovery" to scrape this city
+                <p className="text-[12px] text-paper-3 mt-2">
+                  Click "Run discovery" to scrape this city.
                 </p>
               )}
             </div>
           ) : (
             <table className="w-full">
               <thead>
-                <tr className="hairline-b">
+                <tr className="border-b border-rule bg-ink-1">
                   <Th>Business</Th>
                   <Th>Email</Th>
                   <Th>Contact</Th>
@@ -243,44 +242,42 @@ export default function CampaignDetail({ params }: { params: Promise<{ id: strin
               </thead>
               <tbody>
                 {prospects.map((p) => (
-                  <tr key={p.id} className="hairline-b last:border-0 hover:bg-ink-2 transition-colors">
+                  <tr key={p.id} className="border-b border-rule last:border-0 hover:bg-ink-2 transition-colors">
                     <td className="px-5 py-3">
-                      <div className="flex items-start gap-3">
-                        <div>
-                          <p className="font-ui text-sm text-paper">{p.name}</p>
-                          {p.website && (
-                            <a href={p.website} target="_blank" rel="noopener noreferrer" className="font-mono text-[10px] text-paper-4 hover:text-signal transition-colors inline-flex items-center gap-1 mt-0.5">
-                              {p.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
-                              <ExternalLink className="w-2.5 h-2.5" />
-                            </a>
-                          )}
-                        </div>
+                      <div>
+                        <p className="text-[13px] text-paper font-medium">{p.name}</p>
+                        {p.website && (
+                          <a href={p.website} target="_blank" rel="noopener noreferrer" className="text-[12px] text-paper-3 hover:text-signal transition-colors inline-flex items-center gap-1 mt-0.5">
+                            {p.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       {p.email ? (
-                        <span className="font-mono text-[11px] text-paper-2">{p.email}</span>
+                        <span className="text-[12px] text-paper-2">{p.email}</span>
                       ) : (
-                        <span className="font-mono text-[10px] text-paper-4">—</span>
+                        <span className="text-[12px] text-paper-4">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
                       {p.contactFirstName ? (
-                        <span className="font-ui text-sm text-paper-2">{p.contactFirstName}</span>
+                        <span className="text-[13px] text-paper-2">{p.contactFirstName}</span>
                       ) : (
-                        <span className="font-mono text-[10px] text-paper-4">—</span>
+                        <span className="text-[12px] text-paper-4">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-right">
                       {p.googleRating ? (
-                        <span className="font-mono text-xs text-paper nums">{p.googleRating.toFixed(1)}★</span>
+                        <span className="text-[12px] text-paper nums font-medium">{p.googleRating.toFixed(1)}★</span>
                       ) : (
-                        <span className="font-mono text-[10px] text-paper-4">—</span>
+                        <span className="text-[12px] text-paper-4">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="font-mono text-[10px] tracking-micro uppercase text-paper-3">
-                        {p.status.replace(/_/g, ' ')}
+                      <span className="text-[12px] text-paper-3">
+                        {p.status.charAt(0) + p.status.slice(1).toLowerCase().replace(/_/g, ' ')}
                       </span>
                     </td>
                   </tr>
@@ -296,7 +293,7 @@ export default function CampaignDetail({ params }: { params: Promise<{ id: strin
 
 function Th({ children, align = 'left' }: { children: React.ReactNode; align?: 'left' | 'right' }) {
   return (
-    <th className={`px-4 py-3 font-mono text-[9px] tracking-mega uppercase text-paper-4 font-medium ${align === 'right' ? 'text-right' : 'text-left'}`}>
+    <th className={`px-4 py-2.5 text-[11px] uppercase tracking-wide text-paper-3 font-medium ${align === 'right' ? 'text-right' : 'text-left'}`}>
       {children}
     </th>
   );

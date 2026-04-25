@@ -45,90 +45,85 @@ export default function AgentsListPage() {
   useEffect(() => { load(); }, [load]);
 
   return (
-    <div className="pt-10 pb-24 px-8 max-w-[1400px] mx-auto space-y-12">
-      <section className="pb-10 hairline-b">
-        <div className="flex items-center gap-4 mb-3">
-          <span className="font-mono text-[10px] tracking-mega text-paper-4 uppercase">Chapter 01 · Agents</span>
-          <span className="h-px w-16 bg-rule" />
-          <span className="font-mono text-[10px] tracking-mega text-paper-3 uppercase">
+    <div className="pt-10 pb-24 px-10 max-w-[1400px] mx-auto space-y-10">
+      <section className="pb-8 hairline-b flex items-end justify-between gap-8">
+        <div>
+          <p className="text-[12px] text-paper-3 mb-2">
             {agents.filter((a) => a.active).length} of {agents.length} armed
-          </span>
-        </div>
-        <div className="flex items-end justify-between gap-8">
-          <h1 className="font-display italic font-light text-paper leading-[0.95] tracking-tight text-[64px] lg:text-[84px]">
-            Agents.
+          </p>
+          <h1 className="text-paper text-[36px] font-semibold leading-tight tracking-tight">
+            Agents
           </h1>
-          <Button variant="primary" onClick={() => setShowCreate(true)}>
-            <Plus className="w-3 h-3" />
-            <span>New agent</span>
-          </Button>
+          <p className="text-paper-2 text-[14px] mt-3 max-w-xl leading-relaxed">
+            Each agent is an autonomous outreach worker. Pick target cities and industries,
+            a daily send cap, and email copy. The agent discovers businesses, sends personalized
+            cold emails, and logs everything to its own Google Sheet.
+          </p>
         </div>
-        <p className="font-ui text-paper-2 text-[15px] mt-5 max-w-xl leading-relaxed">
-          Each agent is an autonomous outreach worker. Pick target cities + industries,
-          a daily send cap, email copy. The agent discovers businesses, sends personalized cold emails,
-          logs everything to its own Google Sheet.
-        </p>
+        <Button variant="primary" onClick={() => setShowCreate(true)}>
+          <Plus className="w-3.5 h-3.5" />
+          <span>New agent</span>
+        </Button>
       </section>
 
       <section>
         <SectionHeader numeral="1" title="Your agents" />
         <div className="mt-6">
           {loading ? (
-            <p className="panel p-12 text-center font-mono text-[11px] tracking-micro uppercase text-paper-4">Loading…</p>
+            <p className="panel p-12 text-center text-[13px] text-paper-3">Loading…</p>
           ) : agents.length === 0 ? (
-            <div className="panel p-20 text-center">
-              <Zap className="w-8 h-8 text-paper-4 mx-auto mb-4" />
-              <p className="font-display italic text-paper-3 text-2xl font-light">No agents yet.</p>
+            <div className="panel p-16 text-center">
+              <Zap className="w-7 h-7 text-paper-4 mx-auto mb-4" />
+              <p className="text-paper text-[18px] font-medium">No agents yet</p>
               <button
                 onClick={() => setShowCreate(true)}
-                className="font-mono text-[11px] tracking-micro uppercase text-signal hover:underline mt-4"
+                className="text-[13px] text-signal hover:underline mt-3 font-medium"
               >
                 Create your first agent →
               </button>
             </div>
           ) : (
             <div className="space-y-3">
-              {agents.map((agent, idx) => (
+              {agents.map((agent) => (
                 <Link
                   key={agent.id}
                   href={`/agents/${agent.id}`}
-                  className="panel p-6 hover:border-paper-4 transition-colors block group"
+                  className="panel p-6 hover:shadow-card-hover hover:border-paper-4 transition-all block group"
                 >
                   <div className="grid grid-cols-12 gap-4 items-start">
-                    <div className="col-span-5 flex items-start gap-4">
-                      <span className="font-mono text-[10px] tracking-mega text-paper-4 pt-1.5 shrink-0">
-                        №{(idx + 1).toString().padStart(3, '0')}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <span className={`w-1.5 h-1.5 shrink-0 relative ${agent.active ? 'bg-signal signal-dot' : 'bg-paper-4'}`} />
-                          <span className={`font-mono text-[9px] tracking-mega uppercase ${agent.active ? 'text-signal' : 'text-paper-4'}`}>
-                            {agent.active ? 'Armed' : 'Paused'}
-                          </span>
-                        </div>
-                        <h3 className="font-display italic text-paper text-[26px] font-light leading-tight">{agent.name}</h3>
-                        {agent.description && (
-                          <p className="font-ui text-[12px] text-paper-3 mt-1.5 line-clamp-2">{agent.description}</p>
-                        )}
+                    <div className="col-span-5 min-w-0">
+                      <div className="mb-2">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${
+                            agent.active ? 'bg-signal/10 text-signal' : 'bg-ink-2 text-paper-3'
+                          }`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${agent.active ? 'bg-signal' : 'bg-paper-4'}`} />
+                          {agent.active ? 'Armed' : 'Paused'}
+                        </span>
                       </div>
+                      <h3 className="text-paper text-[18px] font-semibold tracking-tight leading-tight">{agent.name}</h3>
+                      {agent.description && (
+                        <p className="text-[13px] text-paper-3 mt-1.5 line-clamp-2 leading-snug">{agent.description}</p>
+                      )}
                     </div>
 
                     <div className="col-span-4 flex flex-wrap gap-1.5 items-start pt-1">
                       {agent.targetIndustries.slice(0, 3).map((ind) => (
-                        <span key={ind} className="font-mono text-[9px] tracking-mega uppercase hairline px-2 py-1 text-paper-2">
-                          {ind}
+                        <span key={ind} className="px-2 py-0.5 rounded-full bg-ink-2 text-[11px] text-paper-2 font-medium">
+                          {ind.charAt(0) + ind.slice(1).toLowerCase()}
                         </span>
                       ))}
                       {agent.targetCities.slice(0, 2).map((city) => (
-                        <span key={city} className="font-mono text-[9px] tracking-mega uppercase text-paper-4 px-2 py-1">
+                        <span key={city} className="px-2 py-0.5 text-[11px] text-paper-3">
                           {city.split(',')[0]}
                         </span>
                       ))}
                     </div>
 
                     <div className="col-span-2 text-right">
-                      <p className="font-display italic font-light text-paper text-2xl nums leading-none">{agent.dailyCap}</p>
-                      <p className="font-mono text-[9px] tracking-mega text-paper-4 uppercase mt-1">per day</p>
+                      <p className="text-paper text-[22px] nums font-semibold leading-none tracking-tight">{agent.dailyCap}</p>
+                      <p className="text-[11px] text-paper-3 mt-1.5">per day</p>
                     </div>
 
                     <div className="col-span-1 flex justify-end">
@@ -136,8 +131,8 @@ export default function AgentsListPage() {
                     </div>
                   </div>
 
-                  <div className="mt-5 pt-4 hairline-t flex items-center justify-between">
-                    <div className="flex items-center gap-4 font-mono text-[10px] tracking-micro uppercase text-paper-4">
+                  <div className="mt-5 pt-4 border-t border-rule flex items-center justify-between">
+                    <div className="flex items-center gap-3 text-[12px] text-paper-3">
                       <span>{agent._count.campaigns} campaigns</span>
                       <span>·</span>
                       <span>{agent._count.runs} runs</span>
@@ -154,7 +149,7 @@ export default function AgentsListPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="inline-flex items-center gap-1 font-mono text-[10px] tracking-mega uppercase text-paper-3 hover:text-signal transition-colors"
+                        className="inline-flex items-center gap-1 text-[12px] text-paper-3 hover:text-signal font-medium transition-colors"
                       >
                         <span>Open sheet</span>
                         <ExternalLink className="w-3 h-3" />
@@ -222,11 +217,11 @@ function CreateAgentModal({ onClose, onCreated }: { onClose: () => void; onCreat
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-ink-0/80" onClick={onClose} />
-      <div className="relative panel-2 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <header className="flex items-center justify-between px-6 py-4 hairline-b sticky top-0 bg-ink-2 z-10">
-          <span className="font-mono text-[11px] tracking-mega uppercase text-paper-2">New agent</span>
-          <button onClick={onClose} className="text-paper-4 hover:text-paper transition-colors"><X className="w-4 h-4" /></button>
+      <div className="absolute inset-0 bg-paper/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative panel w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-apple-lg">
+        <header className="flex items-center justify-between px-6 py-4 border-b border-rule sticky top-0 bg-ink-0 z-10">
+          <span className="text-paper text-[16px] font-semibold tracking-tight">New agent</span>
+          <button onClick={onClose} className="text-paper-3 hover:text-paper transition-colors"><X className="w-4 h-4" /></button>
         </header>
 
         <div className="p-6 space-y-6">
@@ -247,13 +242,13 @@ function CreateAgentModal({ onClose, onCreated }: { onClose: () => void; onCreat
                 <button
                   key={ind}
                   onClick={() => toggleIndustry(ind)}
-                  className={`px-3 py-1.5 font-mono text-[10px] tracking-mega uppercase hairline transition-colors ${
+                  className={`px-3 py-1.5 rounded-full text-[12px] font-medium border transition-colors ${
                     industries.includes(ind)
-                      ? 'border-signal bg-signal-soft text-signal'
-                      : 'border-rule text-paper-3 hover:text-paper'
+                      ? 'border-signal bg-signal/10 text-signal'
+                      : 'border-rule text-paper-3 hover:text-paper hover:bg-ink-2'
                   }`}
                 >
-                  {ind}
+                  {ind.charAt(0) + ind.slice(1).toLowerCase()}
                 </button>
               ))}
             </div>
@@ -266,18 +261,18 @@ function CreateAgentModal({ onClose, onCreated }: { onClose: () => void; onCreat
                 <button
                   key={c}
                   onClick={() => toggleCity(c)}
-                  className={`px-3 py-1.5 font-mono text-[10px] tracking-micro uppercase hairline transition-colors ${
+                  className={`px-3 py-1.5 rounded-full text-[12px] font-medium border transition-colors ${
                     cities.includes(c)
-                      ? 'border-signal bg-signal-soft text-signal'
-                      : 'border-rule text-paper-3 hover:text-paper'
+                      ? 'border-signal bg-signal/10 text-signal'
+                      : 'border-rule text-paper-3 hover:text-paper hover:bg-ink-2'
                   }`}
                 >
                   {c}
                 </button>
               ))}
             </div>
-            <p className="font-mono text-[10px] text-paper-4 mt-2 tracking-micro uppercase">
-              Agent rotates through city × industry combos when one exhausts
+            <p className="text-[12px] text-paper-3 mt-2">
+              Agent rotates through city × industry combos when one exhausts.
             </p>
           </div>
 
@@ -305,18 +300,18 @@ function CreateAgentModal({ onClose, onCreated }: { onClose: () => void; onCreat
             </div>
           </div>
 
-          <div className="panel p-4 hairline">
-            <p className="font-mono text-[10px] tracking-mega uppercase text-paper-3 mb-2">What happens next</p>
-            <ol className="font-ui text-[12px] text-paper-2 space-y-1.5 leading-relaxed list-decimal list-inside">
-              <li>A new Google Sheet is provisioned with 4 tabs (Prospects · Emails · Daily · Log)</li>
-              <li>Agent starts paused — review sheet access, then arm it from the agent page</li>
-              <li>When armed, agent picks the first city × industry, discovers prospects, sends emails</li>
-              <li>All activity writes to your Sheet in real time</li>
+          <div className="rounded-apple bg-ink-2 p-4">
+            <p className="text-[12px] font-medium text-paper mb-2">What happens next</p>
+            <ol className="text-[13px] text-paper-2 space-y-1.5 leading-relaxed list-decimal list-inside">
+              <li>A new Google Sheet is provisioned with 4 tabs (Prospects · Emails · Daily · Log).</li>
+              <li>Agent starts paused — review sheet access, then arm it from the agent page.</li>
+              <li>When armed, agent picks the first city × industry, discovers prospects, sends emails.</li>
+              <li>All activity writes to your Sheet in real time.</li>
             </ol>
           </div>
         </div>
 
-        <footer className="flex gap-3 px-6 py-4 hairline-t sticky bottom-0 bg-ink-2">
+        <footer className="flex gap-3 px-6 py-4 border-t border-rule sticky bottom-0 bg-ink-0">
           <Button variant="primary" onClick={handleCreate} disabled={creating || !name || cities.length === 0}>
             {creating ? 'Creating…' : 'Create agent'}
           </Button>

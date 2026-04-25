@@ -139,32 +139,32 @@ export default function NotificationBell() {
   const panel = open ? createPortal(
     <div
       ref={panelRef}
-      className="fixed w-[400px] max-h-[540px] panel-2 flex flex-col shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
+      className="fixed w-[400px] max-h-[540px] panel rounded-apple-lg flex flex-col shadow-card-hover"
       style={{ top: panelPos.top, right: panelPos.right, zIndex: 9999 }}
     >
       {/* Tabs */}
-      <div className="flex hairline-b shrink-0">
+      <div className="flex border-b border-rule shrink-0">
         <button
           onClick={() => setTab('notifications')}
-          className={`flex-1 py-3 font-mono text-[10px] tracking-mega uppercase transition-colors relative ${
+          className={`flex-1 py-3 text-[12px] font-medium transition-colors relative ${
             tab === 'notifications' ? 'text-signal' : 'text-paper-3 hover:text-paper'
           }`}
         >
-          Activity {unreadCount > 0 && <span className="ml-1 text-signal nums">[{unreadCount}]</span>}
-          {tab === 'notifications' && <span className="absolute left-0 right-0 -bottom-px h-px bg-signal" />}
+          Activity {unreadCount > 0 && <span className="ml-1 text-signal nums">({unreadCount})</span>}
+          {tab === 'notifications' && <span className="absolute left-0 right-0 -bottom-px h-[2px] bg-signal" />}
         </button>
         <button
           onClick={() => setTab('report')}
-          className={`flex-1 py-3 font-mono text-[10px] tracking-mega uppercase transition-colors relative ${
+          className={`flex-1 py-3 text-[12px] font-medium transition-colors relative ${
             tab === 'report' ? 'text-signal' : 'text-paper-3 hover:text-paper'
           }`}
         >
           Daily report
-          {tab === 'report' && <span className="absolute left-0 right-0 -bottom-px h-px bg-signal" />}
+          {tab === 'report' && <span className="absolute left-0 right-0 -bottom-px h-[2px] bg-signal" />}
         </button>
         <button
           onClick={() => setOpen(false)}
-          className="px-3 text-paper-4 hover:text-paper transition-colors"
+          className="px-3 text-paper-3 hover:text-paper transition-colors"
         >
           <X className="w-3.5 h-3.5" />
         </button>
@@ -175,7 +175,7 @@ export default function NotificationBell() {
         {tab === 'notifications' ? (
           <>
             {notifications.length === 0 ? (
-              <p className="p-12 text-center font-display italic text-paper-3 text-lg font-light">
+              <p className="p-12 text-center text-paper-3 text-[14px]">
                 No activity yet.
               </p>
             ) : (
@@ -195,13 +195,13 @@ export default function NotificationBell() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <p className="font-ui text-sm text-paper leading-tight">{n.title}</p>
-                          {isUnread && <span className="w-1.5 h-1.5 bg-signal shrink-0 mt-1" />}
+                          <p className="text-[13px] text-paper font-medium leading-tight">{n.title}</p>
+                          {isUnread && <span className="w-1.5 h-1.5 rounded-full bg-signal shrink-0 mt-1" />}
                         </div>
-                        <p className="font-ui text-[12px] text-paper-3 mt-0.5 leading-snug">{n.description}</p>
-                        <p className="font-mono text-[9px] tracking-mega uppercase text-paper-4 mt-1">
+                        <p className="text-[12px] text-paper-3 mt-0.5 leading-snug">{n.description}</p>
+                        <p className="text-[11px] text-paper-3 mt-1">
                           {timeAgo(n.createdAt)} ago
-                          {n.prospectName && <span className="text-paper-4"> · {n.prospectName}</span>}
+                          {n.prospectName && <span> · {n.prospectName}</span>}
                         </p>
                       </div>
                     </Link>
@@ -215,31 +215,31 @@ export default function NotificationBell() {
             {report ? (
               <div className="space-y-5">
                 <div>
-                  <p className="font-mono text-[10px] tracking-mega uppercase text-paper-4">
+                  <p className="text-[12px] text-paper-3">
                     {report.period} · Generated {new Date(report.generatedAt).toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                   </p>
                 </div>
-                <div className="grid grid-cols-3 gap-0 hairline border">
+                <div className="grid grid-cols-3 gap-0 rounded-lg border border-rule overflow-hidden">
                   <StatCell label="Sent" value={report.stats.emailsSent} />
                   <StatCell label="Opens" value={report.stats.opens} />
                   <StatCell label="Replies" value={report.stats.replies} accent />
                 </div>
-                <div className="grid grid-cols-3 gap-0 hairline border">
+                <div className="grid grid-cols-3 gap-0 rounded-lg border border-rule overflow-hidden">
                   <StatCell label="Booked" value={report.stats.meetingsBooked} accent />
                   <StatCell label="Bounces" value={report.stats.bounces} />
                   <StatCell label="Discovered" value={report.stats.prospectsDiscovered} />
                 </div>
                 {report.aiSummary && (
-                  <div className="panel p-4">
-                    <span className="label-sm block mb-2">Summary</span>
-                    <p className="font-display italic text-paper-2 text-sm leading-relaxed">
+                  <div className="rounded-apple bg-ink-2 p-4">
+                    <span className="text-[12px] font-medium text-paper block mb-2">Summary</span>
+                    <p className="text-paper-2 text-[13px] leading-relaxed">
                       "{report.aiSummary}"
                     </p>
                   </div>
                 )}
               </div>
             ) : (
-              <p className="p-8 text-center font-mono text-[10px] tracking-mega uppercase text-paper-4">
+              <p className="p-8 text-center text-[13px] text-paper-3">
                 Loading today's report…
               </p>
             )}
@@ -249,10 +249,10 @@ export default function NotificationBell() {
 
       {/* Footer */}
       {tab === 'notifications' && unreadCount > 0 && (
-        <div className="hairline-t shrink-0">
+        <div className="border-t border-rule shrink-0">
           <button
             onClick={markAllRead}
-            className="w-full py-3 font-mono text-[10px] tracking-mega uppercase text-paper-3 hover:text-signal transition-colors"
+            className="w-full py-3 text-[12px] text-paper-3 font-medium hover:text-signal transition-colors"
           >
             Mark all read
           </button>
@@ -267,12 +267,12 @@ export default function NotificationBell() {
       <button
         ref={bellRef}
         onClick={() => setOpen((v) => !v)}
-        className="relative w-8 h-8 hairline flex items-center justify-center text-paper-3 hover:text-paper hover:border-paper-3 transition-colors"
+        className="relative w-8 h-8 rounded-md border border-rule bg-ink-0 flex items-center justify-center text-paper-3 hover:text-paper hover:bg-ink-2 transition-colors"
         title="Notifications"
       >
         <Bell className="w-3.5 h-3.5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-1 bg-signal text-ink-0 font-mono text-[9px] tracking-tight nums font-bold flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-signal text-white text-[10px] nums font-semibold flex items-center justify-center">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -284,9 +284,9 @@ export default function NotificationBell() {
 
 function StatCell({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
   return (
-    <div className="px-3 py-3 hairline-r last:border-r-0">
-      <p className="label-sm">{label}</p>
-      <p className={`font-display italic font-light text-xl nums leading-none mt-1 ${accent ? 'text-signal' : 'text-paper'}`}>
+    <div className="px-3 py-3 border-r border-rule last:border-r-0 bg-ink-1">
+      <p className="text-[11px] text-paper-3">{label}</p>
+      <p className={`text-[20px] nums font-semibold leading-none mt-1.5 tracking-tight ${accent ? 'text-signal' : 'text-paper'}`}>
         {value.toLocaleString()}
       </p>
     </div>

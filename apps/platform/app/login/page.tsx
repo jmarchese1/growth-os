@@ -42,52 +42,31 @@ export default function LoginPage() {
     setLoading(false);
   }
 
-  const now = new Date();
-  const timeString = now.toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: false, hour: '2-digit', minute: '2-digit' });
-  const dateString = now.toLocaleDateString('en-US', { timeZone: 'America/New_York', weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
-
   return (
-    <div className="min-h-screen grid grid-cols-12 bg-ink-0 text-paper">
-      {/* LEFT — editorial panel */}
+    <div className="min-h-screen grid grid-cols-12 bg-ink-1 text-paper">
+      {/* LEFT — clean Apple panel */}
       <aside className="col-span-12 lg:col-span-7 relative hairline-r flex flex-col justify-between p-10 lg:p-16 bg-ink-0 overflow-hidden">
-        {/* Subtle grid behind */}
-        <div className="absolute inset-0 bg-grid-fine opacity-40 pointer-events-none" />
-        <div className="absolute inset-0 grain pointer-events-none" />
-
         <header className="relative z-10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 border border-paper flex items-center justify-center">
-              <span className="font-display italic font-light text-paper text-[17px] leading-none">E</span>
+            <div className="w-8 h-8 rounded-lg bg-signal flex items-center justify-center">
+              <span className="text-white text-[15px] font-semibold leading-none">E</span>
             </div>
-            <div>
-              <p className="font-display italic font-light text-paper text-[18px] leading-none">Embedo</p>
-              <p className="font-mono text-[9px] tracking-mega text-paper-4 mt-1 uppercase">Operator</p>
-            </div>
-          </div>
-          <div className="hidden sm:flex items-baseline gap-4 font-mono text-[10px] tracking-mega uppercase text-paper-4">
-            <span>{dateString}</span>
-            <span className="text-paper">{timeString} ET</span>
+            <p className="text-paper text-[16px] font-semibold leading-none tracking-tight">Embedo</p>
           </div>
         </header>
 
         <div className="relative z-10 max-w-2xl">
-          <span className="font-mono text-[10px] tracking-mega text-paper-4 uppercase">
-            § Vol. 01 · Issue {String(now.getDate()).padStart(3, '0')}
-          </span>
-          <h1 className="font-display italic font-light text-paper mt-6 leading-[0.92] tracking-tight text-[72px] lg:text-[104px]">
-            Where <br />
-            <span className="text-signal not-italic font-normal" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85em', letterSpacing: '-0.03em' }}>
-              cold
-            </span>{' '}becomes <br /> warm.
+          <h1 className="text-paper leading-tight tracking-tight text-[44px] lg:text-[64px] font-semibold">
+            Where cold becomes <span className="text-signal">warm</span>.
           </h1>
-          <p className="font-ui text-paper-2 text-[15px] mt-8 max-w-md leading-relaxed">
-            The internal outreach terminal for Embedo. Campaigns, prospects, domains, replies,
-            everything in one frame.
+          <p className="text-paper-2 text-[15px] mt-6 max-w-md leading-relaxed">
+            The internal outreach platform. Campaigns, prospects, domains, and replies — everything
+            in one place.
           </p>
         </div>
 
-        <footer className="relative z-10 flex items-center justify-between font-mono text-[10px] tracking-mega text-paper-4 uppercase">
-          <span>Embedo · Growth OS</span>
+        <footer className="relative z-10 flex items-center justify-between text-[12px] text-paper-3">
+          <span>Embedo</span>
           <span>All times Eastern</span>
         </footer>
       </aside>
@@ -95,22 +74,21 @@ export default function LoginPage() {
       {/* RIGHT — form */}
       <section className="col-span-12 lg:col-span-5 flex items-center justify-center p-8 lg:p-16 bg-ink-1">
         <div className="w-full max-w-sm">
-          <div className="mb-10">
-            <span className="label">§ 01 — Identify</span>
-            <h2 className="font-display italic font-light text-paper text-[48px] leading-none tracking-tight mt-3">
-              Welcome back.
+          <div className="mb-8">
+            <h2 className="text-paper text-[28px] leading-tight tracking-tight font-semibold">
+              Welcome back
             </h2>
-            <p className="font-ui text-paper-2 text-sm mt-3">
-              Sign in to continue to Embedo Operator.
+            <p className="text-paper-2 text-[14px] mt-2">
+              Sign in to continue.
             </p>
           </div>
 
           {showForgot ? (
-            <form onSubmit={handleForgotPassword} className="space-y-5">
+            <form onSubmit={handleForgotPassword} className="space-y-4">
               {forgotSent ? (
-                <div className="hairline bg-signal-soft p-4">
-                  <p className="font-display italic text-signal text-lg">Reset link sent.</p>
-                  <p className="font-mono text-[11px] tracking-micro uppercase text-paper-3 mt-2">
+                <div className="rounded-apple bg-signal/10 px-4 py-3 border border-signal/30">
+                  <p className="text-signal text-[14px] font-semibold">Reset link sent.</p>
+                  <p className="text-[12px] text-paper-3 mt-1">
                     Check your inbox for a reset link.
                   </p>
                 </div>
@@ -126,13 +104,13 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => { setShowForgot(false); setForgotSent(false); setError(''); }}
-                className="w-full font-mono text-[11px] tracking-micro uppercase text-paper-3 hover:text-signal transition-colors pt-2"
+                className="w-full text-[12px] text-paper-3 hover:text-signal transition-colors pt-2"
               >
                 ← Back to sign in
               </button>
             </form>
           ) : (
-            <form onSubmit={handleLogin} className="space-y-5">
+            <form onSubmit={handleLogin} className="space-y-4">
               <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@company.com" autoFocus required />
               <div>
                 <div className="flex items-center justify-between mb-2">
@@ -140,7 +118,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => { setShowForgot(true); setError(''); }}
-                    className="font-mono text-[10px] tracking-micro uppercase text-paper-3 hover:text-signal transition-colors"
+                    className="text-[12px] text-paper-3 hover:text-signal transition-colors font-medium"
                   >
                     Forgot?
                   </button>
@@ -167,7 +145,7 @@ export default function LoginPage() {
             </form>
           )}
 
-          <p className="mt-12 font-mono text-[10px] tracking-mega text-paper-4 uppercase text-center">
+          <p className="mt-12 text-[12px] text-paper-3 text-center">
             Internal platform · Embedo
           </p>
         </div>
@@ -200,8 +178,8 @@ function Field({
 
 function ErrorMsg({ children }: { children: React.ReactNode }) {
   return (
-    <div className="hairline border-ember bg-ember/10 px-3 py-2">
-      <p className="font-mono text-[11px] tracking-micro text-ember">{children}</p>
+    <div className="rounded-apple border border-ember/30 bg-ember/10 px-3 py-2">
+      <p className="text-[13px] text-ember">{children}</p>
     </div>
   );
 }

@@ -113,8 +113,8 @@ export default function AgentConfigPage({ params }: { params: Promise<{ id: stri
 
   if (!agent) {
     return (
-      <div className="pt-10 pb-24 px-8 max-w-[1400px] mx-auto">
-        <p className="font-mono text-[11px] tracking-micro uppercase text-paper-4">Loading…</p>
+      <div className="pt-10 pb-24 px-10 max-w-[1400px] mx-auto">
+        <p className="text-[13px] text-paper-3">Loading…</p>
       </div>
     );
   }
@@ -125,44 +125,48 @@ export default function AgentConfigPage({ params }: { params: Promise<{ id: stri
     update({ targetIndustries: agent.targetIndustries.includes(i) ? agent.targetIndustries.filter((x) => x !== i) : [...agent.targetIndustries, i] });
 
   return (
-    <div className="pt-10 pb-24 px-8 max-w-[1200px] mx-auto space-y-12">
+    <div className="pt-10 pb-24 px-10 max-w-[1200px] mx-auto space-y-10">
       {/* Back link + title */}
       <section className="pb-6 hairline-b">
-        <button onClick={() => router.push('/agents')} className="flex items-center gap-2 font-mono text-[10px] tracking-mega uppercase text-paper-4 hover:text-signal transition-colors mb-4">
-          <ArrowLeft className="w-3 h-3" />
+        <button onClick={() => router.push('/agents')} className="flex items-center gap-1.5 text-[13px] text-paper-3 hover:text-signal transition-colors mb-4">
+          <ArrowLeft className="w-3.5 h-3.5" />
           <span>All agents</span>
         </button>
         <div className="flex items-start justify-between gap-8">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <span className={`w-1.5 h-1.5 shrink-0 relative ${agent.active ? 'bg-signal signal-dot' : 'bg-paper-4'}`} />
-              <span className={`font-mono text-[10px] tracking-mega uppercase ${agent.active ? 'text-signal' : 'text-paper-4'}`}>
+            <div className="mb-2">
+              <span
+                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${
+                  agent.active ? 'bg-signal/10 text-signal' : 'bg-ink-2 text-paper-3'
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${agent.active ? 'bg-signal' : 'bg-paper-4'}`} />
                 {agent.active ? 'Armed' : 'Paused'}
               </span>
             </div>
             <input
               value={agent.name}
               onChange={(e) => update({ name: e.target.value })}
-              className="font-display italic font-light text-paper leading-[0.95] tracking-tight text-[56px] lg:text-[72px] bg-transparent w-full focus:outline-none focus:text-signal"
+              className="text-paper text-[36px] font-semibold leading-tight tracking-tight bg-transparent w-full focus:outline-none focus:text-signal"
             />
             <input
               value={agent.description ?? ''}
               onChange={(e) => update({ description: e.target.value })}
               placeholder="Describe what this agent does…"
-              className="font-ui text-paper-2 text-[15px] mt-3 w-full bg-transparent focus:outline-none focus:text-paper"
+              className="text-paper-2 text-[14px] mt-2 w-full bg-transparent focus:outline-none focus:text-paper"
             />
           </div>
           <div className="flex flex-col gap-2 shrink-0">
             <Button variant={agent.active ? 'ghost' : 'primary'} onClick={togglePower}>
-              {agent.active ? <><PowerOff className="w-3 h-3" /><span>Pause</span></> : <><Power className="w-3 h-3" /><span>Arm</span></>}
+              {agent.active ? <><PowerOff className="w-3.5 h-3.5" /><span>Pause</span></> : <><Power className="w-3.5 h-3.5" /><span>Arm</span></>}
             </Button>
             <Button variant="primary" onClick={triggerRun}>
-              <Play className="w-3 h-3" />
+              <Play className="w-3.5 h-3.5" />
               <span>Run now</span>
             </Button>
             <Link href={`/agents/${id}/run`}>
               <Button variant="ghost" className="w-full">
-                <Activity className="w-3 h-3" />
+                <Activity className="w-3.5 h-3.5" />
                 <span>Live view</span>
               </Button>
             </Link>
@@ -173,23 +177,23 @@ export default function AgentConfigPage({ params }: { params: Promise<{ id: stri
       {/* Sheet link */}
       {agent.sheetUrl ? (
         <section className="panel p-5 flex items-center justify-between">
-          <div>
-            <p className="label-sm mb-1">Google Sheet · system of record</p>
-            <p className="font-mono text-xs text-paper-2 truncate">{agent.sheetUrl}</p>
+          <div className="min-w-0">
+            <p className="text-[12px] text-paper-3 mb-1">Google Sheet · system of record</p>
+            <p className="text-[12px] text-paper-2 truncate">{agent.sheetUrl}</p>
           </div>
           <a
             href={agent.sheetUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn btn-primary"
+            className="btn btn-primary shrink-0"
           >
             <span>Open sheet</span>
-            <ExternalLink className="w-3 h-3" />
+            <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </section>
       ) : (
-        <section className="panel p-5 flex items-center justify-between border-amber">
-          <p className="font-mono text-[11px] tracking-micro uppercase text-amber">
+        <section className="panel p-5 border-amber">
+          <p className="text-[13px] text-amber font-medium">
             Sheet not provisioned. Check GOOGLE_SERVICE_ACCOUNT_KEY env var on prospector.
           </p>
         </section>
@@ -206,13 +210,13 @@ export default function AgentConfigPage({ params }: { params: Promise<{ id: stri
                 <button
                   key={i}
                   onClick={() => toggleIndustry(i)}
-                  className={`px-3 py-1.5 font-mono text-[10px] tracking-mega uppercase hairline transition-colors ${
+                  className={`px-3 py-1.5 rounded-full text-[12px] font-medium border transition-colors ${
                     agent.targetIndustries.includes(i)
-                      ? 'border-signal bg-signal-soft text-signal'
-                      : 'border-rule text-paper-3 hover:text-paper'
+                      ? 'border-signal bg-signal/10 text-signal'
+                      : 'border-rule text-paper-3 hover:text-paper hover:bg-ink-2'
                   }`}
                 >
-                  {i}
+                  {i.charAt(0) + i.slice(1).toLowerCase()}
                 </button>
               ))}
             </div>
@@ -225,10 +229,10 @@ export default function AgentConfigPage({ params }: { params: Promise<{ id: stri
                 <button
                   key={c}
                   onClick={() => toggleCity(c)}
-                  className={`px-3 py-1.5 font-mono text-[10px] tracking-micro uppercase hairline transition-colors ${
+                  className={`px-3 py-1.5 rounded-full text-[12px] font-medium border transition-colors ${
                     agent.targetCities.includes(c)
-                      ? 'border-signal bg-signal-soft text-signal'
-                      : 'border-rule text-paper-3 hover:text-paper'
+                      ? 'border-signal bg-signal/10 text-signal'
+                      : 'border-rule text-paper-3 hover:text-paper hover:bg-ink-2'
                   }`}
                 >
                   {c}
@@ -241,8 +245,8 @@ export default function AgentConfigPage({ params }: { params: Promise<{ id: stri
 
       {/* Dispatch */}
       <section>
-        <SectionHeader numeral="2" title="Dispatch" subtitle="How often and how much this agent sends" />
-        <div className="mt-6 panel p-6 grid grid-cols-3 gap-6">
+        <SectionHeader title="Dispatch" subtitle="How often and how much this agent sends" />
+        <div className="mt-4 panel p-6 grid grid-cols-3 gap-6">
           <div>
             <label className="label-sm block mb-2">Daily cap</label>
             <input
@@ -253,7 +257,7 @@ export default function AgentConfigPage({ params }: { params: Promise<{ id: stri
               onChange={(e) => update({ dailyCap: parseInt(e.target.value) || 10 })}
               className="input w-full nums"
             />
-            <p className="font-mono text-[10px] text-paper-4 mt-1 tracking-micro uppercase">emails per day</p>
+            <p className="text-[12px] text-paper-3 mt-1.5">emails per day</p>
           </div>
           <div>
             <label className="label-sm block mb-2">Run hour</label>
@@ -265,28 +269,28 @@ export default function AgentConfigPage({ params }: { params: Promise<{ id: stri
               onChange={(e) => update({ runHourET: parseInt(e.target.value) || 9 })}
               className="input w-full nums"
             />
-            <p className="font-mono text-[10px] text-paper-4 mt-1 tracking-micro uppercase">hour (ET), 0–23</p>
+            <p className="text-[12px] text-paper-3 mt-1.5">Hour (ET), 0–23</p>
           </div>
           <div>
             <label className="label-sm block mb-2">Auto-rotate</label>
             <button
               onClick={() => update({ autoRotate: !agent.autoRotate })}
-              className={`input w-full font-mono text-[10px] tracking-mega uppercase flex items-center justify-between ${
-                agent.autoRotate ? 'border-signal text-signal' : 'text-paper-4'
+              className={`input w-full text-[13px] flex items-center justify-between ${
+                agent.autoRotate ? 'border-signal text-signal font-medium' : 'text-paper-3'
               }`}
             >
               <span>{agent.autoRotate ? 'Enabled' : 'Disabled'}</span>
-              <span className={`w-1.5 h-1.5 ${agent.autoRotate ? 'bg-signal' : 'bg-paper-4'}`} />
+              <span className={`w-2 h-2 rounded-full ${agent.autoRotate ? 'bg-signal' : 'bg-paper-4'}`} />
             </button>
-            <p className="font-mono text-[10px] text-paper-4 mt-1 tracking-micro uppercase">spawn new campaigns on exhaust</p>
+            <p className="text-[12px] text-paper-3 mt-1.5">Spawn new campaigns on exhaust</p>
           </div>
         </div>
       </section>
 
       {/* Email copy */}
       <section>
-        <SectionHeader numeral="3" title="Email copy" subtitle="Subject line and body template" />
-        <div className="mt-6 panel p-6 space-y-5">
+        <SectionHeader title="Email copy" subtitle="Subject line and body template" />
+        <div className="mt-4 panel p-6 space-y-5">
           <div>
             <label className="label-sm block mb-2">Subject</label>
             <input
@@ -294,8 +298,8 @@ export default function AgentConfigPage({ params }: { params: Promise<{ id: stri
               onChange={(e) => update({ emailSubject: e.target.value })}
               className="input w-full"
             />
-            <p className="font-mono text-[10px] text-paper-4 mt-1 tracking-micro">
-              vars: &#123;&#123;firstName&#125;&#125; &#123;&#123;shortName&#125;&#125; &#123;&#123;company&#125;&#125; &#123;&#123;city&#125;&#125; &#123;&#123;type&#125;&#125;
+            <p className="text-[12px] text-paper-3 mt-1.5">
+              Variables: &#123;&#123;firstName&#125;&#125; &#123;&#123;shortName&#125;&#125; &#123;&#123;company&#125;&#125; &#123;&#123;city&#125;&#125; &#123;&#123;type&#125;&#125;
             </p>
           </div>
           <div>
@@ -314,7 +318,7 @@ export default function AgentConfigPage({ params }: { params: Promise<{ id: stri
               rows={4}
               value={agent.systemPrompt ?? ''}
               onChange={(e) => update({ systemPrompt: e.target.value })}
-              className="input w-full resize-y font-mono text-[12px] leading-relaxed"
+              className="input w-full resize-y text-[13px] leading-relaxed"
               placeholder="e.g. Focus on how our tool saves them time handling phone orders. Be warm but direct."
             />
           </div>
@@ -322,27 +326,27 @@ export default function AgentConfigPage({ params }: { params: Promise<{ id: stri
       </section>
 
       {/* Save bar */}
-      <section className={`sticky bottom-6 panel-2 px-6 py-4 flex items-center justify-between transition-opacity ${dirty ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <p className="font-mono text-[11px] tracking-micro uppercase text-amber">
+      <section className={`sticky bottom-6 panel px-6 py-4 flex items-center justify-between transition-opacity ${dirty ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <p className="text-[13px] text-amber font-medium">
           Unsaved changes
         </p>
         <div className="flex items-center gap-3">
           <Button variant="ghost" onClick={load}>Discard</Button>
           <Button variant="primary" onClick={save} disabled={saving}>
-            <Save className="w-3 h-3" />
+            <Save className="w-3.5 h-3.5" />
             <span>{saving ? 'Saving…' : justSaved ? 'Saved' : 'Save changes'}</span>
           </Button>
         </div>
       </section>
 
       {/* Danger */}
-      <section className="hairline-t pt-6 flex items-center justify-between">
-        <span className="font-mono text-[10px] tracking-mega uppercase text-paper-4">Danger zone</span>
+      <section className="border-t border-rule pt-6 flex items-center justify-between">
+        <span className="text-[12px] text-paper-3">Danger zone</span>
         <button
           onClick={handleDelete}
-          className="inline-flex items-center gap-2 font-mono text-[10px] tracking-mega uppercase text-ember hover:text-paper transition-colors"
+          className="inline-flex items-center gap-2 text-[13px] text-ember hover:text-paper font-medium transition-colors"
         >
-          <Trash2 className="w-3 h-3" />
+          <Trash2 className="w-3.5 h-3.5" />
           <span>Delete agent</span>
         </button>
       </section>

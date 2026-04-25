@@ -80,31 +80,25 @@ export default function CampaignsPage() {
   const activeCount = campaigns.filter((c) => c.active).length;
 
   return (
-    <div className="pt-10 pb-24 px-8 max-w-[1400px] mx-auto space-y-12">
-      {/* Masthead */}
-      <section className="pb-10 hairline-b">
-        <div className="flex items-center gap-4 mb-3">
-          <span className="font-mono text-[10px] tracking-mega text-paper-4 uppercase">
-            Chapter 02 · Campaigns
-          </span>
-          <span className="h-px w-16 bg-rule" />
-          <span className="font-mono text-[10px] tracking-mega text-paper-3 uppercase">
+    <div className="pt-10 pb-24 px-10 max-w-[1400px] mx-auto space-y-10">
+      {/* Header */}
+      <section className="pb-8 hairline-b flex items-end justify-between gap-8">
+        <div>
+          <p className="text-[12px] text-paper-3 mb-2">
             {activeCount} of {campaigns.length} active
-          </span>
-        </div>
-        <div className="flex items-end justify-between gap-8">
-          <h1 className="font-display italic font-light text-paper leading-[0.95] tracking-tight text-[64px] lg:text-[80px] max-w-3xl">
-            Every scrape.
+          </p>
+          <h1 className="text-paper text-[36px] font-semibold leading-tight tracking-tight">
+            Campaigns
           </h1>
-          <Button variant="primary" onClick={() => setShowCreate(true)}>
-            <Plus className="w-3 h-3" />
-            <span>New campaign</span>
-          </Button>
+          <p className="text-paper-2 text-[14px] mt-3 max-w-xl leading-relaxed">
+            A campaign is one city × industry — Geoapify scrape, email enrichment, ready for the agent
+            to send. Create them manually or let an agent auto-spawn them from its rotation.
+          </p>
         </div>
-        <p className="font-ui text-paper-2 text-[15px] mt-5 max-w-xl leading-relaxed">
-          A campaign is one city × industry — Geoapify scrape, email enrichment, ready for the agent
-          to send. You can create them manually here or let an agent auto-spawn them from its rotation.
-        </p>
+        <Button variant="primary" onClick={() => setShowCreate(true)}>
+          <Plus className="w-3.5 h-3.5" />
+          <span>New campaign</span>
+        </Button>
       </section>
 
       {/* Summary */}
@@ -130,22 +124,22 @@ export default function CampaignsPage() {
 
       {/* Table */}
       <section>
-        <SectionHeader numeral="1" title="The ledger" subtitle={`${campaigns.length} campaigns on the books`} />
-        <div className="mt-6 panel overflow-hidden">
+        <SectionHeader title="All campaigns" subtitle={`${campaigns.length} on the books`} />
+        <div className="mt-4 panel overflow-hidden">
           {loading ? (
-            <p className="p-12 text-center font-mono text-[11px] tracking-micro uppercase text-paper-4">Loading…</p>
+            <p className="p-12 text-center text-[13px] text-paper-3">Loading…</p>
           ) : campaigns.length === 0 ? (
-            <div className="p-20 text-center">
-              <Crosshair className="w-8 h-8 text-paper-4 mx-auto mb-4" />
-              <p className="font-display italic text-paper-3 text-2xl font-light">The ledger is empty.</p>
-              <button onClick={() => setShowCreate(true)} className="font-mono text-[11px] tracking-micro uppercase text-signal hover:underline mt-4 inline-block">
+            <div className="p-16 text-center">
+              <Crosshair className="w-7 h-7 text-paper-4 mx-auto mb-4" />
+              <p className="text-paper text-[18px] font-medium">No campaigns yet</p>
+              <button onClick={() => setShowCreate(true)} className="text-[13px] text-signal hover:underline mt-3 inline-block font-medium">
                 Create your first campaign →
               </button>
             </div>
           ) : (
             <table className="w-full">
               <thead>
-                <tr className="hairline-b">
+                <tr className="border-b border-rule bg-ink-1">
                   <Th>Campaign</Th>
                   <Th>Industry</Th>
                   <Th align="right">Prospects</Th>
@@ -157,57 +151,52 @@ export default function CampaignsPage() {
                 </tr>
               </thead>
               <tbody>
-                {campaigns.map((c, idx) => {
+                {campaigns.map((c) => {
                   const agent = agents.find((a) => a.id === c.agentId);
                   return (
-                    <tr key={c.id} className="hairline-b last:border-0 hover:bg-ink-2 transition-colors group">
+                    <tr key={c.id} className="border-b border-rule last:border-0 hover:bg-ink-2 transition-colors group">
                       <td className="px-5 py-4 min-w-[240px]">
-                        <div className="flex items-start gap-3">
-                          <span className="font-mono text-[10px] text-paper-4 pt-1 shrink-0">
-                            №{(idx + 1).toString().padStart(3, '0')}
-                          </span>
-                          <div className="min-w-0">
-                            <Link href={`/campaigns/${c.id}`} className="font-display italic text-paper text-lg font-light leading-tight hover:text-signal transition-colors block">
-                              {c.name}
+                        <div className="min-w-0">
+                          <Link href={`/campaigns/${c.id}`} className="text-paper text-[14px] font-semibold tracking-tight leading-tight hover:text-signal transition-colors block">
+                            {c.name}
+                          </Link>
+                          <p className="text-[12px] text-paper-3 mt-0.5">
+                            {c.targetCity}{c.targetState ? `, ${c.targetState}` : ''}
+                          </p>
+                          {agent && (
+                            <Link href={`/agents/${agent.id}`} className="inline-flex items-center gap-1 mt-1.5 text-[11px] text-signal font-medium hover:underline">
+                              <Zap className="w-2.5 h-2.5" />
+                              <span>{agent.name}</span>
                             </Link>
-                            <p className="font-mono text-[10px] tracking-micro uppercase text-paper-4 mt-0.5">
-                              {c.targetCity}{c.targetState ? `, ${c.targetState}` : ''}
-                            </p>
-                            {agent && (
-                              <Link href={`/agents/${agent.id}`} className="inline-flex items-center gap-1 mt-1 font-mono text-[10px] tracking-mega uppercase text-signal hover:underline">
-                                <Zap className="w-2.5 h-2.5" />
-                                <span>{agent.name}</span>
-                              </Link>
-                            )}
-                          </div>
+                          )}
                         </div>
                       </td>
                       <td className="px-4 py-4">
-                        <span className="font-mono text-[10px] tracking-mega uppercase text-paper-3">{c.targetIndustry}</span>
+                        <span className="text-[12px] text-paper-2 font-medium">{c.targetIndustry.charAt(0) + c.targetIndustry.slice(1).toLowerCase()}</span>
                       </td>
-                      <td className="px-4 py-4 text-right font-mono text-sm text-paper nums">
+                      <td className="px-4 py-4 text-right text-[13px] text-paper nums font-medium">
                         {c._count.prospects.toLocaleString()}
                       </td>
-                      <td className="px-4 py-4 text-right font-mono text-sm text-paper nums">
+                      <td className="px-4 py-4 text-right text-[13px] text-paper nums font-medium">
                         {c.stats.emailed.toLocaleString()}
                       </td>
                       <td className="px-4 py-4 text-right">
-                        <span className={`font-display italic font-light text-xl nums ${c.stats.openRate > 20 ? 'text-signal' : 'text-paper'}`}>
+                        <span className={`text-[16px] nums font-semibold tracking-tight ${c.stats.openRate > 20 ? 'text-signal' : 'text-paper'}`}>
                           {c.stats.opened}
                         </span>
-                        {c.stats.emailed > 0 && <span className="font-mono text-[9px] text-paper-4 ml-1">{c.stats.openRate}%</span>}
+                        {c.stats.emailed > 0 && <span className="text-[11px] text-paper-3 ml-1">{c.stats.openRate}%</span>}
                       </td>
                       <td className="px-4 py-4 text-right">
-                        <span className={`font-display italic font-light text-xl nums ${c.stats.replied > 0 ? 'text-signal' : 'text-paper'}`}>
+                        <span className={`text-[16px] nums font-semibold tracking-tight ${c.stats.replied > 0 ? 'text-signal' : 'text-paper'}`}>
                           {c.stats.replied}
                         </span>
                       </td>
                       <td className="px-4 py-4">
-                        <span className={`inline-flex items-center gap-1.5 font-mono text-[10px] tracking-mega uppercase ${
-                          c.agentExhaustedAt ? 'text-amber' :
-                          c.active ? 'text-signal' : 'text-paper-4'
+                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${
+                          c.agentExhaustedAt ? 'bg-amber/10 text-amber' :
+                          c.active ? 'bg-signal/10 text-signal' : 'bg-ink-2 text-paper-3'
                         }`}>
-                          <span className={`w-1.5 h-1.5 ${
+                          <span className={`w-1.5 h-1.5 rounded-full ${
                             c.agentExhaustedAt ? 'bg-amber' : c.active ? 'bg-signal' : 'bg-paper-4'
                           }`} />
                           {c.agentExhaustedAt ? 'Exhausted' : c.active ? 'Active' : 'Paused'}
@@ -218,7 +207,7 @@ export default function CampaignsPage() {
                           <button
                             onClick={() => runDiscovery(c.id)}
                             disabled={running === c.id}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 hairline hover:border-signal font-mono text-[10px] tracking-mega uppercase text-paper-3 hover:text-signal transition-colors disabled:opacity-40"
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-rule text-[12px] font-medium text-paper-3 hover:text-signal hover:border-signal transition-colors disabled:opacity-40"
                             title="Run Geoapify discovery + email enrichment"
                           >
                             <Play className="w-3 h-3" />
@@ -226,7 +215,7 @@ export default function CampaignsPage() {
                           </button>
                           <Link
                             href={`/campaigns/${c.id}`}
-                            className="inline-flex items-center gap-1 font-mono text-[10px] tracking-mega uppercase text-paper-4 group-hover:text-signal transition-colors"
+                            className="inline-flex items-center gap-1 text-[12px] text-paper-3 group-hover:text-signal font-medium transition-colors"
                           >
                             <span>Open</span>
                             <ArrowUpRight className="w-3 h-3" />
@@ -296,11 +285,11 @@ function CreateCampaignModal({ onClose, onCreated, agents }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-ink-0/80" onClick={onClose} />
-      <div className="relative panel-2 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <header className="flex items-center justify-between px-6 py-4 hairline-b sticky top-0 bg-ink-2 z-10">
-          <span className="font-mono text-[11px] tracking-mega uppercase text-paper-2">New campaign</span>
-          <button onClick={onClose} className="text-paper-4 hover:text-paper transition-colors"><X className="w-4 h-4" /></button>
+      <div className="absolute inset-0 bg-paper/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative panel w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-apple-lg">
+        <header className="flex items-center justify-between px-6 py-4 border-b border-rule sticky top-0 bg-ink-0 z-10">
+          <span className="text-paper text-[16px] font-semibold tracking-tight">New campaign</span>
+          <button onClick={onClose} className="text-paper-3 hover:text-paper transition-colors"><X className="w-4 h-4" /></button>
         </header>
 
         <div className="p-6 space-y-5">
@@ -326,11 +315,11 @@ function CreateCampaignModal({ onClose, onCreated, agents }: {
                 <button
                   key={i}
                   onClick={() => setIndustry(i)}
-                  className={`px-3 py-1.5 font-mono text-[10px] tracking-mega uppercase hairline transition-colors ${
-                    industry === i ? 'border-signal bg-signal-soft text-signal' : 'border-rule text-paper-3 hover:text-paper'
+                  className={`px-3 py-1.5 rounded-full text-[12px] font-medium border transition-colors ${
+                    industry === i ? 'border-signal bg-signal/10 text-signal' : 'border-rule text-paper-3 hover:text-paper hover:bg-ink-2'
                   }`}
                 >
-                  {i}
+                  {i.charAt(0) + i.slice(1).toLowerCase()}
                 </button>
               ))}
             </div>
@@ -349,8 +338,8 @@ function CreateCampaignModal({ onClose, onCreated, agents }: {
                   <option key={a.id} value={a.id}>{a.name}</option>
                 ))}
               </select>
-              <p className="font-mono text-[10px] text-paper-4 mt-1 tracking-micro uppercase">
-                Linked campaigns count toward that agent's rotation
+              <p className="text-[12px] text-paper-3 mt-1.5">
+                Linked campaigns count toward that agent's rotation.
               </p>
             </div>
           )}
@@ -367,22 +356,22 @@ function CreateCampaignModal({ onClose, onCreated, agents }: {
               onChange={(e) => setBody(e.target.value)}
               className="input w-full resize-y font-mono text-[12px] leading-relaxed"
             />
-            <p className="font-mono text-[10px] text-paper-4 mt-1 tracking-micro">
-              vars: &#123;&#123;firstName&#125;&#125; &#123;&#123;shortName&#125;&#125; &#123;&#123;company&#125;&#125; &#123;&#123;city&#125;&#125;
+            <p className="text-[12px] text-paper-3 mt-1.5">
+              Variables: &#123;&#123;firstName&#125;&#125; &#123;&#123;shortName&#125;&#125; &#123;&#123;company&#125;&#125; &#123;&#123;city&#125;&#125;
             </p>
           </div>
 
-          <div className="panel p-4">
-            <p className="font-mono text-[10px] tracking-mega uppercase text-paper-3 mb-2">What happens next</p>
-            <ol className="font-ui text-[12px] text-paper-2 space-y-1.5 leading-relaxed list-decimal list-inside">
-              <li>Campaign row created immediately</li>
-              <li>Click <span className="text-signal font-mono">Discover</span> on the list page to run Geoapify scrape + email enrichment</li>
-              <li>Once enriched, any armed agent with matching industry will start sending</li>
+          <div className="rounded-apple bg-ink-2 p-4">
+            <p className="text-[12px] font-medium text-paper mb-2">What happens next</p>
+            <ol className="text-[13px] text-paper-2 space-y-1.5 leading-relaxed list-decimal list-inside">
+              <li>Campaign row created immediately.</li>
+              <li>Click <span className="text-signal font-medium">Discover</span> on the list to run Geoapify scrape + email enrichment.</li>
+              <li>Once enriched, any armed agent with matching industry will start sending.</li>
             </ol>
           </div>
         </div>
 
-        <footer className="flex gap-3 px-6 py-4 hairline-t sticky bottom-0 bg-ink-2">
+        <footer className="flex gap-3 px-6 py-4 border-t border-rule sticky bottom-0 bg-ink-0">
           <Button variant="primary" onClick={handleCreate} disabled={creating || !name || !city}>
             {creating ? 'Creating…' : 'Create campaign'}
           </Button>
@@ -395,7 +384,7 @@ function CreateCampaignModal({ onClose, onCreated, agents }: {
 
 function Th({ children, align = 'left' }: { children: React.ReactNode; align?: 'left' | 'right' }) {
   return (
-    <th className={`px-4 py-3 font-mono text-[9px] tracking-mega uppercase text-paper-4 font-medium ${align === 'right' ? 'text-right' : 'text-left'}`}>
+    <th className={`px-4 py-2.5 text-[11px] uppercase tracking-wide text-paper-3 font-medium ${align === 'right' ? 'text-right' : 'text-left'}`}>
       {children}
     </th>
   );
