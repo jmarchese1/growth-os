@@ -1577,7 +1577,8 @@ Output format:
 
   // ─── Global outreach activity feed (powers the Data tab) ──────────────────
   // Returns paginated OutreachMessage rows joined with prospect + campaign.
-  // Filters: status, campaignId, agentId (via campaign.agentId), search.
+  // Filters: status, campaignId, agentId, search, since (ISO date),
+  // agentsOnly (only messages from campaigns owned by an agent).
   app.get('/messages', async (request, reply) => {
     const q = request.query as {
       page?: string;
@@ -1586,6 +1587,8 @@ Output format:
       campaignId?: string;
       agentId?: string;
       search?: string;
+      since?: string;
+      agentsOnly?: string;
     };
     const page = Math.max(1, parseInt(q.page ?? '1', 10) || 1);
     const pageSize = Math.min(200, Math.max(10, parseInt(q.pageSize ?? '50', 10) || 50));
@@ -1595,12 +1598,23 @@ Output format:
       const statuses = q.status.split(',').filter(Boolean);
       if (statuses.length > 0) where['status'] = { in: statuses };
     }
-    if (q.campaignId) {
-      where['prospect'] = { campaignId: q.campaignId };
+
+    // Compose prospect-level filters (campaign + agent + agentsOnly)
+    const prospectWhere: Record<string, unknown> = {};
+    if (q.campaignId) prospectWhere['campaignId'] = q.campaignId;
+    const campaignWhere: Record<string, unknown> = {};
+    if (q.agentId) campaignWhere['agentId'] = q.agentId;
+    if (q.agentsOnly === 'true' && !q.agentId) campaignWhere['agentId'] = { not: null };
+    if (Object.keys(campaignWhere).length > 0) prospectWhere['campaign'] = campaignWhere;
+    if (Object.keys(prospectWhere).length > 0) where['prospect'] = prospectWhere;
+
+    if (q.since) {
+      const sinceDate = new Date(q.since);
+      if (!Number.isNaN(sinceDate.getTime())) {
+        where['createdAt'] = { gte: sinceDate };
+      }
     }
-    if (q.agentId) {
-      where['prospect'] = { campaign: { agentId: q.agentId } };
-    }
+
     if (q.search) {
       const term = q.search.trim();
       where['OR'] = [
@@ -1650,13 +1664,29 @@ Output format:
   });
 
   // ─── Aggregate counts for the Data tab header ─────────────────────────────
-  app.get('/messages/stats', async (_request, reply) => {
+  // Same since / agentsOnly filters as /messages so the header reflects the table.
+  app.get('/messages/stats', async (request, reply) => {
+    const q = request.query as { since?: string; agentsOnly?: string; agentId?: string };
+
+    const baseWhere: Record<string, unknown> = {};
+    if (q.since) {
+      const sinceDate = new Date(q.since);
+      if (!Number.isNaN(sinceDate.getTime())) baseWhere['createdAt'] = { gte: sinceDate };
+    }
+    if (q.agentId) {
+      baseWhere['prospect'] = { campaign: { agentId: q.agentId } };
+    } else if (q.agentsOnly === 'true') {
+      baseWhere['prospect'] = { campaign: { agentId: { not: null } } };
+    }
+
+    const merge = (extra: Record<string, unknown>) => ({ ...baseWhere, ...extra });
+
     const [total, sent, opened, replied, bounced] = await Promise.all([
-      db.outreachMessage.count(),
-      db.outreachMessage.count({ where: { status: 'SENT' } }),
-      db.outreachMessage.count({ where: { openedAt: { not: null } } }),
-      db.outreachMessage.count({ where: { status: 'REPLIED' } }),
-      db.outreachMessage.count({ where: { status: 'BOUNCED' } }),
+      db.outreachMessage.count({ where: baseWhere }),
+      db.outreachMessage.count({ where: merge({ status: 'SENT' }) }),
+      db.outreachMessage.count({ where: merge({ openedAt: { not: null } }) }),
+      db.outreachMessage.count({ where: merge({ status: 'REPLIED' }) }),
+      db.outreachMessage.count({ where: merge({ status: 'BOUNCED' }) }),
     ]);
     return reply.send({ total, sent, opened, replied, bounced });
   });

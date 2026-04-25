@@ -93,18 +93,27 @@ export default function DataPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: String(page),
-        pageSize: String(pageSize),
-      });
+      const baseParams = new URLSearchParams();
+      // Only show agent-driven sends from start-of-today (ET) onward.
+      // Computes today's date in NY timezone, then anchors midnight ET.
+      const todayET = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+      const startOfTodayET = new Date(`${todayET}T04:00:00.000Z`); // 00:00 ET ≈ 04:00 UTC (5:00 in winter, fine for filter purposes)
+      baseParams.set('since', startOfTodayET.toISOString());
+      baseParams.set('agentsOnly', 'true');
+      if (agentId) baseParams.set('agentId', agentId);
+      if (campaignId) baseParams.set('campaignId', campaignId);
+
+      const params = new URLSearchParams(baseParams);
+      params.set('page', String(page));
+      params.set('pageSize', String(pageSize));
       if (filter) params.set('status', filter);
       if (search.trim()) params.set('search', search.trim());
-      if (agentId) params.set('agentId', agentId);
-      if (campaignId) params.set('campaignId', campaignId);
+
+      const statsParams = new URLSearchParams(baseParams);
 
       const [mRes, sRes] = await Promise.all([
         fetch(`${PROSPECTOR_URL}/messages?${params}`),
-        fetch(`${PROSPECTOR_URL}/messages/stats`),
+        fetch(`${PROSPECTOR_URL}/messages/stats?${statsParams}`),
       ]);
       if (mRes.ok) {
         const data = await mRes.json();
@@ -124,11 +133,12 @@ export default function DataPage() {
     <div className="pt-10 pb-24 px-10 max-w-[1500px] mx-auto space-y-10">
       {/* Header */}
       <section className="pb-8 hairline-b">
+        <p className="text-[12px] text-paper-3 mb-2">Today, ET</p>
         <h1 className="text-paper text-[36px] font-semibold leading-tight tracking-tight">
           Data
         </h1>
         <p className="text-paper-2 text-[14px] mt-3 max-w-xl leading-relaxed">
-          Every email sent across every agent and campaign — recipient, contents, status, opens, replies.
+          Every email sent by your agents today — recipient, contents, status, opens, replies.
           Click any row to inspect the full message.
         </p>
       </section>
