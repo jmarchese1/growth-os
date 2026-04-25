@@ -52,11 +52,11 @@ const config: Config = {
         mega:  '0.14em',
       },
       fontSize: {
-        'hero':      ['96px',  { lineHeight: '0.95', letterSpacing: '-0.04em' }],
-        'hero-sm':   ['72px',  { lineHeight: '0.95', letterSpacing: '-0.035em' }],
-        'hero-xs':   ['56px',  { lineHeight: '0.95', letterSpacing: '-0.03em' }],
-        'stat':      ['40px',  { lineHeight: '1',    letterSpacing: '-0.025em' }],
-        'stat-sm':   ['28px',  { lineHeight: '1',    letterSpacing: '-0.02em' }],
+        'hero':      ['56px',  { lineHeight: '1',    letterSpacing: '-0.035em' }],
+        'hero-sm':   ['44px',  { lineHeight: '1',    letterSpacing: '-0.03em' }],
+        'hero-xs':   ['34px',  { lineHeight: '1',    letterSpacing: '-0.025em' }],
+        'stat':      ['32px',  { lineHeight: '1',    letterSpacing: '-0.02em' }],
+        'stat-sm':   ['24px',  { lineHeight: '1',    letterSpacing: '-0.015em' }],
       },
       borderRadius: {
         'apple': '10px',

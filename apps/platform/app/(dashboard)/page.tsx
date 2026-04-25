@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Zap, ArrowUpRight, Plus, ExternalLink, CheckCircle2, Circle } from 'lucide-react';
+import { clsx } from 'clsx';
+import { Zap, ArrowUpRight, Plus, CheckCircle2, Circle } from 'lucide-react';
 import {
   SectionHeader, HeroMetric, MetricBlock, Button,
 } from '../../components/ui/primitives';
@@ -42,38 +43,28 @@ export default async function DashboardPage() {
   });
 
   return (
-    <div className="pt-10 pb-24 px-8 max-w-[1400px] mx-auto space-y-14">
-      {/* Masthead */}
-      <section className="pb-10 hairline-b">
-        <div className="flex items-center gap-4 mb-3">
-          <span className="font-mono text-[10px] tracking-mega text-paper-4 uppercase">
-            Vol. 01 · Issue {new Date().getDate().toString().padStart(3, '0')}
-          </span>
-          <span className="h-px w-12 bg-rule" />
-          <span className="font-mono text-[10px] tracking-mega text-paper-3 uppercase">
-            {today}
-          </span>
-        </div>
-        <div className="flex items-end justify-between gap-8">
-          <h1 className="font-display italic font-light text-paper leading-[0.95] tracking-tight text-[72px] lg:text-[92px]">
-            The machine{activeCount > 0 ? ' is' : ''} <span className={activeCount > 0 ? 'text-signal not-italic' : 'text-paper-3'} style={activeCount > 0 ? { fontFamily: 'var(--font-mono)' } : {}}>
-              {activeCount > 0 ? 'working' : 'resting'}
-            </span>.
+    <div className="pt-10 pb-24 px-10 max-w-[1400px] mx-auto space-y-12">
+      {/* Header */}
+      <section className="flex items-end justify-between gap-8 pb-8 hairline-b">
+        <div>
+          <p className="text-[12px] text-paper-3 mb-2">{today}</p>
+          <h1 className="text-paper text-[36px] font-semibold leading-tight tracking-tight">
+            {activeCount > 0 ? 'Your agents are running.' : 'No agents running yet.'}
           </h1>
-          <div className="flex flex-col items-end gap-3">
-            <Link href="/agents">
-              <Button variant="primary">
-                <Plus className="w-3 h-3" />
-                <span>New agent</span>
-              </Button>
-            </Link>
-          </div>
+          <p className="text-paper-2 text-[15px] mt-3 max-w-xl leading-relaxed">
+            {agents.length === 0
+              ? 'Build your first agent — pick industries, cities, daily cap, and email copy. The agent handles discovery, enrichment, personalization, and sending.'
+              : 'Every agent writes to its own Google Sheet. Prospects, emails, replies, and daily summaries all live there. The platform arms, configures, and watches.'}
+          </p>
         </div>
-        <p className="font-ui text-paper-2 text-[15px] mt-6 max-w-xl leading-relaxed">
-          {agents.length === 0
-            ? 'No agents yet. Build your first one — pick industries, cities, daily cap, email copy. The agent handles the rest: discovery, enrichment, personalization, sending.'
-            : `Every agent writes to its own Google Sheet. All data — prospects, emails, replies, daily summaries — lives there. The platform just arms, configures, and watches.`}
-        </p>
+        <div className="shrink-0">
+          <Link href="/agents">
+            <Button variant="primary">
+              <Plus className="w-3.5 h-3.5" />
+              <span>New agent</span>
+            </Button>
+          </Link>
+        </div>
       </section>
 
       {/* Top-line */}
@@ -113,64 +104,64 @@ export default async function DashboardPage() {
         />
         <div className="mt-6">
           {agents.length === 0 ? (
-            <div className="panel p-20 text-center">
-              <Zap className="w-8 h-8 text-paper-4 mx-auto mb-4" />
-              <p className="font-display italic text-paper-3 text-2xl font-light">
-                No agents yet.
+            <div className="panel p-16 text-center">
+              <Zap className="w-7 h-7 text-paper-4 mx-auto mb-4" />
+              <p className="text-paper text-[18px] font-medium">
+                No agents yet
               </p>
-              <Link href="/agents" className="font-mono text-[11px] tracking-micro uppercase text-signal hover:underline mt-4 inline-block">
+              <Link href="/agents" className="text-[13px] text-signal hover:underline mt-3 inline-block font-medium">
                 Create your first agent →
               </Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {agents.slice(0, 6).map((agent, idx) => (
+              {agents.slice(0, 6).map((agent) => (
                 <Link
                   key={agent.id}
                   href={`/agents/${agent.id}`}
-                  className="panel p-6 hover:border-paper-4 transition-colors block group"
+                  className="panel p-6 hover:shadow-card-hover hover:border-paper-4 transition-all block group"
                 >
                   <div className="flex items-start justify-between gap-4 mb-5">
-                    <div className="flex items-start gap-4 min-w-0">
-                      <span className="font-mono text-[10px] tracking-mega text-paper-4 pt-1.5 shrink-0">
-                        №{(idx + 1).toString().padStart(3, '0')}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className={`w-1.5 h-1.5 shrink-0 relative ${agent.active ? 'bg-signal signal-dot' : 'bg-paper-4'}`} />
-                          <span className={`font-mono text-[9px] tracking-mega uppercase ${agent.active ? 'text-signal' : 'text-paper-4'}`}>
-                            {agent.active ? 'Armed' : 'Paused'}
-                          </span>
-                        </div>
-                        <h3 className="font-display italic text-paper text-[26px] font-light leading-tight truncate">{agent.name}</h3>
-                        {agent.description && (
-                          <p className="font-ui text-[13px] text-paper-3 mt-2 line-clamp-2 leading-snug">{agent.description}</p>
-                        )}
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-2">
+                        <span
+                          className={clsx(
+                            'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium',
+                            agent.active ? 'bg-signal/10 text-signal' : 'bg-ink-2 text-paper-3',
+                          )}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${agent.active ? 'bg-signal' : 'bg-paper-4'}`} />
+                          {agent.active ? 'Armed' : 'Paused'}
+                        </span>
                       </div>
+                      <h3 className="text-paper text-[18px] font-semibold tracking-tight leading-tight truncate">{agent.name}</h3>
+                      {agent.description && (
+                        <p className="text-[13px] text-paper-3 mt-1.5 line-clamp-2 leading-snug">{agent.description}</p>
+                      )}
                     </div>
                     <ArrowUpRight className="w-4 h-4 text-paper-4 group-hover:text-signal transition-colors shrink-0" />
                   </div>
 
-                  <div className="grid grid-cols-3 gap-0 hairline border">
+                  <div className="grid grid-cols-3 gap-0 rounded-lg border border-rule overflow-hidden">
                     <NumCell label="Daily cap" value={`${agent.dailyCap}`} />
                     <NumCell label="Campaigns" value={`${agent._count.campaigns}`} />
                     <NumCell label="Runs" value={`${agent._count.runs}`} />
                   </div>
 
-                  <div className="mt-4 pt-4 hairline-t flex items-center justify-between">
-                    <span className="font-mono text-[10px] tracking-micro uppercase text-paper-4">
+                  <div className="mt-4 pt-4 border-t border-rule flex items-center justify-between">
+                    <span className="text-[12px] text-paper-3">
                       {agent.lastRunAt
                         ? `Last ran ${new Date(agent.lastRunAt).toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: 'numeric' })}`
                         : 'Never run'}
                     </span>
                     {agent.sheetUrl ? (
-                      <span className="inline-flex items-center gap-1 font-mono text-[10px] tracking-mega uppercase text-signal">
-                        <CheckCircle2 className="w-3 h-3" />
+                      <span className="inline-flex items-center gap-1 text-[12px] text-signal font-medium">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
                         Sheet
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 font-mono text-[10px] tracking-mega uppercase text-paper-4">
-                        <Circle className="w-3 h-3" />
+                      <span className="inline-flex items-center gap-1 text-[12px] text-paper-3">
+                        <Circle className="w-3.5 h-3.5" />
                         No sheet
                       </span>
                     )}
@@ -183,11 +174,11 @@ export default async function DashboardPage() {
       </section>
 
       {/* Footer */}
-      <section className="hairline-t pt-6 flex items-center justify-between">
-        <span className="font-mono text-[10px] tracking-mega text-paper-4 uppercase">
-          Embedo · Operator
+      <section className="border-t border-rule pt-6 flex items-center justify-between">
+        <span className="text-[12px] text-paper-3">
+          Embedo
         </span>
-        <span className="font-mono text-[10px] tracking-mega text-paper-4 uppercase">
+        <span className="text-[12px] text-paper-3">
           Data lives in your Google Sheets
         </span>
       </section>
@@ -197,9 +188,9 @@ export default async function DashboardPage() {
 
 function NumCell({ label, value }: { label: string; value: string }) {
   return (
-    <div className="px-3 py-3 hairline-r last:border-r-0">
-      <p className="label-sm">{label}</p>
-      <p className="font-display italic font-light text-paper text-xl nums leading-none mt-1">{value}</p>
+    <div className="px-4 py-3 border-r border-rule last:border-r-0 bg-ink-1">
+      <p className="text-[11px] text-paper-3">{label}</p>
+      <p className="text-paper text-[18px] nums font-semibold leading-none mt-1.5 tracking-tight">{value}</p>
     </div>
   );
 }

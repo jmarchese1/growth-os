@@ -1,24 +1,19 @@
 /**
- * Operator design system — shared primitives.
- *
- * Usage patterns baked in:
- *   <SectionHeader numeral="I" title="Overview" meta="Live" />
- *   <MetricBlock label="Prospects" value={862} delta="+24" />
- *   <HeroMetric label="Reply rate" value="8.4" unit="%" />
- *   <StatusDot status="active" />
- *   <LiveBadge active />
- *   <Panel>...</Panel>
+ * Embedo design system — shared primitives.
+ * Apple-styled clean light theme. Sentence-case labels, no Roman numerals,
+ * no italic Fraunces, soft card shadows, rounded corners, generous padding.
  */
 
 import { clsx } from 'clsx';
 import type { ReactNode } from 'react';
 
 /* ─────────────────────────────────────────────────────────────
-   Section header — Roman numeral + title + optional meta right
+   Section header — title + subtitle + optional action
+   (numeral prop kept for backward compat but no longer rendered)
    ───────────────────────────────────────────────────────────── */
 
 export function SectionHeader({
-  numeral,
+  numeral: _numeral,
   title,
   subtitle,
   action,
@@ -31,23 +26,16 @@ export function SectionHeader({
   className?: string;
 }) {
   return (
-    <header className={clsx('flex items-end justify-between pb-5 border-b border-rule', className)}>
-      <div className="flex items-end gap-5">
-        {numeral && (
-          <span className="font-mono text-[10px] tracking-mega text-paper-4 leading-none pb-1.5">
-            § {numeral.padStart(2, '0')}
-          </span>
+    <header className={clsx('flex items-end justify-between pb-4', className)}>
+      <div>
+        <h2 className="text-paper text-[22px] font-semibold leading-tight tracking-tight">
+          {title}
+        </h2>
+        {subtitle && (
+          <p className="mt-1 text-[13px] text-paper-3">
+            {subtitle}
+          </p>
         )}
-        <div>
-          <h2 className="font-display text-[34px] leading-none tracking-tight text-paper font-light">
-            {title}
-          </h2>
-          {subtitle && (
-            <p className="mt-1.5 font-mono text-[11px] tracking-micro uppercase text-paper-3">
-              {subtitle}
-            </p>
-          )}
-        </div>
       </div>
       {action && <div>{action}</div>}
     </header>
@@ -55,7 +43,7 @@ export function SectionHeader({
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Hero metric — large italic serif number
+   Hero metric — large clean tabular sans
    ───────────────────────────────────────────────────────────── */
 
 export function HeroMetric({
@@ -75,21 +63,21 @@ export function HeroMetric({
     size === 'lg' ? 'text-hero' : size === 'md' ? 'text-hero-sm' : 'text-hero-xs';
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
       <span className="label">{label}</span>
       <div className="flex items-baseline gap-2">
         <span className={clsx('hero-num text-paper', sizeClass)}>{value}</span>
         {unit && (
-          <span className="font-display italic text-paper-3 text-3xl font-light">{unit}</span>
+          <span className="text-paper-3 text-[20px] font-light tracking-tight">{unit}</span>
         )}
       </div>
-      {caption && <span className="font-mono text-[11px] text-paper-4 tracking-micro">{caption}</span>}
+      {caption && <span className="text-[12px] text-paper-3">{caption}</span>}
     </div>
   );
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Metric block — compact tabular metric, dense layouts
+   Metric block — compact tabular metric
    ───────────────────────────────────────────────────────────── */
 
 export function MetricBlock({
@@ -106,19 +94,19 @@ export function MetricBlock({
   suffix?: string;
 }) {
   const trendColor =
-    trend === 'up' ? 'text-signal' : trend === 'down' ? 'text-ember' : 'text-paper-4';
+    trend === 'up' ? 'text-signal' : trend === 'down' ? 'text-ember' : 'text-paper-3';
 
   return (
-    <div className="flex flex-col gap-1.5 py-4 px-5 hairline-b border-0 border-r border-rule last:border-r-0">
+    <div className="flex flex-col gap-1.5 py-5 px-5 border-r border-rule last:border-r-0">
       <span className="label-sm">{label}</span>
       <div className="flex items-baseline gap-1.5">
-        <span className="font-display italic font-light text-paper nums text-[32px] leading-none tracking-tight">
+        <span className="text-paper nums text-[26px] font-semibold leading-none tracking-tight">
           {value}
         </span>
-        {suffix && <span className="font-mono text-paper-3 text-xs">{suffix}</span>}
+        {suffix && <span className="text-paper-3 text-[12px]">{suffix}</span>}
       </div>
       {delta && (
-        <span className={clsx('font-mono text-[10px] tracking-micro', trendColor)}>
+        <span className={clsx('text-[12px]', trendColor)}>
           {delta}
         </span>
       )}
@@ -127,7 +115,7 @@ export function MetricBlock({
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Live badge — pulsing dot + mono label
+   Live badge — Apple pill
    ───────────────────────────────────────────────────────────── */
 
 export function LiveBadge({
@@ -138,19 +126,27 @@ export function LiveBadge({
   label?: string;
 }) {
   return (
-    <span className="inline-flex items-center gap-2 font-mono text-[10px] tracking-mega uppercase">
-      <span className="relative inline-flex w-2 h-2">
-        <span className={clsx('absolute inset-0', active ? 'bg-signal signal-dot' : 'bg-paper-4')} />
+    <span
+      className={clsx(
+        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium',
+        active ? 'bg-signal/10 text-signal' : 'bg-ink-2 text-paper-3',
+      )}
+    >
+      <span className="relative inline-flex w-1.5 h-1.5">
+        <span
+          className={clsx(
+            'absolute inset-0 rounded-full',
+            active ? 'bg-signal signal-dot' : 'bg-paper-4',
+          )}
+        />
       </span>
-      <span className={active ? 'text-signal' : 'text-paper-3'}>
-        {label ?? (active ? 'Live' : 'Idle')}
-      </span>
+      <span>{label ?? (active ? 'Live' : 'Idle')}</span>
     </span>
   );
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Status dot — colored square + mono text
+   Status pill
    ───────────────────────────────────────────────────────────── */
 
 export function StatusDot({
@@ -161,21 +157,21 @@ export function StatusDot({
   children: ReactNode;
 }) {
   return (
-    <span className={clsx('status-sq', `status-${status}`, 'text-paper-2')}>
+    <span className={clsx('status-sq', `status-${status}`)}>
       {children}
     </span>
   );
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Panel — a raised surface with hairline border
+   Panel — Apple-style card
    ───────────────────────────────────────────────────────────── */
 
 export function Panel({
   children,
   className,
   title,
-  numeral,
+  numeral: _numeral,
   action,
 }: {
   children: ReactNode;
@@ -187,17 +183,10 @@ export function Panel({
   return (
     <section className={clsx('panel', className)}>
       {title && (
-        <header className="flex items-center justify-between px-5 py-3.5 hairline-b">
-          <div className="flex items-center gap-3.5">
-            {numeral && (
-              <span className="font-mono text-[10px] tracking-mega text-paper-4">
-                § {numeral.padStart(2, '0')}
-              </span>
-            )}
-            <span className="font-mono text-[11px] tracking-micro uppercase text-paper-2">
-              {title}
-            </span>
-          </div>
+        <header className="flex items-center justify-between px-5 py-3.5 border-b border-rule">
+          <span className="text-paper text-[13px] font-semibold tracking-tight">
+            {title}
+          </span>
           {action}
         </header>
       )}
@@ -207,7 +196,7 @@ export function Panel({
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Hairline — horizontal rule
+   Hairline rule
    ───────────────────────────────────────────────────────────── */
 
 export function Hairline({ className }: { className?: string }) {
@@ -215,8 +204,7 @@ export function Hairline({ className }: { className?: string }) {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Dotted row — label on left, value on right, dotted leader
-   Used for compact key-value lists (financial-report style).
+   Key-value row — clean spaced layout (no dotted line)
    ───────────────────────────────────────────────────────────── */
 
 export function DottedRow({
@@ -229,14 +217,14 @@ export function DottedRow({
   accent?: boolean;
 }) {
   return (
-    <div className="dotted-leader py-2">
-      <span className="font-mono text-[11px] tracking-micro uppercase text-paper-3 shrink-0">
+    <div className="flex items-baseline justify-between gap-4 py-2">
+      <span className="text-[13px] text-paper-3">
         {label}
       </span>
       <span
         className={clsx(
-          'font-mono text-sm nums shrink-0',
-          accent ? 'text-signal font-semibold' : 'text-paper'
+          'text-[13px] nums',
+          accent ? 'text-signal font-semibold' : 'text-paper font-medium',
         )}
       >
         {value}
@@ -246,7 +234,7 @@ export function DottedRow({
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Button — terminal-style
+   Button — Apple-style
    ───────────────────────────────────────────────────────────── */
 
 export function Button({
@@ -265,8 +253,8 @@ export function Button({
         'btn',
         variant === 'primary' && 'btn-primary',
         variant === 'ghost' && 'btn-ghost',
-        size === 'sm' && '!py-1.5 !px-3 !text-[10px]',
-        className
+        size === 'sm' && '!py-1.5 !px-3 !text-[12px]',
+        className,
       )}
       {...props}
     >
@@ -276,7 +264,7 @@ export function Button({
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Funnel bar — horizontal progress bar with mono count
+   Funnel bar — clean Apple style
    ───────────────────────────────────────────────────────────── */
 
 export function FunnelBar({
@@ -294,22 +282,22 @@ export function FunnelBar({
 
   return (
     <div className="flex items-center gap-4 py-2">
-      <span className="w-28 font-mono text-[10px] tracking-micro uppercase text-paper-3 shrink-0">
+      <span className="w-32 text-[12px] text-paper-3 shrink-0">
         {label}
       </span>
-      <div className="flex-1 h-6 border border-rule relative overflow-hidden bg-ink-2">
+      <div className="flex-1 h-2 rounded-full overflow-hidden bg-ink-2">
         <div
           className={clsx(
-            'h-full transition-all duration-700',
-            accent ? 'bg-signal' : 'bg-paper-3'
+            'h-full rounded-full transition-all duration-700',
+            accent ? 'bg-signal' : 'bg-paper-3',
           )}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className="font-mono text-sm nums text-paper w-16 text-right shrink-0">
+      <span className="text-[13px] nums text-paper font-medium w-16 text-right shrink-0">
         {value.toLocaleString()}
       </span>
-      <span className="font-mono text-[10px] text-paper-4 w-10 text-right shrink-0">
+      <span className="text-[12px] text-paper-3 w-10 text-right shrink-0">
         {pct.toFixed(0)}%
       </span>
     </div>

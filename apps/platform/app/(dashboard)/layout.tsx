@@ -16,8 +16,8 @@ type NavSection = { numeral: string; section: string; items: NavItemT[] };
 
 const NAV: NavSection[] = [
   {
-    numeral: 'I',
-    section: 'Operator',
+    numeral: '',
+    section: 'Workspace',
     items: [
       { href: '/',          label: 'Dashboard',  icon: LayoutDashboard },
       { href: '/agents',    label: 'Agents',     icon: Zap },
@@ -41,17 +41,14 @@ function NavItem({
       href={href}
       title={collapsed ? label : undefined}
       className={`group relative flex items-center transition-all duration-150 ${
-        collapsed ? 'justify-center h-10 w-10 mx-auto' : 'h-9 pl-4 pr-3 gap-3'
+        collapsed ? 'justify-center h-9 w-9 mx-auto rounded-lg' : 'h-9 mx-2 px-3 gap-3 rounded-lg'
       } ${
         isActive
-          ? 'text-paper bg-ink-2'
-          : 'text-paper-3 hover:text-paper hover:bg-ink-2/60'
+          ? 'text-signal bg-signal/10 font-medium'
+          : 'text-paper-2 hover:text-paper hover:bg-ink-2'
       }`}
     >
-      {isActive && !collapsed && (
-        <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-signal" />
-      )}
-      <Icon className={`w-[14px] h-[14px] shrink-0 ${isActive ? 'text-signal' : ''}`} />
+      <Icon className={`w-[15px] h-[15px] shrink-0 ${isActive ? 'text-signal' : ''}`} />
       {!collapsed && <span className="text-[13px] tracking-tight">{label}</span>}
     </Link>
   );
@@ -77,37 +74,25 @@ function Sidebar({
     >
       {/* Wordmark */}
       <div className={`hairline-b flex items-center ${collapsed ? 'justify-center h-16' : 'h-16 px-5 gap-3'}`}>
-        {/* Mark */}
-        <div className="relative w-7 h-7 shrink-0 border border-paper flex items-center justify-center">
-          <span className="font-display italic font-light text-paper text-[15px] leading-none">E</span>
+        <div className="relative w-7 h-7 shrink-0 rounded-lg bg-signal flex items-center justify-center">
+          <span className="text-white text-[14px] font-semibold leading-none">E</span>
         </div>
         {!collapsed && (
           <div className="flex-1 min-w-0">
-            <p className="font-display italic font-light text-paper text-[17px] leading-none">
+            <p className="text-paper text-[15px] font-semibold leading-none tracking-tight">
               Embedo
             </p>
-            <p className="font-mono text-[9px] tracking-mega text-paper-4 mt-1 uppercase">
-              Operator · v0.1
-            </p>
           </div>
-        )}
-        {!collapsed && (
-          <span className="font-mono text-[9px] tracking-mega text-paper-4 uppercase shrink-0">
-            NYC
-          </span>
         )}
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto py-4">
+      <nav className="flex-1 overflow-y-auto py-3">
         {NAV.map((group, i) => (
-          <div key={group.section} className={i > 0 ? 'mt-6' : ''}>
+          <div key={group.section} className={i > 0 ? 'mt-5' : ''}>
             {!collapsed && (
-              <div className="px-5 mb-2 flex items-baseline gap-2">
-                <span className="font-mono text-[9px] tracking-mega text-paper-4 leading-none">
-                  §{group.numeral}
-                </span>
-                <span className="font-mono text-[9px] tracking-mega text-paper-4 uppercase leading-none">
+              <div className="px-5 mb-1.5">
+                <span className="text-[11px] font-medium text-paper-3 leading-none">
                   {group.section}
                 </span>
               </div>
@@ -126,23 +111,23 @@ function Sidebar({
 
       {/* Footer */}
       <div className={`hairline-t ${collapsed ? 'h-14 flex items-center justify-center' : 'px-5 py-4 flex items-center gap-3'}`}>
-        <div className="relative w-7 h-7 shrink-0 bg-signal flex items-center justify-center">
-          <span className="font-display italic font-semibold text-ink-0 text-xs">{userInitial}</span>
+        <div className="relative w-7 h-7 shrink-0 rounded-full bg-signal flex items-center justify-center">
+          <span className="text-white text-[12px] font-semibold leading-none">{userInitial}</span>
         </div>
         {!collapsed && (
           <>
             <div className="flex-1 min-w-0">
-              <p className="font-ui text-[12px] font-medium text-paper leading-none truncate">
+              <p className="text-[12px] font-medium text-paper leading-none truncate">
                 {userEmail?.split('@')[0] ?? 'operator'}
               </p>
-              <p className="font-mono text-[9px] tracking-micro text-paper-4 mt-1 uppercase">
+              <p className="text-[11px] text-paper-3 mt-1">
                 Owner
               </p>
             </div>
             <button
               onClick={onLogout}
               title="Sign out"
-              className="shrink-0 w-7 h-7 flex items-center justify-center text-paper-4 hover:text-ember hairline transition"
+              className="shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-paper-3 hover:text-ember hover:bg-ink-2 transition"
             >
               <LogOut className="w-3.5 h-3.5" />
             </button>
@@ -153,7 +138,7 @@ function Sidebar({
       {/* Collapse toggle */}
       <button
         onClick={onToggle}
-        className="absolute top-[52px] -right-3 w-6 h-6 bg-ink-0 hairline flex items-center justify-center text-paper-3 hover:text-signal hover:border-signal transition z-50"
+        className="absolute top-[52px] -right-3 w-6 h-6 rounded-full bg-ink-0 border border-rule shadow-sm flex items-center justify-center text-paper-3 hover:text-signal hover:border-signal transition z-50"
         title={collapsed ? 'Expand' : 'Collapse'}
       >
         <ChevronLeft className={`w-3 h-3 transition-transform ${collapsed ? 'rotate-180' : ''}`} />
@@ -178,35 +163,34 @@ function TopBar({ path }: { path: string }) {
     hour: '2-digit',
     minute: '2-digit',
   });
-  const dateString = now.toLocaleDateString('en-US', {
+  const dateLabel = now.toLocaleDateString('en-US', {
     timeZone: 'America/New_York',
-    weekday: 'short',
     month: 'short',
     day: 'numeric',
-  }).toUpperCase();
+  });
 
-  const breadcrumb = path === '/' ? 'DASHBOARD' : path.slice(1).split('/')[0]?.toUpperCase();
+  const rawSegment = path === '/' ? 'Dashboard' : path.slice(1).split('/')[0] ?? '';
+  const breadcrumb = rawSegment.charAt(0).toUpperCase() + rawSegment.slice(1);
 
   return (
-    <header className="flex-shrink-0 h-14 hairline-b flex items-center justify-between px-8 bg-ink-0/90 backdrop-blur-sm sticky top-0 z-30">
+    <header className="flex-shrink-0 h-14 hairline-b flex items-center justify-between px-10 bg-ink-0/85 backdrop-blur-md sticky top-0 z-30">
       {/* Left — breadcrumb */}
       <div className="flex items-center gap-5">
-        <span className="font-mono text-[10px] tracking-mega text-paper-4 uppercase">
-          Embedo / {breadcrumb}
+        <span className="text-paper text-[14px] font-semibold tracking-tight">
+          {breadcrumb}
         </span>
       </div>
 
-      {/* Center intentionally left bare — the agent widget bottom-right carries status */}
       <div className="flex-1" />
 
       {/* Right — time + actions */}
-      <div className="flex items-center gap-5">
-        <div className="hidden md:flex items-baseline gap-3 font-mono text-[10px] tracking-micro text-paper-3 uppercase">
-          <span>{dateString}</span>
-          <span className="text-paper nums">{timeString} ET</span>
+      <div className="flex items-center gap-4">
+        <div className="hidden md:flex items-baseline gap-2 text-[12px] text-paper-3">
+          <span>{dateLabel}</span>
+          <span className="text-paper-2 nums">{timeString}</span>
         </div>
         <button
-          className="hidden md:inline-flex items-center gap-1.5 hairline px-2.5 py-1 font-mono text-[10px] tracking-mega text-paper-3 hover:text-paper hover:border-paper-3 transition"
+          className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-rule text-[12px] text-paper-3 hover:text-paper hover:bg-ink-2 transition"
           title="Command palette"
         >
           <Command className="w-3 h-3" />

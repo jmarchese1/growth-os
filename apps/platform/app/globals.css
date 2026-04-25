@@ -47,6 +47,7 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scrollbar-gutter: stable;
+  font-size: 14px;            /* Apple-scale base — was browser default 16px */
 }
 
 body {
@@ -54,6 +55,8 @@ body {
   color: var(--paper);
   font-family: var(--font-ui), -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
   font-feature-settings: "ss01", "cv02";
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 /* ── Typography utilities ────────────────────────────────────── */
@@ -81,22 +84,22 @@ body {
   font-feature-settings: "tnum";
 }
 
-/* Mono uppercase micro-label — toned down for light theme */
+/* Section / field labels — Apple uses sentence-case sans, not mono-uppercase */
 .label {
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 10px;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  letter-spacing: -0.005em;
+  text-transform: none;
   color: var(--paper-3);
   font-weight: 500;
 }
 
 .label-sm {
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 9px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--paper-4);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: -0.005em;
+  text-transform: none;
+  color: var(--paper-3);
   font-weight: 500;
 }
 
@@ -121,9 +124,10 @@ body {
 /* ── Surfaces ───────────────────────────────────────────────── */
 
 .panel {
-  background: var(--ink-1);
+  background: var(--ink-0);
   border: 1px solid var(--rule);
   border-radius: var(--r-md);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03), 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
 .panel-2 {
@@ -312,21 +316,25 @@ body {
 
 /* ── Status indicators ─────────────────────────────────────── */
 
+/* Status pill — Apple-style rounded badge */
 .status-sq {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: -0.005em;
+  text-transform: none;
   font-weight: 500;
   color: var(--paper-2);
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--ink-2);
 }
 .status-sq::before {
   content: "";
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   display: inline-block;
   border-radius: 9999px;
 }
@@ -336,3 +344,8 @@ body {
 .status-idle::before   { background: var(--paper-4); }
 .status-fire::before   { background: var(--ember); }
 .status-sky::before    { background: var(--sky); }
+
+/* ── Dotted leader: drop the dotted line for Apple clarity ──── */
+.dotted-leader::before {
+  border-bottom: none;
+}
