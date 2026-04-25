@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import logo from './assets/embedo-logo.jpg';
+import logo from './assets/embedo-logo.png';
 
 /**
  * Embedo logomark — fal.ai-generated icon, imported as a module so Next.js

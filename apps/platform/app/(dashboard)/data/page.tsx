@@ -171,13 +171,13 @@ export default function DataPage() {
           ))}
         </div>
         <div className="flex-1 max-w-md ml-auto relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-paper-3" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-paper-3 pointer-events-none" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { setPage(1); load(); } }}
             placeholder="Search by subject, business, or email…"
-            className="input w-full pl-9"
+            className="input w-full pl-11"
           />
         </div>
       </section>
