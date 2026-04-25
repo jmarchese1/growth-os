@@ -1576,9 +1576,8 @@ Output format:
   });
 
   // ─── Global outreach activity feed (powers the Data tab) ──────────────────
-  // Returns paginated OutreachMessage rows joined with prospect + campaign.
-  // Filters: status, campaignId, agentId, search, since (ISO date),
-  // agentsOnly (only messages from campaigns owned by an agent).
+  // Filters: status (CSV), campaignId, agentId, search, since/until (ISO),
+  //          agentsOnly, sortBy (createdAt|sentAt|openedAt|repliedAt), sortDir
   app.get('/messages', async (request, reply) => {
     const q = request.query as {
       page?: string;
@@ -1588,7 +1587,10 @@ Output format:
       agentId?: string;
       search?: string;
       since?: string;
+      until?: string;
       agentsOnly?: string;
+      sortBy?: string;
+      sortDir?: string;
     };
     const page = Math.max(1, parseInt(q.page ?? '1', 10) || 1);
     const pageSize = Math.min(200, Math.max(10, parseInt(q.pageSize ?? '50', 10) || 50));
@@ -1608,12 +1610,17 @@ Output format:
     if (Object.keys(campaignWhere).length > 0) prospectWhere['campaign'] = campaignWhere;
     if (Object.keys(prospectWhere).length > 0) where['prospect'] = prospectWhere;
 
+    // Date range — combine since/until on createdAt
+    const createdRange: Record<string, Date> = {};
     if (q.since) {
-      const sinceDate = new Date(q.since);
-      if (!Number.isNaN(sinceDate.getTime())) {
-        where['createdAt'] = { gte: sinceDate };
-      }
+      const d = new Date(q.since);
+      if (!Number.isNaN(d.getTime())) createdRange['gte'] = d;
     }
+    if (q.until) {
+      const d = new Date(q.until);
+      if (!Number.isNaN(d.getTime())) createdRange['lte'] = d;
+    }
+    if (Object.keys(createdRange).length > 0) where['createdAt'] = createdRange;
 
     if (q.search) {
       const term = q.search.trim();
@@ -1624,11 +1631,17 @@ Output format:
       ];
     }
 
+    // Sort — whitelist sortable fields to prevent injection
+    const allowedSortBy = new Set(['createdAt', 'sentAt', 'openedAt', 'repliedAt']);
+    const sortBy = q.sortBy && allowedSortBy.has(q.sortBy) ? q.sortBy : 'createdAt';
+    const sortDir = q.sortDir === 'asc' ? 'asc' : 'desc';
+    const orderBy = { [sortBy]: sortDir };
+
     const [total, messages] = await Promise.all([
       db.outreachMessage.count({ where }),
       db.outreachMessage.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy,
         skip: (page - 1) * pageSize,
         take: pageSize,
         select: {

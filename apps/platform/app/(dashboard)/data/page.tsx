@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Search, Mail, Eye, MessageSquare, AlertTriangle, X, Maximize2, Minimize2 } from 'lucide-react';
+import { Search, Mail, Eye, MessageSquare, AlertTriangle, X, Maximize2, Minimize2, ArrowUp, ArrowDown, Download } from 'lucide-react';
 
 const PROSPECTOR_URL = process.env['NEXT_PUBLIC_PROSPECTOR_URL']
   ?? 'https://prospector-production-bc03.up.railway.app';
@@ -53,6 +53,38 @@ const STATUS_FILTERS = [
   { label: 'Bounced', value: 'BOUNCED,FAILED' },
 ];
 
+type DateRange = 'today' | 'yesterday' | '7d' | '30d' | 'all';
+
+const DATE_RANGES: { label: string; value: DateRange }[] = [
+  { label: 'Today',     value: 'today' },
+  { label: 'Yesterday', value: 'yesterday' },
+  { label: 'Last 7d',   value: '7d' },
+  { label: 'Last 30d',  value: '30d' },
+  { label: 'All time',  value: 'all' },
+];
+
+/** Returns ISO `since` and `until` for a preset, anchored to ET midnight. */
+function rangeToISO(range: DateRange): { since?: string; until?: string } {
+  const todayET = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+  const startOfToday = new Date(`${todayET}T04:00:00.000Z`); // ~00:00 ET
+  const day = 24 * 60 * 60 * 1000;
+
+  if (range === 'today') return { since: startOfToday.toISOString() };
+  if (range === 'yesterday') {
+    const yest = new Date(startOfToday.getTime() - day);
+    return { since: yest.toISOString(), until: startOfToday.toISOString() };
+  }
+  if (range === '7d') return { since: new Date(startOfToday.getTime() - 7 * day).toISOString() };
+  if (range === '30d') return { since: new Date(startOfToday.getTime() - 30 * day).toISOString() };
+  return {}; // all
+}
+
+interface CampaignOption { id: string; name: string; }
+interface AgentOption { id: string; name: string; }
+
+type SortBy = 'createdAt' | 'sentAt' | 'openedAt' | 'repliedAt';
+type SortDir = 'asc' | 'desc';
+
 function formatDate(s: string | null): string {
   if (!s) return '—';
   const d = new Date(s);
@@ -88,33 +120,42 @@ export default function DataPage() {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Message | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
+  const [dateRange, setDateRange] = useState<DateRange>('today');
+  const [campaignFilter, setCampaignFilter] = useState<string>(campaignId ?? '');
+  const [agentFilter, setAgentFilter] = useState<string>(agentId ?? '');
+  const [sortBy, setSortBy] = useState<SortBy>('createdAt');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [campaigns, setCampaigns] = useState<CampaignOption[]>([]);
+  const [agents, setAgents] = useState<AgentOption[]>([]);
   const pageSize = 50;
+
+  // Build the shared param set used by both /messages and /messages/stats + CSV export.
+  const buildParams = useCallback((): URLSearchParams => {
+    const p = new URLSearchParams();
+    const { since, until } = rangeToISO(dateRange);
+    if (since) p.set('since', since);
+    if (until) p.set('until', until);
+    if (agentFilter) p.set('agentId', agentFilter);
+    if (campaignFilter) p.set('campaignId', campaignFilter);
+    if (filter) p.set('status', filter);
+    if (search.trim()) p.set('search', search.trim());
+    return p;
+  }, [dateRange, agentFilter, campaignFilter, filter, search]);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const baseParams = new URLSearchParams();
-      // Show every email created today (ET) onward, regardless of whether the
-      // campaign is explicitly linked to an agent. Tomorrow's run, manual
-      // trigger, agent-spawned campaigns — all show up. Historical emails
-      // pre-today are excluded.
-      const todayET = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
-      const startOfTodayET = new Date(`${todayET}T04:00:00.000Z`); // 00:00 ET ≈ 04:00 UTC (close enough for filter)
-      baseParams.set('since', startOfTodayET.toISOString());
-      if (agentId) baseParams.set('agentId', agentId);
-      if (campaignId) baseParams.set('campaignId', campaignId);
+      const baseParams = buildParams();
 
       const params = new URLSearchParams(baseParams);
       params.set('page', String(page));
       params.set('pageSize', String(pageSize));
-      if (filter) params.set('status', filter);
-      if (search.trim()) params.set('search', search.trim());
-
-      const statsParams = new URLSearchParams(baseParams);
+      params.set('sortBy', sortBy);
+      params.set('sortDir', sortDir);
 
       const [mRes, sRes] = await Promise.all([
         fetch(`${PROSPECTOR_URL}/messages?${params}`),
-        fetch(`${PROSPECTOR_URL}/messages/stats?${statsParams}`),
+        fetch(`${PROSPECTOR_URL}/messages/stats?${baseParams}`),
       ]);
       if (mRes.ok) {
         const data = await mRes.json();
@@ -124,7 +165,74 @@ export default function DataPage() {
       if (sRes.ok) setStats(await sRes.json());
     } catch { /* silent */ }
     setLoading(false);
-  }, [filter, search, page, agentId, campaignId]);
+  }, [buildParams, page, sortBy, sortDir]);
+
+  // Load campaigns + agents lookups for the dropdowns (once)
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      fetch(`${PROSPECTOR_URL}/campaigns`).then((r) => r.ok ? r.json() : []).catch(() => []),
+      fetch(`${PROSPECTOR_URL}/agents`).then((r) => r.ok ? r.json() : []).catch(() => []),
+    ]).then(([camps, ags]) => {
+      if (cancelled) return;
+      setCampaigns((Array.isArray(camps) ? camps : []).map((c: { id: string; name: string }) => ({ id: c.id, name: c.name })));
+      setAgents((Array.isArray(ags) ? ags : []).map((a: { id: string; name: string }) => ({ id: a.id, name: a.name })));
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Toggle sort: clicking the active column flips direction; clicking a new column resets to desc
+  const toggleSort = useCallback((col: SortBy) => {
+    if (sortBy === col) setSortDir((d) => (d === 'desc' ? 'asc' : 'desc'));
+    else { setSortBy(col); setSortDir('desc'); }
+    setPage(1);
+  }, [sortBy]);
+
+  // CSV export — fetches up to 1000 matching rows in current filter context
+  const exportCsv = useCallback(async () => {
+    const params = buildParams();
+    params.set('page', '1');
+    params.set('pageSize', '1000');
+    params.set('sortBy', sortBy);
+    params.set('sortDir', sortDir);
+    const res = await fetch(`${PROSPECTOR_URL}/messages?${params}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const rows: Message[] = data.items ?? [];
+
+    const escape = (v: unknown) => {
+      const s = v == null ? '' : String(v);
+      return `"${s.replace(/"/g, '""').replace(/\r?\n/g, ' ')}"`;
+    };
+    const header = ['#', 'Business', 'Email', 'Subject', 'Campaign', 'Sent (ET)', 'Opened', 'Replied', 'Status'];
+    const lines = [header.join(',')];
+    rows.forEach((m, i) => {
+      const badge = statusBadge(m).label;
+      lines.push([
+        i + 1,
+        m.prospect.name,
+        m.prospect.email ?? '',
+        m.subject ?? '',
+        m.prospect.campaign?.name ?? '',
+        formatDate(m.sentAt ?? m.createdAt),
+        m.openedAt ? formatDate(m.openedAt) : '',
+        m.repliedAt ? formatDate(m.repliedAt) : '',
+        badge,
+      ].map(escape).join(','));
+    });
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `embedo-data-${dateRange}-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }, [buildParams, sortBy, sortDir, dateRange]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => { setPage(1); }, [dateRange, agentFilter, campaignFilter, filter, search]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -167,7 +275,7 @@ export default function DataPage() {
             <Hd>Email</Hd>
             <Hd>Subject</Hd>
             <Hd>Campaign</Hd>
-            <Hd>Sent (ET)</Hd>
+            <SortableHd label="Sent (ET)" col="sentAt" sortBy={sortBy} sortDir={sortDir} onClick={toggleSort} />
             <Hd>Status</Hd>
           </tr>
         </thead>
@@ -231,8 +339,8 @@ export default function DataPage() {
   // animate-fade-up transform context (which would otherwise constrain
   // `position: fixed` to that ancestor instead of the viewport).
   const fullscreenView = fullscreen && typeof window !== 'undefined' ? createPortal(
-    <div className="fixed inset-0 z-[100] bg-ink-0 p-6 flex flex-col">
-      <div className="flex items-center justify-between mb-4 shrink-0">
+    <div className="fixed inset-0 z-[100] bg-ink-0 p-6 flex flex-col gap-4">
+      <div className="flex items-center justify-between shrink-0">
         <div>
           <h2 className="text-paper text-[22px] font-semibold leading-tight tracking-tight">
             All emails
@@ -250,6 +358,15 @@ export default function DataPage() {
           <span>Exit fullscreen</span>
         </button>
       </div>
+      <FilterBar
+        dateRange={dateRange} setDateRange={setDateRange}
+        filter={filter} setFilter={setFilter}
+        agentFilter={agentFilter} setAgentFilter={setAgentFilter}
+        campaignFilter={campaignFilter} setCampaignFilter={setCampaignFilter}
+        search={search} setSearch={setSearch}
+        agents={agents} campaigns={campaigns}
+        onExport={exportCsv}
+      />
       {tableContents}
     </div>,
     document.body,
@@ -259,13 +376,13 @@ export default function DataPage() {
     <div className="pt-10 pb-24 px-10 max-w-[1500px] mx-auto space-y-10">
       {/* Header */}
       <section className="pb-8 hairline-b">
-        <p className="text-[12px] text-paper-3 mb-2">Today, ET</p>
         <h1 className="text-paper text-[36px] font-semibold leading-tight tracking-tight">
           Data
         </h1>
         <p className="text-paper-2 text-[14px] mt-3 max-w-xl leading-relaxed">
-          Every email sent by your agents today — recipient, contents, status, opens, replies.
-          Click any row to inspect the full message.
+          Every email your agents have sent — recipient, contents, status, opens, replies.
+          Filter by date, agent, campaign, or status. Click any row for the full message,
+          or export the current view as CSV.
         </p>
       </section>
 
@@ -279,34 +396,15 @@ export default function DataPage() {
       </section>
 
       {/* Filters */}
-      <section className="flex items-center gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
-          {STATUS_FILTERS.map((f) => (
-            <button
-              key={f.label}
-              onClick={() => { setFilter(f.value); setPage(1); }}
-              className={`px-3 py-1.5 rounded-full text-[12px] font-medium border transition-colors ${
-                filter === f.value
-                  ? 'border-signal bg-signal/10 text-signal'
-                  : 'border-rule text-paper-3 hover:text-paper hover:bg-ink-2'
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-        <div className="flex-1 max-w-md ml-auto relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-paper-3 pointer-events-none z-10" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') { setPage(1); load(); } }}
-            placeholder="Search by subject, business, or email…"
-            className="input w-full"
-            style={{ paddingLeft: '40px' }}
-          />
-        </div>
-      </section>
+      <FilterBar
+        dateRange={dateRange} setDateRange={setDateRange}
+        filter={filter} setFilter={setFilter}
+        agentFilter={agentFilter} setAgentFilter={setAgentFilter}
+        campaignFilter={campaignFilter} setCampaignFilter={setCampaignFilter}
+        search={search} setSearch={setSearch}
+        agents={agents} campaigns={campaigns}
+        onExport={exportCsv}
+      />
 
       {/* Spreadsheet — Google-Sheets-style grid */}
       <section>
@@ -377,6 +475,30 @@ function Hd({ children, className = '' }: { children: React.ReactNode; className
   );
 }
 
+function SortableHd({
+  label, col, sortBy, sortDir, onClick, className = '',
+}: {
+  label: string;
+  col: SortBy;
+  sortBy: SortBy;
+  sortDir: SortDir;
+  onClick: (c: SortBy) => void;
+  className?: string;
+}) {
+  const active = sortBy === col;
+  return (
+    <th
+      onClick={() => onClick(col)}
+      className={`px-3 py-2 text-left text-[11px] font-semibold bg-ink-2 border-r border-b border-rule last:border-r-0 cursor-pointer select-none hover:bg-ink-3 transition-colors ${active ? 'text-signal' : 'text-paper-2'} ${className}`}
+    >
+      <span className="inline-flex items-center gap-1">
+        {label}
+        {active && (sortDir === 'desc' ? <ArrowDown className="w-3 h-3" /> : <ArrowUp className="w-3 h-3" />)}
+      </span>
+    </th>
+  );
+}
+
 function Cell({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
     <td
@@ -384,6 +506,111 @@ function Cell({ children, className = '' }: { children: React.ReactNode; classNa
     >
       {children}
     </td>
+  );
+}
+
+function FilterBar({
+  dateRange, setDateRange,
+  filter, setFilter,
+  agentFilter, setAgentFilter,
+  campaignFilter, setCampaignFilter,
+  search, setSearch,
+  agents, campaigns,
+  onExport,
+}: {
+  dateRange: DateRange; setDateRange: (v: DateRange) => void;
+  filter: string; setFilter: (v: string) => void;
+  agentFilter: string; setAgentFilter: (v: string) => void;
+  campaignFilter: string; setCampaignFilter: (v: string) => void;
+  search: string; setSearch: (v: string) => void;
+  agents: AgentOption[]; campaigns: CampaignOption[];
+  onExport: () => void;
+}) {
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Row 1 — date range + status pills */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <span className="text-[11px] uppercase tracking-wide text-paper-3 font-medium">Date</span>
+        <div className="flex items-center gap-1.5">
+          {DATE_RANGES.map((r) => (
+            <button
+              key={r.value}
+              onClick={() => setDateRange(r.value)}
+              className={`px-3 py-1.5 rounded-full text-[12px] font-medium border transition-colors ${
+                dateRange === r.value
+                  ? 'border-signal bg-signal/10 text-signal'
+                  : 'border-rule text-paper-3 hover:text-paper hover:bg-ink-2'
+              }`}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+        <div className="hidden md:block w-px h-5 bg-rule mx-1" />
+        <span className="text-[11px] uppercase tracking-wide text-paper-3 font-medium">Status</span>
+        <div className="flex items-center gap-1.5">
+          {STATUS_FILTERS.map((f) => (
+            <button
+              key={f.label}
+              onClick={() => setFilter(f.value)}
+              className={`px-3 py-1.5 rounded-full text-[12px] font-medium border transition-colors ${
+                filter === f.value
+                  ? 'border-signal bg-signal/10 text-signal'
+                  : 'border-rule text-paper-3 hover:text-paper hover:bg-ink-2'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Row 2 — agent / campaign / search / export */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <select
+          value={agentFilter}
+          onChange={(e) => setAgentFilter(e.target.value)}
+          className="input"
+          style={{ paddingTop: 6, paddingBottom: 6, fontSize: 13 }}
+        >
+          <option value="">All agents</option>
+          {agents.map((a) => (
+            <option key={a.id} value={a.id}>{a.name}</option>
+          ))}
+        </select>
+        <select
+          value={campaignFilter}
+          onChange={(e) => setCampaignFilter(e.target.value)}
+          className="input"
+          style={{ paddingTop: 6, paddingBottom: 6, fontSize: 13 }}
+        >
+          <option value="">All campaigns</option>
+          {campaigns.map((c) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
+
+        <div className="flex-1 max-w-md ml-auto relative">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-paper-3 pointer-events-none z-10" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by subject, business, or email…"
+            className="input w-full"
+            style={{ paddingLeft: '40px' }}
+          />
+        </div>
+
+        <button
+          onClick={onExport}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-rule text-[12px] font-medium text-paper-3 hover:text-paper hover:bg-ink-2 transition-colors"
+          title="Export filtered rows to CSV"
+        >
+          <Download className="w-3.5 h-3.5" />
+          <span>Export CSV</span>
+        </button>
+      </div>
+    </div>
   );
 }
 
