@@ -140,6 +140,121 @@ export default function DataPage() {
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
+  const tableContents = messages.length === 0 ? (
+    <div className="p-16 text-center">
+      <Mail className="w-7 h-7 text-paper-4 mx-auto mb-4" />
+      <p className="text-paper text-[16px] font-medium">No emails sent today yet</p>
+      <p className="text-[13px] text-paper-3 mt-1.5">
+        Once an agent sends, every message will show up here.
+      </p>
+    </div>
+  ) : (
+    <div className={fullscreen ? 'overflow-auto flex-1 border border-rule rounded-apple' : 'overflow-auto max-h-[70vh]'}>
+      <table className="w-full border-collapse text-[13px]" style={{ tableLayout: 'fixed' }}>
+        <colgroup>
+          <col style={{ width: 44 }} />
+          <col style={{ width: 220 }} />
+          <col style={{ width: 220 }} />
+          <col style={{ width: 320 }} />
+          <col style={{ width: 200 }} />
+          <col style={{ width: 140 }} />
+          <col style={{ width: 110 }} />
+        </colgroup>
+        <thead className="sticky top-0 z-10">
+          <tr>
+            <Hd className="text-center bg-ink-2 sticky left-0 z-20"> </Hd>
+            <Hd>Business</Hd>
+            <Hd>Email</Hd>
+            <Hd>Subject</Hd>
+            <Hd>Campaign</Hd>
+            <Hd>Sent (ET)</Hd>
+            <Hd>Status</Hd>
+          </tr>
+        </thead>
+        <tbody>
+          {messages.map((m, idx) => {
+            const badge = statusBadge(m);
+            const rowNum = (page - 1) * pageSize + idx + 1;
+            return (
+              <tr
+                key={m.id}
+                onClick={() => setSelected(m)}
+                className="hover:bg-signal/5 transition-colors cursor-pointer"
+              >
+                <Cell className="text-center text-[11px] text-paper-3 nums bg-ink-1 sticky left-0 z-10 font-medium">
+                  {rowNum}
+                </Cell>
+                <Cell>
+                  <span className="text-paper font-medium truncate block">{m.prospect.name}</span>
+                </Cell>
+                <Cell>
+                  <span className="text-paper-2 truncate block font-mono text-[12px]">{m.prospect.email ?? '—'}</span>
+                </Cell>
+                <Cell>
+                  <div className="truncate">
+                    <span className="text-paper-2 truncate">{m.subject ?? '—'}</span>
+                    {m.stepNumber && m.stepNumber > 1 && (
+                      <span className="ml-2 text-[11px] text-paper-3">· Follow-up {m.stepNumber}</span>
+                    )}
+                  </div>
+                </Cell>
+                <Cell>
+                  {m.prospect.campaign ? (
+                    <Link
+                      href={`/campaigns/${m.prospect.campaign.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-paper-2 hover:text-signal font-medium truncate block"
+                    >
+                      {m.prospect.campaign.name}
+                    </Link>
+                  ) : (
+                    <span className="text-paper-3">—</span>
+                  )}
+                </Cell>
+                <Cell>
+                  <span className="text-paper-2 text-[12px] nums whitespace-nowrap">{formatDate(m.sentAt ?? m.createdAt)}</span>
+                </Cell>
+                <Cell>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${badge.cls}`}>
+                    {badge.label}
+                  </span>
+                </Cell>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  // Fullscreen view rendered via portal so it escapes the dashboard layout's
+  // animate-fade-up transform context (which would otherwise constrain
+  // `position: fixed` to that ancestor instead of the viewport).
+  const fullscreenView = fullscreen && typeof window !== 'undefined' ? createPortal(
+    <div className="fixed inset-0 z-[100] bg-ink-0 p-6 flex flex-col">
+      <div className="flex items-center justify-between mb-4 shrink-0">
+        <div>
+          <h2 className="text-paper text-[22px] font-semibold leading-tight tracking-tight">
+            All emails
+          </h2>
+          <p className="mt-1 text-[13px] text-paper-3">
+            {loading ? 'Loading…' : `Showing ${messages.length} of ${total.toLocaleString()}`}
+          </p>
+        </div>
+        <button
+          onClick={() => setFullscreen(false)}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-rule text-[12px] font-medium text-paper-3 hover:text-paper hover:bg-ink-2 transition-colors"
+          title="Exit fullscreen (Esc)"
+        >
+          <Minimize2 className="w-3.5 h-3.5" />
+          <span>Exit fullscreen</span>
+        </button>
+      </div>
+      {tableContents}
+    </div>,
+    document.body,
+  ) : null;
+
   return (
     <div className="pt-10 pb-24 px-10 max-w-[1500px] mx-auto space-y-10">
       {/* Header */}
@@ -213,119 +328,8 @@ export default function DataPage() {
             <span>{fullscreen ? 'Exit fullscreen' : 'Fullscreen'}</span>
           </button>
         </div>
-        <div
-          className={
-            fullscreen
-              ? 'fixed inset-0 z-[60] bg-ink-0 p-6 flex flex-col'
-              : 'panel overflow-hidden p-0'
-          }
-        >
-          {fullscreen && (
-            <div className="flex items-center justify-between mb-4 shrink-0">
-              <div>
-                <h2 className="text-paper text-[22px] font-semibold leading-tight tracking-tight">
-                  All emails
-                </h2>
-                <p className="mt-1 text-[13px] text-paper-3">
-                  {loading ? 'Loading…' : `Showing ${messages.length} of ${total.toLocaleString()}`}
-                </p>
-              </div>
-              <button
-                onClick={() => setFullscreen(false)}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-rule text-[12px] font-medium text-paper-3 hover:text-paper hover:bg-ink-2 transition-colors"
-                title="Exit fullscreen"
-              >
-                <Minimize2 className="w-3.5 h-3.5" />
-                <span>Exit fullscreen</span>
-              </button>
-            </div>
-          )}
-          {messages.length === 0 ? (
-            <div className="p-16 text-center">
-              <Mail className="w-7 h-7 text-paper-4 mx-auto mb-4" />
-              <p className="text-paper text-[16px] font-medium">No emails sent today yet</p>
-              <p className="text-[13px] text-paper-3 mt-1.5">
-                Once an agent sends, every message will show up here.
-              </p>
-            </div>
-          ) : (
-            <div className={fullscreen ? 'overflow-auto flex-1 border border-rule rounded-apple' : 'overflow-auto max-h-[70vh]'}>
-              <table className="w-full border-collapse text-[13px]" style={{ tableLayout: 'fixed' }}>
-                <colgroup>
-                  <col style={{ width: 44 }} />
-                  <col style={{ width: 220 }} />
-                  <col style={{ width: 220 }} />
-                  <col style={{ width: 320 }} />
-                  <col style={{ width: 200 }} />
-                  <col style={{ width: 140 }} />
-                  <col style={{ width: 110 }} />
-                </colgroup>
-                <thead className="sticky top-0 z-10">
-                  <tr>
-                    <Hd className="text-center bg-ink-2 sticky left-0 z-20"> </Hd>
-                    <Hd>Business</Hd>
-                    <Hd>Email</Hd>
-                    <Hd>Subject</Hd>
-                    <Hd>Campaign</Hd>
-                    <Hd>Sent (ET)</Hd>
-                    <Hd>Status</Hd>
-                  </tr>
-                </thead>
-                <tbody>
-                  {messages.map((m, idx) => {
-                    const badge = statusBadge(m);
-                    const rowNum = (page - 1) * pageSize + idx + 1;
-                    return (
-                      <tr
-                        key={m.id}
-                        onClick={() => setSelected(m)}
-                        className="hover:bg-signal/5 transition-colors cursor-pointer"
-                      >
-                        <Cell className="text-center text-[11px] text-paper-3 nums bg-ink-1 sticky left-0 z-10 font-medium">
-                          {rowNum}
-                        </Cell>
-                        <Cell>
-                          <span className="text-paper font-medium truncate block">{m.prospect.name}</span>
-                        </Cell>
-                        <Cell>
-                          <span className="text-paper-2 truncate block font-mono text-[12px]">{m.prospect.email ?? '—'}</span>
-                        </Cell>
-                        <Cell>
-                          <div className="truncate">
-                            <span className="text-paper-2 truncate">{m.subject ?? '—'}</span>
-                            {m.stepNumber && m.stepNumber > 1 && (
-                              <span className="ml-2 text-[11px] text-paper-3">· Follow-up {m.stepNumber}</span>
-                            )}
-                          </div>
-                        </Cell>
-                        <Cell>
-                          {m.prospect.campaign ? (
-                            <Link
-                              href={`/campaigns/${m.prospect.campaign.id}`}
-                              onClick={(e) => e.stopPropagation()}
-                              className="text-paper-2 hover:text-signal font-medium truncate block"
-                            >
-                              {m.prospect.campaign.name}
-                            </Link>
-                          ) : (
-                            <span className="text-paper-3">—</span>
-                          )}
-                        </Cell>
-                        <Cell>
-                          <span className="text-paper-2 text-[12px] nums whitespace-nowrap">{formatDate(m.sentAt ?? m.createdAt)}</span>
-                        </Cell>
-                        <Cell>
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${badge.cls}`}>
-                            {badge.label}
-                          </span>
-                        </Cell>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+        <div className="panel overflow-hidden p-0">
+          {tableContents}
         </div>
 
         {/* Pagination */}
@@ -356,6 +360,9 @@ export default function DataPage() {
 
       {/* Detail drawer */}
       {selected && <MessageDetail message={selected} onClose={() => setSelected(null)} />}
+
+      {/* Fullscreen spreadsheet (rendered via portal) */}
+      {fullscreenView}
     </div>
   );
 }
