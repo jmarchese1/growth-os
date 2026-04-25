@@ -191,19 +191,17 @@ export default function AgentRunLiveView({ params }: { params: Promise<{ id: str
         </div>
       </section>
 
-      {/* Sheet link */}
-      {agent.sheetUrl && (
-        <section className="panel p-5 flex items-center justify-between">
-          <div>
-            <p className="text-[12px] text-paper-3 mb-1">Google Sheet</p>
-            <p className="text-[13px] text-paper-2">Every prospect, email, and event logged live.</p>
-          </div>
-          <a href={agent.sheetUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary shrink-0">
-            <span>Open sheet</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
-        </section>
-      )}
+      {/* Data link */}
+      <section className="panel p-5 flex items-center justify-between">
+        <div>
+          <p className="text-paper text-[14px] font-semibold tracking-tight">Activity</p>
+          <p className="text-[13px] text-paper-3 mt-0.5">Every prospect, email, and event tracked live in the Data tab.</p>
+        </div>
+        <Link href={`/data?agentId=${id}`} className="btn btn-primary shrink-0">
+          <span>View in Data</span>
+          <ExternalLink className="w-3.5 h-3.5" />
+        </Link>
+      </section>
 
       {/* Live terminal + current campaign */}
       <section className="grid grid-cols-12 gap-8">

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '../../lib/supabase/client';
+import { EmbedoMark } from '../../components/EmbedoMark';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -47,11 +48,9 @@ export default function LoginPage() {
       {/* LEFT — clean Apple panel */}
       <aside className="col-span-12 lg:col-span-7 relative hairline-r flex flex-col justify-between p-10 lg:p-16 bg-ink-0 overflow-hidden">
         <header className="relative z-10 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-signal flex items-center justify-center">
-              <span className="text-white text-[15px] font-semibold leading-none">E</span>
-            </div>
-            <p className="text-paper text-[16px] font-semibold leading-none tracking-tight">Embedo</p>
+          <div className="flex items-center gap-2.5">
+            <EmbedoMark size={32} />
+            <p className="text-paper text-[18px] font-semibold leading-none tracking-tight">Embedo</p>
           </div>
         </header>
 

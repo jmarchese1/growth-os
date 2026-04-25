@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { clsx } from 'clsx';
-import { Zap, ArrowUpRight, Plus, CheckCircle2, Circle } from 'lucide-react';
+import { Zap, ArrowUpRight, Plus } from 'lucide-react';
 import {
   SectionHeader, HeroMetric, MetricBlock, Button,
 } from '../../components/ui/primitives';
@@ -54,7 +54,7 @@ export default async function DashboardPage() {
           <p className="text-paper-2 text-[15px] mt-3 max-w-xl leading-relaxed">
             {agents.length === 0
               ? 'Build your first agent — pick industries, cities, daily cap, and email copy. The agent handles discovery, enrichment, personalization, and sending.'
-              : 'Every agent writes to its own Google Sheet. Prospects, emails, replies, and daily summaries all live there. The platform arms, configures, and watches.'}
+              : 'Every agent runs autonomously. Prospects, emails, replies, and bounces are tracked in the Data tab in real time.'}
           </p>
         </div>
         <div className="shrink-0">
@@ -154,17 +154,9 @@ export default async function DashboardPage() {
                         ? `Last ran ${new Date(agent.lastRunAt).toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: 'numeric' })}`
                         : 'Never run'}
                     </span>
-                    {agent.sheetUrl ? (
-                      <span className="inline-flex items-center gap-1 text-[12px] text-signal font-medium">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        Sheet
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-[12px] text-paper-3">
-                        <Circle className="w-3.5 h-3.5" />
-                        No sheet
-                      </span>
-                    )}
+                    <span className="inline-flex items-center gap-1 text-[12px] text-paper-3 font-medium">
+                      View in Data →
+                    </span>
                   </div>
                 </Link>
               ))}
@@ -178,9 +170,9 @@ export default async function DashboardPage() {
         <span className="text-[12px] text-paper-3">
           Embedo
         </span>
-        <span className="text-[12px] text-paper-3">
-          Data lives in your Google Sheets
-        </span>
+        <Link href="/data" className="text-[12px] text-paper-3 hover:text-signal transition-colors">
+          All activity in Data →
+        </Link>
       </section>
     </div>
   );

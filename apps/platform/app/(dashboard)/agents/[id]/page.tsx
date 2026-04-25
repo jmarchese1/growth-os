@@ -174,30 +174,17 @@ export default function AgentConfigPage({ params }: { params: Promise<{ id: stri
         </div>
       </section>
 
-      {/* Sheet link */}
-      {agent.sheetUrl ? (
-        <section className="panel p-5 flex items-center justify-between">
-          <div className="min-w-0">
-            <p className="text-[12px] text-paper-3 mb-1">Google Sheet · system of record</p>
-            <p className="text-[12px] text-paper-2 truncate">{agent.sheetUrl}</p>
-          </div>
-          <a
-            href={agent.sheetUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn btn-primary shrink-0"
-          >
-            <span>Open sheet</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
-        </section>
-      ) : (
-        <section className="panel p-5 border-amber">
-          <p className="text-[13px] text-amber font-medium">
-            Sheet not provisioned. Check GOOGLE_SERVICE_ACCOUNT_KEY env var on prospector.
-          </p>
-        </section>
-      )}
+      {/* Data link */}
+      <section className="panel p-5 flex items-center justify-between">
+        <div className="min-w-0">
+          <p className="text-paper text-[14px] font-semibold tracking-tight">Activity</p>
+          <p className="text-[12px] text-paper-3 mt-0.5">Every send, open, reply, and bounce for this agent.</p>
+        </div>
+        <Link href={`/data?agentId=${id}`} className="btn btn-primary shrink-0">
+          <span>View in Data</span>
+          <ExternalLink className="w-3.5 h-3.5" />
+        </Link>
+      </section>
 
       {/* Targeting */}
       <section>

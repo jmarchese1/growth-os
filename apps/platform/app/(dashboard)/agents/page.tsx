@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus, Zap, ArrowUpRight, X, ExternalLink } from 'lucide-react';
+import { Plus, Zap, ArrowUpRight, X } from 'lucide-react';
 import { SectionHeader, Button } from '../../../components/ui/primitives';
 
 const PROSPECTOR_URL = process.env['NEXT_PUBLIC_PROSPECTOR_URL']
@@ -57,7 +57,7 @@ export default function AgentsListPage() {
           <p className="text-paper-2 text-[14px] mt-3 max-w-xl leading-relaxed">
             Each agent is an autonomous outreach worker. Pick target cities and industries,
             a daily send cap, and email copy. The agent discovers businesses, sends personalized
-            cold emails, and logs everything to its own Google Sheet.
+            cold emails, and tracks every send in the Data tab.
           </p>
         </div>
         <Button variant="primary" onClick={() => setShowCreate(true)}>
@@ -143,18 +143,9 @@ export default function AgentsListPage() {
                         </>
                       )}
                     </div>
-                    {agent.sheetUrl && (
-                      <a
-                        href={agent.sheetUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="inline-flex items-center gap-1 text-[12px] text-paper-3 hover:text-signal font-medium transition-colors"
-                      >
-                        <span>Open sheet</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
+                    <span className="inline-flex items-center gap-1 text-[12px] text-paper-3 font-medium">
+                      View in Data →
+                    </span>
                   </div>
                 </Link>
               ))}
@@ -183,7 +174,6 @@ function CreateAgentModal({ onClose, onCreated }: { onClose: () => void; onCreat
   const [cities, setCities] = useState<string[]>(['Brooklyn, NY']);
   const [industries, setIndustries] = useState<string[]>(['RESTAURANT']);
   const [dailyCap, setDailyCap] = useState(10);
-  const [ownerEmail, setOwnerEmail] = useState('');
   const [creating, setCreating] = useState(false);
 
   const toggleCity = (c: string) => {
@@ -203,7 +193,6 @@ function CreateAgentModal({ onClose, onCreated }: { onClose: () => void; onCreat
         body: JSON.stringify({
           name, description, targetCities: cities, targetIndustries: industries,
           dailyCap,
-          ownerEmail: ownerEmail || undefined,
         }),
       });
       if (res.ok) {
@@ -276,37 +265,25 @@ function CreateAgentModal({ onClose, onCreated }: { onClose: () => void; onCreat
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="label-sm block mb-2">Daily send cap</label>
-              <input
-                type="number"
-                min={1}
-                max={200}
-                value={dailyCap}
-                onChange={(e) => setDailyCap(parseInt(e.target.value) || 10)}
-                className="input w-full nums"
-              />
-            </div>
-            <div>
-              <label className="label-sm block mb-2">Share Sheet with email</label>
-              <input
-                type="email"
-                value={ownerEmail}
-                onChange={(e) => setOwnerEmail(e.target.value)}
-                placeholder="you@embedo.io"
-                className="input w-full"
-              />
-            </div>
+          <div>
+            <label className="label-sm block mb-2">Daily send cap</label>
+            <input
+              type="number"
+              min={1}
+              max={200}
+              value={dailyCap}
+              onChange={(e) => setDailyCap(parseInt(e.target.value) || 10)}
+              className="input w-full nums max-w-[180px]"
+            />
+            <p className="text-[12px] text-paper-3 mt-1.5">Emails per day across this agent.</p>
           </div>
 
           <div className="rounded-apple bg-ink-2 p-4">
             <p className="text-[12px] font-medium text-paper mb-2">What happens next</p>
             <ol className="text-[13px] text-paper-2 space-y-1.5 leading-relaxed list-decimal list-inside">
-              <li>A new Google Sheet is provisioned with 4 tabs (Prospects · Emails · Daily · Log).</li>
-              <li>Agent starts paused — review sheet access, then arm it from the agent page.</li>
+              <li>Agent starts paused — review the config, then arm it from the agent page.</li>
               <li>When armed, agent picks the first city × industry, discovers prospects, sends emails.</li>
-              <li>All activity writes to your Sheet in real time.</li>
+              <li>All sends, opens, replies, and bounces appear in the Data tab in real time.</li>
             </ol>
           </div>
         </div>

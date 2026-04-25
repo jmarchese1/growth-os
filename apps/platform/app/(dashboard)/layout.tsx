@@ -4,10 +4,11 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  LayoutDashboard, Settings as SettingsIcon, LogOut, ChevronLeft, Command, Zap, Crosshair,
+  LayoutDashboard, Settings as SettingsIcon, LogOut, ChevronLeft, Command, Zap, Crosshair, Database,
 } from 'lucide-react';
 import NotificationBell from '../../components/NotificationBell';
 import { AgentStatusWidget } from '../../components/AgentStatusWidget';
+import { EmbedoMark } from '../../components/EmbedoMark';
 import { useSession } from '../../components/auth/session-provider';
 import { createSupabaseBrowserClient } from '../../lib/supabase/client';
 
@@ -22,6 +23,7 @@ const NAV: NavSection[] = [
       { href: '/',          label: 'Dashboard',  icon: LayoutDashboard },
       { href: '/agents',    label: 'Agents',     icon: Zap },
       { href: '/campaigns', label: 'Campaigns',  icon: Crosshair },
+      { href: '/data',      label: 'Data',       icon: Database },
       { href: '/settings',  label: 'Settings',   icon: SettingsIcon },
     ],
   },
@@ -32,6 +34,7 @@ const COLLAPSED_WIDTH = 60;
 const MIN_EXPANDED = 200;
 const MAX_WIDTH = 340;
 const SNAP_THRESHOLD = 130;
+
 
 function NavItem({
   href, label, icon: Icon, isActive, collapsed,
@@ -73,16 +76,12 @@ function Sidebar({
       style={{ width }}
     >
       {/* Wordmark */}
-      <div className={`hairline-b flex items-center ${collapsed ? 'justify-center h-16' : 'h-16 px-5 gap-3'}`}>
-        <div className="relative w-7 h-7 shrink-0 rounded-lg bg-signal flex items-center justify-center">
-          <span className="text-white text-[14px] font-semibold leading-none">E</span>
-        </div>
+      <div className={`hairline-b flex items-center ${collapsed ? 'justify-center h-16' : 'h-16 px-5 gap-2.5'}`}>
+        <EmbedoMark />
         {!collapsed && (
-          <div className="flex-1 min-w-0">
-            <p className="text-paper text-[15px] font-semibold leading-none tracking-tight">
-              Embedo
-            </p>
-          </div>
+          <p className="flex-1 min-w-0 text-paper text-[16px] font-semibold leading-none tracking-tight">
+            Embedo
+          </p>
         )}
       </div>
 

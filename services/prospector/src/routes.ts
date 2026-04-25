@@ -1575,6 +1575,92 @@ Output format:
     return reply.send(messages);
   });
 
+  // ─── Global outreach activity feed (powers the Data tab) ──────────────────
+  // Returns paginated OutreachMessage rows joined with prospect + campaign.
+  // Filters: status, campaignId, agentId (via campaign.agentId), search.
+  app.get('/messages', async (request, reply) => {
+    const q = request.query as {
+      page?: string;
+      pageSize?: string;
+      status?: string;
+      campaignId?: string;
+      agentId?: string;
+      search?: string;
+    };
+    const page = Math.max(1, parseInt(q.page ?? '1', 10) || 1);
+    const pageSize = Math.min(200, Math.max(10, parseInt(q.pageSize ?? '50', 10) || 50));
+
+    const where: Record<string, unknown> = {};
+    if (q.status) {
+      const statuses = q.status.split(',').filter(Boolean);
+      if (statuses.length > 0) where['status'] = { in: statuses };
+    }
+    if (q.campaignId) {
+      where['prospect'] = { campaignId: q.campaignId };
+    }
+    if (q.agentId) {
+      where['prospect'] = { campaign: { agentId: q.agentId } };
+    }
+    if (q.search) {
+      const term = q.search.trim();
+      where['OR'] = [
+        { subject: { contains: term, mode: 'insensitive' } },
+        { prospect: { name: { contains: term, mode: 'insensitive' } } },
+        { prospect: { email: { contains: term, mode: 'insensitive' } } },
+      ];
+    }
+
+    const [total, messages] = await Promise.all([
+      db.outreachMessage.count({ where }),
+      db.outreachMessage.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        select: {
+          id: true,
+          subject: true,
+          body: true,
+          status: true,
+          stepNumber: true,
+          sentAt: true,
+          openedAt: true,
+          repliedAt: true,
+          replyBody: true,
+          replyCategory: true,
+          createdAt: true,
+          prospect: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              contactFirstName: true,
+              status: true,
+              campaign: {
+                select: { id: true, name: true, targetCity: true, targetIndustry: true, agentId: true },
+              },
+            },
+          },
+          sendingDomain: { select: { domain: true } },
+        },
+      }),
+    ]);
+
+    return reply.send({ total, page, pageSize, items: messages });
+  });
+
+  // ─── Aggregate counts for the Data tab header ─────────────────────────────
+  app.get('/messages/stats', async (_request, reply) => {
+    const [total, sent, opened, replied, bounced] = await Promise.all([
+      db.outreachMessage.count(),
+      db.outreachMessage.count({ where: { status: 'SENT' } }),
+      db.outreachMessage.count({ where: { openedAt: { not: null } } }),
+      db.outreachMessage.count({ where: { status: 'REPLIED' } }),
+      db.outreachMessage.count({ where: { status: 'BOUNCED' } }),
+    ]);
+    return reply.send({ total, sent, opened, replied, bounced });
+  });
+
   // ─── Enrich NEW prospects with Hunter.io ──────────────────────────────────
   // Targets prospects with status=NEW (no email found) that have a website.
   // Calls Hunter domain search, saves email + contact info, queues outreach.
