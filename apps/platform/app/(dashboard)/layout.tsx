@@ -29,11 +29,11 @@ const NAV: NavSection[] = [
   },
 ];
 
-const DEFAULT_WIDTH = 248;
-const COLLAPSED_WIDTH = 60;
-const MIN_EXPANDED = 200;
-const MAX_WIDTH = 340;
-const SNAP_THRESHOLD = 130;
+const DEFAULT_WIDTH = 268;
+const COLLAPSED_WIDTH = 64;
+const MIN_EXPANDED = 220;
+const MAX_WIDTH = 360;
+const SNAP_THRESHOLD = 140;
 
 
 function NavItem({
@@ -44,15 +44,15 @@ function NavItem({
       href={href}
       title={collapsed ? label : undefined}
       className={`group relative flex items-center transition-all duration-150 ${
-        collapsed ? 'justify-center h-9 w-9 mx-auto rounded-lg' : 'h-9 mx-2 px-3 gap-3 rounded-lg'
+        collapsed ? 'justify-center h-10 w-10 mx-auto rounded-lg' : 'h-10 mx-2 px-3 gap-3 rounded-lg'
       } ${
         isActive
-          ? 'text-signal bg-signal/10 font-medium'
+          ? 'text-signal bg-signal/10 font-semibold'
           : 'text-paper-2 hover:text-paper hover:bg-ink-2'
       }`}
     >
-      <Icon className={`w-[15px] h-[15px] shrink-0 ${isActive ? 'text-signal' : ''}`} />
-      {!collapsed && <span className="text-[13px] tracking-tight">{label}</span>}
+      <Icon className={`w-[17px] h-[17px] shrink-0 ${isActive ? 'text-signal' : ''}`} />
+      {!collapsed && <span className="text-[14px] tracking-tight">{label}</span>}
     </Link>
   );
 }
@@ -76,22 +76,22 @@ function Sidebar({
       style={{ width }}
     >
       {/* Wordmark */}
-      <div className={`hairline-b flex items-center ${collapsed ? 'justify-center h-16' : 'h-16 px-5 gap-2.5'}`}>
-        <EmbedoMark />
+      <div className={`hairline-b flex items-center ${collapsed ? 'justify-center h-[68px]' : 'h-[68px] px-5 gap-3'}`}>
+        <EmbedoMark size={collapsed ? 32 : 34} />
         {!collapsed && (
-          <p className="flex-1 min-w-0 text-paper text-[16px] font-semibold leading-none tracking-tight">
+          <p className="flex-1 min-w-0 text-paper text-[19px] font-semibold leading-none tracking-tight">
             Embedo
           </p>
         )}
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto py-3">
+      <nav className="flex-1 overflow-y-auto py-4">
         {NAV.map((group, i) => (
-          <div key={group.section} className={i > 0 ? 'mt-5' : ''}>
+          <div key={group.section} className={i > 0 ? 'mt-6' : ''}>
             {!collapsed && (
-              <div className="px-5 mb-1.5">
-                <span className="text-[11px] font-medium text-paper-3 leading-none">
+              <div className="px-5 mb-2">
+                <span className="text-[11px] uppercase tracking-[0.10em] font-semibold text-paper-3 leading-none">
                   {group.section}
                 </span>
               </div>
@@ -109,26 +109,26 @@ function Sidebar({
       </nav>
 
       {/* Footer */}
-      <div className={`hairline-t ${collapsed ? 'h-14 flex items-center justify-center' : 'px-5 py-4 flex items-center gap-3'}`}>
-        <div className="relative w-7 h-7 shrink-0 rounded-full bg-signal flex items-center justify-center">
-          <span className="text-white text-[12px] font-semibold leading-none">{userInitial}</span>
+      <div className={`hairline-t ${collapsed ? 'h-16 flex items-center justify-center' : 'px-5 py-4 flex items-center gap-3'}`}>
+        <div className="relative w-9 h-9 shrink-0 rounded-full bg-signal flex items-center justify-center">
+          <span className="text-white text-[14px] font-semibold leading-none">{userInitial}</span>
         </div>
         {!collapsed && (
           <>
             <div className="flex-1 min-w-0">
-              <p className="text-[12px] font-medium text-paper leading-none truncate">
+              <p className="text-[13px] font-semibold text-paper leading-tight truncate">
                 {userEmail?.split('@')[0] ?? 'operator'}
               </p>
-              <p className="text-[11px] text-paper-3 mt-1">
+              <p className="text-[12px] text-paper-3 mt-0.5">
                 Owner
               </p>
             </div>
             <button
               onClick={onLogout}
               title="Sign out"
-              className="shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-paper-3 hover:text-ember hover:bg-ink-2 transition"
+              className="shrink-0 w-8 h-8 rounded-md flex items-center justify-center text-paper-3 hover:text-ember hover:bg-ink-2 transition"
             >
-              <LogOut className="w-3.5 h-3.5" />
+              <LogOut className="w-4 h-4" />
             </button>
           </>
         )}
