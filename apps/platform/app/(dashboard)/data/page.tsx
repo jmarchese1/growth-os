@@ -4,8 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Search, Mail, Eye, MessageSquare, AlertTriangle, X } from 'lucide-react';
-import { SectionHeader } from '../../../components/ui/primitives';
+import { Search, Mail, Eye, MessageSquare, AlertTriangle, X, Maximize2, Minimize2 } from 'lucide-react';
 
 const PROSPECTOR_URL = process.env['NEXT_PUBLIC_PROSPECTOR_URL']
   ?? 'https://prospector-production-bc03.up.railway.app';
@@ -88,6 +87,7 @@ export default function DataPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Message | null>(null);
+  const [fullscreen, setFullscreen] = useState(false);
   const pageSize = 50;
 
   const load = useCallback(async () => {
@@ -127,6 +127,16 @@ export default function DataPage() {
   }, [filter, search, page, agentId, campaignId]);
 
   useEffect(() => { load(); }, [load]);
+
+  // ESC exits fullscreen
+  useEffect(() => {
+    if (!fullscreen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setFullscreen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [fullscreen]);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -171,24 +181,65 @@ export default function DataPage() {
           ))}
         </div>
         <div className="flex-1 max-w-md ml-auto relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-paper-3 pointer-events-none" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-paper-3 pointer-events-none z-10" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { setPage(1); load(); } }}
             placeholder="Search by subject, business, or email…"
-            className="input w-full pl-11"
+            className="input w-full"
+            style={{ paddingLeft: '40px' }}
           />
         </div>
       </section>
 
       {/* Spreadsheet — Google-Sheets-style grid */}
       <section>
-        <SectionHeader
-          title="All emails"
-          subtitle={loading ? 'Loading…' : `Showing ${messages.length} of ${total.toLocaleString()}`}
-        />
-        <div className="mt-4 panel overflow-hidden p-0">
+        <div className="flex items-end justify-between pb-4">
+          <div>
+            <h2 className="text-paper text-[22px] font-semibold leading-tight tracking-tight">
+              All emails
+            </h2>
+            <p className="mt-1 text-[13px] text-paper-3">
+              {loading ? 'Loading…' : `Showing ${messages.length} of ${total.toLocaleString()}`}
+            </p>
+          </div>
+          <button
+            onClick={() => setFullscreen((v) => !v)}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-rule text-[12px] font-medium text-paper-3 hover:text-paper hover:bg-ink-2 transition-colors"
+            title={fullscreen ? 'Exit fullscreen' : 'Expand to fullscreen'}
+          >
+            {fullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+            <span>{fullscreen ? 'Exit fullscreen' : 'Fullscreen'}</span>
+          </button>
+        </div>
+        <div
+          className={
+            fullscreen
+              ? 'fixed inset-0 z-[60] bg-ink-0 p-6 flex flex-col'
+              : 'panel overflow-hidden p-0'
+          }
+        >
+          {fullscreen && (
+            <div className="flex items-center justify-between mb-4 shrink-0">
+              <div>
+                <h2 className="text-paper text-[22px] font-semibold leading-tight tracking-tight">
+                  All emails
+                </h2>
+                <p className="mt-1 text-[13px] text-paper-3">
+                  {loading ? 'Loading…' : `Showing ${messages.length} of ${total.toLocaleString()}`}
+                </p>
+              </div>
+              <button
+                onClick={() => setFullscreen(false)}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-rule text-[12px] font-medium text-paper-3 hover:text-paper hover:bg-ink-2 transition-colors"
+                title="Exit fullscreen"
+              >
+                <Minimize2 className="w-3.5 h-3.5" />
+                <span>Exit fullscreen</span>
+              </button>
+            </div>
+          )}
           {messages.length === 0 ? (
             <div className="p-16 text-center">
               <Mail className="w-7 h-7 text-paper-4 mx-auto mb-4" />
@@ -198,7 +249,7 @@ export default function DataPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-auto max-h-[70vh]">
+            <div className={fullscreen ? 'overflow-auto flex-1 border border-rule rounded-apple' : 'overflow-auto max-h-[70vh]'}>
               <table className="w-full border-collapse text-[13px]" style={{ tableLayout: 'fixed' }}>
                 <colgroup>
                   <col style={{ width: 44 }} />
