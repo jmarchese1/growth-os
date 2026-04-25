@@ -12,6 +12,7 @@ import { findEmailViaApollo, extractDomain as extractApolloDomain, discoverViaAp
 import { isDuplicate } from './dedup/isDuplicate.js';
 import { scoreWebsite } from './scraper/website-score.js';
 import { registerAgentRoutes } from './agent/routes.js';
+import { sendDailyDigest } from './workers/digest.worker.js';
 import { env } from './config.js';
 
 const log = createLogger('prospector:routes');
@@ -1674,6 +1675,18 @@ Output format:
     ]);
 
     return reply.send({ total, page, pageSize, items: messages });
+  });
+
+  // ─── Manually fire the daily Agent Update email ──────────────────────────
+  // For smoke-testing + so a Railway cron can drive the schedule reliably
+  // instead of the in-process setInterval (which resets on every redeploy).
+  app.post('/digest/send', async (_request, reply) => {
+    try {
+      await sendDailyDigest();
+      return reply.send({ ok: true });
+    } catch (err) {
+      return reply.code(500).send({ ok: false, error: String(err) });
+    }
   });
 
   // ─── Aggregate counts for the Data tab header ─────────────────────────────
