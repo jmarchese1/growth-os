@@ -258,15 +258,15 @@ export default function DataPage() {
     </div>
   ) : (
     <div className={fullscreen ? 'overflow-auto flex-1 border border-rule rounded-apple' : 'overflow-auto max-h-[70vh]'}>
-      <table className="w-full border-collapse text-[13px]" style={{ tableLayout: 'fixed' }}>
+      <table className="w-full border-collapse text-[14px]" style={{ tableLayout: 'fixed' }}>
         <colgroup>
-          <col style={{ width: 44 }} />
+          <col style={{ width: 56 }} />
+          <col style={{ width: 240 }} />
+          <col style={{ width: 260 }} />
+          <col style={{ width: 360 }} />
           <col style={{ width: 220 }} />
-          <col style={{ width: 220 }} />
-          <col style={{ width: 320 }} />
-          <col style={{ width: 200 }} />
-          <col style={{ width: 140 }} />
-          <col style={{ width: 110 }} />
+          <col style={{ width: 160 }} />
+          <col style={{ width: 120 }} />
         </colgroup>
         <thead className="sticky top-0 z-10">
           <tr>
@@ -289,7 +289,7 @@ export default function DataPage() {
                 onClick={() => setSelected(m)}
                 className="hover:bg-signal/5 transition-colors cursor-pointer"
               >
-                <Cell className="text-center text-[11px] text-paper-3 nums bg-ink-1 sticky left-0 z-10 font-medium">
+                <Cell className="text-center text-[12px] text-paper-3 nums bg-ink-1 sticky left-0 z-10 font-medium">
                   {rowNum}
                 </Cell>
                 <Cell>
@@ -373,16 +373,14 @@ export default function DataPage() {
   ) : null;
 
   return (
-    <div className="pt-10 pb-24 px-10 max-w-[1500px] mx-auto space-y-10">
+    <div className="pt-10 pb-24 px-10 max-w-[1280px] mx-auto space-y-8">
       {/* Header */}
-      <section className="pb-8 hairline-b">
-        <h1 className="text-paper text-[36px] font-semibold leading-tight tracking-tight">
+      <section className="pb-6 hairline-b">
+        <h1 className="text-paper text-[40px] font-semibold leading-tight tracking-tight">
           Data
         </h1>
-        <p className="text-paper-2 text-[14px] mt-3 max-w-xl leading-relaxed">
-          Every email your agents have sent — recipient, contents, status, opens, replies.
-          Filter by date, agent, campaign, or status. Click any row for the full message,
-          or export the current view as CSV.
+        <p className="text-paper-2 text-[15px] mt-3 max-w-2xl leading-relaxed">
+          Every email your agents have sent — recipient, contents, status, opens, replies. Filter by date, agent, campaign, or status. Click any row for the full message, or export the current view as CSV.
         </p>
       </section>
 
@@ -410,19 +408,19 @@ export default function DataPage() {
       <section>
         <div className="flex items-end justify-between pb-4">
           <div>
-            <h2 className="text-paper text-[22px] font-semibold leading-tight tracking-tight">
+            <h2 className="text-paper text-[26px] font-semibold leading-tight tracking-tight">
               All emails
             </h2>
-            <p className="mt-1 text-[13px] text-paper-3">
+            <p className="mt-1.5 text-[14px] text-paper-3">
               {loading ? 'Loading…' : `Showing ${messages.length} of ${total.toLocaleString()}`}
             </p>
           </div>
           <button
             onClick={() => setFullscreen((v) => !v)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-rule text-[12px] font-medium text-paper-3 hover:text-paper hover:bg-ink-2 transition-colors"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md border border-rule text-[13px] font-medium text-paper-2 hover:text-paper hover:bg-ink-2 transition-colors"
             title={fullscreen ? 'Exit fullscreen' : 'Expand to fullscreen'}
           >
-            {fullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+            {fullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             <span>{fullscreen ? 'Exit fullscreen' : 'Fullscreen'}</span>
           </button>
         </div>
@@ -468,7 +466,7 @@ export default function DataPage() {
 function Hd({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
     <th
-      className={`px-3 py-2 text-left text-[11px] font-semibold text-paper-2 bg-ink-2 border-r border-b border-rule last:border-r-0 ${className}`}
+      className={`px-4 py-3 text-left text-[12px] font-semibold uppercase tracking-wide text-paper-2 bg-ink-2 border-r border-b border-rule last:border-r-0 ${className}`}
     >
       {children}
     </th>
@@ -489,11 +487,11 @@ function SortableHd({
   return (
     <th
       onClick={() => onClick(col)}
-      className={`px-3 py-2 text-left text-[11px] font-semibold bg-ink-2 border-r border-b border-rule last:border-r-0 cursor-pointer select-none hover:bg-ink-3 transition-colors ${active ? 'text-signal' : 'text-paper-2'} ${className}`}
+      className={`px-4 py-3 text-left text-[12px] font-semibold uppercase tracking-wide bg-ink-2 border-r border-b border-rule last:border-r-0 cursor-pointer select-none hover:bg-ink-3 transition-colors ${active ? 'text-signal' : 'text-paper-2'} ${className}`}
     >
       <span className="inline-flex items-center gap-1">
         {label}
-        {active && (sortDir === 'desc' ? <ArrowDown className="w-3 h-3" /> : <ArrowUp className="w-3 h-3" />)}
+        {active && (sortDir === 'desc' ? <ArrowDown className="w-3.5 h-3.5" /> : <ArrowUp className="w-3.5 h-3.5" />)}
       </span>
     </th>
   );
@@ -502,7 +500,7 @@ function SortableHd({
 function Cell({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
     <td
-      className={`px-3 py-2 border-r border-b border-rule last:border-r-0 align-middle overflow-hidden whitespace-nowrap ${className}`}
+      className={`px-4 py-3 border-r border-b border-rule last:border-r-0 align-middle overflow-hidden whitespace-nowrap ${className}`}
     >
       {children}
     </td>
@@ -530,13 +528,13 @@ function FilterBar({
     <div className="flex flex-col gap-3">
       {/* Row 1 — date range + status pills */}
       <div className="flex items-center gap-3 flex-wrap">
-        <span className="text-[11px] uppercase tracking-wide text-paper-3 font-medium">Date</span>
+        <span className="text-[12px] uppercase tracking-wide text-paper-3 font-semibold">Date</span>
         <div className="flex items-center gap-1.5">
           {DATE_RANGES.map((r) => (
             <button
               key={r.value}
               onClick={() => setDateRange(r.value)}
-              className={`px-3 py-1.5 rounded-full text-[12px] font-medium border transition-colors ${
+              className={`px-3.5 py-2 rounded-full text-[13px] font-medium border transition-colors ${
                 dateRange === r.value
                   ? 'border-signal bg-signal/10 text-signal'
                   : 'border-rule text-paper-3 hover:text-paper hover:bg-ink-2'
@@ -546,14 +544,14 @@ function FilterBar({
             </button>
           ))}
         </div>
-        <div className="hidden md:block w-px h-5 bg-rule mx-1" />
-        <span className="text-[11px] uppercase tracking-wide text-paper-3 font-medium">Status</span>
+        <div className="hidden md:block w-px h-6 bg-rule mx-1" />
+        <span className="text-[12px] uppercase tracking-wide text-paper-3 font-semibold">Status</span>
         <div className="flex items-center gap-1.5">
           {STATUS_FILTERS.map((f) => (
             <button
               key={f.label}
               onClick={() => setFilter(f.value)}
-              className={`px-3 py-1.5 rounded-full text-[12px] font-medium border transition-colors ${
+              className={`px-3.5 py-2 rounded-full text-[13px] font-medium border transition-colors ${
                 filter === f.value
                   ? 'border-signal bg-signal/10 text-signal'
                   : 'border-rule text-paper-3 hover:text-paper hover:bg-ink-2'
@@ -571,7 +569,7 @@ function FilterBar({
           value={agentFilter}
           onChange={(e) => setAgentFilter(e.target.value)}
           className="input"
-          style={{ paddingTop: 6, paddingBottom: 6, fontSize: 13 }}
+          style={{ fontSize: 14, paddingTop: 8, paddingBottom: 8 }}
         >
           <option value="">All agents</option>
           {agents.map((a) => (
@@ -582,7 +580,7 @@ function FilterBar({
           value={campaignFilter}
           onChange={(e) => setCampaignFilter(e.target.value)}
           className="input"
-          style={{ paddingTop: 6, paddingBottom: 6, fontSize: 13 }}
+          style={{ fontSize: 14, paddingTop: 8, paddingBottom: 8 }}
         >
           <option value="">All campaigns</option>
           {campaigns.map((c) => (
@@ -597,16 +595,16 @@ function FilterBar({
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by subject, business, or email…"
             className="input w-full"
-            style={{ paddingLeft: '40px' }}
+            style={{ paddingLeft: '40px', fontSize: 14 }}
           />
         </div>
 
         <button
           onClick={onExport}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-rule text-[12px] font-medium text-paper-3 hover:text-paper hover:bg-ink-2 transition-colors"
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md border border-rule text-[13px] font-medium text-paper-2 hover:text-paper hover:bg-ink-2 transition-colors"
           title="Export filtered rows to CSV"
         >
-          <Download className="w-3.5 h-3.5" />
+          <Download className="w-4 h-4" />
           <span>Export CSV</span>
         </button>
       </div>
@@ -629,12 +627,17 @@ function StatCell({
     'text-paper-3';
 
   return (
-    <div className="px-5 py-5 border-r border-rule last:border-r-0">
-      <div className="flex items-center gap-2 mb-2">
-        <Icon className={`w-3.5 h-3.5 ${color}`} />
-        <span className="text-[12px] text-paper-3">{label}</span>
+    <div className="px-6 py-6 border-r border-rule last:border-r-0">
+      <div className="flex items-center gap-2 mb-3">
+        <Icon className={`w-4 h-4 ${color}`} />
+        <span className="text-[13px] text-paper-3 font-medium">{label}</span>
       </div>
-      <p className="text-paper text-[28px] font-semibold leading-none nums tracking-tight">
+      <p className={`text-[40px] font-semibold leading-none nums tracking-tight ${
+        accent === 'signal' ? 'text-signal' :
+        accent === 'sky' ? 'text-[#5ac8fa]' :
+        accent === 'ember' ? 'text-ember' :
+        'text-paper'
+      }`}>
         {value.toLocaleString()}
       </p>
     </div>
