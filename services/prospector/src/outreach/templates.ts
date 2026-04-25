@@ -17,10 +17,6 @@ export const DEFAULT_EMAIL_BODY_HTML = DEFAULT_EMAIL_BODY;
 
 const SIGNATURE_HTML = `<table style="margin-top: 28px; padding-top: 20px; border-collapse: collapse; width: 100%;" cellpadding="0" cellspacing="0"><tr><td style="padding-right: 12px; vertical-align: middle; width: 56px;"><img src="https://i.imgur.com/RDXkWkD.jpeg" alt="Jason" width="48" height="48" style="border-radius: 50%; display: block; object-fit: cover;" /></td><td style="vertical-align: middle;"><p style="margin: 0; font-size: 14px; font-weight: 700; color: #1a1a1a;">Jason</p><p style="margin: 2px 0 0; font-size: 13px; color: #666;">Founder · <a href="https://embedo.io" style="color: #4f46e5; text-decoration: none;">embedo.io</a></p></td></tr></table>`;
 
-function buildUnsubscribe(replyEmail: string): string {
-  return `<p style="margin-top: 32px; font-size: 11px; color: #bbb;">Not interested? <a href="mailto:${replyEmail}?subject=Unsubscribe" style="color: #bbb;">Unsubscribe</a></p>`;
-}
-
 // Cache for AI-generated names (survives for the lifetime of the process)
 const nameCache = new Map<string, { displayName: string; shortName: string; type: string; isChain: boolean }>();
 
@@ -244,12 +240,12 @@ export function renderEmailHtml(
       .join('\n  ');
 
     const sig = options?.appendSignature !== false ? SIGNATURE_HTML : '';
-    const unsub = options?.replyEmail ? buildUnsubscribe(options.replyEmail) : (vars['replyEmail'] ? buildUnsubscribe(vars['replyEmail']) : '');
+    // Unsubscribe footer disabled per agent config — emails read more like a real
+    // person reaching out, not a marketing send.
 
     content = `<div style="font-family: -apple-system, system-ui, sans-serif; max-width: 580px; color: #222; line-height: 1.7; font-size: 14px;">
   ${paragraphs}
   ${sig}
-  ${unsub}
 </div>`;
   }
 

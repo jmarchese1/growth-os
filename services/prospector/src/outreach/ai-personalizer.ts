@@ -1,7 +1,10 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createLogger } from '@embedo/utils';
+import { reviewEmail } from './ai-reviewer.js';
 
 const log = createLogger('prospector:ai-personalizer');
+
+const MAX_REGENERATION_ATTEMPTS = 2;
 
 export interface ProspectContext {
   name: string;
@@ -36,19 +39,12 @@ function buildContext(p: ProspectContext): string {
   return lines.join('\n');
 }
 
-/**
- * Generate a personalized cold email body using Claude Haiku.
- * Voice: a friendly intro offering a chat about AI agents, chatbots,
- * voice agents, or automation that could help the business.
- *
- * Returns plain text only (no HTML, no sign-off).
- * Returns null on failure — caller falls back to template substitution.
- */
-export async function generatePersonalizedEmail(
+/** Single Claude generation attempt — returns plain text or null. */
+async function attemptGeneration(
   prospect: ProspectContext,
-  _replyEmail: string,
   apiKey: string,
-  options: PersonalizerOptions = {},
+  options: PersonalizerOptions,
+  retryFeedback?: string,
 ): Promise<string | null> {
   try {
     const client = new Anthropic({ apiKey });
@@ -59,23 +55,16 @@ export async function generatePersonalizedEmail(
       ? options.systemPrompt.trim()
       : DEFAULT_PITCH;
 
-    // Optional website context — used to sound like you actually looked at the business.
-    // NEVER required to reference something specific; Claude may or may not use it.
     const siteBlock = prospect.websiteContent
       ? `\n\nQuick glance at their website (use ONLY if something stands out naturally; otherwise ignore):\n"""\n${prospect.websiteContent}\n"""`
       : '';
 
-    // Rotate opener + CTA styles so emails don't all read identical.
-    // Claude sees a hash-seeded choice; output varies across prospects even with same pitch.
-    const seed = Math.abs(
-      [...prospect.name].reduce((a, c) => a + c.charCodeAt(0), 0),
-    );
-
+    // Rotate opener + CTA styles per prospect (deterministic by name)
+    const seed = Math.abs([...prospect.name].reduce((a, c) => a + c.charCodeAt(0), 0));
     const OPENER_STYLES = ['observation', 'question', 'direct-context'] as const;
     const CTA_STYLES = ['loom', 'mockup', 'reply', 'short-zoom'] as const;
     type OpenerStyle = typeof OPENER_STYLES[number];
     type CtaStyle = typeof CTA_STYLES[number];
-
     const openerStyle: OpenerStyle = OPENER_STYLES[seed % OPENER_STYLES.length] ?? 'observation';
     const ctaStyle: CtaStyle = CTA_STYLES[seed % CTA_STYLES.length] ?? 'reply';
 
@@ -84,13 +73,17 @@ export async function generatePersonalizedEmail(
       'question':       `Open with a sharp question relevant to a business like theirs (e.g. "who handles the phone when you're cooking a full Saturday rush?"). Don't answer your own question in the email, let it breathe.`,
       'direct-context': `Open by naming what you do (one short line) and immediately connect it to their type of business with a concrete hook. Skip any "how are you" or "hope this finds you well" warm-up.`,
     };
-
     const CTA_GUIDES: Record<CtaStyle, string> = {
       'loom':        `End by offering a 90-second Loom walkthrough showing what a system like this would actually do for a business like theirs. Make it clear no call is needed to see it.`,
       'mockup':      `End by offering to mock something up and send it over, no call needed. Frame it as zero commitment.`,
       'reply':       `End with a simple "want me to send more?", invite a one-word reply.`,
       'short-zoom':  `End by proposing a 10-min Zoom if they're curious. Explicitly say 10 minutes, nothing more.`,
     };
+
+    // If a previous attempt failed review, prepend the feedback so Claude knows what to fix.
+    const feedbackBlock = retryFeedback
+      ? `\n===== PREVIOUS ATTEMPT FAILED REVIEW =====\nReason: ${retryFeedback}\nFix it on this attempt. Same structure, but eliminate the issue.\n`
+      : '';
 
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',
@@ -99,7 +92,7 @@ export async function generatePersonalizedEmail(
         {
           role: 'user',
           content: `You are ${senderName}. Write a SHORT, specific cold email to a local business owner. Real person voice, not salesy.
-
+${feedbackBlock}
 ===== AUTO-REJECT PHRASES =====
 The email will be rejected and rewritten if it contains ANY of these. Treat them as radioactive:
 - "I was checking out" / "I came across" / "I stumbled on" / "I noticed you"
@@ -160,23 +153,73 @@ Rules:
 
     const firstBlock = response.content[0];
     const rawText = (firstBlock?.type === 'text' ? firstBlock.text.trim() : '')
-      .replace(/—/g, ', ')   // em dash
-      .replace(/–/g, ', ')   // en dash
-      .replace(/ - /g, ' ')       // spaced hyphen
-      .replace(/---+/g, '')       // horizontal rules
+      .replace(/—/g, ', ')
+      .replace(/–/g, ', ')
+      .replace(/ - /g, ' ')
+      .replace(/---+/g, '')
       .trim();
 
     if (!rawText || rawText.length < 30) return null;
-
-    log.info(
-      { business: prospect.name, length: rawText.length, hasSite: !!prospect.websiteContent, customPitch: !!options.systemPrompt },
-      'AI email generated',
-    );
     return rawText;
   } catch (err) {
-    log.warn({ err, business: prospect.name }, 'AI personalization failed');
+    log.warn({ err, business: prospect.name }, 'AI generation attempt failed');
     return null;
   }
+}
+
+/**
+ * Generate + REVIEW + retry loop.
+ *
+ * 1. Generate with Sonnet 4.6
+ * 2. Run through ai-reviewer (deterministic banned-phrase check + Haiku grader)
+ * 3. If fail, regenerate up to MAX_REGENERATION_ATTEMPTS more times,
+ *    feeding the failure reasons back into the prompt so Claude can fix them.
+ * 4. After max attempts, return null — caller falls back to template substitution.
+ */
+export async function generatePersonalizedEmail(
+  prospect: ProspectContext,
+  _replyEmail: string,
+  apiKey: string,
+  options: PersonalizerOptions = {},
+): Promise<string | null> {
+  let lastFailureReason: string | undefined;
+
+  for (let attempt = 0; attempt <= MAX_REGENERATION_ATTEMPTS; attempt++) {
+    const draft = await attemptGeneration(prospect, apiKey, options, lastFailureReason);
+    if (!draft) {
+      log.warn({ business: prospect.name, attempt }, 'Generation returned null');
+      continue;
+    }
+
+    const review = await reviewEmail(draft, prospect.name, apiKey);
+
+    if (review.pass) {
+      log.info(
+        {
+          business: prospect.name,
+          attempt: attempt + 1,
+          score: review.score,
+          length: draft.length,
+          hasSite: !!prospect.websiteContent,
+          customPitch: !!options.systemPrompt,
+        },
+        'AI email generated and approved',
+      );
+      return draft;
+    }
+
+    lastFailureReason = review.reasons.join('; ') || `Score ${review.score}/10 below threshold`;
+    log.warn(
+      { business: prospect.name, attempt: attempt + 1, score: review.score, reasons: review.reasons },
+      'Email failed review, regenerating',
+    );
+  }
+
+  log.warn(
+    { business: prospect.name, lastFailureReason },
+    `All ${MAX_REGENERATION_ATTEMPTS + 1} generation attempts failed review — returning null`,
+  );
+  return null;
 }
 
 /**

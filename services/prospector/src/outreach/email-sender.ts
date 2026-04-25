@@ -41,10 +41,12 @@ export async function sendColdEmail(
   const subjectTemplate = options?.subjectOverride ?? campaign.emailSubject;
   const bodyTemplate = options?.bodyHtmlOverride ?? campaign.emailBodyHtml;
 
-  // Use Claude to personalize per prospect if enabled on campaign + ANTHROPIC_API_KEY configured
+  // Use Claude to personalize per prospect if not explicitly disabled + ANTHROPIC_API_KEY configured
   const apolloConf = (campaign.apolloConfig as Record<string, unknown> | null) ?? {};
   const appendSig = apolloConf['appendSignature'] === true;
-  const aiEnabled = apolloConf['aiPersonalization'] === true; // OFF by default, must be explicitly enabled
+  // Default ON: only skip AI if the flag is explicitly set to false. This way agent-driven
+  // sends always get AI even on legacy campaigns that pre-date the agent system.
+  const aiEnabled = apolloConf['aiPersonalization'] !== false;
   // Custom agent-provided pitch instructions (from Agent.systemPrompt, stored on campaign's apolloConfig)
   const customSystemPrompt =
     typeof apolloConf['systemPrompt'] === 'string' && (apolloConf['systemPrompt'] as string).trim().length >= 20
