@@ -1,15 +1,16 @@
-/* eslint-disable @next/next/no-img-element */
+import Image from 'next/image';
+import logo from './assets/embedo-logo.jpg';
 
 /**
- * Embedo logomark — fal.ai-generated PNG saved to /embedo-logo.jpg.
- * A premium iOS-style icon: blue gradient rounded square with a clean
- * stacked-bar abstract monogram inside. Soft shadow for depth.
+ * Embedo logomark — fal.ai-generated icon, imported as a module so Next.js
+ * bundles it into _next/static/media (the public/ folder isn't being
+ * deployed on this Vercel project for some reason).
  */
 export function EmbedoMark({ size = 28 }: { size?: number }) {
   return (
     <span
       aria-label="Embedo"
-      className="relative shrink-0 inline-flex items-center justify-center overflow-hidden"
+      className="relative shrink-0 inline-block overflow-hidden"
       style={{
         width: size,
         height: size,
@@ -18,11 +19,12 @@ export function EmbedoMark({ size = 28 }: { size?: number }) {
           '0 1px 2px rgba(0,113,227,0.18), 0 4px 12px rgba(0,113,227,0.18)',
       }}
     >
-      <img
-        src="/embedo-logo.jpg"
+      <Image
+        src={logo}
         alt=""
         width={size}
         height={size}
+        priority
         style={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover' }}
         draggable={false}
       />

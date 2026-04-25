@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '../../lib/supabase/client';
 import { EmbedoMark } from '../../components/EmbedoMark';
+import authHero from '../../components/assets/auth-hero.jpg';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -51,7 +52,7 @@ export default function LoginPage() {
           aria-hidden
           className="absolute inset-0 pointer-events-none"
           style={{
-            backgroundImage: 'url(/auth-hero.jpg)',
+            backgroundImage: `url(${authHero.src})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}
