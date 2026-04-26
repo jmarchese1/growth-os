@@ -1095,6 +1095,7 @@ model Reservation {
 // ─── Business Tools (extensible tool library) ─────────────────────────────────
 
 enum ToolType {
+  // Restaurant
   TAKEOUT_ORDERS
   WAITLIST
   DAILY_SPECIALS
@@ -1105,6 +1106,26 @@ enum ToolType {
   TABLE_TURNOVER
   DELIVERY_TRACKING
   GIFT_CARD_LOYALTY
+
+  // Salon
+  SALON_AVAILABILITY
+  SALON_WAITLIST
+  CLIENT_NOTES
+
+  // Fitness
+  CLASS_ROSTER
+  FACILITY_STATUS
+  SESSION_PACKAGES
+
+  // Retail
+  LIVE_INVENTORY
+  ORDER_STATUS
+  PRICE_PROMO
+
+  // Medical
+  PROVIDER_SCHEDULE
+  MEDICAL_WAITLIST
+  VISIT_PREP
 }
 
 model BusinessTool {

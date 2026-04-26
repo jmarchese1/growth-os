@@ -1078,7 +1078,7 @@ function ConversationHistory({ businessId }: { businessId: string }) {
 }
 
 /* ── Main Voice Agent Dashboard ─────────────────────────────────── */
-export default function VoiceAgentClient({ businessId }: { businessId: string }) {
+export default function VoiceAgentClient({ businessId, businessType }: { businessId: string; businessType: string }) {
   const [status, setStatus] = useState<VoiceStatus | null>(null);
   const [stats, setStats] = useState<VoiceStats | null>(null);
   const [calls, setCalls] = useState<CallLog[]>([]);
@@ -1278,7 +1278,7 @@ export default function VoiceAgentClient({ businessId }: { businessId: string })
               <p className="text-sm text-slate-500 dark:text-slate-400">Enable capabilities for your phone agent — orders, reservations, waitlist, and more. Settings are shared with your chatbot.</p>
             </div>
           </div>
-          <CapabilitiesPanel businessId={businessId} />
+          <CapabilitiesPanel businessId={businessId} businessType={businessType} />
         </div>
       )}
 

@@ -634,22 +634,12 @@ export default function ToolsPage() {
         </div>
       )}
 
-      {/* Coming Soon Section */}
-      <div className="mt-12">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Coming Soon — Other Industries</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[
-            { name: 'Appointment Booking', desc: 'AI schedules appointments for service businesses', industry: 'Barber Shops, Salons, Spas' },
-            { name: 'Class & Session Booking', desc: 'Book fitness classes, sessions, and memberships', industry: 'Gyms, Studios, Training' },
-            { name: 'Service Quotes', desc: 'AI collects job details and generates service quotes', industry: 'Contractors, Auto Shops' },
-          ].map(item => (
-            <div key={item.name} className="bg-white dark:bg-white/[0.04] border border-dashed border-slate-200 dark:border-white/[0.08] rounded-xl p-5 opacity-60">
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">{item.name}</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">{item.desc}</p>
-              <span className="text-[10px] text-slate-400">{item.industry}</span>
-            </div>
-          ))}
-        </div>
+      {/* Industry Tools Note */}
+      <div className="mt-12 bg-violet-50 dark:bg-violet-500/5 border border-violet-200 dark:border-violet-500/20 rounded-xl p-5">
+        <p className="text-sm text-violet-700 dark:text-violet-400">
+          <span className="font-semibold">Industry-specific tools</span> (Salon, Fitness, Retail, Medical) are available in the
+          {' '}<span className="font-semibold">Chat Widget</span> and <span className="font-semibold">Phone Agent</span> pages under the <span className="font-semibold">Capabilities</span> tab.
+        </p>
       </div>
     </div>
   );

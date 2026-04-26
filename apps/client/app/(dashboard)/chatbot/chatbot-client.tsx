@@ -1072,7 +1072,7 @@ function EmbedSnippet({ businessId }: { businessId: string }) {
 }
 
 /* ── Main Chatbot Dashboard ───────────────────────────────────── */
-export default function ChatbotClient({ businessId }: { businessId: string }) {
+export default function ChatbotClient({ businessId, businessType }: { businessId: string; businessType: string }) {
   const [tab, setTab] = useState('dashboard');
   const [status, setStatus] = useState<ChatbotStatus | null>(null);
   const [stats, setStats] = useState<ChatbotStats | null>(null);
@@ -1143,7 +1143,7 @@ export default function ChatbotClient({ businessId }: { businessId: string }) {
       {tab === 'capabilities' && (
         <div>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Enable capabilities for your chatbot — orders, reservations, waitlist, and more. Settings are shared with your phone agent.</p>
-          <CapabilitiesPanel businessId={businessId} />
+          <CapabilitiesPanel businessId={businessId} businessType={businessType} />
         </div>
       )}
       {tab === 'test' && <TestChatTab businessId={businessId} />}

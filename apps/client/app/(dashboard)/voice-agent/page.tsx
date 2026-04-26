@@ -16,5 +16,5 @@ export default function VoiceAgentPage() {
 
   if (!business) return null;
 
-  return <VoiceAgentClient businessId={business.id} />;
+  return <VoiceAgentClient businessId={business.id} businessType={business.type ?? 'RESTAURANT'} />;
 }

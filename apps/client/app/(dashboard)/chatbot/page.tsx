@@ -16,5 +16,5 @@ export default function ChatbotPage() {
 
   if (!business) return null;
 
-  return <ChatbotClient businessId={business.id} />;
+  return <ChatbotClient businessId={business.id} businessType={business.type ?? 'RESTAURANT'} />;
 }

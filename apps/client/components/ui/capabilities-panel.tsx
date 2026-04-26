@@ -371,7 +371,7 @@ const DATA_LINKS: Record<string, { href: string; label: string }> = {
 
 /* ── Main component ────────────────────────────────────────────── */
 
-export function CapabilitiesPanel({ businessId }: { businessId: string }) {
+export function CapabilitiesPanel({ businessId, businessType }: { businessId: string; businessType?: string }) {
   const [catalog, setCatalog] = useState<CatalogTool[]>([]);
   const [enabledTools, setEnabledTools] = useState<EnabledTool[]>([]);
   const [loading, setLoading] = useState(true);
@@ -479,6 +479,9 @@ export function CapabilitiesPanel({ businessId }: { businessId: string }) {
     }
   };
 
+  const filteredCatalog = businessType
+    ? catalog.filter(t => t.industries.includes(businessType))
+    : catalog;
   const getEnabledTool = (type: string) => enabledTools.find(t => t.type === type && t.enabled);
 
   if (loading) {
@@ -497,11 +500,11 @@ export function CapabilitiesPanel({ businessId }: { businessId: string }) {
           <span className="w-2 h-2 rounded-full bg-emerald-500" />
           {enabledTools.filter(t => t.enabled).length} active
         </span>
-        <span className="text-xs text-slate-400">{catalog.length} available</span>
+        <span className="text-xs text-slate-400">{filteredCatalog.length} available</span>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {catalog.map(tool => {
+        {filteredCatalog.map(tool => {
           const enabled = getEnabledTool(tool.type);
           const isConfiguring = configuring === tool.type;
           const ConfigComponent = CONFIG_COMPONENTS[tool.type];

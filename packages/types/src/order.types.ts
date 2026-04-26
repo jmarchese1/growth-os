@@ -64,7 +64,23 @@ export type ToolTypeValue =
   | 'PROMO_ALERTS'
   | 'TABLE_TURNOVER'
   | 'DELIVERY_TRACKING'
-  | 'GIFT_CARD_LOYALTY';
+  | 'GIFT_CARD_LOYALTY'
+  // Salon
+  | 'SALON_AVAILABILITY'
+  | 'SALON_WAITLIST'
+  | 'CLIENT_NOTES'
+  // Fitness
+  | 'CLASS_ROSTER'
+  | 'FACILITY_STATUS'
+  | 'SESSION_PACKAGES'
+  // Retail
+  | 'LIVE_INVENTORY'
+  | 'ORDER_STATUS'
+  | 'PRICE_PROMO'
+  // Medical
+  | 'PROVIDER_SCHEDULE'
+  | 'MEDICAL_WAITLIST'
+  | 'VISIT_PREP';
 
 export interface MenuItemConfig {
   name: string;
