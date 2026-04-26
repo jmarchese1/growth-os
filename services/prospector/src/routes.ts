@@ -1677,6 +1677,30 @@ Output format:
     return reply.send({ total, page, pageSize, items: messages });
   });
 
+  // ─── Inspect sending domains: from + reply-to + warmup status ────────────
+  app.get('/sending-domains', async (_request, reply) => {
+    const domains = await db.sendingDomain.findMany({
+      orderBy: { domain: 'asc' },
+      select: {
+        id: true,
+        domain: true,
+        fromEmail: true,
+        fromName: true,
+        replyToEmail: true,
+        active: true,
+        verified: true,
+        warmupStage: true,
+        dailyLimit: true,
+        sentToday: true,
+        totalSent: true,
+        bounceCount: true,
+        openCount: true,
+        disabledReason: true,
+      },
+    });
+    return reply.send({ count: domains.length, domains });
+  });
+
   // ─── Manually fire the daily Agent Update email ──────────────────────────
   // For smoke-testing + so a Railway cron can drive the schedule reliably
   // instead of the in-process setInterval (which resets on every redeploy).
