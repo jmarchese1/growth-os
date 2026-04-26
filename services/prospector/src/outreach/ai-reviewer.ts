@@ -73,9 +73,9 @@ CRITERIA:
 Auto-fail (score 0) if email:
 - Repeats the business name more than 3 times
 - Contains "I was checking out", "No pressure", "worth a chat", "just wanted to introduce myself"
-- Has a sign-off ("Best, Jason" etc.) — those get appended separately
+- Missing a sign-off — must end with "Best," on one line and the sender's first name on the next line
 - Uses dashes, em dashes, en dashes, or colons
-- Is over 110 words or under 35 words
+- Is over 120 words or under 40 words
 
 BUSINESS BEING EMAILED: ${businessName}
 
@@ -118,8 +118,8 @@ export async function reviewEmail(
 
   // Length sanity
   const wordCount = emailBody.trim().split(/\s+/).length;
-  if (wordCount < 30 || wordCount > 120) {
-    return { score: 2, pass: false, reasons: [`Word count ${wordCount} out of range (30-120)`] };
+  if (wordCount < 35 || wordCount > 130) {
+    return { score: 2, pass: false, reasons: [`Word count ${wordCount} out of range (35-130)`] };
   }
 
   // LLM review

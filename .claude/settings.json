@@ -4,7 +4,8 @@
       "Bash(curl -s https://prospector-production-bc03.up.railway.app/agents/cmoddib0s0000lz019a4fkfu4/status)",
       "Bash(python -c ' *)",
       "Bash(curl -s \"https://prospector-production-bc03.up.railway.app/agents/cmoddib0s0000lz019a4fkfu4/runs?limit=5\")",
-      "Bash(curl -s \"https://prospector-production-bc03.up.railway.app/agents/cmoddib0s0000lz019a4fkfu4/runs/cmoeclsch0002lz01ys3ec7q1\")"
+      "Bash(curl -s \"https://prospector-production-bc03.up.railway.app/agents/cmoddib0s0000lz019a4fkfu4/runs/cmoeclsch0002lz01ys3ec7q1\")",
+      "Bash(curl -s \"https://prospector-production-bc03.up.railway.app/agents/cmoddib0s0000lz019a4fkfu4/runs?limit=10\")"
     ]
   },
   "hooks": {

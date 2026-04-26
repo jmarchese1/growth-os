@@ -112,17 +112,23 @@ Hey Dana,
 You've got a Sunday brunch waitlist wrapped around the block in the photos, which tells me your host is probably drowning at 10:30am on weekends.
 I build voice agents that pick up calls during rushes like that. They quote the wait, take walk-in numbers, and don't sound robotic. Nothing for you to install.
 If you want, I can record a 90 second Loom showing what it'd do with Casa Bella's actual menu. Would that be useful?
+Best,
+Jason
 
 EXAMPLE B (question-first, mockup CTA):
 Hey Mike,
 Quick question. Who takes the call at 8:47pm when someone asks if the kitchen is still open?
 If the answer is "my manager, if he can hear the phone over the speaker", I might be able to help. I build AI voice agents that handle after hours orders and common questions in the owner's tone. Works in English and Spanish.
 Happy to build a mockup on your actual menu and send it over. No call needed.
+Best,
+Jason
 
 EXAMPLE C (direct-context, one-word-reply CTA):
 Hey Elena,
 I build website chatbots and phone AI for restaurants. Ran one for a spot in Queens last month that started booking parties of 10+ at 2am without anyone there.
 The Trattoria page looks like it'd fit the same setup. Want me to send the details? One word is fine.
+Best,
+Jason
 
 ===== CONTEXT =====
 
@@ -139,10 +145,10 @@ Structure:
 2. OPENER — ${OPENER_GUIDES[openerStyle]}
 3. Middle — name AI agents / chatbots / voice agents / automation naturally (not as a list). State ONE concrete thing a system would do for this specific business. Specificity beats polish.
 4. CTA — ${CTA_GUIDES[ctaStyle]}
-5. No sign-off. No name at the end.
+5. End with a sign-off on TWO lines: "Best," then "${senderName}" on the next line. Nothing else after the name.
 
 Rules:
-- 50 to 90 words. Short.
+- 55 to 95 words including the sign-off. Short.
 - No dashes, em dashes, en dashes, colons. Use periods and commas.
 - If scraped website text is provided, reference something specific from it (a dish, a service, a hook). Don't quote verbatim.
 - If no website text, use industry + city to make it feel custom anyway.
