@@ -14,6 +14,7 @@ export interface ProspectContext {
   googleRating?: number | null;
   googleReviewCount?: number | null;
   contactFirstName?: string | null;
+  shortName?: string | null;            // AI-generated casual short name ("Mario's", "Hofbrauhaus")
   businessType?: string | null;         // "pizzeria", "salon", "gym" — from aiBusinessName
   websiteContent?: string | null;       // scraped homepage text, for Claude to reference
 }
@@ -28,17 +29,14 @@ export interface PersonalizerOptions {
 /** Baseline fallback pitch when an agent hasn't supplied a systemPrompt. */
 const DEFAULT_PITCH = `You build AI agents, chatbots, voice agents, and automation for local businesses. You're reaching out to introduce yourself and open the door to a short conversation about how any of these could help them — whether that's a voice agent that answers phone calls, a chatbot for their website visitors, or simple automation around bookings, leads, and follow-ups. The tone is casual, low-pressure, friendly. Not pitchy.`;
 
-function buildContext(p: ProspectContext): string {
+function buildContext(p: ProspectContext, greetingTarget: string): string {
   const lines: string[] = [
     `Business: ${p.name}`,
     `City: ${p.city}`,
   ];
   if (p.businessType) lines.push(`Type: ${p.businessType}`);
-  if (p.contactFirstName) {
-    lines.push(`Contact first name: ${p.contactFirstName}`);
-  } else {
-    lines.push(`Contact first name: (unknown — greet with "there", do not invent a name or use the type)`);
-  }
+  // Always tell the model exactly what to put after "Hey" — no inference allowed.
+  lines.push(`Greet with: "${greetingTarget}"  (use this exactly after "Hey ", do not substitute or invent)`);
   if (p.website) lines.push(`Website: ${p.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}`);
   return lines.join('\n');
 }
@@ -52,8 +50,29 @@ async function attemptGeneration(
 ): Promise<string | null> {
   try {
     const client = new Anthropic({ apiKey });
-    const firstName = prospect.contactFirstName ?? 'there';
     const senderName = options.senderName ?? 'Jason';
+
+    // Compute the greeting target.
+    // - With contact name: "Hey {firstName},"
+    // - Without (common for Geoapify-discovered prospects): rotate between
+    //   "Hey there," and "Hey {shortName}," for warmth without being weird.
+    //   Hash-seeded by business name so the same prospect always gets the
+    //   same greeting on retries.
+    const seedForGreeting = Math.abs(
+      [...prospect.name].reduce((a, c) => a + c.charCodeAt(0), 0),
+    );
+    const greetingTarget: string = (() => {
+      if (prospect.contactFirstName && prospect.contactFirstName.trim().length > 0) {
+        return prospect.contactFirstName.trim();
+      }
+      // No contact name. Use shortName if it exists and is short enough to feel
+      // natural in a greeting (3-20 chars, no special chars).
+      const sn = prospect.shortName?.trim();
+      const usable = !!sn && sn.length >= 3 && sn.length <= 20 && /^[A-Za-z][A-Za-z0-9' .]*$/.test(sn);
+      if (usable && seedForGreeting % 2 === 0) return sn!;
+      return 'there';
+    })();
+    const firstName = greetingTarget;
 
     const pitch = (options.systemPrompt && options.systemPrompt.trim().length >= 20)
       ? options.systemPrompt.trim()
@@ -140,7 +159,7 @@ Your background (who you are, what you actually sell):
 ${pitch}
 
 The business you're emailing:
-${buildContext(prospect)}${siteBlock}
+${buildContext(prospect, firstName)}${siteBlock}
 
 ===== WRITING INSTRUCTIONS =====
 

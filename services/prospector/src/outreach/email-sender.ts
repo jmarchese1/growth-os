@@ -68,6 +68,7 @@ export async function sendColdEmail(
         googleRating: prospect.googleRating,
         googleReviewCount: prospect.googleReviewCount,
         contactFirstName: prospect.contactFirstName,
+        shortName: vars['shortName'] ?? null,
         businessType: vars['type'] ?? (prospect as { businessType?: string | null }).businessType ?? null,
         websiteContent,
       },
