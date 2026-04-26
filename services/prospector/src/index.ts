@@ -11,7 +11,6 @@ import { env } from './config.js';
 import { registerRoutes } from './routes.js';
 import { startProspectWorker } from './workers/prospect.worker.js';
 import { startOutreachWorker } from './workers/outreach.worker.js';
-import { sendDailyDigest } from './workers/digest.worker.js';
 import { resetDailyCounts, advanceWarmup } from './outreach/domain-rotator.js';
 import { startInstagramDmWorker } from './workers/instagram-dm.worker.js';
 import { resetDailyCounts as resetIgDailyCounts } from './instagram/session-manager.js';
@@ -43,20 +42,13 @@ async function start() {
   await app.listen({ port: env.PORT, host: '0.0.0.0' });
   log.info({ port: env.PORT }, 'Prospector service started');
 
-  // Daily digest — runs every 24h, sends at ~9am EST (schedule on startup + interval)
-  const now = new Date();
-  const next9am = new Date(now);
-  next9am.setUTCHours(14, 0, 0, 0); // 9am EST = 14:00 UTC
-  if (next9am <= now) next9am.setDate(next9am.getDate() + 1);
-  const msUntil9am = next9am.getTime() - now.getTime();
-
-  setTimeout(() => {
-    sendDailyDigest();
-    setInterval(sendDailyDigest, 24 * 60 * 60 * 1000);
-  }, msUntil9am);
-  log.info({ nextDigestAt: next9am.toISOString() }, 'Daily digest scheduled');
+  // Daily Agent Update is now fired automatically when the agent run
+  // COMPLETES (see agent/daily-send.ts). That guarantees the email reflects
+  // the just-finished run instead of the cron's start moment. The
+  // POST /digest/send route is also available for manual triggering.
 
   // Midnight ET reset — reset daily send counts + advance warm-up stages
+  const now = new Date();
   const nextMidnightET = new Date(now);
   nextMidnightET.setUTCHours(5, 0, 0, 0); // midnight ET = 5:00 UTC (EST)
   if (nextMidnightET <= now) nextMidnightET.setDate(nextMidnightET.getDate() + 1);

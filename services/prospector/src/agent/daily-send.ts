@@ -15,6 +15,7 @@ import { getTotalDailyCapacity } from '../outreach/domain-rotator.js';
 import { EventBuffer } from './events.js';
 import { spawnNextCampaignForAgent } from './auto-rotate.js';
 import { writeEmailRow, writeLogRow, writeDailySummary } from './sheets.js';
+import { sendDailyDigest } from '../workers/digest.worker.js';
 
 const log = createLogger('agent:daily-send');
 
@@ -252,6 +253,15 @@ export async function runAgent(options: RunOptions): Promise<RunResult> {
 
   const durationMs = Date.now() - startedAt.getTime();
   await buffer.finalize(status, { ...stats, errors: errors.length > 0 ? errors : undefined }, startedAt);
+
+  // Fire the Agent Update email AFTER the run completes — guarantees the
+  // numbers reflect the just-finished run instead of the cron's start moment.
+  // Skipped on dry runs and failed runs (no useful data to report).
+  if (!options.dryRun && status === 'completed' && stats.emailsSent > 0) {
+    void sendDailyDigest().catch((err) => {
+      log.warn({ err }, 'Post-run digest failed');
+    });
+  }
 
   return { runId: run.id, status, ...stats, durationMs };
 }
