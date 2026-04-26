@@ -34,7 +34,11 @@ function buildContext(p: ProspectContext): string {
     `City: ${p.city}`,
   ];
   if (p.businessType) lines.push(`Type: ${p.businessType}`);
-  if (p.contactFirstName) lines.push(`Contact first name: ${p.contactFirstName}`);
+  if (p.contactFirstName) {
+    lines.push(`Contact first name: ${p.contactFirstName}`);
+  } else {
+    lines.push(`Contact first name: (unknown — greet with "there", do not invent a name or use the type)`);
+  }
   if (p.website) lines.push(`Website: ${p.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}`);
   return lines.join('\n');
 }
@@ -141,7 +145,7 @@ ${buildContext(prospect)}${siteBlock}
 ===== WRITING INSTRUCTIONS =====
 
 Structure:
-1. "Hey ${firstName}," on its own line.
+1. The first line must be exactly: "Hey ${firstName}," — do NOT substitute, modify, or replace the word after "Hey". Never use the business type, business name, city, or any other word as a stand-in for a name. If the variable above is "there", the line is "Hey there,". This is non-negotiable.
 2. OPENER — ${OPENER_GUIDES[openerStyle]}
 3. Middle — name AI agents / chatbots / voice agents / automation naturally (not as a list). State ONE concrete thing a system would do for this specific business. Specificity beats polish.
 4. CTA — ${CTA_GUIDES[ctaStyle]}
@@ -150,15 +154,21 @@ Structure:
 Rules:
 - 55 to 95 words including the sign-off. Short.
 - No dashes, em dashes, en dashes, colons. Use periods and commas.
-- If scraped website text is provided, reference something specific from it (a dish, a service, a hook). Don't quote verbatim.
-- If no website text, use industry + city to make it feel custom anyway.
+- DO NOT INVENT details. Don't fabricate menu items, awards, news, locations, or quotes you don't see in the context. A generic-but-honest line ("running a busy spot in Brooklyn") beats a fake-specific one ("your famous truffle ravioli was mentioned on Eater").
+- If scraped website text is provided, reference something specific from it (a dish, a service, a hook). Don't quote verbatim, and only use it if you're sure it's real on their site.
+- If no website text, use industry + city to make it feel custom anyway. Don't reach for fake details.
 - Plain text output only. No HTML, no markdown, no headers. Start with "Hey ${firstName},".`,
         },
       ],
     });
 
     const firstBlock = response.content[0];
+    const expectedGreeting = `Hey ${firstName},`;
     const rawText = (firstBlock?.type === 'text' ? firstBlock.text.trim() : '')
+      // Force the first line to the exact greeting we expect, no matter what
+      // Claude returned. Defends against the model picking up a noun from
+      // context (e.g. "Hey diner,") when contactFirstName is null.
+      .replace(/^Hey[^\n]*,/, expectedGreeting)
       .replace(/—/g, ', ')
       .replace(/–/g, ', ')
       .replace(/ - /g, ' ')

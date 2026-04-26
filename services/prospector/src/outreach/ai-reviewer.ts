@@ -38,6 +38,11 @@ const BANNED_REGEXES: { phrase: string; rx: RegExp }[] = [
   { phrase: 'crushing it',                rx: /\bcrushing\s+it\b/i },
   { phrase: 'doing great on Google',      rx: /\bdoing\s+great\s+on\s+google\b/i },
   { phrase: 'smooth things out',          rx: /\bsmooth\s+things\s+out\b/i },
+  // Common-noun greetings — Claude sometimes uses business type or category
+  // as a first name when no contact is known. The personalizer also force-
+  // rewrites the greeting line, so this is a belt-and-suspenders check.
+  { phrase: 'Hey + common noun greeting',
+    rx: /^Hey\s+(?:diner|pizzeria|restaurant|cafe|bar|chef|owner|team|friends?|folks|guys?|everyone|business|store|shop|salon|gym|clinic|office)\s*,/im },
 ];
 
 /**
