@@ -1677,6 +1677,31 @@ Output format:
     return reply.send({ total, page, pageSize, items: messages });
   });
 
+  // ─── Update a sending domain (reply-to, active, etc.) ────────────────────
+  app.patch('/sending-domains/:id', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const body = request.body as {
+      replyToEmail?: string;
+      fromEmail?: string;
+      fromName?: string;
+      active?: boolean;
+      dailyLimit?: number;
+      disabledReason?: string | null;
+    };
+
+    const data: Record<string, unknown> = {};
+    if (typeof body.replyToEmail === 'string') data['replyToEmail'] = body.replyToEmail;
+    if (typeof body.fromEmail === 'string')    data['fromEmail']    = body.fromEmail;
+    if (typeof body.fromName === 'string')     data['fromName']     = body.fromName;
+    if (typeof body.active === 'boolean')      data['active']       = body.active;
+    if (typeof body.dailyLimit === 'number')   data['dailyLimit']   = body.dailyLimit;
+    // Clear disabledReason explicitly when re-activating
+    if (body.disabledReason === null || body.active === true) data['disabledReason'] = null;
+
+    const updated = await db.sendingDomain.update({ where: { id }, data });
+    return reply.send(updated);
+  });
+
   // ─── Inspect sending domains: from + reply-to + warmup status ────────────
   app.get('/sending-domains', async (_request, reply) => {
     const domains = await db.sendingDomain.findMany({
